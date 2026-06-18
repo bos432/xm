@@ -1,0 +1,213 @@
+<!DOCTYPE html public/admin "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8">
+    <title><?php echo $siteConfig['site_name'];?>-项目实施</title>
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <link rel="stylesheet" type="text/css" href="public/admin/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="public/country/stylesheets/theme.css">
+    <link rel="stylesheet" href="public/country/lib/font-awesome/css/font-awesome.css">
+    <script src="public/country/lib/jquery-1.7.2.min.js" type="text/javascript"></script>  <!--date picker-->
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="../assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
+  </head>
+  <!--[if lt IE 7 ]> <body class="ie ie6"> <![endif]-->
+  <!--[if IE 7 ]> <body class="ie ie7 "> <![endif]-->
+  <!--[if IE 8 ]> <body class="ie ie8 "> <![endif]-->
+  <!--[if IE 9 ]> <body class="ie ie9 "> <![endif]-->
+  <!--[if (gt IE 9)|!(IE)]><!-->
+  <body class="">
+  <!--<![endif]-->
+  <style>
+	  .table11 th,.table11 td {
+		  font-size:13px;
+	  }
+  </style>
+  <php>include("./public/country/include/navbar.php");</php>
+  <php>include("./public/country/include/left-nav.php");</php>
+  <php>include("./public/country/include/datepicker.php");</php>
+
+
+    <div class="content">
+        <div class="header">
+            <h1 class="page-title">项目实施</h1>
+        </div>
+
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="block">
+                            <table class="table table11">
+                              <thead>
+                                <tr>
+                                  <th>编号</th>
+                                  <th>项目名称</th>
+                                    <th>计划类别</th>
+                                  <th>申报单位</th>
+                                    <th>归口管理单位</th>
+                                    <if condition="$STATEID eq 7">
+                                         <th>审核时间</th>
+                                        <elseif condition="$STATEID eq 20"/>
+                                         <th>提交时间</th>
+                                        <else/>
+                                         <th>完成时间</th>
+                                    </if>
+                                    <th>推荐</th>
+                                    <th>支持</th>
+                                    <th>支持资金</th>
+                                    <th>状态</th>
+                                    <th style="display: none">项目进度</th>
+                                    <th>操作</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                              <if condition="empty($li) neq true">
+                                <volist name="li" id='li'>
+                                    <tr>
+                                          <td>{$li.id}</td>
+                                        <td><a href="index.php?m=country&a=app_project_content&id={$li.id}">{$li.proname}</a></td>
+                                        <td><a href="index.php?m=country&a=project_info&id={$li.pro_kind}">{$li.projectname}</a></td>
+                                        <td><a href="index.php?m=country&a=com&id={$li.uid}">{$li.unit}</a></td>
+                                        <td>{$li.protype}</td>
+                                        <if condition="$li.state_id eq 7">
+                                            <td>{$li.time_pass}</td>
+                                            <elseif condition="$STATEID eq 20"/>
+                                            <td>{$li.work_time}</td>
+                                            <else/>
+                                            <td>{$li.finish_time}</td>
+                                        </if>
+
+                                            <td>{$li.recornot}</td>
+                                            <td>
+                                               <span rel="tooltip">{$li.support}</span>
+                                            </td>
+                                            <td>
+                                                {$li.support_money}万元
+                                            </td>
+                                            <if condition="$li.state_id neq 20 ">
+                                                <td><span rel="tooltip" title="审核人：{$li.check_name}">{$li.state}</span></td>
+                                                <else/>
+                                                <td><span rel="tooltip">{$li.state}</span></td>
+                                            </if>
+                                           <td style="display: none">
+                                               <if condition="$li.p neq NUll ">
+                                                      {$li.p} : {$li.ptime}
+                                                   <else/>
+                                                   --
+                                               </if>
+                                           </td>
+
+                                            <td>
+                                                <?php if ( $li['prokind']==2){ ?>
+                                                    <?php if ($_COOKIE['role_id']==1 && $li['state_id1']!=7 && $li['state_id']==20){ ?>
+                                                         <a href="#" onclick="check_apply('{$li.id}')" role="button" >实施审核</a>
+                                                    <?php }elseif($_COOKIE['role_id']==3 && $li['state_id1']==7 &&  $li['state_id']==20){ ?>
+                                                         <a href="#" onclick="check_apply('{$li.id}')" role="button" >实施审核</a>
+                                                    <?php } ?>
+                                                <?php }else{ ?>
+                                                     <?php if ($_COOKIE['role_id']==0 && $li['state_id1']!=7 && $li['state_id']==20){ ?>
+                                                        <a href="#" onclick="check_apply('{$li.id}')" role="button" >实施审核</a>
+                                                     <?php }elseif($_COOKIE['role_id']==3 && $li['state_id1']==7 &&  $li['state_id']==20){ ?>
+                                                         <a href="#" onclick="check_apply('{$li.id}')" role="button" >实施审核</a>
+                                                    <?php } ?>
+                                                <?php } ?>
+
+                                                <?php if ( $li['state_id']==7 || $li['state_id']== 8 || $li['state_id']== 20){ ?>
+
+                                                    <?php if($li['file_list_count']>0){ ?>
+                                                        <?php if($li['file_list_check_count']>0){ ?>
+                                                                  <a href="index.php?m=country&a=project_file_view&id={$li.id}&type=2">资料审核</a>
+                                                         <?php }else{ ?>
+                                                                  <a href="index.php?m=country&a=project_file_view&id={$li.id}&type=2">资料查看</a>
+                                                        <?php } ?>
+                                                    <?php } ?>
+
+                                                <?php } ?>
+                                            </td>
+
+                                    </tr>
+                                </volist>
+                                <else/>
+                                <tr>
+                                    <td colspan="12">没有数据！</td>
+                                </tr>
+                                </if>
+                              </tbody>
+                            </table>
+                        </div>
+                     </div>
+        </div>
+
+  <div class="modal small hide fade" id="myModal1" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+      <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+          <h3 id="myModalLabel">审批项目实施</h3>
+      </div>
+      <form  role="form" action="index.php?m=Country&a=startwork" onsubmit="return check_data()" method="post" style="margin: 0 0 0 0;">
+          <div class="modal-body">
+              <input name="id" type="hidden" id="appid" value="0" />
+              <div class="form-group">
+                  <div class="form-group">
+                      <span for="state">项目实施：</span>
+                      <select class="form-control" style="width: 200px;" name="state_id" id="state_id">
+                          <option value="7">准予实施</option>
+                          <option value="5">不准予实施</option>
+                      </select>
+                  </div>
+                  <div class="form-group">
+                      <span for="pifu">审批批复：</span>
+                      <textarea type="text" class="form-control" style="width: 200px;height: 100px" id="pifu" name="pifu" placeholder=""></textarea>
+                  </div>
+              </div>
+          </div>
+          <div class="modal-footer">
+              <button class="btn btn-primary" type="submit" >确定</button>
+              <button class="btn" data-dismiss="modal" aria-hidden="true">取消</button>
+          </div>
+      </form>
+  </div>
+
+  <script src="public/lib/bootstrap/js/bootstrap.js"></script>
+  <php>include("./public/country/include/footer.php");</php>
+
+  </div>
+  </div>
+
+  <script type="text/javascript">
+      $("[rel=tooltip]").tooltip();
+      $(function() {
+          $('.demo-cancel-click').click(function(){return false;});
+      });
+
+      //审批申请
+      function check_apply(appid){
+          $("#appid").val(appid);
+          $("#myModal1").modal('show');
+      }
+
+      function check_data(){
+          var pifu = $("#pifu").val();
+          if (pifu==""){
+              layer.msg('批复不能为空!');
+              return false;
+          }
+          return  true;
+      }
+
+      var  todaytime  = "{$todaytime}";
+  </script>
+
+  </body>
+</html>

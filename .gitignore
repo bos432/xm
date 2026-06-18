@@ -1,0 +1,77 @@
+# Local/runtime files
+.DS_Store
+Thumbs.db
+*.log
+vite-preview*.log
+
+# Secrets and environment
+.env
+.env.*
+!.env.example
+app/Conf/config.php
+app/Conf/config.php1
+
+# Database dumps and backups
+*.sql
+*.sql.gz
+*.dump
+*.db
+*.sqlite
+*.sqlite3
+*.bak
+*.backup
+
+# Known infected/quarantined files
+*.infected
+*.php.infected
+*.html.infected
+
+# Legacy public/static webroot copies contain mixed uploaded/static/runtime assets
+# and previously suspicious executable samples. Keep them out of GitHub until
+# they are reviewed and intentionally restored from clean sources.
+css/
+excel/
+images/
+img/
+inc/
+js/
+lib/
+public/
+ueditor/
+index.php
+index.html
+
+# Legacy runtime/cache
+app/Runtime/
+Runtime/
+runtime/
+cache/
+temp/
+
+# User uploads and legacy editor upload payloads
+upload/
+ueditor/php/upload/
+public/upload/
+public/uploads/
+
+# Dependency directories
+vendor/
+node_modules/
+modernization/backend/vendor/
+modernization/frontend/node_modules/
+
+# Build outputs
+dist/
+modernization/frontend/dist/
+modernization/backend/storage/*.key
+modernization/backend/storage/logs/
+modernization/backend/bootstrap/cache/
+
+# Generated migration archives and large generated exports
+modernization/scripts/*.zip
+modernization/scripts/*.xlsx
+modernization/scripts/*.pdf
+modernization/scripts/legacy-*.json
+modernization/scripts/legacy-*.csv
+modernization/scripts/legacy-*.md
+modernization/scripts/legacy-*.txt

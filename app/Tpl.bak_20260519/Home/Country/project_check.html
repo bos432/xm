@@ -1,0 +1,548 @@
+<!DOCTYPE html public/admin "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8">
+  <title><?php echo $siteConfig['site_name'];?>-审核项目</title>
+  <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <link rel="stylesheet" type="text/css" href="public/admin/lib/bootstrap/css/bootstrap.css">
+  <link rel="stylesheet" type="text/css" href="public/country/stylesheets/theme.css">
+  <link rel="stylesheet" href="public/admin/lib/font-awesome/css/font-awesome.css">
+  <script src="public/admin/lib/jquery-1.7.2.min.js" type="text/javascript"></script>
+  <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+  <!--[if lt IE 9]>
+  <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <!-- Le fav and touch icons -->
+  <link rel="shortcut icon" href="../assets/ico/favicon.ico">
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+  <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
+
+  <style>
+  form {
+    margin: 0;
+  }
+  textarea {
+    display: block;
+  }
+</style>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+  <!--[if lt IE 7 ]>
+<body class="ie ie6">
+  <![endif]-->
+  <!--[if IE 7 ]>
+<body class="ie ie7 ">
+  <![endif]-->
+  <!--[if IE 8 ]>
+<body class="ie ie8 ">
+  <![endif]-->
+  <!--[if IE 9 ]>
+<body class="ie ie9 ">
+  <![endif]-->
+  <!--[if (gt IE 9)|!(IE)]>
+  <!-->
+<body class="">
+  <!--<![endif]-->
+
+  <?php include("public/country/include/navbar.php") ?>
+  <?php include("public/country/include/left-nav.php") ?>
+  <?php if($type==0){ ?>
+  <div class="content">
+    <div class="header">
+      <h1 class="page-title">审核项目</h1>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row-fluid">
+          <div class="well">
+            <form  role="form" action="index.php?m=Country&a=check_apply" onsubmit="return checkdatas()" method="post" >
+                <input name="id" type="hidden" id="appid" value="{$id}" />
+
+                  <div class="form-group">
+                    <span for="state">审批状态：</span>
+                      <select class="form-control" style="width: 200px;" name="state_id" id="state_id">
+                        <option value="2">通过</option>
+                        <option value="3">退回修改</option>
+                        <option value="-1">不通过</option>
+                      </select>
+                  </div>
+
+                  <div class="form-group">
+                    <span for="pifu">审批批复：</span>
+                    <script id="editor" type="text/plain" name="pifu" style="width:700px;height:400px;"></script>
+                  </div>
+
+              <br/>
+              <button class="btn btn-primary" type="submit" >确定</button>
+              <a class="btn" data-dismiss="modal" aria-hidden="true" onclick="javascript:history.back(-1);">取消</a>
+          </form>
+          </div>
+        </div>
+    </div>
+
+      <?php include("public/country/include/footer.php") ?>
+    </div>
+  </div>
+  <script src="public/admin/lib/bootstrap/js/bootstrap.js"></script>
+  <script type="text/javascript">
+    var ue = UE.getEditor('editor');
+    $("[rel=tooltip]").tooltip();
+    $(function() {
+      $('.demo-cancel-click').click(function(){return false;});
+    });
+
+    //审批申请
+    function check_apply(appid){
+      $("#appid").val(appid);
+      $("#myModal1").modal('show');
+    }
+
+    function checkdatas(){
+      var Content =  ue.getContent();
+      Content = Content.trim();
+      if (Content==""||Content==null) {
+        layer.msg('批复不能为空!');
+        return  false;
+      }
+      return  true;
+    }
+
+  </script>
+  <?php }?>
+
+  <?php if($type==1){ ?>
+  <div class="content">
+    <div class="header">
+      <h1 class="page-title">审核项目</h1>
+    </div>
+
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="well">
+          <form  role="form" action="index.php?m=country&a=check_project" method="post" onsubmit="return checkdata2()" style="margin: 0 0 0 0;" >
+
+              <input name="id" type="hidden" id="appid2" value="{$id}" />
+              <div class="form-group">
+                  <span for="state">是否通过：</span>
+                  <select class="form-control" style="width: 200px;" name="state_id" id="state_id">
+                    <option value="41">通过</option>
+                    <option value="42">退回修改</option>
+                    <option value="-1">不通过</option>
+                  </select>
+              </div>
+
+              <div class="form-group">
+                <span for="pifu">审核备注：</span>
+                <script id="editor" type="text/plain" name="pifu" style="width:700px;height:400px;margin-left:70px;margin-top: -20px"></script>
+              </div>
+            <br/>
+              <button class="btn btn-primary" type="submit" >确定</button>
+              <a class="btn" data-dismiss="modal" aria-hidden="true" onclick="javascript:history.back(-1);">取消</a>
+
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <?php include("public/country/include/footer.php") ?>
+  </div>
+  </div>
+  <script src="public/admin/lib/bootstrap/js/bootstrap.js"></script>
+  <script type="text/javascript">
+    var ue = UE.getEditor('editor');
+    $("[rel=tooltip]").tooltip();
+    $(function() {
+      $('.demo-cancel-click').click(function(){return false;});
+    });
+
+    //审批申请
+    function check_apply(appid){
+      $("#appid").val(appid);
+      $("#myModal1").modal('show');
+    }
+
+    function check_apply2(appid){
+      $("#appid2").val(appid);
+      $("#myModal2").modal('show');
+    }
+
+    function checkdata(){
+
+      var experts = new Array();
+      $("input[name='experts[]']:checkbox[checked]").each(function(i){
+        experts[i] = $(this).val();
+      });
+      if (experts.length==0){
+        layer.msg("请选择专家");
+        return false;
+      }
+      return true;
+    }
+
+
+    function checkdata2(){
+      var Content =  ue.getContent();
+      Content = Content.trim();
+      if (Content==""||Content==null){
+        layer.msg("备注不能为空！");
+        return  false;
+      }
+
+      return true;
+    }
+
+
+    //审批申请
+    function check_apply3(appid){
+      $("#appid3").val(appid);
+      $("#myModal3").modal('show');
+    }
+
+    var role_id = "<?php echo $_COOKIE['role_id'];?>"
+    function setMoneydiv(){
+      var  support = $("#support").val();
+      if (support=="是" && role_id==3){
+        $("#div_money").show();
+      }else{
+        $("#div_money").hide();
+      }
+    }
+
+    if (role_id==1){
+      $("#div_money").hide();
+    }
+
+    function check_data3(){
+      var  support = $("#support").val();
+      var  support_money = $("#support_money").val();
+
+      if (support=="是" && role_id==3){
+        if (support_money<0){
+          layer.msg('请填写支持金额!');
+          return false;
+        }
+      }
+
+      var experts_pifu =$("#experts_pifu").val();
+      if (experts_pifu==""){
+        layer.msg('审核备注不能为空!');
+        return false;
+      }
+      return  true;
+    }
+  </script>
+
+  <?php }?>
+
+
+
+  <?php if($type==3){ ?>
+
+      <div class="content">
+        <div class="header">
+          <h1 class="page-title">合同资料审核</h1>
+        </div>
+
+        <div class="container-fluid">
+          <div class="row-fluid">
+            <div class="well">
+              <form  role="form" action="index.php?m=Country&a=check_hetong_file" onsubmit="return check_data1()" method="post" style="margin: 0 0 0 0;">
+
+                  <input name="id" type="hidden" id="appid1" value="{$id}" />
+                  <div class="form-group">
+                    <div class="form-group">
+                      <span for="state">审批状态：</span>
+                      <select class="form-control" style="width: 200px;" name="state_id" id="state_id6">
+                        <option value="51">通过</option>
+                        <option value="52">退回修改</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <span for="pifu">审批批复：</span>
+                      <script id="editor" type="text/plain" name="experts_pifu" style="width:700px;height:400px;margin-left:70px;margin-top: -20px"></script>
+                    </div>
+                  </div>
+                <br/>
+                  <button class="btn btn-primary" type="submit" >确定</button>
+                  <a class="btn" data-dismiss="modal" aria-hidden="true" onclick="javascript:history.back(-1);">取消</a>
+
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <?php include("public/country/include/footer.php") ?>
+      </div>
+      </div>
+      <script src="public/admin/lib/bootstrap/js/bootstrap.js"></script>
+      <script type="text/javascript">
+        var ue = UE.getEditor('editor');
+        $("[rel=tooltip]").tooltip();
+        $(function() {
+          $('.demo-cancel-click').click(function(){return false;});
+        });
+
+        function check_apply1(appid){
+          $("#appid1").val(appid);
+          $("#myModal1").modal('show');
+        }
+
+        function check_data6(){
+          var Content =  ue.getContent();
+          Content = Content.trim();
+          if (Content==""||Content==null) {
+            layer.msg('审核批复不能为空!');
+            return false;
+          }
+          return  true;
+        }
+      </script>
+
+  <?php }?>
+
+
+
+  <?php if($type==4){ ?>
+
+      <div class="content">
+        <div class="header">
+          <h1 class="page-title">实施资料审核</h1>
+        </div>
+
+        <div class="container-fluid">
+          <div class="row-fluid">
+            <div class="well">
+              <form  role="form" action="index.php?m=Country&a=check_work_file" onsubmit="return check_data6()" method="post" style="margin: 0 0 0 0;">
+
+                <input name="id" type="hidden" id="appid6" value="{$id}" />
+                <div class="form-group">
+                  <div class="form-group">
+                    <span for="state">审批状态：</span>
+                    <select class="form-control" style="width: 200px;" name="state_id" id="state_id10">
+                      <option value="1">通过</option>
+                      <option value="2">不通过</option>
+                      <option value="3">退回修改</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <span for="pifu">审批批复：</span>
+                    <script id="editor" type="text/plain" name="pifu" style="width:700px;height:400px;margin-left:70px;margin-top: -20px"></script>
+                  </div>
+                </div>
+                <br/>
+                <button class="btn btn-primary" type="submit" >确定</button>
+                <a class="btn" data-dismiss="modal" aria-hidden="true" onclick="javascript:history.back(-1);">取消</a>
+
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <?php include("public/country/include/footer.php") ?>
+      </div>
+      </div>
+      <script src="public/admin/lib/bootstrap/js/bootstrap.js"></script>
+      <script type="text/javascript">
+        var ue = UE.getEditor('editor');
+        $("[rel=tooltip]").tooltip();
+        $(function() {
+          $('.demo-cancel-click').click(function(){return false;});
+        });
+        function check_data6(){
+          var Content =  ue.getContent();
+          Content = Content.trim();
+          if (Content==""||Content==null) {
+            layer.msg('审核批复不能为空!');
+            return false;
+          }
+          return  true;
+        }
+      </script>
+
+  <?php }?>
+
+
+  <?php if($type==5){ ?>
+
+      <div class="content">
+        <div class="header">
+          <h1 class="page-title">验收资料审核</h1>
+        </div>
+
+        <div class="container-fluid">
+          <div class="row-fluid">
+            <div class="well">
+              <form  role="form" action="index.php?m=country&a=yanshou" onsubmit="return check_data6()" method="post" style="margin: 0 0 0 0;">
+
+                <input name="id" type="hidden" id="appid" value="{$id}" />
+                <div class="form-group">
+                  <div class="form-group">
+                    <span for="state">审批状态：</span>
+                    <select class="form-control" style="width: 200px;" name="state_id">
+                         <option  value="10">通过</option>
+                         <option  value="12">不通过</option>
+                         <option  value="13">退回修改</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <span for="pifu">审批批复：</span>
+                    <script id="editor" type="text/plain" name="yanshou_pifu" style="width:700px;height:400px;margin-left:70px;margin-top: -20px"></script>
+                  </div>
+                </div>
+                <br/>
+                <button class="btn btn-primary" type="submit" >确定</button>
+                <a class="btn" data-dismiss="modal" aria-hidden="true" onclick="javascript:history.back(-1);">取消</a>
+
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <?php include("public/country/include/footer.php") ?>
+      </div>
+      </div>
+      <script src="public/admin/lib/bootstrap/js/bootstrap.js"></script>
+      <script type="text/javascript">
+        var ue = UE.getEditor('editor');
+        $("[rel=tooltip]").tooltip();
+        $(function() {
+          $('.demo-cancel-click').click(function(){return false;});
+        });
+        function check_data6(){
+          var Content =  ue.getContent();
+          Content = Content.trim();
+          if (Content==""||Content==null) {
+            layer.msg('审核批复不能为空!');
+            return false;
+          }
+          return  true;
+        }
+      </script>
+
+  <?php }?>
+
+  <?php if($type==6){ ?>
+
+      <div class="content">
+        <div class="header">
+          <h1 class="page-title">项目验收审核</h1>
+        </div>
+
+        <div class="container-fluid">
+          <div class="row-fluid">
+            <div class="well">
+              <form  role="form" action="index.php?m=country&a=project_yanshou" onsubmit="return check_data6()" method="post" style="margin: 0 0 0 0;">
+
+                <input name="id" type="hidden" id="appid" value="{$id}" />
+                <div class="form-group">
+                  <div class="form-group">
+                    <span for="state">审批状态：</span>
+                    <select class="form-control" style="width: 200px;" name="state_id">
+                      <option  value="11">通过</option>
+                      <option  value="12">不通过</option>
+                      <option  value="13">退回修改</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <span for="pifu">审批批复：</span>
+                    <script id="editor" type="text/plain" name="yanshou_pifu" style="width:700px;height:400px;margin-left:70px;margin-top: -20px;"></script>
+                  </div>
+                </div>
+                <br/>
+                <button class="btn btn-primary" type="submit" >确定</button>
+                <a class="btn" data-dismiss="modal" aria-hidden="true" onclick="javascript:history.back(-1);">取消</a>
+
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <?php include("public/country/include/footer.php") ?>
+      </div>
+      </div>
+      <script src="public/admin/lib/bootstrap/js/bootstrap.js"></script>
+      <script type="text/javascript">
+        var ue = UE.getEditor('editor');
+        $("[rel=tooltip]").tooltip();
+        $(function() {
+          $('.demo-cancel-click').click(function(){return false;});
+        });
+        function check_data6(){
+          var Content =  ue.getContent();
+          Content = Content.trim();
+          if (Content==""||Content==null) {
+            layer.msg('审核批复不能为空!');
+            return false;
+          }
+          return  true;
+        }
+      </script>
+
+  <?php }?>
+
+
+  <?php if($type==7){ ?>
+
+  <div class="content">
+    <div class="header">
+      <h1 class="page-title">项目延期审核</h1>
+    </div>
+
+    <div class="container-fluid">
+      <div class="row-fluid">
+        <div class="well">
+          <form  role="form" action="index.php?m=country&a=check_delay" onsubmit="return check_data7()" method="post" style="margin: 0 0 0 0;">
+            <input name="id" type="hidden" id="appid" value="{$id}" />
+            <div class="form-group">
+              <div class="form-group">
+                <span for="state">审批状态：</span>
+                <select class="form-control" style="width: 200px;" name="state_id">
+                  <option value="1">通过</option>
+                  <option value="2">不通过</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <span for="pifu">审批批复：</span>
+                <script id="editor" type="text/plain" name="pifu" style="width:700px;height:400px;margin-left:70px;margin-top: -20px;"></script>
+              </div>
+            </div>
+            <br/>
+            <button class="btn btn-primary" type="submit" >确定</button>
+            <a class="btn" data-dismiss="modal" aria-hidden="true" onclick="javascript:history.back(-1);">取消</a>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <?php include("public/country/include/footer.php") ?>
+  </div>
+  </div>
+  <script src="public/admin/lib/bootstrap/js/bootstrap.js"></script>
+  <script type="text/javascript">
+    var ue = UE.getEditor('editor');
+    $("[rel=tooltip]").tooltip();
+    $(function() {
+      $('.demo-cancel-click').click(function(){return false;});
+    });
+    function check_data7(){
+      var Content =  ue.getContent();
+      Content = Content.trim();
+      if (Content==""||Content==null) {
+        layer.msg('审核批复不能为空!');
+        return false;
+      }
+      return  true;
+    }
+  </script>
+
+  <?php }?>
+
+</body>
+</html>

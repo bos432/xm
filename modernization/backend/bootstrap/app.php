@@ -1,0 +1,37 @@
+<?php
+
+use App\Console\Commands\ImportLegacyCoreData;
+use App\Console\Commands\ImportLegacyRecords;
+use App\Http\Middleware\EnsureActiveUser;
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Middleware\HandleCors;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
+
+return Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        api: __DIR__.'/../routes/api.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withCommands([
+        ImportLegacyCoreData::class,
+        ImportLegacyRecords::class,
+    ])
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->api(prepend: [
+            EnsureFrontendRequestsAreStateful::class,
+            HandleCors::class,
+        ]);
+
+        $middleware->alias([
+            'bindings' => SubstituteBindings::class,
+            'active' => EnsureActiveUser::class,
+        ]);
+    })
+    ->withExceptions(function (Exceptions $exceptions) {
+        // Centralized exception rendering can be added once production logging is wired.
+    })
+    ->create();

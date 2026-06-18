@@ -1,0 +1,518 @@
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8">
+    <title>{$title}</title>
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <link rel="stylesheet" type="text/css" href="public/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="public/stylesheets/theme.css">
+    <link rel="stylesheet" href="public/lib/font-awesome/css/font-awesome.css">
+    <script src="public/lib/jquery-1.7.2.min.js" type="text/javascript"></script>
+	<!--date picker-->
+	<?php include("public/include/datepicker.php") ?>
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="../assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
+  </head>
+  <!--[if lt IE 7 ]> <body class="ie ie6"> <![endif]-->
+  <!--[if IE 7 ]> <body class="ie ie7 "> <![endif]-->
+  <!--[if IE 8 ]> <body class="ie ie8 "> <![endif]-->
+  <!--[if IE 9 ]> <body class="ie ie9 "> <![endif]-->
+  <!--[if (gt IE 9)|!(IE)]><!-->
+  <body class="">
+  <!--<![endif]-->
+  <?php include("public/admin/include/navbar.php") ?>
+  <?php include("public/admin/include/left-nav.php") ?>
+
+    <div class="content">
+
+        <div class="header">
+            <h1 class="page-title">项目申报修改</h1>
+        </div>
+
+        <ul class="breadcrumb">
+            <li>项目管理<span class="divider">/</span></li>
+            <li class="active">项目申报修改</li>
+        </ul>
+
+        <div class="container-fluid">
+            <?php include("public/include/project_tip.php") ?>
+
+<div class="row-fluid">
+    <div class="block">
+        <a href="#page-stats" class="block-heading" data-toggle="collapse">新项目申报（第一步：填写基本信息）</a>
+        <div id="page-stats" class="block-body collapse in">
+        <form action="/" method="post" onsubmit="return false" class="new_project" id="form1">
+            <input type="hidden" name="id" id="id" value="{$pro_id}">
+            <input type="hidden" name="pro_kind" id="pro_kind" value="{$pro_kind}">
+
+        	<div class="well">
+            	<h3>申报信息</h3>
+
+                    <label>申报项目名称:</label>
+                    <input type="text" class="input-xlarge" name="proname" id="proname" value="{$data['proname']}" datatype="*">
+
+                    <label>项目起止时间：</label>
+                    <input type="text" id="from" name="start" readonly="readonly" value="{$data['start']}" datatype="*" />
+ 					<span>至</span>
+                    <input type="text" id="to" name="end" readonly="readonly" value="{$data['end']}" datatype="*" />
+
+                    <label>归口管理单位：</label>
+                    <select class="input-xlarge" name="prokind" id="prokind" onchange="getdept()">
+                        <option value="">--请选择--</option>
+                        <volist id="projecttype" name='projecttype'>
+                            <option data-id="{$projecttype['id']}"  <?php if($data['prokind'] == $projecttype['id']){ echo "selected"; } ?> value="{$projecttype.id}">{$projecttype.name}</option>
+                        </volist>
+                    </select>
+
+                    <div id="div_region" >
+                        <label>申报项目归属区域：</label>
+                        <select class="input-xlarge" name="region_id" id="region_id">
+                            <option value="">--请选择--</option>
+                        </select>
+                    </div>
+
+                    <label>项目所属领域：</label>
+                    <div class="form-group">
+                        <volist id="classfi" name='classfi'>
+                            <label class="checkbox-inline" style="display: inline-block;margin: 5px 5px 5px 5px">
+                                <input type="checkbox" <?php if(in_array($classfi['id'], $data['classfi'])){ echo "checked";  }?> name="classfi[]"  value="{$classfi.id}">{$classfi.name}
+                            </label>
+                        </volist>
+                    </div>
+
+                    <label>指南代码:</label>
+                    <input type="text" class="input-xlarge" name="guide_code" id="guide_code" value="{$data.guide_code}" datatype="*">
+
+                    <label>研究方向:</label>
+                    <input type="text" class="input-xlarge" name="research_direction" id="research_direction" value="{$data.research_direction}" datatype="*">
+
+                <label>合作单位:<a onclick="add_cooper()" class="btn btn-info">+添加</a></label>
+                <div id="cooperator_div">
+
+                    <?php if($data['cooperator']){ foreach ($data['cooperator'] as $kco=>$coo){ ?>
+
+                        <div id="coo_item{$kco}">
+                            <input type="text" class="input-xlarge" name="cooperator[]"  value="{$coo}" >
+                            <a href="javascript:;" onclick="del_coo_item({$kco})" style="color: red">X</a>
+                        </div>
+
+                    <?php }}else{ ?>
+                        <div>
+                            <input type="text" class="input-xlarge" name="cooperator[]"  value="" >
+                        </div>
+
+                    <?php }?>
+                </div>
+            </div>
+
+            <div class="well">
+            	<h3>项目负责人</h3>
+                <div class="myForm">
+                    <label>姓名：</label>
+                    <input type="text" value="{$info['head_name']}" class="input-xlarge" name="head_name" id="head_name"  datatype="*">
+                    <label>职称：</label>
+                    <input type="text" value="{$info.head_post}" class="input-xlarge" name="head_post" id="head_post" datatype="*">
+                    <label>固话：</label>
+                    <input type="text" value="{$info.head_fix_phone}" class="input-xlarge" id="head_fix_phone" name="head_fix_phone">
+                </div>
+
+                <div class="myForm">
+                    <label>性别：</label>
+
+                      <div class="form-group" style="height: 40px;">
+                            <div class="radio-inline" style="display: inline-block">
+                                <label for=""><input type="radio"  <?php if($info['head_sex'] == '男'){ echo "checked"; } ?> name="head_sex" value="男" >男</label>
+                            </div>
+                            <div class="radio-inline" style="display: inline-block">
+                                <label for=""><input type="radio" <?php if($info['head_sex'] == '女'){ echo "checked"; } ?> name="head_sex" value="女" >女</label>
+                            </div>
+                       </div>
+
+                    <label>工作单位：</label>
+                    <input type="text" value="{$info.head_company}" class="input-xlarge" name="head_company" id="head_company" >
+
+                    <label>手机：</label>
+                    <input type="text" value="{$info.head_phone}" class="input-xlarge" name="head_phone" id="head_phone"  datatype="*">
+
+                </div>
+
+                <div class="myForm">
+                    <label>身份证号：</label>
+                    <input type="text" value="{$info.head_idcard}" id="head_idcard" name="head_idcard" class="input-xlarge" >
+
+					<label>电子邮箱：</label>
+                    <input type="text" value="{$info.head_email}" class="input-xlarge" id="head_email" name="head_email" datatype="e">
+
+                </div>
+            </div>
+
+            <div class="well">
+            	<h3>项目联系人</h3>
+                <div class="myForm">
+                    <label>姓名：</label>
+                    <input type="text"  class="input-xlarge" name="link_name" value="{$info.link_name}" id="link_name" datatype="*"/>
+                    <label>固话：</label>
+                    <input type="text"  class="input-xlarge" name="link_fix_phone" id="link_fix_phone" value="{$info.link_fix_phone}"/>
+                </div>
+                <div class="myForm">
+                    <label>职称：</label>
+                    <input type="text"  class="input-xlarge" name="link_post" id="link_post" value="{$info.link_post}"/>
+                    <label>手机：</label>
+                    <input type="text"  class="input-xlarge" name="link_phone" id="link_phone" value="{$info.link_phone}"/>
+                </div>
+                <div class="myForm">
+                    <label>工作单位：</label>
+                    <input type="text"  class="input-xlarge" name="link_company" id="link_company" value="{$info.link_company}"/>
+                    <label>电子邮箱：</label>
+                    <input type="text"  class="input-xlarge" name="link_email" id="link_email" value="{$info.link_email}" datatype="e"/>
+                </div>
+            </div>
+
+            <div class="well">
+            	<h3>项目摘要</h3>
+                <textarea style="width:97%" rows="10" name="abstract" id="abstract"  datatype="*">{$data.abstract}</textarea>
+            </div>
+
+            <div class="well">
+                <h3>项目投入</h3>
+                <div class="myForm" style="width: 200px;">
+                    <label>总投资(万元)：</label>
+                    <input type="number" value="{$data.totalmoney}" class="input-medium" name="totalmoney" id="totalmoney"   datatype="*" />
+                </div>
+                <div class="myForm " style="width: 200px;">
+                    <label>申请(万元)：</label>
+                    <input type="number" value="{$data.apply_money}" class="input-medium" name="apply_money" id="apply_money" datatype="*" />
+                </div>
+                <div class="myForm" style="width: 200px;">
+                    <label>自筹(万元)：</label>
+                    <input type="number" value="{$data.self_raised}" class="input-medium" name="self_raised" id="self_raised" datatype="*" />
+                </div>
+                <div class="myForm" style="width: 200px;">
+                    <label>其他(万元)：</label>
+                    <input type="number" value="{$data.other_money}" class="input-medium" name="other_money"  id="other_money" datatype="*" />
+                </div>
+            </div>
+
+            <div class="well">
+                <h3>人才培养</h3>
+
+                <div>
+                    <div style="display: inline-block">
+                        <label>培养博士：</label>
+                        <input type="number" value="{$data.doctor}" class="input-xlarge" name="doctor" id="doctor"  />
+                    </div>
+                    <div style="display: inline-block;margin-left: 5px;" >
+                        <label>培养硕士：</label>
+                        <input type="number" value="{$data.graduate}" class="input-xlarge" name="graduate" id="graduate"  />
+                    </div>
+                </div>
+                <br/>
+                    <label>成果形式：</label>
+                    <div class="form-group">
+                        <volist id="achieve" name='achieve'>
+                            <label class="checkbox-inline" style="display: inline-block;margin: 5px 5px 5px 5px">
+                                <input type="checkbox" <?php if(in_array($achieve['id'], $data['achieve'])){ echo "checked";  }?> name="achieve[]"  value="{$achieve.id}">{$achieve.name}
+                            </label>
+                        </volist>
+                    </div>
+            </div>
+
+        	<div class="clear"></div>
+            <div class="btn-toolbar">
+                <button type="submit" class="btn btn-primary" value="保存申请" onclick="checkData(0)">保存</button>
+                <button type="submit" class="btn " value="保存申请" onclick="checkData(1)">下一步</button>
+                <a class="btn" href="javascript:history.back(-1)">取消</a>
+            </div>
+			<div class="error12"></div>
+		</form>
+        </div>
+    </div>
+</div>
+            <?php include("public/admin/include/footer.php") ?>
+            </div>
+    </div>
+
+    <script src="public/lib/bootstrap/js/bootstrap.js"></script>
+	<script src="public/form.js"></script>
+
+    <script type="text/javascript">
+        $("[rel=tooltip]").tooltip();
+        $(function() {
+            $('.demo-cancel-click').click(function(){return false;});
+            getdept();
+
+        });
+
+        function getdept(){
+            var projecttype = $("#prokind").val();
+            var region_id =  "{$region_id}";
+            $.ajax({
+                        type : "POST",
+                        dataType: "json",
+                        url : "/index.php?m=Unit&a=getdeptlist",
+                        data :{'parent_id':projecttype,'select_id':region_id},
+                        success : function(result) {
+                            console.log(result);
+                            $("#region_id").empty();
+                            $("#region_id").append(result.msg);
+                        },
+                        error : function(e){
+                            console.log(e.status);
+                            console.log(e.responseText);
+                        }
+            });
+        }
+
+		$(".new_project").Validform();
+
+        var myreg_email = /^([\.a-zA-Z0-9_-])+@([a-zA-Z0-9_-])+(\.[a-zA-Z0-9_-])+/;
+        var myreg_phone = /^(((13[0-9])|(14[5-9])|(15[0-3])|(15[5-9])|(166)|(17[0-8])|(18[0-9])|(19[8-9]))+\d{8})$/;
+        //身份证号验证
+        function check_idcard(value)
+        {
+            var reg=/^(\d{15}$|^\d{18}$|^\d{17}(\d|X|x))$/;
+            var re = new RegExp(reg);
+            if (re.test(value)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+		function set_region_id(){}
+        var  nn = 50;
+        function add_cooper(){
+            var cooperator_div = $("#cooperator_div");
+            var html = ' <div id="coo_item'+nn+'">\n' +
+                '<input type="text" class="input-xlarge" name="cooperator[]"  value="" > <a href="javascript:;" onclick="del_coo_item('+nn+')" style="color: red">X</a>\n' +
+                '</div>';
+            cooperator_div.append(html);
+            nn++;
+        }
+        function del_coo_item(i){
+            $("#coo_item"+i).remove();
+        }
+
+        var pro_id = 0;
+        function checkData(is_next){
+
+            if (pro_id>0&&is_next==1){
+                window.location.href = "/index.php?m=Admin&a=newproject_describe&pro_id="+pro_id;
+            }
+
+            var proname = $("#proname").val();
+            if (proname==""||proname==null){
+                layer.msg("请填写申报项目名称");
+                return false;
+            }
+
+            var from = $("#from").val();
+            if (from==""||from==null){
+                layer.msg("请填写项目开始时间");
+                return false;
+            }
+
+            var to = $("#to").val();
+            if (to==""||to==null){
+                layer.msg("请填写项目截止时间");
+                return false;
+            }
+
+            var prokind = $("#prokind").val();
+            if (prokind==""||prokind==null){
+                layer.msg("请选择归口管理单位");
+                return false;
+            }
+            var region_id = $("#region_id").val();
+            if ((region_id==""||region_id==null)){
+                layer.msg("请选择项目归属区域！");
+                return false;
+            }
+
+            var arr = new Array();
+
+            $("input[name='classfi[]']:checkbox[checked]").each(function(i){
+                arr[i] = $(this).val();
+            });
+            if (arr.length==0){
+                layer.msg("请选择项目所属领域");
+                return false;
+            }
+
+            var guide_code = $("#guide_code").val();
+            if (guide_code==""||guide_code==null){
+                layer.msg("请输入指南代码");
+                return false;
+            }
+
+            var research_direction = $("#research_direction").val();
+            if (research_direction==""||research_direction==null){
+                layer.msg("请输入研究方向");
+                return false;
+            }
+
+            var head_name = $("#head_name").val();
+            if (head_name==""||head_name==null){
+                layer.msg("请输入项目负责人姓名");
+                return false;
+            }
+
+            var head_idcard = $("#head_idcard").val();
+            if (head_idcard==""||head_idcard==null){
+                message = "请输入负责人身份证号！";
+                layer.msg(message);
+                return false;
+            }else if (!check_idcard(head_idcard)){
+                message = "请输入正确的身份证号！";
+                layer.msg(message);
+                return false;
+            }
+
+
+            var message = "";
+
+            var head_phone = $("#head_phone").val();
+            if (head_phone ==""||head_phone==null){
+                layer.msg("请输入项目负责人手机");
+                return false;
+            } else if(head_phone.length != 11){
+                message = "请输入有效的负责人手机号码！"
+                layer.msg(message);
+                return false;
+            }else if(!myreg_phone.test(head_phone)){
+                message = "请输入有效的手机号码！";
+                layer.msg(message);
+                return false;
+            }
+
+            var email = $("#head_email").val();
+            if (email!=""&&email!=""){
+                if(!myreg_email.test(email)){
+                    layer.msg("请输入正确的项目负责人邮箱地址");
+                    return false;
+                }
+            }
+
+
+            var link_name = $("#link_name").val();
+            if (link_name==""||link_name==null){
+                layer.msg("请输入项目联系人姓名");
+                return false;
+            }
+
+            var link_phone = $("#link_phone").val();
+            if (link_phone==""||link_phone==null){
+                layer.msg("请输入项目联系人手机");
+                return false;
+            } else if(link_phone.length !=11){
+                message = "请输入有效联系人手机号码！"
+                layer.msg(message);
+                return false;
+            }else if(!myreg_phone.test(link_phone)){
+                message = "请输入有效的联系人手机号码！";
+                layer.msg(message);
+                return false;
+            }
+
+
+
+            var link_email = $("#link_email").val();
+            if (link_email!=""&&link_email!=""){
+                if(!myreg_email.test(link_email)){
+                    layer.msg("请输入正确的联系人邮箱地址");
+                    return false;
+                }
+            }
+
+            var abstract = $("#abstract").val();
+            if (abstract==""||abstract==null){
+                layer.msg("请输入项目摘要");
+                return false;
+            }
+
+            var totalmoney = $("#totalmoney").val();
+
+            var apply_money = $("#apply_money").val();
+            var self_raised = $("#self_raised").val();
+            var other_money = $("#other_money").val();
+
+            if (totalmoney==""||totalmoney==null||totalmoney==0){
+                layer.msg("请输入总投资");
+                return false;
+            }
+
+            if (totalmoney>(self_raised*1+other_money*1+apply_money*1) || totalmoney*1 < (self_raised*1+other_money*1+apply_money*1)){
+                layer.msg("总投资必须要等于（申请+自筹+其他）金额");
+                return false;
+            }
+
+            var doctor = $("#doctor").val();
+            if (doctor==""||doctor==null){
+                layer.msg("请输入培养博士人数");
+                return false;
+            }
+
+            var graduate = $("#graduate").val();
+            if (graduate==""||graduate==null){
+                layer.msg("请输入培养研究生人数");
+                return false;
+            }
+
+            var achieve = new Array();
+            $("input[name='achieve[]']:checkbox[checked]").each(function(i){
+                achieve[i] = $(this).val();
+            });
+            if (achieve.length==0){
+                layer.msg("请选择成果形式");
+                return false;
+            }
+
+            $.ajax({
+                type: "POST",//方法类型
+                dataType: "json",
+                beforeSend:function () {
+                    layer.load({
+                        shade: [0.2,'#fff']
+                    });
+                },
+                url: "/index.php?m=Admin&a=edit_pro" ,
+                data: $('#form1').serialize(),
+                success: function (result) {
+                    layer.closeAll('loading');
+                    console.log(result);
+                    if (result.status == 1) {
+                        layer.msg("保存成功！");
+                        pro_id = result.data;
+                        if (pro_id*1>0){
+                            $("#id").val(pro_id);
+                        }
+                        if (pro_id>0&&is_next==1){
+                            window.location.href = "/index.php?m=admin&a=newproject_describe&pro_id="+pro_id;
+                        }
+                    };
+                },
+                error:function() {
+                    alert("异常！");
+                }
+            });
+
+        }
+    </script>
+
+  </body>
+</html>
+
+

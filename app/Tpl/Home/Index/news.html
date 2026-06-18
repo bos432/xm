@@ -1,0 +1,50 @@
+
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>通知公告-<?php echo $siteConfig['site_name'];?></title>
+    <meta name="keywords" content="<?php echo $siteConfig['keyword'];?>">
+    <meta name="description" itemprop="description" content="<?php echo $siteConfig['describe'];?>">
+<?php include "inc/cssjs.html" ?>
+</head>
+<body>
+<div class="container">
+	<?php include "inc/title.html" ?>
+    <div class="photo"><div class="photo2"></div></div>
+    <div class="row">
+    	<div class="box pull-left">
+        	<div class="box_title"><a href="#">通知公告</a></div>
+            <ul class="unstyled">
+			<volist id="li" name="li">
+            	<li style="width:600px;"><a href="index.php?m=Index&a=news_content&id={$li.id}">{$li.title}</a><span>{$li.time}</span></li>
+            </volist>	
+            </ul>
+            <div class="clear"></div>
+            <div class="pagination pull-right">
+                <ul>
+                    <li style="clear:none"><a href="index.php?m=Index&a=news&pageid={$up}">«</a></li>                                    
+                    <li style="clear:none"><a href="index.php?m=Index&a=news&pageid={$cur}">第{$cur}页,共{$totalpages}页</a></li>
+                    <li style="clear:none"><a href="index.php?m=Index&a=news&pageid={$down}">»</a></li>
+                </ul>
+            </div>
+        </div>
+        <?php include "inc/logindiv.html" ?>
+    </div>
+</div>
+<?php include "inc/footer.html" ?>
+<script>
+$(document).ready(function() {
+	//$(".title").find("ul li:eq(2)").addClass("active");
+	var i = $.cookie("photo");
+	if(i == 1 ){
+		$(".photo2").animate({height:"180px"});
+		$.cookie("photo", "2", { expires: 7 });	
+	}else {
+		$(".photo2").height("180px");
+		$.cookie("photo", "2", { expires: 7 });			
+	}
+});
+</script>
+</body>
+</html>

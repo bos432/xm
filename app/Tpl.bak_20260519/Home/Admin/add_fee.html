@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+       Remove this if you use the .htaccess -->
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="initial-scale=1.0, target-densitydpi=device-dpi" /><!-- this is for mobile (Android) Chrome -->
+	<meta name="viewport" content="initial-scale=1.0, width=device-height"><!--  mobile Safari, FireFox, Opera Mobile  -->
+
+	<link rel="stylesheet" type="text/css" href="public/lib/bootstrap/css/bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="public/stylesheets/theme.css">
+	<link rel="stylesheet" href="public/lib/font-awesome/css/font-awesome.css">
+	<script src="public/lib/jquery-1.7.2.min.js" type="text/javascript"></script>
+
+</head>
+<body>
+<div>
+	<div id="content">
+		<form  role="form"  method="post" onsubmit="return false" id="form1">
+			<div class="modal-body" >
+				<input name="pro_id" type="hidden" id="pro_id" value="{$id}" />
+
+				<div class="form-group">
+					<span for="state" style="width: 100px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;概算科目名称：</span>
+					<input  type="text" class="form-control" id="name" name="name" placeholder=""/>
+				</div>
+
+				<div class="form-group">
+					<span for="age" style="width: 100px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;申请专项经费：</span>
+					<input type="text" class="form-control"  onkeyup="value=value.replace(/^\D*(\d*(?:\.\d{0,2})?).*$/g, '$1')" onblur="getMoney()"    id="special_money" name="special_money" placeholder=""/>万元
+				</div>
+
+				<div class="form-group">
+					<span for="education" style="width: 100px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;概算自筹经费：</span>
+					<input type="text" class="form-control"  id="self_raised_money" name="self_raised_money"  onkeyup="value=value.replace(/^\D*(\d*(?:\.\d{0,2})?).*$/g, '$1')" onblur="getMoney()"  />万元
+				</div>
+
+				<div class="form-group">
+					<span for="sex" style="width: 100px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;概算合计：</span>
+					<input  type="text" class="form-control" id="total_money" name="total_money" readonly placeholder=""/>万元
+				</div>
+
+
+				<div class="form-group">
+					<span for="note" style="width: 100px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;备注：</span>
+					<textarea type="text" class="form-control" style="width: 200px;height: 100px" id="note" name="note" placeholder=""></textarea>
+				</div>
+
+				<div class="form-group">
+					<span for="sex" style="width: 100px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;经费类型：</span>
+					<div class="radio-inline" style="display: inline-block">
+						<label for="type"><input type="radio" name="type" id="type" checked value="1" >直接费用</label>
+					</div>
+					<div class="radio-inline" style="display: inline-block">
+						<label for="type"><input type="radio" name="type"  id="type" value="2" >间接经费</label>
+					</div>
+				</div>
+			</div>
+
+			<div class="modal-footer">
+				<button class="btn btn-primary" type="submit" onclick="checkData()">添加</button>
+			</div>
+		</form>
+	</div>
+</div>
+<script src="public/country/lib/bootstrap/js/bootstrap.js"></script>
+<script src="lib/layer/layer.js"></script>
+<script>
+
+	function getMoney(){
+		var num   = $("#special_money").val();
+		var price = $("#self_raised_money").val();
+		var money = num*1+price*1;
+		$("#total_money").val(money);
+	}
+
+	function checkData(){
+
+		var name = $("#name").val();
+		if (name==""||name==null){
+			layer.msg("请填写概算物资名称");
+			return false;
+		}
+
+		var special_money = $("#special_money").val();
+		if (special_money==""||special_money==null){
+			layer.msg("请填写申请专项经费");
+			return false;
+		}
+
+		var self_raised_money = $("#self_raised_money").val();
+		if (self_raised_money==""||self_raised_money==null){
+			layer.msg("请填写概算自筹经费");
+			return false;
+		}
+
+		var money = self_raised_money*1+special_money*1;
+		$("#total_money").val(money);
+		if (money<=0){
+			layer.msg("请填写经费合计不能为0");
+			return false;
+		}
+
+		$.ajax({
+			type: "POST",//方法类型
+			dataType: "json",
+			url: "/index.php?m=admin&a=add_fee" ,
+			data: $('#form1').serialize(),
+			success: function (result) {
+				console.log(result);
+				if (result.status == 1) {
+					layer.msg("添加成功！");
+					setTimeout(function (){
+						parent.closeLayer();
+					}, 1500);
+				};
+			},
+			error : function() {
+				alert("异常！");
+			}
+		});
+	}
+</script>
+</body>
+</html>

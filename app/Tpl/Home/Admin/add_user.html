@@ -1,0 +1,134 @@
+<!DOCTYPE html public/admin "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8">
+    <title><?php echo $siteConfig['site_name'];?>-添加申报单位账户</title>
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <link rel="stylesheet" type="text/css" href="public/admin/lib/bootstrap/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="public/admin/stylesheets/theme.css">
+    <link rel="stylesheet" href="public/admin/lib/font-awesome/css/font-awesome.css">
+    <script src="public/admin/lib/jquery-1.7.2.min.js" type="text/javascript"></script>  <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <!-- Le fav and touch icons -->
+    <link rel="shortcut icon" href="../assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
+  </head>
+  <!--[if lt IE 7 ]> <body class="ie ie6"> <![endif]-->
+  <!--[if IE 7 ]> <body class="ie ie7 "> <![endif]-->
+  <!--[if IE 8 ]> <body class="ie ie8 "> <![endif]-->
+  <!--[if IE 9 ]> <body class="ie ie9 "> <![endif]-->
+  <!--[if (gt IE 9)|!(IE)]><!--> 
+  <body class=""> 
+  <!--<![endif]-->
+    
+<php>include("./public/admin/include/navbar.php");</php>   <php>include("./public/admin/include/left-nav.php");</php>    
+
+    
+    <div class="content">
+        
+        <div class="header">
+            <h1 class="page-title">添加申报单位账户</h1>
+        </div>
+
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="block">
+                    <a href="#page-stats" class="block-heading" data-toggle="collapse">添加申报单位账户</a>
+                    <div id="page-stats" class="block-body collapse in">
+                    <form action="index.php?m=Admin&a=add_user" method="post">
+                        <div class="well">
+                            <div style="width: 30%">
+                                <label>单位名称(登录账号)</label>
+                                <input value="" class="span12 validate[required] text-input" type="text" name="unitname" /><span></span>
+                                <label>密码</label>
+                                <input value="" class="span12 validate[required] text-input" type="password" name="password" id="password" />
+                                <label>密码确认</label>
+                                <input value="" class="span12 validate[required,equals[password]] text-input" type="password" name="repassword" id="password" />
+                                <label>电子邮件</label>
+                                <input value="" class="span12 validate[required,custom[email]] text-input" type="text" name="linkermail" id="email" />
+
+                                <div style="display: inline">
+                                    <label>单位地址</label>
+                                    <select style="float:; width:120px;" name="unitaddr" class="span12 ">
+                                        <option></option>
+                                        <volist name="addrlist" id="voaddr">
+                                            <option value="{$voaddr.region_name}">{$voaddr.region_name}</option>
+                                        </volist>
+                                    </select>
+                                    <input style="float:; width:300px;" placeholder="地址详情" value="" class="span12  text-input" type="text" name="detailaddr" />
+                                </div>
+
+                                <label style="display: inline;width: 500px;">职工人数（人）</label>
+                                <input value="" class="span12 validate[custom[onlyNumberSp]] text-input" type="text" name="worker" />
+                                <label>邮编</label>
+                                <input value="" class="span12 validate[custom[onlyNumberSp]] text-input" type="text" name="unitpostcode" />
+                                <label>企业联系电话</label>
+                                <input value="" class="span12 validate[custom[fax]] validate[required]  text-input" type="text" name="unittel" />
+                                <label>法人代表</label>
+                                <input value="" class="span12 validate[required] text-input" type="text" name="unitlaw" />
+                                <label>联系人姓名</label>
+                                <input type="text" class="span12 validate[required] text-input" name="unitlinker">
+                                <label>联系人手机</label>
+                                <input value="" class="span12 validate[custom[phone]] validate[required] text-input" type="text" name="unitlinkermobile" />
+                                <label>注册登记类型</label>
+                                <select  class="span12 validate[required]" name="regkind">
+                                    <option></option>
+                                    <option value="私企">私企</option>
+                                    <option value="国企">国企</option>
+                                    <option value="外企">外企</option>
+                                    <option value="合资企业">合资企业</option>
+                                </select>
+                                <label>注册资本（万元）</label>
+                                <input value="" class="span12 validate[custom[number]] validate[required]  text-input" type="text" name="regmoney" />
+                                <label>总资产（万元）</label>
+                                <input value="" class="span12 validate[custom[number]] validate[required]  text-input" type="text" name="unittotalmoney" />
+                                <label>资金负债率（%）</label>
+                                <input value="" class="span12 validate[custom[number]] validate[required]  text-input" type="text" name="betmoneyrate" />
+                                <label>银行信用等级</label>
+                                <select  class="span12 validate[required]" name="bankcredit">
+                                    <option></option>
+                                    <option value="无">无</option>
+                                    <option value="A">A</option>
+                                    <option value="AA">AA</option>
+                                    <option value="AAA">AAA</option>
+                                    <option value="AAAA">AAAA</option>
+                                </select>
+                                <label>传真</label>
+                                <input value="" class="span12 validate[custom[fax]] validate[required]  text-input" type="text" name="fax" />
+                                <label>信用代码</label>
+                                <input value="" class="span12 validate[required]  text-input" type="text" name="unitcode" />
+
+                                <input name="action" value="add" type="hidden" />
+                            </div>
+                        </div>
+                        <div class="btn-toolbar">
+                            <button class="btn btn-primary"><i class="icon-save"></i>添加</button>
+                          <div class="btn-group">
+                          </div>
+                        </div>
+                    </form>
+                    </div>
+                </div>
+            </div>
+<php>include("./public/admin/include/footer.php");</php> </div></div> <script src="public/admin/lib/bootstrap/js/bootstrap.js"></script>
+    <script type="text/javascript">
+        $("[rel=tooltip]").tooltip();
+        $(function() {
+            $('.demo-cancel-click').click(function(){return false;});
+        });
+    </script>
+    
+  </body>
+</html>
+
+

@@ -1,0 +1,10 @@
+backend/vendor/
+backend/.env
+backend/storage/*.key
+frontend/node_modules/
+frontend/dist/
+frontend/dev-server.*.log
+scripts/legacy-risk-report.txt
+scripts/legacy-core-tables.txt
+scripts/legacy-import-dry-run.json
+scripts/legacy-migration-preview.json
