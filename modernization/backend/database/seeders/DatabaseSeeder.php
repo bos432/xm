@@ -3,11 +3,16 @@
 namespace Database\Seeders;
 
 use App\Models\DictionaryItem;
+use App\Models\ApplicationBatch;
+use App\Models\MailTemplate;
 use App\Models\PublicHomeItem;
 use App\Models\PublicHomeSection;
+use App\Models\RbacPermission;
+use App\Models\RbacRole;
 use App\Models\SystemSetting;
 use App\Models\Unit;
 use App\Models\User;
+use App\Support\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -15,6 +20,8 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->seedRolesAndPermissions();
+
         $adminUnit = Unit::firstOrCreate(
             ['name' => '系统管理单位'],
             ['status' => 'active']
@@ -26,15 +33,35 @@ class DatabaseSeeder extends Seeder
                 'unit_id' => $adminUnit->id,
                 'name' => '系统管理员',
                 'password' => Hash::make('ChangeMe-2026'),
-                'role' => 'admin',
+                'role' => Role::SUPER_ADMIN,
                 'is_active' => true,
             ]
         );
 
+        User::query()->where('role', 'admin')->update(['role' => Role::SUPER_ADMIN]);
+
         $settings = [
             ['key' => 'sms.provider', 'value' => '', 'group' => 'sms', 'is_secret' => false, 'description' => '短信供应商标识'],
             ['key' => 'sms.api_key', 'value' => '', 'group' => 'sms', 'is_secret' => true, 'description' => '短信接口密钥'],
-            ['key' => 'mail.from_address', 'value' => '', 'group' => 'mail', 'is_secret' => false, 'description' => '可选发件地址覆盖；SMTP 主机、账号、密码在生产 .env 配置'],
+            ['key' => 'mail.mailer', 'value' => 'log', 'group' => 'mail', 'is_secret' => false, 'description' => '邮件驱动：smtp/log/array'],
+            ['key' => 'mail.host', 'value' => '', 'group' => 'mail', 'is_secret' => false, 'description' => 'SMTP 主机'],
+            ['key' => 'mail.port', 'value' => '465', 'group' => 'mail', 'is_secret' => false, 'description' => 'SMTP 端口'],
+            ['key' => 'mail.encryption', 'value' => 'ssl', 'group' => 'mail', 'is_secret' => false, 'description' => '加密方式：ssl/tls/空'],
+            ['key' => 'mail.username', 'value' => '', 'group' => 'mail', 'is_secret' => false, 'description' => 'SMTP 用户名'],
+            ['key' => 'mail.password', 'value' => '', 'group' => 'mail', 'is_secret' => true, 'description' => 'SMTP 密码或授权码'],
+            ['key' => 'mail.from_address', 'value' => '', 'group' => 'mail', 'is_secret' => false, 'description' => '发件邮箱地址'],
+            ['key' => 'mail.from_name', 'value' => '阿拉善盟科技计划项目管理信息系统', 'group' => 'mail', 'is_secret' => false, 'description' => '发件人名称'],
+            ['key' => 'site.name', 'value' => '阿拉善盟科技计划项目管理信息系统', 'group' => 'site', 'is_secret' => false, 'description' => '系统名称'],
+            ['key' => 'site.admin_subtitle', 'value' => '科技项目管理后台', 'group' => 'site', 'is_secret' => false, 'description' => '后台副标题'],
+            ['key' => 'site.footer_text', 'value' => '阿拉善盟科技计划项目管理信息系统 版权所有', 'group' => 'site', 'is_secret' => false, 'description' => '首页版权/备案文字'],
+            ['key' => 'site.app_url_display', 'value' => 'https://nxm.zlck888.com', 'group' => 'site', 'is_secret' => false, 'description' => '后台展示用 APP_URL'],
+            ['key' => 'upload.allowed_extensions', 'value' => 'jpg,jpeg,png,pdf,doc,docx,xls,xlsx,zip,webp,svg', 'group' => 'upload', 'is_secret' => false, 'description' => '允许上传扩展名'],
+            ['key' => 'upload.max_kb', 'value' => '20480', 'group' => 'upload', 'is_secret' => false, 'description' => '通用上传大小上限 KB'],
+            ['key' => 'upload.blocked_extensions', 'value' => 'php,phtml,phar,asp,aspx,jsp,jspx,cer,asa,cdx,war,sh,bat,cmd,ps1,exe,dll,html,js', 'group' => 'upload', 'is_secret' => false, 'description' => '危险扩展名黑名单'],
+            ['key' => 'security.login_failure_threshold', 'value' => '5', 'group' => 'security', 'is_secret' => false, 'description' => '登录失败锁定阈值'],
+            ['key' => 'security.lock_minutes', 'value' => '30', 'group' => 'security', 'is_secret' => false, 'description' => '达到阈值后的锁定分钟数'],
+            ['key' => 'security.ip_whitelist_enabled', 'value' => '0', 'group' => 'security', 'is_secret' => false, 'description' => '是否启用 IP 白名单'],
+            ['key' => 'security.ip_blacklist_enabled', 'value' => '1', 'group' => 'security', 'is_secret' => false, 'description' => '是否启用 IP 黑名单'],
             ['key' => 'workflow.default_first_stage', 'value' => 'county', 'group' => 'workflow', 'is_secret' => false, 'description' => '项目提交后的第一审核角色'],
         ];
 
@@ -42,6 +69,8 @@ class DatabaseSeeder extends Seeder
             SystemSetting::firstOrCreate(['key' => $setting['key']], $setting);
         }
 
+        $this->seedApplicationBatches();
+        $this->seedMailTemplates();
         SystemSetting::firstOrCreate(
             ['key' => 'public.homepage_content'],
             [
@@ -140,6 +169,76 @@ class DatabaseSeeder extends Seeder
                     'label' => $item['label'] ?? null,
                 ],
                 $item
+            );
+        }
+    }
+
+    private function seedRolesAndPermissions(): void
+    {
+        $permissionIds = [];
+        foreach (Role::permissionsCatalog() as $permission) {
+            $model = RbacPermission::updateOrCreate(
+                ['code' => $permission['code']],
+                $permission
+            );
+            $permissionIds[$permission['code']] = $model->id;
+        }
+
+        foreach (Role::builtInRoles() as $code => $name) {
+            $role = RbacRole::updateOrCreate(
+                ['code' => $code],
+                [
+                    'name' => $name,
+                    'is_builtin' => true,
+                    'is_active' => true,
+                ]
+            );
+
+            $ids = collect(Role::builtInCapabilities($code))
+                ->map(fn (string $permission) => $permissionIds[$permission] ?? null)
+                ->filter()
+                ->values()
+                ->all();
+
+            $role->permissions()->sync($ids);
+        }
+    }
+
+    private function seedApplicationBatches(): void
+    {
+        ApplicationBatch::firstOrCreate(
+            ['code' => 'HISTORY-DEFAULT'],
+            [
+                'name' => '历史默认批次',
+                'status' => ApplicationBatch::STATUS_OPEN,
+                'starts_at' => now()->subYears(10),
+                'ends_at' => now()->addYears(10),
+                'guide' => '历史项目自动归集批次，用于兼容迁移前已存在的申报项目。',
+                'attachment_requirements' => '沿用原项目材料要求。',
+                'metadata' => ['system_default' => true],
+            ]
+        );
+    }
+
+    private function seedMailTemplates(): void
+    {
+        $templates = [
+            ['key' => 'password_reset', 'name' => '找回密码', 'subject' => '项目申报系统密码重置', 'body' => "您正在重置项目申报系统账号密码。\n\n请在 {{ expire_minutes }} 分钟内打开以下链接设置新密码：\n{{ reset_link }}\n\n如果不是本人操作，请忽略本邮件。"],
+            ['key' => 'registration_pending', 'name' => '注册待审', 'subject' => '单位注册申请已提交', 'body' => "您的单位注册申请已提交。\n单位：{{ unit_name }}\n账号：{{ username }}\n请等待管理员审核启用。"],
+            ['key' => 'registration_result', 'name' => '注册审核结果', 'subject' => '单位注册审核结果', 'body' => "您的单位注册审核结果：{{ result }}。\n{{ comment }}"],
+            ['key' => 'project_submitted', 'name' => '项目提交', 'subject' => '项目已提交', 'body' => "项目“{{ project_title }}”已提交，当前阶段：{{ stage }}。"],
+            ['key' => 'review_flow', 'name' => '审核流转', 'subject' => '项目审核流转提醒', 'body' => "项目“{{ project_title }}”已流转到 {{ stage }}，请及时处理。"],
+            ['key' => 'review_result', 'name' => '审核结果', 'subject' => '项目审核结果', 'body' => "项目“{{ project_title }}”审核结果：{{ decision }}。\n{{ comment }}"],
+            ['key' => 'acceptance_submitted', 'name' => '验收提交', 'subject' => '验收申请已提交', 'body' => "项目“{{ project_title }}”已提交验收申请，当前阶段：{{ stage }}。"],
+            ['key' => 'acceptance_review', 'name' => '验收审核', 'subject' => '验收审核流转提醒', 'body' => "项目“{{ project_title }}”验收已流转到 {{ stage }}，请及时处理。"],
+            ['key' => 'extension_result', 'name' => '延期处理', 'subject' => '延期申请处理结果', 'body' => "项目“{{ project_title }}”延期申请结果：{{ decision }}。\n{{ comment }}"],
+            ['key' => 'test_mail', 'name' => '测试邮件', 'subject' => '项目申报系统测试邮件', 'body' => "这是一封测试邮件。\n发送时间：{{ sent_at }}"],
+        ];
+
+        foreach ($templates as $template) {
+            MailTemplate::updateOrCreate(
+                ['key' => $template['key']],
+                $template + ['is_active' => true, 'is_builtin' => true]
             );
         }
     }

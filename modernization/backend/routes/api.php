@@ -1,11 +1,14 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AcceptanceController;
+use App\Http\Controllers\ApplicationBatchController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DictionaryController;
 use App\Http\Controllers\DictionaryItemController;
 use App\Http\Controllers\FileController;
 use App\Http\Controllers\MessageController;
+use App\Http\Controllers\MailCenterController;
 use App\Http\Controllers\MigrationBatchController;
 use App\Http\Controllers\MigrationReadinessController;
 use App\Http\Controllers\OperationLogController;
@@ -14,8 +17,10 @@ use App\Http\Controllers\PublicHomeAdminController;
 use App\Http\Controllers\PublicHomeController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectExportController;
+use App\Http\Controllers\RbacController;
 use App\Http\Controllers\ReviewExportController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UnitExportController;
@@ -30,6 +35,8 @@ Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])-
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
 Route::get('/public/homepage', [PublicHomeController::class, 'index']);
 Route::get('/public/homepage/downloads/{item}', [PublicHomeController::class, 'download']);
+Route::get('/public/homepage/assets/{section}/{type}', [PublicHomeController::class, 'asset']);
+Route::get('/public/application-batches/open', [ApplicationBatchController::class, 'openBatches']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('active')->group(function () {
@@ -48,6 +55,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/projects/{project}/extension', [ProjectController::class, 'requestExtension']);
     Route::post('/projects/{project}/extension/{index}/review', [ProjectController::class, 'reviewExtension']);
 
+    Route::get('/application-batches', [ApplicationBatchController::class, 'index']);
+    Route::post('/application-batches', [ApplicationBatchController::class, 'store']);
+    Route::get('/application-batches/{applicationBatch}', [ApplicationBatchController::class, 'show']);
+    Route::put('/application-batches/{applicationBatch}', [ApplicationBatchController::class, 'update']);
+    Route::post('/application-batches/{applicationBatch}/open', [ApplicationBatchController::class, 'open']);
+    Route::post('/application-batches/{applicationBatch}/close', [ApplicationBatchController::class, 'close']);
+    Route::post('/application-batches/{applicationBatch}/archive', [ApplicationBatchController::class, 'archive']);
+
+    Route::get('/acceptance', [AcceptanceController::class, 'index']);
+    Route::get('/acceptance/{acceptance}', [AcceptanceController::class, 'show']);
+    Route::post('/projects/{project}/acceptance', [AcceptanceController::class, 'store']);
+    Route::post('/acceptance/{acceptance}/submit', [AcceptanceController::class, 'submit']);
+    Route::post('/acceptance/{acceptance}/reviews', [AcceptanceController::class, 'review']);
+    Route::post('/acceptance/{acceptance}/files', [AcceptanceController::class, 'uploadFile']);
+    Route::post('/acceptance/{acceptance}/extensions', [AcceptanceController::class, 'extension']);
+
     Route::post('/projects/{project}/files', [FileController::class, 'store']);
     Route::get('/files/{file}/download', [FileController::class, 'download']);
     Route::delete('/files/{file}', [FileController::class, 'destroy']);
@@ -60,9 +83,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/settings', [SystemSettingController::class, 'index']);
     Route::get('/settings/runtime', [SystemSettingController::class, 'runtime']);
+    Route::get('/settings/groups', [SystemSettingController::class, 'groups']);
+    Route::put('/settings/groups/{group}', [SystemSettingController::class, 'updateGroup']);
+    Route::post('/settings/mail/test', [SystemSettingController::class, 'testMail']);
     Route::put('/settings/{setting}', [SystemSettingController::class, 'update']);
     Route::get('/public-home', [PublicHomeAdminController::class, 'index']);
     Route::put('/public-home/sections/{section:key}', [PublicHomeAdminController::class, 'updateSection']);
+    Route::post('/public-home/sections/{section:key}/asset', [PublicHomeAdminController::class, 'uploadAsset']);
+    Route::delete('/public-home/sections/{section:key}/asset/{type}', [PublicHomeAdminController::class, 'deleteAsset']);
     Route::post('/public-home/items', [PublicHomeAdminController::class, 'storeItem']);
     Route::put('/public-home/items/{item}', [PublicHomeAdminController::class, 'updateItem']);
     Route::delete('/public-home/items/{item}', [PublicHomeAdminController::class, 'destroyItem']);
@@ -71,6 +99,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/messages', [MessageController::class, 'index']);
     Route::post('/messages/read-all', [MessageController::class, 'markAllRead']);
     Route::post('/messages/{message}/read', [MessageController::class, 'markRead']);
+    Route::get('/mail/templates', [MailCenterController::class, 'templates']);
+    Route::post('/mail/templates', [MailCenterController::class, 'storeTemplate']);
+    Route::put('/mail/templates/{template}', [MailCenterController::class, 'updateTemplate']);
+    Route::get('/mail/logs', [MailCenterController::class, 'logs']);
+    Route::post('/mail/logs/{log}/retry', [MailCenterController::class, 'retry']);
+    Route::get('/roles', [RbacController::class, 'roles']);
+    Route::post('/roles', [RbacController::class, 'storeRole']);
+    Route::put('/roles/{role}', [RbacController::class, 'updateRole']);
+    Route::get('/permissions', [RbacController::class, 'permissions']);
+    Route::put('/roles/{role}/permissions', [RbacController::class, 'updatePermissions']);
+    Route::put('/users/{user}/roles', [RbacController::class, 'updateUserRoles']);
+    Route::get('/security/events', [SecurityController::class, 'events']);
+    Route::get('/security/blocked-identities', [SecurityController::class, 'blockedIdentities']);
+    Route::post('/security/blocked-identities', [SecurityController::class, 'storeBlockedIdentity']);
+    Route::delete('/security/blocked-identities/{id}', [SecurityController::class, 'destroyBlockedIdentity']);
+    Route::get('/security/policies', [SecurityController::class, 'policies']);
+    Route::put('/security/policies', [SecurityController::class, 'updatePolicies']);
+    Route::post('/security/locks/{lock}/release', [SecurityController::class, 'releaseLock']);
     Route::get('/dictionaries', [DictionaryController::class, 'index']);
     Route::apiResource('dictionary-items', DictionaryItemController::class)->except(['destroy']);
     Route::get('/users/export.csv', [UserExportController::class, 'csv']);

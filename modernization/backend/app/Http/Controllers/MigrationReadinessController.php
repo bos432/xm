@@ -11,7 +11,7 @@ class MigrationReadinessController extends Controller
 {
     public function show(Request $request): JsonResponse
     {
-        if (! Role::canManageSettings($request->user()->role)) {
+        if (! Role::userCan($request->user(), 'view_migration')) {
             abort(403, '无权查看迁移准备');
         }
 

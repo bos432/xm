@@ -95,7 +95,7 @@ class UnitController extends Controller
 
     private function authorizeUnitManagement(Request $request): void
     {
-        if (! in_array('manage_units', Role::capabilities($request->user()->role), true)) {
+        if (! Role::userCan($request->user(), 'manage_units')) {
             abort(403, '无权维护单位资料');
         }
     }

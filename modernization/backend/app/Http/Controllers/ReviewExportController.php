@@ -18,12 +18,12 @@ class ReviewExportController extends Controller
 
     public function tasksCsv(Request $request): StreamedResponse
     {
-        if (! in_array($request->user()->role, Role::reviewerRoles(), true)) {
+        if (! Role::userCan($request->user(), 'review_projects')) {
             abort(403, '无权导出审核任务');
         }
 
         $projects = Project::query()
-            ->where('current_reviewer_role', $request->user()->role)
+            ->where('current_reviewer_role', Role::reviewerStageFor($request->user()->role))
             ->whereIn('status', [Project::STATUS_SUBMITTED, Project::STATUS_REVIEWING])
             ->when($request->filled('project_id'), function ($query) use ($request) {
                 $query->where('id', $request->query('project_id'));
@@ -88,7 +88,7 @@ class ReviewExportController extends Controller
 
     public function resultsCsv(Request $request): StreamedResponse
     {
-        if (! in_array($request->user()->role, Role::reviewerRoles(), true)) {
+        if (! Role::userCan($request->user(), 'review_projects')) {
             abort(403, '无权导出审核结果');
         }
 
@@ -96,8 +96,8 @@ class ReviewExportController extends Controller
             ->with(['project.unit', 'project.owner', 'reviewer'])
             ->latest('reviewed_at');
 
-        if ($request->user()->role !== Role::ADMIN) {
-            $query->where('stage', $request->user()->role);
+        if (! in_array($request->user()->role, Role::adminRoles(), true)) {
+            $query->where('stage', Role::reviewerStageFor($request->user()->role));
         } elseif ($stage = $request->query('stage')) {
             $query->where('stage', $stage);
         }
@@ -150,7 +150,7 @@ class ReviewExportController extends Controller
 
         $this->auditLogger->record($request, 'review_results.exported', null, [
             'format' => 'csv',
-            'stage' => $request->user()->role === Role::ADMIN ? $request->query('stage') : $request->user()->role,
+            'stage' => in_array($request->user()->role, Role::adminRoles(), true) ? $request->query('stage') : Role::reviewerStageFor($request->user()->role),
             'project_id' => $request->query('project_id'),
             'decision' => $request->query('decision'),
             'score_min' => $request->query('score_min'),

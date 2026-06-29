@@ -11,6 +11,41 @@
     <el-card shadow="never">
       <template #header><strong>基础区域</strong></template>
       <el-tabs v-model="activeSection">
+        <el-tab-pane label="品牌素材" name="brand">
+          <el-alert
+            v-if="!session.can('manage_home_assets')"
+            title="只有超级管理员可以上传或删除首页 logo、banner。"
+            type="info"
+            show-icon
+            :closable="false"
+          />
+          <div class="asset-grid">
+            <div class="asset-box">
+              <strong>首页 Logo</strong>
+              <img v-if="assetFor('nav', 'logo')" :src="`/api/public/homepage/assets/nav/logo?t=${assetVersion}`" alt="首页 Logo" />
+              <span v-else class="muted">未上传，前台显示文字徽标</span>
+              <el-input v-model="assetForms.logo_alt" placeholder="Logo 替代文本" :disabled="!session.can('manage_home_assets')" />
+              <div class="table-action-row">
+                <el-upload :show-file-list="false" :disabled="!session.can('manage_home_assets')" :http-request="(options) => uploadAsset('nav', 'logo', options)">
+                  <el-button :icon="Upload" :disabled="!session.can('manage_home_assets')">替换 Logo</el-button>
+                </el-upload>
+                <el-button :icon="Delete" type="danger" :disabled="!assetFor('nav', 'logo') || !session.can('manage_home_assets')" @click="deleteAsset('nav', 'logo')">删除</el-button>
+              </div>
+            </div>
+            <div class="asset-box">
+              <strong>首页 Banner</strong>
+              <img v-if="assetFor('hero', 'banner')" :src="`/api/public/homepage/assets/hero/banner?t=${assetVersion}`" alt="首页 Banner" />
+              <span v-else class="muted">未上传，前台显示蓝色政务背景</span>
+              <el-input v-model="assetForms.banner_alt" placeholder="Banner 替代文本" :disabled="!session.can('manage_home_assets')" />
+              <div class="table-action-row">
+                <el-upload :show-file-list="false" :disabled="!session.can('manage_home_assets')" :http-request="(options) => uploadAsset('hero', 'banner', options)">
+                  <el-button :icon="Upload" :disabled="!session.can('manage_home_assets')">替换 Banner</el-button>
+                </el-upload>
+                <el-button :icon="Delete" type="danger" :disabled="!assetFor('hero', 'banner') || !session.can('manage_home_assets')" @click="deleteAsset('hero', 'banner')">删除</el-button>
+              </div>
+            </div>
+          </div>
+        </el-tab-pane>
         <el-tab-pane label="导航" name="nav">
           <el-form :model="sectionForms.nav" label-position="top" class="home-manager-grid">
             <el-form-item label="系统名称">
@@ -186,7 +221,9 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Edit, Plus, Refresh, Upload } from '@element-plus/icons-vue'
 import { api } from '../api.js'
+import { useSessionStore } from '../store.js'
 
+const session = useSessionStore()
 const loading = ref(false)
 const savingSection = ref(false)
 const savingItem = ref(false)
@@ -195,6 +232,8 @@ const activeItemSection = ref('notice')
 const sections = ref([])
 const items = ref([])
 const itemEditorVisible = ref(false)
+const assetVersion = ref(Date.now())
+const assetForms = reactive({ logo_alt: '', banner_alt: '' })
 
 const itemTabs = [
   { name: 'notice', label: '通知公告' },
@@ -287,6 +326,13 @@ function fillSectionForms() {
     body: footer.body || '',
     is_active: footer.is_active !== false
   })
+
+  assetForms.logo_alt = sectionByKey('nav').metadata?.assets?.logo?.alt || ''
+  assetForms.banner_alt = sectionByKey('hero').metadata?.assets?.banner?.alt || ''
+}
+
+function assetFor(sectionKey, type) {
+  return sectionByKey(sectionKey).metadata?.assets?.[type] || null
 }
 
 async function saveSection(key) {
@@ -382,6 +428,31 @@ async function uploadFile(row, options) {
     options.onError?.(error)
     ElMessage.error(error.message || '附件上传失败')
   }
+}
+
+async function uploadAsset(sectionKey, type, options) {
+  const data = new FormData()
+  data.append('type', type)
+  data.append('file', options.file)
+  data.append('alt', type === 'logo' ? assetForms.logo_alt : assetForms.banner_alt)
+  try {
+    await api(`/public-home/sections/${sectionKey}/asset`, { method: 'POST', body: data })
+    ElMessage.success('品牌素材已上传')
+    options.onSuccess?.()
+    assetVersion.value = Date.now()
+    await loadContent()
+  } catch (error) {
+    options.onError?.(error)
+    ElMessage.error(error.message || '素材上传失败')
+  }
+}
+
+async function deleteAsset(sectionKey, type) {
+  await ElMessageBox.confirm('删除后前台将回到兜底样式，确认删除？', '删除素材', { type: 'warning' })
+  await api(`/public-home/sections/${sectionKey}/asset/${type}`, { method: 'DELETE' })
+  ElMessage.success('品牌素材已删除')
+  assetVersion.value = Date.now()
+  await loadContent()
 }
 
 onMounted(loadContent)

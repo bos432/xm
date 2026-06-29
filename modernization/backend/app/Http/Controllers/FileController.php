@@ -111,7 +111,7 @@ class FileController extends Controller
     {
         $user = $request->user();
 
-        if (! in_array('view_projects', Role::capabilities($user->role), true)) {
+        if (! Role::userCan($user, 'view_projects')) {
             abort(403, '无权访问项目文件');
         }
 

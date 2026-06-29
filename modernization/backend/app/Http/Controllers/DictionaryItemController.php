@@ -72,7 +72,7 @@ class DictionaryItemController extends Controller
 
     private function authorizeDictionaryManagement(Request $request): void
     {
-        if (! Role::canManageSettings($request->user()->role)) {
+        if (! Role::userCan($request->user(), 'manage_dictionaries')) {
             abort(403, '无权维护数据字典');
         }
     }

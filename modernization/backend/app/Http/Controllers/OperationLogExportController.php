@@ -17,7 +17,7 @@ class OperationLogExportController extends Controller
 
     public function csv(Request $request): StreamedResponse
     {
-        if (! Role::canManageSettings($request->user()->role)) {
+        if (! Role::userCan($request->user(), 'view_operation_logs')) {
             abort(403, '无权导出操作日志');
         }
 

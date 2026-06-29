@@ -55,10 +55,10 @@
       </div>
       <el-table :data="summary.security.recent_security_events || []" border size="small">
         <el-table-column label="事件" width="130">
-          <template #default="{ row }">{{ securityEventAction(row.action) }}</template>
+          <template #default="{ row }">{{ securityEventAction(row.type || row.action) }}</template>
         </el-table-column>
         <el-table-column label="账号" min-width="150">
-          <template #default="{ row }">{{ row.user?.username || row.payload?.username || '-' }}</template>
+          <template #default="{ row }">{{ row.user?.username || row.username || row.payload?.username || '-' }}</template>
         </el-table-column>
         <el-table-column label="原因" width="150">
           <template #default="{ row }">{{ failedLoginReason(row.payload?.reason) }}</template>
@@ -155,6 +155,15 @@ const metrics = computed(() => {
     })
   }
 
+  if (summary.value?.batches) {
+    base.push({
+      label: '开放批次',
+      value: summary.value.batches.open ?? 0,
+      note: summary.value.batches.current?.name || '暂无开放批次',
+      to: '/application-batches'
+    })
+  }
+
   return base
 })
 
@@ -175,7 +184,11 @@ const failedLoginReasons = {
 }
 const securityEventActions = {
   'auth.login_failed': '登录失败',
+  'auth.login': '登录成功',
   'auth.captcha_failed': '验证码失败',
+  'security.login_blocked': '登录拦截',
+  'security.ip_blacklisted': '黑名单拦截',
+  'security.ip_not_whitelisted': '白名单拦截',
   'user.tokens_revoked': '账号会话撤销',
   'unit.tokens_revoked': '单位会话撤销',
   'project_file.invalid_disk': '附件磁盘异常',
@@ -234,11 +247,12 @@ function goMetric(item) {
 function openRelatedLogs(row) {
   const params = new URLSearchParams()
   if (row.action) params.set('action', row.action)
+  if (row.type && !row.action) params.set('keyword', row.type)
   if (row.target_type) params.set('target_type', row.target_type)
   if (row.target_id) params.set('target_id', row.target_id)
   if (!row.target_id && row.ip_address) params.set('ip_address', row.ip_address)
-  const keyword = row.user?.username || row.payload?.username
-  if (!row.target_id && keyword) params.set('keyword', keyword)
+  const keyword = row.user?.username || row.username || row.payload?.username
+  if (!row.target_id && keyword && !params.has('keyword')) params.set('keyword', keyword)
   router.push(`/operation-logs?${params.toString()}`)
 }
 

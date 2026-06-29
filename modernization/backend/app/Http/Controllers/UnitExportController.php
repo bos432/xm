@@ -17,7 +17,7 @@ class UnitExportController extends Controller
 
     public function csv(Request $request): StreamedResponse
     {
-        if (! in_array('manage_units', Role::capabilities($request->user()->role), true)) {
+        if (! Role::userCan($request->user(), 'manage_units')) {
             abort(403, '无权导出单位资料');
         }
 

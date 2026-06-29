@@ -2,23 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SystemSetting;
 use App\Models\Unit;
 use App\Models\User;
 use App\Support\AuditLogger;
+use App\Support\MailCenter;
 use App\Support\Role;
+use App\Support\SecurityService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly MailCenter $mailCenter,
+        private readonly SecurityService $securityService,
+    )
     {
     }
 
@@ -45,11 +49,14 @@ class AuthController extends Controller
             'captcha_answer' => ['required', 'integer'],
         ]);
 
+        $this->securityService->assertLoginAllowed($request, $data['username']);
+
         if (! $this->captchaIsValid($data['captcha_id'], (int) $data['captcha_answer'])) {
             $this->auditLogger->record($request, 'auth.captcha_failed', null, [
                 'username' => $data['username'],
                 'reason' => 'invalid_captcha',
             ]);
+            $this->securityService->recordFailure($request, $data['username'], 'invalid_captcha');
 
             return response()->json(['message' => '验证码错误'], 422);
         }
@@ -85,6 +92,7 @@ class AuthController extends Controller
             'username' => $user->username,
             'role' => $user->role,
         ]);
+        $this->securityService->recordSuccess($request, $user);
 
         return response()->json([
             'token' => $user->createToken('web')->plainTextToken,
@@ -152,6 +160,10 @@ class AuthController extends Controller
             'username' => $user->username,
             'registration_status' => 'pending',
         ]);
+        $this->mailCenter->queueTemplate('registration_pending', $user->email, [
+            'unit_name' => $unit->name,
+            'username' => $user->username,
+        ], $user, $user->name);
 
         return response()->json([
             'message' => '注册申请已提交，请等待管理员审核启用。',
@@ -194,16 +206,10 @@ class AuthController extends Controller
                 'token' => $token,
             ]));
 
-            Mail::raw(
-                "您正在重置项目申报系统账号密码。\n\n请在 60 分钟内打开以下链接设置新密码：\n{$link}\n\n如果不是本人操作，请忽略本邮件。",
-                function ($message) use ($data) {
-                    $message->to($data['email'])->subject('项目申报系统密码重置');
-
-                    if ($fromAddress = $this->configuredMailFromAddress()) {
-                        $message->from($fromAddress, config('mail.from.name'));
-                    }
-                }
-            );
+            $this->mailCenter->queueTemplate('password_reset', $data['email'], [
+                'reset_link' => $link,
+                'expire_minutes' => (string) config('auth.passwords.users.expire', 60),
+            ], $user, $user->name);
 
             $this->auditLogger->record($request, 'auth.password_reset_requested', $user, [
                 'email' => $data['email'],
@@ -314,7 +320,7 @@ class AuthController extends Controller
             'last_login_at' => $user->last_login_at,
             'last_login_ip' => $user->last_login_ip,
             'unit' => $user->unit,
-            ...Role::profile($user->role),
+            ...Role::profile($user),
         ];
     }
 
@@ -325,6 +331,7 @@ class AuthController extends Controller
             'reason' => $reason,
             'role' => $user?->role,
         ]);
+        $this->securityService->recordFailure($request, $username, $reason, $user);
     }
 
     private function captchaIsValid(string $id, int $answer): bool
@@ -333,21 +340,6 @@ class AuthController extends Controller
         $expected = Cache::pull($key);
 
         return $expected !== null && (int) $expected === $answer;
-    }
-
-    private function configuredMailFromAddress(): ?string
-    {
-        $address = trim((string) SystemSetting::query()
-            ->where('key', 'mail.from_address')
-            ->value('value'));
-
-        if ($address !== '' && filter_var($address, FILTER_VALIDATE_EMAIL)) {
-            return $address;
-        }
-
-        $configured = trim((string) config('mail.from.address'));
-
-        return filter_var($configured, FILTER_VALIDATE_EMAIL) ? $configured : null;
     }
 
     private function captchaCacheKey(string $id): string

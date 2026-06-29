@@ -22,6 +22,7 @@ class Project extends Model
         'legacy_id',
         'unit_id',
         'owner_id',
+        'application_batch_id',
         'title',
         'category',
         'project_type',
@@ -52,6 +53,11 @@ class Project extends Model
         return $this->belongsTo(User::class, 'owner_id');
     }
 
+    public function applicationBatch()
+    {
+        return $this->belongsTo(ApplicationBatch::class);
+    }
+
     public function files()
     {
         return $this->hasMany(ProjectFile::class);
@@ -62,12 +68,24 @@ class Project extends Model
         return $this->hasMany(ProjectReview::class);
     }
 
+    public function acceptanceApplications()
+    {
+        return $this->hasMany(AcceptanceApplication::class);
+    }
+
     public function pendingExtensionRequestsCount(): int
     {
         $requests = $this->metadata['extension_requests'] ?? [];
 
-        return collect($requests)
+        $legacyCount = collect($requests)
             ->filter(fn (array $request) => ($request['status'] ?? 'pending') === 'pending')
             ->count();
+
+        $acceptanceCount = AcceptanceExtension::query()
+            ->where('project_id', $this->id)
+            ->where('status', 'pending')
+            ->count();
+
+        return $legacyCount + $acceptanceCount;
     }
 }

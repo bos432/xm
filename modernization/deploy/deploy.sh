@@ -65,9 +65,9 @@ git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$SOURCE_DIR"
 
 log "Building frontend"
 cd "$SOURCE_DIR/modernization/frontend"
-if ! "$NPM_BIN" ci; then
-  log "npm ci failed, falling back to npm install for platform optional dependencies"
-  "$NPM_BIN" install
+if ! "$NPM_BIN" ci --include=optional --no-audit --no-fund; then
+  log "WARNING: npm ci failed, falling back to npm install for platform optional dependencies"
+  "$NPM_BIN" install --include=optional --no-audit --no-fund
 fi
 "$NPM_BIN" run build
 
@@ -128,6 +128,17 @@ chown -R "$WEB_USER" "$RELEASE_DIR" "$SHARED_DIR" || true
 log "Reloading nginx if available"
 if command -v nginx >/dev/null 2>&1; then
   nginx -t && /etc/init.d/nginx reload || fail "nginx reload failed"
+fi
+
+APP_URL="$(grep -E '^APP_URL=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"')"
+APP_URL="${APP_URL:-https://nxm.zlck888.com}"
+log "Running deployment health checks for $APP_URL"
+curl -fsSI "$APP_URL/" >/dev/null || fail "Homepage health check failed"
+curl -fsS "$APP_URL/api/auth/captcha" >/dev/null || fail "Captcha API health check failed"
+curl -fsS "$APP_URL/api/public/homepage" >/dev/null || fail "Public homepage API health check failed"
+"$PHP_BIN" "$BACKEND_DIR/artisan" config:show queue.default >/dev/null 2>&1 || log "WARNING: queue config health check skipped"
+if [ "$( "$PHP_BIN" "$BACKEND_DIR/artisan" tinker --execute='echo DB::table("failed_jobs")->count();' 2>/dev/null || echo 0 )" != "0" ]; then
+  log "WARNING: failed queue jobs exist; check the mail/queue worker"
 fi
 
 log "Deployment complete: $RELEASE_ID"

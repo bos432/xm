@@ -4,173 +4,125 @@
       <div>
         <span class="eyebrow">System Settings</span>
         <h2>系统配置</h2>
-        <p class="muted">业务参数在此维护，运行时密钥和 SMTP 连接信息由生产环境配置文件托管。</p>
+        <p class="muted">仅超级管理员可维护运行时业务配置；数据库、APP_KEY、队列驱动等启动级配置仍保留在 .env。</p>
       </div>
-      <el-button :icon="Refresh" :loading="loading || runtimeLoading" @click="loadAll">刷新</el-button>
+      <el-button :icon="Refresh" :loading="loading" @click="loadGroups">刷新</el-button>
     </div>
 
     <div class="settings-overview-grid">
       <el-card shadow="never" class="settings-card">
+        <template #header>队列状态</template>
+        <dl class="settings-runtime-list">
+          <div><dt>队列驱动</dt><dd>{{ runtime.queue_driver || '-' }}</dd></div>
+          <div><dt>待处理任务</dt><dd>{{ runtime.pending_jobs ?? 0 }}</dd></div>
+          <div><dt>失败任务</dt><dd>{{ runtime.failed_jobs ?? 0 }}</dd></div>
+        </dl>
+      </el-card>
+      <el-card shadow="never" class="settings-card">
         <template #header>首页内容</template>
-        <p>公开首页已改为独立内容模型维护，导航、横幅、公告、资料下载和服务事项请进入首页管理。</p>
+        <p>导航、公告、下载、服务事项和 logo/banner 请进入首页管理维护。</p>
         <el-button type="primary" plain @click="router.push('/public-home')">进入首页管理</el-button>
       </el-card>
-
       <el-card shadow="never" class="settings-card">
-        <template #header>邮件发送</template>
-        <dl class="settings-runtime-list">
-          <div>
-            <dt>发信驱动</dt>
-            <dd><el-tag :type="mail.is_smtp ? 'success' : 'warning'">{{ mail.mailer || 'log' }}</el-tag></dd>
-          </div>
-          <div>
-            <dt>SMTP 主机</dt>
-            <dd>{{ mail.host || '未配置' }}<span v-if="mail.port">:{{ mail.port }}</span></dd>
-          </div>
-          <div>
-            <dt>SMTP 账号</dt>
-            <dd>{{ mail.username || '未配置' }}</dd>
-          </div>
-          <div>
-            <dt>SMTP 密码</dt>
-            <dd>{{ mail.password_configured ? '已配置' : '未配置' }}</dd>
-          </div>
-          <div>
-            <dt>发件地址</dt>
-            <dd>{{ mail.from_address || '未配置' }} · {{ sourceLabel(mail.from_source) }}</dd>
-          </div>
-        </dl>
-        <p class="muted">SMTP 主机、端口、账号、密码在 <code>{{ runtime?.paths?.env || '/www/wwwroot/nxm.zlck888.com/shared/.env' }}</code> 配置。</p>
-      </el-card>
-
-      <el-card shadow="never" class="settings-card">
-        <template #header>安全说明</template>
-        <p>敏感配置仅显示脱敏值；留空保存敏感项时保留原值。生产环境修改 .env 后需要重新刷新 Laravel 配置缓存。</p>
-        <el-tag type="info">APP_URL：{{ mail.app_url || '-' }}</el-tag>
+        <template #header>测试邮件</template>
+        <el-input v-model="testMailTo" placeholder="收件邮箱" />
+        <el-button type="primary" :loading="testingMail" @click="sendTestMail">发送测试邮件</el-button>
       </el-card>
     </div>
 
-    <el-alert title="旧 public.homepage_content 仅作为兼容兜底，不再作为主要编辑入口。" type="info" show-icon :closable="false" />
-
-    <el-card shadow="never">
-      <template #header>业务配置</template>
-      <el-table :data="visibleSettings" border v-loading="loading">
-        <el-table-column prop="group" label="分组" width="120" />
-        <el-table-column prop="key" label="配置键" width="220" />
-        <el-table-column label="配置值" min-width="220">
-          <template #default="{ row }">
-            <span class="settings-value">{{ row.value || '-' }}</span>
+    <el-tabs v-model="activeGroup">
+      <el-tab-pane v-for="group in groups" :key="group.key" :label="group.title" :name="group.key">
+        <el-card shadow="never">
+          <template #header>
+            <div>
+              <strong>{{ group.title }}</strong>
+              <p class="muted">{{ group.description }}</p>
+            </div>
           </template>
-        </el-table-column>
-        <el-table-column prop="description" label="说明" min-width="280" />
-        <el-table-column prop="is_secret" label="敏感" width="100">
-          <template #default="{ row }"><el-tag :type="row.is_secret ? 'danger' : 'info'">{{ row.is_secret ? '是' : '否' }}</el-tag></template>
-        </el-table-column>
-        <el-table-column label="操作" width="88" align="center">
-          <template #default="{ row }">
-            <el-tooltip content="编辑配置" placement="top">
-              <el-button :icon="Edit" circle size="small" @click="openEditor(row)" />
-            </el-tooltip>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
-
-    <el-dialog v-model="editorVisible" title="编辑系统配置" width="520px">
-      <el-form :model="form" label-position="top">
-        <el-form-item label="配置键">
-          <el-input v-model="form.key" disabled />
-        </el-form-item>
-        <el-form-item label="配置值">
-          <el-input v-if="form.is_secret" v-model="form.value" type="password" show-password />
-          <el-input v-else v-model="form.value" type="textarea" :rows="4" />
-          <div v-if="form.is_secret" class="form-tip">留空保存将保留原敏感值。</div>
-        </el-form-item>
-        <el-form-item label="说明">
-          <el-input v-model="form.description" type="textarea" :rows="3" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="editorVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="saveSetting">保存</el-button>
-      </template>
-    </el-dialog>
+          <el-form label-position="top" class="home-manager-grid">
+            <el-form-item v-for="field in group.fields" :key="field.key" :label="field.label" :class="{ 'wide-field': field.type === 'textarea' }">
+              <el-switch v-if="field.type === 'boolean'" v-model="forms[group.key][field.key]" />
+              <el-select v-else-if="field.type === 'select'" v-model="forms[group.key][field.key]" clearable>
+                <el-option v-for="option in field.options || []" :key="String(option)" :label="option || '空'" :value="option" />
+              </el-select>
+              <el-input-number v-else-if="field.type === 'number'" v-model="forms[group.key][field.key]" :min="0" />
+              <el-input v-else-if="field.type === 'password'" v-model="forms[group.key][field.key]" type="password" show-password :placeholder="field.configured ? field.value + '（留空保留原值）' : ''" />
+              <el-input v-else-if="field.type === 'textarea'" v-model="forms[group.key][field.key]" type="textarea" :rows="4" />
+              <el-input v-else v-model="forms[group.key][field.key]" />
+            </el-form-item>
+          </el-form>
+          <el-button type="primary" :loading="savingGroup === group.key" @click="saveGroup(group)">保存 {{ group.title }}</el-button>
+        </el-card>
+      </el-tab-pane>
+    </el-tabs>
   </section>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Edit, Refresh } from '@element-plus/icons-vue'
+import { Refresh } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api.js'
 
 const router = useRouter()
 const loading = ref(false)
-const runtimeLoading = ref(false)
-const saving = ref(false)
-const settings = ref([])
-const runtime = ref(null)
-const editorVisible = ref(false)
-const form = reactive({ id: null, key: '', value: '', description: '', is_secret: false })
-const visibleSettings = computed(() => settings.value.filter((item) => item.key !== 'public.homepage_content'))
-const mail = computed(() => runtime.value?.mail || {})
+const testingMail = ref(false)
+const groups = ref([])
+const activeGroup = ref('')
+const runtime = ref({})
+const forms = reactive({})
+const savingGroup = ref('')
+const testMailTo = ref('')
 
-async function loadSettings() {
+function fieldInitialValue(field) {
+  if (field.type === 'boolean') return ['1', 'true', true].includes(field.value)
+  if (field.type === 'number') return Number(field.value || field.default || 0)
+  if (field.type === 'password') return ''
+  return field.value ?? field.default ?? ''
+}
+
+async function loadGroups() {
   loading.value = true
   try {
-    settings.value = await api('/settings')
+    const result = await api('/settings/groups')
+    groups.value = result.groups || []
+    runtime.value = result.runtime || {}
+    groups.value.forEach((group) => {
+      forms[group.key] = {}
+      group.fields.forEach((field) => {
+        forms[group.key][field.key] = fieldInitialValue(field)
+      })
+    })
+    activeGroup.value = activeGroup.value || groups.value[0]?.key || ''
   } finally {
     loading.value = false
   }
 }
 
-async function loadRuntime() {
-  runtimeLoading.value = true
+async function saveGroup(group) {
+  savingGroup.value = group.key
   try {
-    runtime.value = await api('/settings/runtime')
-  } catch {
-    runtime.value = null
-  } finally {
-    runtimeLoading.value = false
-  }
-}
-
-async function loadAll() {
-  await Promise.all([loadSettings(), loadRuntime()])
-}
-
-function sourceLabel(source) {
-  if (source === 'system_setting') return '系统配置覆盖'
-  if (source === 'env') return '.env'
-  return '未识别'
-}
-
-function openEditor(row) {
-  Object.assign(form, {
-    id: row.id,
-    key: row.key,
-    value: row.is_secret ? '' : row.value || '',
-    description: row.description || '',
-    is_secret: Boolean(row.is_secret)
-  })
-  editorVisible.value = true
-}
-
-async function saveSetting() {
-  saving.value = true
-  try {
-    await api(`/settings/${form.id}`, {
+    await api(`/settings/groups/${group.key}`, {
       method: 'PUT',
-      body: JSON.stringify({ value: form.value, description: form.description })
+      body: JSON.stringify({ values: forms[group.key] })
     })
     ElMessage.success('配置已保存')
-    editorVisible.value = false
-    await loadSettings()
+    await loadGroups()
   } finally {
-    saving.value = false
+    savingGroup.value = ''
   }
 }
 
-onMounted(loadAll)
+async function sendTestMail() {
+  testingMail.value = true
+  try {
+    await api('/settings/mail/test', { method: 'POST', body: JSON.stringify({ to: testMailTo.value }) })
+    ElMessage.success('测试邮件已加入发送队列')
+  } finally {
+    testingMail.value = false
+  }
+}
+
+onMounted(loadGroups)
 </script>

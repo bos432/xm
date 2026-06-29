@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProjectRequest;
+use App\Models\ApplicationBatch;
 use App\Models\Message;
 use App\Models\Project;
 use App\Models\User;
@@ -20,11 +21,11 @@ class ProjectController extends Controller
 
     public function index(Request $request)
     {
-        if (! in_array('view_projects', Role::capabilities($request->user()->role), true)) {
+        if (! Role::userCan($request->user(), 'view_projects')) {
             abort(403, '无权访问项目');
         }
 
-        $query = Project::query()->with(['unit', 'owner']);
+        $query = Project::query()->with(['unit', 'owner', 'applicationBatch']);
 
         if ($request->user()->role === Role::UNIT) {
             $query->where('unit_id', $request->user()->unit_id);
@@ -40,6 +41,10 @@ class ProjectController extends Controller
 
         if ($projectType = $request->query('project_type')) {
             $query->where('project_type', $projectType);
+        }
+
+        if ($batchId = $request->query('application_batch_id')) {
+            $query->where('application_batch_id', $batchId);
         }
 
         if ($request->boolean('pending_extension')) {
@@ -83,7 +88,12 @@ class ProjectController extends Controller
         $this->authorizeUnitApplicant($request);
 
         $user = $request->user();
-        $project = Project::create($request->validated() + [
+        $data = $request->validated();
+        $batch = $this->resolveOpenBatch($data['application_batch_id'] ?? null);
+        $this->ensureBatchAllowsProject($batch, $data);
+        $data['application_batch_id'] = $batch->id;
+
+        $project = Project::create($data + [
             'unit_id' => $user->unit_id,
             'owner_id' => $user->id,
             'status' => Project::STATUS_DRAFT,
@@ -100,6 +110,7 @@ class ProjectController extends Controller
 
         return $project->load([
             'unit', 'owner',
+            'applicationBatch',
             'files' => fn ($q) => $q->latest(),
             'reviews' => fn ($q) => $q->with('reviewer')->latest('reviewed_at'),
         ]);
@@ -113,11 +124,19 @@ class ProjectController extends Controller
             return response()->json(['message' => '当前状态不允许修改'], 422);
         }
 
-        $project->update($request->validated());
+        $data = $request->validated();
+        if (array_key_exists('application_batch_id', $data) && $data['application_batch_id']) {
+            $batch = $this->resolveOpenBatch($data['application_batch_id']);
+            $this->ensureBatchAllowsProject($batch, $data + $project->only(['category', 'project_type']));
+        } elseif (array_key_exists('application_batch_id', $data)) {
+            unset($data['application_batch_id']);
+        }
+
+        $project->update($data);
 
         $this->auditLogger->record($request, 'project.updated', $project);
 
-        return $project->refresh()->load(['unit', 'owner']);
+        return $project->refresh()->load(['unit', 'owner', 'applicationBatch']);
     }
 
     public function destroy(Request $request, Project $project)
@@ -173,6 +192,12 @@ class ProjectController extends Controller
         if (! in_array($project->status, [Project::STATUS_DRAFT, Project::STATUS_RETURNED], true)) {
             return response()->json(['message' => '当前状态不允许提交'], 422);
         }
+
+        $batch = $project->applicationBatch ?: $this->resolveOpenBatch($project->application_batch_id);
+        if (! $batch->isOpenNow()) {
+            return response()->json(['message' => '申报批次未开放，不能提交'], 422);
+        }
+        $this->ensureBatchAllowsProject($batch, $project->only(['category', 'project_type']));
 
         $project->update([
             'status' => Project::STATUS_SUBMITTED,
@@ -344,7 +369,12 @@ class ProjectController extends Controller
     private function notifyRole(Project $project, string $role, string $title, string $body): void
     {
         User::query()
-            ->where('role', $role)
+            ->where(function ($query) use ($role): void {
+                $query->where('role', $role);
+                if ($role === Role::ADMIN) {
+                    $query->orWhere('role', Role::SUPER_ADMIN);
+                }
+            })
             ->where('is_active', true)
             ->each(function (User $user) use ($project, $title, $body): void {
                 Message::create([
@@ -359,7 +389,7 @@ class ProjectController extends Controller
 
     private function authorizeAdminProjectAction(Request $request): void
     {
-        if ($request->user()->role !== Role::ADMIN) {
+        if (! in_array($request->user()->role, Role::adminRoles(), true)) {
             abort(403, '只有管理员可以处理项目验收');
         }
     }
@@ -368,7 +398,7 @@ class ProjectController extends Controller
     {
         $user = $request->user();
 
-        if (! in_array('view_projects', Role::capabilities($user->role), true)) {
+        if (! Role::userCan($user, 'view_projects')) {
             abort(403, '无权访问项目');
         }
 
@@ -393,6 +423,48 @@ class ProjectController extends Controller
 
         if ($user->loadMissing('unit')->unit?->status !== 'active') {
             abort(403, '单位已停用，无法维护申报项目');
+        }
+    }
+
+    private function resolveOpenBatch(?int $batchId = null): ApplicationBatch
+    {
+        $query = ApplicationBatch::query()
+            ->where('status', ApplicationBatch::STATUS_OPEN)
+            ->where(function ($query): void {
+                $query->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+            })
+            ->where(function ($query): void {
+                $query->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+            });
+
+        if ($batchId) {
+            $batch = (clone $query)->whereKey($batchId)->first();
+            if (! $batch) {
+                abort(422, '所选申报批次未开放');
+            }
+
+            return $batch;
+        }
+
+        $batches = $query->limit(2)->get();
+        if ($batches->count() === 1) {
+            return $batches->first();
+        }
+
+        abort(422, '请选择当前开放的申报批次');
+    }
+
+    private function ensureBatchAllowsProject(ApplicationBatch $batch, array $data): void
+    {
+        $categories = is_array($batch->allowed_categories) ? array_filter($batch->allowed_categories) : [];
+        $types = is_array($batch->allowed_project_types) ? array_filter($batch->allowed_project_types) : [];
+
+        if ($categories && ! in_array($data['category'] ?? null, $categories, true)) {
+            abort(422, '项目类别不在当前批次允许范围内');
+        }
+
+        if ($types && ! in_array($data['project_type'] ?? null, $types, true)) {
+            abort(422, '项目类型不在当前批次允许范围内');
         }
     }
 }

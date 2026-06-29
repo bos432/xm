@@ -10,7 +10,7 @@ class MigrationBatchController extends Controller
 {
     public function index(Request $request)
     {
-        if (! Role::canManageSettings($request->user()->role)) {
+        if (! Role::userCan($request->user(), 'view_migration')) {
             abort(403, '无权查看迁移批次');
         }
 
@@ -19,11 +19,10 @@ class MigrationBatchController extends Controller
 
     public function show(Request $request, MigrationBatch $migrationBatch)
     {
-        if (! Role::canManageSettings($request->user()->role)) {
+        if (! Role::userCan($request->user(), 'view_migration')) {
             abort(403, '无权查看迁移批次');
         }
 
         return $migrationBatch->load('items');
     }
 }
-

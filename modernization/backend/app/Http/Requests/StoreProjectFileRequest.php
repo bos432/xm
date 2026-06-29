@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\RuntimeConfig;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\UploadedFile;
@@ -16,9 +17,9 @@ class StoreProjectFileRequest extends FormRequest
 
     public function rules(): array
     {
-        $extensions = $this->extensionList(config('modernization.upload_allowed_extensions'));
-        $blockedExtensions = $this->extensionList(config('modernization.upload_blocked_extensions'));
-        $maxKb = (int) config('modernization.upload_max_kb');
+        $extensions = $this->extensionList(RuntimeConfig::value('upload.allowed_extensions', config('modernization.upload_allowed_extensions')));
+        $blockedExtensions = $this->extensionList(RuntimeConfig::value('upload.blocked_extensions', config('modernization.upload_blocked_extensions')));
+        $maxKb = RuntimeConfig::intValue('upload.max_kb', (int) config('modernization.upload_max_kb'));
 
         return [
             'file' => [

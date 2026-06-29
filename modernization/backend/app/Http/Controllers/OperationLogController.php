@@ -10,7 +10,7 @@ class OperationLogController extends Controller
 {
     public function index(Request $request)
     {
-        if (! Role::canManageSettings($request->user()->role)) {
+        if (! Role::userCan($request->user(), 'view_operation_logs')) {
             abort(403, '无权查看操作日志');
         }
 

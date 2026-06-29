@@ -15,6 +15,7 @@ class StoreProjectRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:200'],
+            'application_batch_id' => ['nullable', 'integer', 'exists:application_batches,id'],
             'category' => ['nullable', 'string', 'max:100'],
             'project_type' => ['nullable', 'string', 'max:100'],
             'summary' => ['nullable', 'string', 'max:5000'],
@@ -23,4 +24,3 @@ class StoreProjectRequest extends FormRequest
         ];
     }
 }
-

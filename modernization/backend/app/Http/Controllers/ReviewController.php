@@ -21,7 +21,7 @@ class ReviewController extends Controller
         $this->authorizeReviewer($request);
 
         return Project::query()
-            ->where('current_reviewer_role', $request->user()->role)
+            ->where('current_reviewer_role', Role::reviewerStageFor($request->user()->role))
             ->whereIn('status', [Project::STATUS_SUBMITTED, Project::STATUS_REVIEWING])
             ->when($request->filled('project_id'), function ($query) use ($request) {
                 $query->where('id', $request->query('project_id'));
@@ -57,8 +57,8 @@ class ReviewController extends Controller
             ->with(['project.unit', 'project.owner', 'reviewer'])
             ->latest('reviewed_at');
 
-        if ($request->user()->role !== Role::ADMIN) {
-            $query->where('stage', $request->user()->role);
+        if (! in_array($request->user()->role, Role::adminRoles(), true)) {
+            $query->where('stage', Role::reviewerStageFor($request->user()->role));
         } elseif ($stage = $request->query('stage')) {
             $query->where('stage', $stage);
         }
@@ -114,7 +114,8 @@ class ReviewController extends Controller
     {
         $this->authorizeReviewer($request);
 
-        if ($project->current_reviewer_role !== $request->user()->role) {
+        $stage = Role::reviewerStageFor($request->user()->role);
+        if ($project->current_reviewer_role !== $stage) {
             abort(403, '当前项目不属于你的审核阶段');
         }
 
@@ -128,7 +129,7 @@ class ReviewController extends Controller
         $review = ProjectReview::create($data + [
             'project_id' => $project->id,
             'reviewer_id' => $request->user()->id,
-            'stage' => $request->user()->role,
+            'stage' => $stage,
             'reviewed_at' => now(),
         ]);
 
@@ -161,7 +162,7 @@ class ReviewController extends Controller
 
     private function authorizeReviewer(Request $request): void
     {
-        if (! in_array($request->user()->role, Role::reviewerRoles(), true)) {
+        if (! Role::userCan($request->user(), 'review_projects')) {
             abort(403, '无权处理审核任务');
         }
     }
@@ -169,7 +170,12 @@ class ReviewController extends Controller
     private function notifyRole(Project $project, string $role, string $title, string $body): void
     {
         User::query()
-            ->where('role', $role)
+            ->where(function ($query) use ($role): void {
+                $query->where('role', $role);
+                if ($role === Role::ADMIN) {
+                    $query->orWhere('role', Role::SUPER_ADMIN);
+                }
+            })
             ->where('is_active', true)
             ->each(function (User $user) use ($project, $title, $body): void {
                 Message::create([

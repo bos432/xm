@@ -39,4 +39,10 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Unit::class);
     }
+
+    public function additionalRoles()
+    {
+        return $this->belongsToMany(RbacRole::class, 'role_user', 'user_id', 'role_id')
+            ->withTimestamps();
+    }
 }

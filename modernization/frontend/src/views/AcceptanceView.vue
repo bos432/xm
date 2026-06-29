@@ -1,0 +1,336 @@
+<template>
+  <section class="page-stack">
+    <div class="toolbar">
+      <div>
+        <h2>验收管理</h2>
+        <span class="muted">单位提交验收材料，区县、部门、专家和管理员分阶段处理</span>
+      </div>
+      <div class="toolbar-actions">
+        <el-input v-model="keyword" clearable placeholder="项目/单位" @keyup.enter="loadAcceptances" />
+        <el-select v-model="status" clearable placeholder="状态" @change="loadAcceptances">
+          <el-option label="草稿" value="draft" />
+          <el-option label="已提交" value="submitted" />
+          <el-option label="审核中" value="reviewing" />
+          <el-option label="退回修改" value="returned" />
+          <el-option label="已驳回" value="rejected" />
+          <el-option label="已通过" value="approved" />
+          <el-option label="已关闭" value="closed" />
+        </el-select>
+        <el-button :icon="Refresh" :loading="loading" @click="loadAcceptances">刷新</el-button>
+        <el-button v-if="session.can('submit_acceptance')" type="primary" :icon="Plus" @click="createVisible = true">发起验收</el-button>
+      </div>
+    </div>
+
+    <el-table :data="acceptances" border v-loading="loading">
+      <el-table-column label="项目" min-width="240">
+        <template #default="{ row }">
+          <strong>{{ row.project?.title || '-' }}</strong>
+          <div class="muted">{{ row.unit?.name || row.project?.unit?.name || '-' }}</div>
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" width="110">
+        <template #default="{ row }"><el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag></template>
+      </el-table-column>
+      <el-table-column label="当前阶段" width="130">
+        <template #default="{ row }">{{ roleLabel(row.current_reviewer_role) }}</template>
+      </el-table-column>
+      <el-table-column prop="submitted_at" label="提交时间" width="170" />
+      <el-table-column prop="summary" label="验收说明" min-width="220" show-overflow-tooltip />
+      <el-table-column label="操作" width="310" fixed="right">
+        <template #default="{ row }">
+          <div class="table-action-row">
+            <el-button size="small" :icon="View" @click="openDetail(row)">详情</el-button>
+            <el-button v-if="canSubmit(row)" size="small" type="primary" @click="openSubmit(row)">提交</el-button>
+            <el-button v-if="canUpload(row)" size="small" :icon="Upload" @click="openUpload(row)">材料</el-button>
+            <el-button v-if="canReview(row)" size="small" type="success" @click="openReview(row)">审核</el-button>
+            <el-button v-if="canExtend(row)" size="small" @click="openExtension(row)">延期</el-button>
+          </div>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <el-dialog v-model="createVisible" title="发起验收" width="520px">
+      <el-form :model="createForm" label-position="top">
+        <el-form-item label="项目 ID"><el-input v-model="createForm.project_id" placeholder="填写已通过或验收中项目 ID" /></el-form-item>
+        <el-form-item label="验收说明"><el-input v-model="createForm.summary" type="textarea" :rows="4" /></el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="createVisible = false">取消</el-button>
+        <el-button type="primary" :loading="saving" @click="createAcceptance">保存草稿</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="submitVisible" title="提交验收" width="560px">
+      <el-form :model="submitForm" label-position="top">
+        <el-form-item label="验收说明"><el-input v-model="submitForm.summary" type="textarea" :rows="5" /></el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="submitVisible = false">取消</el-button>
+        <el-button type="primary" :loading="saving" @click="submitAcceptance">提交</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="reviewVisible" title="验收审核" width="560px">
+      <el-form :model="reviewForm" label-position="top">
+        <el-form-item label="处理结果">
+          <el-select v-model="reviewForm.decision">
+            <el-option label="通过" value="approve" />
+            <el-option label="退回修改" value="return" />
+            <el-option label="驳回" value="reject" />
+            <el-option v-if="currentAcceptance?.current_reviewer_role === 'admin'" label="终审关闭" value="close" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="评分"><el-input-number v-model="reviewForm.score" :min="0" :max="100" /></el-form-item>
+        <el-form-item label="审核意见"><el-input v-model="reviewForm.comment" type="textarea" :rows="4" /></el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="reviewVisible = false">取消</el-button>
+        <el-button type="primary" :loading="saving" @click="saveReview">提交审核</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="extensionVisible" title="验收延期" width="560px">
+      <el-form :model="extensionForm" label-position="top">
+        <template v-if="session.role === 'unit'">
+          <el-form-item label="延期原因"><el-input v-model="extensionForm.reason" type="textarea" :rows="4" /></el-form-item>
+          <el-form-item label="计划完成日期"><el-date-picker v-model="extensionForm.expected_date" type="date" value-format="YYYY-MM-DD" /></el-form-item>
+        </template>
+        <template v-else>
+          <el-form-item label="延期记录">
+            <el-select v-model="extensionForm.extension_id">
+              <el-option v-for="item in detail?.extensions || []" :key="item.id" :label="`${item.reason}（${item.status}）`" :value="item.id" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="处理结果">
+            <el-select v-model="extensionForm.decision">
+              <el-option label="通过" value="approved" />
+              <el-option label="驳回" value="rejected" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="处理意见"><el-input v-model="extensionForm.comment" type="textarea" :rows="4" /></el-form-item>
+        </template>
+      </el-form>
+      <template #footer>
+        <el-button @click="extensionVisible = false">取消</el-button>
+        <el-button type="primary" :loading="saving" @click="saveExtension">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="uploadVisible" title="上传验收材料" width="520px">
+      <el-upload drag :show-file-list="false" :http-request="uploadFile">
+        <el-icon><Upload /></el-icon>
+        <div>拖拽文件到这里或点击选择</div>
+      </el-upload>
+    </el-dialog>
+
+    <el-drawer v-model="detailVisible" title="验收详情" size="680px">
+      <div v-if="detail" class="detail-stack">
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="项目" :span="2">{{ detail.project?.title }}</el-descriptions-item>
+          <el-descriptions-item label="单位">{{ detail.unit?.name }}</el-descriptions-item>
+          <el-descriptions-item label="状态">{{ statusMeta(detail.status).label }}</el-descriptions-item>
+          <el-descriptions-item label="说明" :span="2">{{ detail.summary || '-' }}</el-descriptions-item>
+        </el-descriptions>
+        <section>
+          <div class="section-title">验收材料</div>
+          <el-table :data="detail.project?.files || []" border size="small">
+            <el-table-column prop="original_name" label="文件名" min-width="220" />
+            <el-table-column prop="extension" label="类型" width="80" />
+          </el-table>
+        </section>
+        <section>
+          <div class="section-title">审核记录</div>
+          <el-table :data="detail.reviews || []" border size="small">
+            <el-table-column label="阶段" width="110"><template #default="{ row }">{{ roleLabel(row.stage) }}</template></el-table-column>
+            <el-table-column prop="decision" label="结果" width="100" />
+            <el-table-column prop="score" label="评分" width="80" />
+            <el-table-column prop="comment" label="意见" min-width="220" />
+            <el-table-column prop="reviewed_at" label="时间" width="170" />
+          </el-table>
+        </section>
+        <section>
+          <div class="section-title">延期记录</div>
+          <el-table :data="detail.extensions || []" border size="small">
+            <el-table-column prop="reason" label="原因" min-width="220" />
+            <el-table-column prop="expected_date" label="计划日期" width="120" />
+            <el-table-column prop="status" label="状态" width="100" />
+            <el-table-column prop="review_comment" label="处理意见" min-width="160" />
+          </el-table>
+        </section>
+      </div>
+    </el-drawer>
+  </section>
+</template>
+
+<script setup>
+import { onMounted, reactive, ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Plus, Refresh, Upload, View } from '@element-plus/icons-vue'
+import { api } from '../api.js'
+import { useSessionStore } from '../store.js'
+
+const session = useSessionStore()
+const loading = ref(false)
+const saving = ref(false)
+const acceptances = ref([])
+const keyword = ref('')
+const status = ref('')
+const createVisible = ref(false)
+const submitVisible = ref(false)
+const reviewVisible = ref(false)
+const extensionVisible = ref(false)
+const uploadVisible = ref(false)
+const detailVisible = ref(false)
+const currentAcceptance = ref(null)
+const detail = ref(null)
+const createForm = reactive({ project_id: '', summary: '' })
+const submitForm = reactive({ summary: '' })
+const reviewForm = reactive({ decision: 'approve', score: null, comment: '' })
+const extensionForm = reactive({ reason: '', expected_date: '', extension_id: null, decision: 'approved', comment: '' })
+const statusLabels = {
+  draft: { label: '草稿', type: 'info' },
+  submitted: { label: '已提交', type: 'warning' },
+  reviewing: { label: '审核中', type: 'primary' },
+  returned: { label: '退回修改', type: 'danger' },
+  rejected: { label: '已驳回', type: 'danger' },
+  approved: { label: '已通过', type: 'success' },
+  closed: { label: '已关闭', type: 'info' }
+}
+const roleLabels = { county: '区县审核', department: '部门审核', expert: '专家评审', admin: '管理员终审' }
+
+function statusMeta(value) {
+  return statusLabels[value] || { label: value || '-', type: 'info' }
+}
+
+function roleLabel(value) {
+  return roleLabels[value] || value || '-'
+}
+
+function reviewerStage() {
+  return session.role === 'super_admin' ? 'admin' : session.role
+}
+
+function canSubmit(row) {
+  return session.can('submit_acceptance') && ['draft', 'returned'].includes(row.status)
+}
+
+function canUpload(row) {
+  return session.can('submit_acceptance') && ['draft', 'returned'].includes(row.status)
+}
+
+function canReview(row) {
+  return (session.can('review_acceptance') || session.can('manage_acceptance')) && row.current_reviewer_role === reviewerStage()
+}
+
+function canExtend(row) {
+  return session.can('submit_acceptance') || session.can('manage_acceptance')
+}
+
+async function loadAcceptances() {
+  loading.value = true
+  try {
+    const params = new URLSearchParams()
+    if (keyword.value) params.set('keyword', keyword.value)
+    if (status.value) params.set('status', status.value)
+    const result = await api(`/acceptance${params.toString() ? `?${params.toString()}` : ''}`)
+    acceptances.value = result.data || result
+  } finally {
+    loading.value = false
+  }
+}
+
+async function createAcceptance() {
+  saving.value = true
+  try {
+    await api(`/projects/${createForm.project_id}/acceptance`, {
+      method: 'POST',
+      body: JSON.stringify({ summary: createForm.summary, metadata: {} })
+    })
+    ElMessage.success('验收草稿已创建')
+    createVisible.value = false
+    Object.assign(createForm, { project_id: '', summary: '' })
+    await loadAcceptances()
+  } finally {
+    saving.value = false
+  }
+}
+
+function openSubmit(row) {
+  currentAcceptance.value = row
+  submitForm.summary = row.summary || ''
+  submitVisible.value = true
+}
+
+async function submitAcceptance() {
+  saving.value = true
+  try {
+    await api(`/acceptance/${currentAcceptance.value.id}/submit`, { method: 'POST', body: JSON.stringify(submitForm) })
+    ElMessage.success('验收已提交')
+    submitVisible.value = false
+    await loadAcceptances()
+  } finally {
+    saving.value = false
+  }
+}
+
+function openReview(row) {
+  currentAcceptance.value = row
+  Object.assign(reviewForm, { decision: 'approve', score: null, comment: '' })
+  reviewVisible.value = true
+}
+
+async function saveReview() {
+  saving.value = true
+  try {
+    await api(`/acceptance/${currentAcceptance.value.id}/reviews`, { method: 'POST', body: JSON.stringify(reviewForm) })
+    ElMessage.success('验收审核已提交')
+    reviewVisible.value = false
+    await loadAcceptances()
+  } finally {
+    saving.value = false
+  }
+}
+
+async function openExtension(row) {
+  currentAcceptance.value = row
+  detail.value = await api(`/acceptance/${row.id}`)
+  Object.assign(extensionForm, { reason: '', expected_date: '', extension_id: detail.value.extensions?.find((item) => item.status === 'pending')?.id || null, decision: 'approved', comment: '' })
+  extensionVisible.value = true
+}
+
+async function saveExtension() {
+  saving.value = true
+  try {
+    const payload = session.role === 'unit'
+      ? { reason: extensionForm.reason, expected_date: extensionForm.expected_date || null }
+      : { extension_id: extensionForm.extension_id, decision: extensionForm.decision, comment: extensionForm.comment }
+    await api(`/acceptance/${currentAcceptance.value.id}/extensions`, { method: 'POST', body: JSON.stringify(payload) })
+    ElMessage.success('延期记录已保存')
+    extensionVisible.value = false
+    await loadAcceptances()
+  } finally {
+    saving.value = false
+  }
+}
+
+function openUpload(row) {
+  currentAcceptance.value = row
+  uploadVisible.value = true
+}
+
+async function uploadFile({ file }) {
+  const body = new FormData()
+  body.append('file', file)
+  body.append('purpose', 'acceptance')
+  await api(`/acceptance/${currentAcceptance.value.id}/files`, { method: 'POST', body })
+  ElMessage.success('验收材料已上传')
+  uploadVisible.value = false
+}
+
+async function openDetail(row) {
+  detail.value = await api(`/acceptance/${row.id}`)
+  detailVisible.value = true
+}
+
+onMounted(loadAcceptances)
+</script>

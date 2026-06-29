@@ -43,6 +43,14 @@ cd /www/wwwroot/nxm.zlck888.com
 bash ./deploy.sh
 ```
 
+Frontend dependencies are installed with:
+
+```bash
+npm ci --include=optional --no-audit --no-fund
+```
+
+If Linux optional dependencies are missing, the script falls back to `npm install --include=optional --no-audit --no-fund` and prints a warning.
+
 Optional environment variables:
 
 ```bash
@@ -70,3 +78,24 @@ nginx -t && /etc/init.d/nginx reload
 ```
 
 Rollback does not roll back database migrations. For database changes, restore from a verified backup when required.
+
+## Queue Worker
+
+邮件中心使用 Laravel database queue。宝塔 Supervisor 可配置：
+
+```ini
+directory=/www/wwwroot/nxm.zlck888.com/current/backend
+command=/www/server/php/83/bin/php artisan queue:work database --queue=default --tries=3 --timeout=90 --sleep=3
+user=www
+autostart=true
+autorestart=true
+redirect_stderr=true
+stdout_logfile=/www/wwwroot/nxm.zlck888.com/shared/storage/logs/queue-worker.log
+```
+
+若不使用 Supervisor，可临时用计划任务兜底：
+
+```bash
+cd /www/wwwroot/nxm.zlck888.com/current/backend
+/www/server/php/83/bin/php artisan queue:work database --queue=default --tries=3 --timeout=90 --stop-when-empty
+```

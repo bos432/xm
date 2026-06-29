@@ -10,7 +10,10 @@
         <el-select v-model="projectType" clearable placeholder="类型" @change="reloadProjects">
           <el-option v-for="item in projectTypeOptions" :key="item.code" :label="item.label" :value="item.label" />
         </el-select>
-        <el-switch v-if="session.role === 'admin'" v-model="pendingExtensionOnly" active-text="待延期" @change="reloadProjects" />
+        <el-select v-model="applicationBatchId" clearable placeholder="申报批次" @change="reloadProjects">
+          <el-option v-for="batch in openBatches" :key="batch.id" :label="batch.name" :value="batch.id" />
+        </el-select>
+        <el-switch v-if="session.can('manage_acceptance')" v-model="pendingExtensionOnly" active-text="待延期" @change="reloadProjects" />
         <el-tooltip content="查询项目" placement="top">
           <el-button type="primary" :icon="Search" circle @click="reloadProjects" />
         </el-tooltip>
@@ -24,13 +27,14 @@
     <el-table :data="projects" border v-loading="loading">
       <el-table-column prop="title" label="项目名称" min-width="220" />
       <el-table-column prop="unit.name" label="申报单位" min-width="180" />
+      <el-table-column prop="application_batch.name" label="申报批次" min-width="160" />
       <el-table-column prop="project_type" label="项目类型" width="140" />
       <el-table-column label="状态" width="120">
         <template #default="{ row }">
           <el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column v-if="session.role === 'admin'" label="待延期" width="90" align="center">
+      <el-table-column v-if="session.can('manage_acceptance')" label="待延期" width="90" align="center">
         <template #default="{ row }">
           <el-tag v-if="row.pending_extension_requests_count" type="warning">{{ row.pending_extension_requests_count }}</el-tag>
           <span v-else>-</span>
@@ -65,6 +69,11 @@
     <el-dialog v-model="dialogVisible" :title="editingProject ? '编辑申报项目' : '新建申报项目'" width="560px">
       <el-form :model="form" label-position="top">
         <el-form-item label="项目名称"><el-input v-model="form.title" /></el-form-item>
+        <el-form-item label="申报批次">
+          <el-select v-model="form.application_batch_id" placeholder="请选择开放批次">
+            <el-option v-for="batch in openBatches" :key="batch.id" :label="batch.name" :value="batch.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="项目类型">
           <el-select v-model="form.project_type" filterable allow-create clearable>
             <el-option v-for="item in projectTypeOptions" :key="item.code" :label="item.label" :value="item.label" />
@@ -136,7 +145,7 @@
             </el-table-column>
             <el-table-column prop="review_comment" label="处理意见" min-width="160" />
             <el-table-column prop="requested_at" label="申请时间" width="170" />
-            <el-table-column v-if="session.role === 'admin'" label="操作" width="130">
+            <el-table-column v-if="session.can('manage_acceptance')" label="操作" width="130">
               <template #default="{ row, $index }">
                 <el-tooltip v-if="canReviewExtension(row)" content="通过延期" placement="top"><el-button size="small" type="success" :icon="Checked" circle @click="reviewExtension($index, 'approved')" /></el-tooltip>
                 <el-tooltip v-if="canReviewExtension(row)" content="驳回延期" placement="top"><el-button size="small" type="danger" :icon="CloseBold" circle @click="reviewExtension($index, 'rejected')" /></el-tooltip>
@@ -246,8 +255,10 @@ const saving = ref(false)
 const projects = ref([])
 const projectTypeOptions = ref([])
 const projectCategoryOptions = ref([])
+const openBatches = ref([])
 const category = ref('')
 const projectType = ref('')
+const applicationBatchId = ref('')
 const pendingExtensionOnly = ref(false)
 const dialogVisible = ref(false)
 const uploadVisible = ref(false)
@@ -258,7 +269,7 @@ const detail = ref(null)
 const currentProject = ref(null)
 const editingProject = ref(null)
 const actionProject = ref(null)
-const form = reactive({ title: '', category: '', project_type: '', summary: '', budget_amount: 0 })
+const form = reactive({ title: '', application_batch_id: null, category: '', project_type: '', summary: '', budget_amount: 0 })
 const extensionForm = reactive({ reason: '', expected_date: '' })
 const closeForm = reactive({ comment: '' })
 const pagination = reactive({ current_page: 1, per_page: 20, total: 0 })
@@ -302,15 +313,15 @@ function canRequestExtension(row) {
 }
 
 function canEnterAcceptance(row) {
-  return session.role === 'admin' && row.status === 'approved'
+  return session.can('manage_acceptance') && row.status === 'approved'
 }
 
 function canClose(row) {
-  return session.role === 'admin' && row.status === 'acceptance' && pendingExtensionCount(row) === 0
+  return session.can('manage_acceptance') && row.status === 'acceptance' && pendingExtensionCount(row) === 0
 }
 
 function canReviewExtension(row) {
-  return session.role === 'admin' && (row.status || 'pending') === 'pending'
+  return session.can('manage_acceptance') && (row.status || 'pending') === 'pending'
 }
 
 function pendingExtensionCount(row) {
@@ -319,16 +330,18 @@ function pendingExtensionCount(row) {
 }
 
 function resetForm() {
-  Object.assign(form, { title: '', category: '', project_type: '', summary: '', budget_amount: 0 })
+  Object.assign(form, { title: '', application_batch_id: openBatches.value[0]?.id || null, category: '', project_type: '', summary: '', budget_amount: 0 })
 }
 
 async function loadDictionaries() {
-  const [types, categories] = await Promise.all([
+  const [types, categories, batches] = await Promise.all([
     api('/dictionaries?group=project_type'),
-    api('/dictionaries?group=project_category')
+    api('/dictionaries?group=project_category'),
+    api('/public/application-batches/open')
   ])
   projectTypeOptions.value = types
   projectCategoryOptions.value = categories
+  openBatches.value = batches
 }
 
 async function loadProjects() {
@@ -351,6 +364,7 @@ function buildProjectQuery() {
   if (keyword.value) params.set('keyword', keyword.value)
   if (category.value) params.set('category', category.value)
   if (projectType.value) params.set('project_type', projectType.value)
+  if (applicationBatchId.value) params.set('application_batch_id', applicationBatchId.value)
   if (pendingExtensionOnly.value) params.set('pending_extension', '1')
   if (pagination.current_page > 1) params.set('page', pagination.current_page)
   return params.toString() ? `?${params.toString()}` : ''
@@ -390,6 +404,7 @@ async function openEdit(row) {
     title: row.title || '',
     category: row.category || '',
     project_type: row.project_type || '',
+    application_batch_id: row.application_batch_id || row.application_batch?.id || null,
     summary: row.summary || '',
     budget_amount: Number(row.budget_amount || 0)
   })
@@ -560,6 +575,7 @@ async function exportProjects() {
   if (keyword.value) params.set('keyword', keyword.value)
   if (category.value) params.set('category', category.value)
   if (projectType.value) params.set('project_type', projectType.value)
+  if (applicationBatchId.value) params.set('application_batch_id', applicationBatchId.value)
   if (pendingExtensionOnly.value) params.set('pending_extension', '1')
   const query = params.toString() ? `?${params.toString()}` : ''
   try {

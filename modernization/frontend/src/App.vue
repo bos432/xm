@@ -73,7 +73,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Bell, Checked, Collection, Connection, DataLine, FolderOpened, House, Lock, OfficeBuilding, Setting, SwitchButton, Tickets, User } from '@element-plus/icons-vue'
+import { Bell, Checked, Collection, Connection, DataLine, FolderChecked, FolderOpened, House, Lock, Message, OfficeBuilding, Operation, Setting, SwitchButton, Tickets, User, Warning } from '@element-plus/icons-vue'
 import { api } from './api.js'
 import { useSessionStore } from './store.js'
 
@@ -92,6 +92,9 @@ const profileForm = reactive({ name: '', mobile: '', email: '' })
 const iconMap = {
   dashboard: DataLine,
   projects: FolderOpened,
+  application_batches: Collection,
+  acceptance: FolderChecked,
+  acceptance_admin: FolderChecked,
   units: OfficeBuilding,
   users: User,
   unit_profile: OfficeBuilding,
@@ -100,12 +103,17 @@ const iconMap = {
   migration: Connection,
   operation_logs: Tickets,
   public_home: House,
+  mail_center: Message,
+  roles: Operation,
+  security: Warning,
   dictionary_items: Collection,
   settings: Setting
 }
 const titles = {
   '/dashboard': '运行概览',
   '/projects': '项目申报',
+  '/application-batches': '申报批次',
+  '/acceptance': '验收管理',
   '/units': '单位管理',
   '/users': '账号管理',
   '/unit-profile': '单位资料',
@@ -114,11 +122,15 @@ const titles = {
   '/migration': '迁移准备',
   '/operation-logs': '操作日志',
   '/public-home': '首页管理',
+  '/mail-center': '邮件中心',
+  '/roles': '角色权限',
+  '/security': '安全中心',
   '/dictionary-items': '数据字典',
   '/settings': '系统配置'
 }
 const roleLabels = {
-  admin: '管理员',
+  super_admin: '超级管理员',
+  admin: '业务管理员',
   unit: '单位用户',
   county: '区县审核',
   department: '部门审核',

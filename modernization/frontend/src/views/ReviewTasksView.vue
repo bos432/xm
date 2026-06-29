@@ -66,7 +66,7 @@
           <div class="toolbar">
             <el-input v-model="resultKeyword" clearable placeholder="按项目、单位、账号、意见搜索" @keyup.enter="reloadResults" />
             <div class="toolbar-actions">
-              <el-select v-if="session.role === 'admin'" v-model="resultStage" clearable placeholder="阶段" @change="reloadResults">
+              <el-select v-if="isAdminRole" v-model="resultStage" clearable placeholder="阶段" @change="reloadResults">
                 <el-option v-for="item in stageOptions" :key="item.value" :label="item.label" :value="item.value" />
               </el-select>
               <el-select v-model="resultDecision" clearable placeholder="结果" @change="reloadResults">
@@ -228,6 +228,7 @@ const resultCategory = ref('')
 const resultProjectType = ref('')
 const resultScoreMin = ref(null)
 const resultScoreMax = ref(null)
+const isAdminRole = computed(() => ['admin', 'super_admin'].includes(session.role))
 const detailVisible = ref(false)
 const reviewVisible = ref(false)
 const detail = ref(null)
@@ -279,7 +280,7 @@ const decisionOptions = computed(() => {
     ]
   }
 
-  if (session.role === 'admin') {
+  if (isAdminRole.value) {
     return [
       { label: '通过', value: 'accept' },
       { label: '退回', value: 'return' },
@@ -329,7 +330,7 @@ function buildResultQuery(includePage = true) {
   const params = new URLSearchParams()
   if (resultKeyword.value) params.set('keyword', resultKeyword.value)
   if (route.query.project_id) params.set('project_id', route.query.project_id)
-  if (session.role === 'admin' && resultStage.value) params.set('stage', resultStage.value)
+  if (isAdminRole.value && resultStage.value) params.set('stage', resultStage.value)
   if (resultDecision.value) params.set('decision', resultDecision.value)
   if (resultCategory.value) params.set('category', resultCategory.value)
   if (resultProjectType.value) params.set('project_type', resultProjectType.value)

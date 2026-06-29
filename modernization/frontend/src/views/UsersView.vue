@@ -103,7 +103,8 @@ const router = useRouter()
 const route = useRoute()
 const session = useSessionStore()
 const roleOptions = [
-  { label: '管理员', value: 'admin' },
+  { label: '超级管理员', value: 'super_admin' },
+  { label: '业务管理员', value: 'admin' },
   { label: '单位用户', value: 'unit' },
   { label: '区县审核', value: 'county' },
   { label: '部门审核', value: 'department' },

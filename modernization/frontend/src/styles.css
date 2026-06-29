@@ -122,6 +122,54 @@ body { margin: 0; }
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0 16px;
 }
+.asset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.asset-box {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #ffffff;
+}
+.asset-box img {
+  width: 100%;
+  max-height: 170px;
+  object-fit: contain;
+  background: #f6f8fb;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.permission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+}
+.permission-grid .el-checkbox {
+  height: auto;
+  align-items: flex-start;
+  white-space: normal;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.permission-grid b,
+.permission-grid span {
+  display: block;
+  line-height: 1.6;
+}
+.permission-grid span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.role-checkbox-list {
+  display: grid;
+  gap: 10px;
+}
+.mt-16 { margin-top: 16px; }
 .home-manager-grid .wide-field { grid-column: 1 / -1; }
 .table-action-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .compact-grid > div { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; display: grid; gap: 6px; }
@@ -305,6 +353,12 @@ body { margin: 0; }
   font-size: 26px;
   font-weight: 800;
 }
+.gov-logo {
+  width: 64px;
+  max-height: 64px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
 .gov-brand-row strong {
   display: block;
   color: var(--gov-blue-dark);
@@ -339,6 +393,8 @@ body { margin: 0; }
   background:
     linear-gradient(90deg, rgba(9, 64, 126, 0.95), rgba(15, 92, 162, 0.88)),
     #0b4a8f;
+  background-size: cover;
+  background-position: center;
 }
 .gov-masthead-grid {
   min-height: 310px;
@@ -886,6 +942,8 @@ body { margin: 0; }
 
 @media (max-width: 760px) {
   .home-manager-grid { grid-template-columns: 1fr; }
+  .asset-grid,
+  .permission-grid { grid-template-columns: 1fr; }
   .public-nav { align-items: flex-start; height: auto; padding-top: 18px; padding-bottom: 18px; flex-direction: column; gap: 12px; }
   .public-nav nav { flex-wrap: wrap; }
   .public-hero { min-height: auto; grid-template-columns: 1fr; padding-top: 32px; }

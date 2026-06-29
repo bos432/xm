@@ -17,11 +17,11 @@ class UserExportController extends Controller
 
     public function csv(Request $request): StreamedResponse
     {
-        if (! in_array('manage_users', Role::capabilities($request->user()->role), true)) {
+        if (! Role::userCan($request->user(), 'manage_users')) {
             abort(403, '无权导出账号');
         }
 
-        $query = User::query()->with('unit')->latest();
+        $query = User::query()->with(['unit', 'additionalRoles'])->latest();
 
         if ($role = $request->query('role')) {
             $query->where('role', $role);

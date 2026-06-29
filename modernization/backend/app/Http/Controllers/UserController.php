@@ -18,7 +18,7 @@ class UserController extends Controller
     {
         $this->authorizeUserManagement($request);
 
-        $query = User::query()->with('unit')->latest();
+        $query = User::query()->with(['unit', 'additionalRoles'])->latest();
 
         if ($role = $request->query('role')) {
             $query->where('role', $role);
@@ -57,6 +57,7 @@ class UserController extends Controller
         $this->authorizeUserManagement($request);
 
         $data = $this->validatedData($request);
+        $this->guardSuperAdminRole($request, $data['role']);
         $user = User::create($data);
 
         $this->auditLogger->record($request, 'user.created', $user, [
@@ -65,14 +66,14 @@ class UserController extends Controller
             'unit_id' => $user->unit_id,
         ]);
 
-        return response()->json($user->load('unit'), 201);
+        return response()->json($user->load(['unit', 'additionalRoles']), 201);
     }
 
     public function show(Request $request, User $user)
     {
         $this->authorizeUserManagement($request);
 
-        return $user->load('unit');
+        return $user->load(['unit', 'additionalRoles']);
     }
 
     public function update(Request $request, User $user)
@@ -80,6 +81,7 @@ class UserController extends Controller
         $this->authorizeUserManagement($request);
 
         $data = $this->validatedData($request, $user);
+        $this->guardSuperAdminRole($request, $data['role'], $user);
         if (($data['password'] ?? '') === '') {
             unset($data['password']);
         }
@@ -101,12 +103,12 @@ class UserController extends Controller
             $this->revokeTokens($request, $user, 'password_reset');
         }
 
-        return $user->refresh()->load('unit');
+        return $user->refresh()->load(['unit', 'additionalRoles']);
     }
 
     private function authorizeUserManagement(Request $request): void
     {
-        if (! in_array('manage_users', Role::capabilities($request->user()->role), true)) {
+        if (! Role::userCan($request->user(), 'manage_users')) {
             abort(403, '无权维护账号');
         }
     }
@@ -121,10 +123,21 @@ class UserController extends Controller
             'email' => ['nullable', 'email', 'max:120', 'unique:users,email,'.$userId],
             'mobile' => ['nullable', 'string', 'max:40'],
             'password' => [$user ? 'nullable' : 'required', 'string', 'min:8', 'max:200'],
-            'role' => ['required', Rule::in([Role::ADMIN, Role::UNIT, Role::COUNTY, Role::DEPARTMENT, Role::EXPERT])],
+            'role' => ['required', Rule::in([Role::SUPER_ADMIN, Role::ADMIN, Role::UNIT, Role::COUNTY, Role::DEPARTMENT, Role::EXPERT])],
             'unit_id' => ['nullable', 'exists:units,id'],
             'is_active' => ['required', 'boolean'],
         ]);
+    }
+
+    private function guardSuperAdminRole(Request $request, string $role, ?User $target = null): void
+    {
+        if ($role !== Role::SUPER_ADMIN && $target?->role !== Role::SUPER_ADMIN) {
+            return;
+        }
+
+        if ($request->user()->role !== Role::SUPER_ADMIN) {
+            abort(403, '只有超级管理员可以维护超级管理员账号');
+        }
     }
 
     private function revokeTokens(Request $request, User $user, string $reason): void

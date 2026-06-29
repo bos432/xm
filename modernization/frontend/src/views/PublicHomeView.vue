@@ -15,7 +15,8 @@
 
     <header class="gov-header">
       <div class="gov-wrap gov-brand-row">
-        <div class="gov-emblem">科</div>
+        <img v-if="home.brand.logo_url" class="gov-logo" :src="home.brand.logo_url" :alt="home.brand.logo_alt || home.nav.title" />
+        <div v-else class="gov-emblem">科</div>
         <div>
           <strong>{{ home.nav.title || '阿拉善盟科技计划项目管理信息系统' }}</strong>
           <span>科技计划项目申报、审核、评审与验收公共服务平台</span>
@@ -34,7 +35,7 @@
     <section v-else-if="!hasHomeContent" class="public-empty">首页内容暂未配置</section>
 
     <template v-else>
-      <section class="gov-masthead">
+      <section class="gov-masthead" :style="bannerStyle">
         <div class="gov-wrap gov-masthead-grid">
           <div class="gov-banner">
             <p>{{ home.hero.eyebrow || '科技计划项目申报服务' }}</p>
@@ -123,6 +124,7 @@
             <p>请申报单位按通知要求准备材料，完成注册审核后登录系统办理。</p>
           </template>
           <div class="gov-status-list">
+            <span v-if="home.current_batch">当前批次：{{ home.current_batch.name }}</span>
             <span v-for="item in home.hero.status_items" :key="item.label">{{ item.label }}：{{ item.value }}</span>
           </div>
         </aside>
@@ -196,7 +198,9 @@ const captcha = reactive({ id: '', question: '' })
 const loginForm = reactive({ username: '', password: '', captcha_id: '', captcha_answer: '' })
 const hasHomeContent = computed(() => Boolean(
   home.value.nav.title ||
+  home.value.brand.logo_url ||
   home.value.hero.title ||
+  home.value.hero.banner_url ||
   home.value.highlights.length ||
   home.value.notices.length ||
   home.value.downloads.length ||
@@ -207,10 +211,13 @@ const hasHomeContent = computed(() => Boolean(
 function emptyHomeContent() {
   return {
     nav: { title: '', links: [] },
+    brand: { logo_url: null, logo_alt: '系统标识' },
     hero: {
       eyebrow: '',
       title: '',
       description: '',
+      banner_url: null,
+      banner_alt: '首页横幅',
       primary_action: { label: '', href: '/login' },
       secondary_action: { label: '', href: '#notices' },
       status_title: '',
@@ -220,6 +227,8 @@ function emptyHomeContent() {
     notices: [],
     downloads: [],
     services: [],
+    open_batches: [],
+    current_batch: null,
     footer: ''
   }
 }
@@ -233,10 +242,16 @@ function normalizeHomeContent(payload) {
       title: payload.nav?.title || '',
       links: Array.isArray(payload.nav?.links) ? payload.nav.links : []
     },
+    brand: {
+      logo_url: payload.brand?.logo_url || null,
+      logo_alt: payload.brand?.logo_alt || '系统标识'
+    },
     hero: {
       eyebrow: payload.hero?.eyebrow || '',
       title: payload.hero?.title || '',
       description: payload.hero?.description || '',
+      banner_url: payload.hero?.banner_url || null,
+      banner_alt: payload.hero?.banner_alt || '首页横幅',
       primary_action: payload.hero?.primary_action || fallback.hero.primary_action,
       secondary_action: payload.hero?.secondary_action || fallback.hero.secondary_action,
       status_title: payload.hero?.status_title || '',
@@ -246,9 +261,19 @@ function normalizeHomeContent(payload) {
     notices: Array.isArray(payload.notices) ? payload.notices : [],
     downloads: Array.isArray(payload.downloads) ? payload.downloads : [],
     services: Array.isArray(payload.services) ? payload.services : [],
+    open_batches: Array.isArray(payload.open_batches) ? payload.open_batches : [],
+    current_batch: payload.current_batch || null,
     footer: payload.footer || ''
   }
 }
+
+const bannerStyle = computed(() => {
+  if (!home.value.hero.banner_url) return {}
+
+  return {
+    backgroundImage: `linear-gradient(90deg, rgba(9, 64, 126, 0.9), rgba(15, 92, 162, 0.76)), url("${home.value.hero.banner_url}")`
+  }
+})
 
 function isRouterTarget(href) {
   return typeof href === 'string' && href.startsWith('/')
