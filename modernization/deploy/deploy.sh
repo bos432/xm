@@ -65,7 +65,10 @@ git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$SOURCE_DIR"
 
 log "Building frontend"
 cd "$SOURCE_DIR/modernization/frontend"
-"$NPM_BIN" ci
+if ! "$NPM_BIN" ci; then
+  log "npm ci failed, falling back to npm install for platform optional dependencies"
+  "$NPM_BIN" install
+fi
 "$NPM_BIN" run build
 
 log "Preparing release directories"
