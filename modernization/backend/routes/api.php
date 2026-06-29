@@ -23,6 +23,7 @@ use App\Http\Controllers\ReviewExportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SystemSettingController;
+use App\Http\Controllers\SystemTextController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UnitExportController;
 use App\Http\Controllers\UserController;
@@ -38,6 +39,7 @@ Route::get('/public/homepage', [PublicHomeController::class, 'index']);
 Route::get('/public/homepage/downloads/{item}', [PublicHomeController::class, 'download']);
 Route::get('/public/homepage/assets/{section}/{type}', [PublicHomeController::class, 'asset']);
 Route::get('/public/application-batches/open', [ApplicationBatchController::class, 'openBatches']);
+Route::get('/public/system-texts', [SystemTextController::class, 'publicIndex']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('active')->group(function () {
@@ -106,6 +108,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/settings/groups/{group}', [SystemSettingController::class, 'updateGroup']);
     Route::post('/settings/mail/test', [SystemSettingController::class, 'testMail']);
     Route::put('/settings/{setting}', [SystemSettingController::class, 'update']);
+    Route::get('/system-texts', [SystemTextController::class, 'index']);
+    Route::post('/system-texts', [SystemTextController::class, 'store']);
+    Route::put('/system-texts/{systemText}', [SystemTextController::class, 'update']);
+    Route::post('/system-texts/{systemText}/reset', [SystemTextController::class, 'reset']);
+    Route::delete('/system-texts/{systemText}', [SystemTextController::class, 'destroy']);
     Route::get('/public-home', [PublicHomeAdminController::class, 'index']);
     Route::put('/public-home/sections/{section:key}', [PublicHomeAdminController::class, 'updateSection']);
     Route::post('/public-home/sections/{section:key}/asset', [PublicHomeAdminController::class, 'uploadAsset']);

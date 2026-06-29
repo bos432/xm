@@ -10,9 +10,11 @@ use App\Models\PublicHomeSection;
 use App\Models\RbacPermission;
 use App\Models\RbacRole;
 use App\Models\SystemSetting;
+use App\Models\SystemText;
 use App\Models\Unit;
 use App\Models\User;
 use App\Support\Role;
+use App\Support\SystemTextCatalog;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -21,6 +23,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->seedRolesAndPermissions();
+        $this->seedSystemTexts();
 
         $adminUnit = Unit::firstOrCreate(
             ['name' => '系统管理单位'],
@@ -201,6 +204,30 @@ class DatabaseSeeder extends Seeder
                 ->all();
 
             $role->permissions()->sync($ids);
+        }
+    }
+
+    private function seedSystemTexts(): void
+    {
+        foreach (SystemTextCatalog::items() as $item) {
+            $text = SystemText::firstOrCreate(
+                ['key' => $item['key']],
+                ['is_active' => true] + [
+                    'group' => $item['group'],
+                    'label' => $item['label'],
+                    'default_value' => $item['default_value'],
+                    'is_builtin' => true,
+                    'sort_order' => $item['sort_order'] ?? 0,
+                ]
+            );
+
+            $text->update([
+                'group' => $item['group'],
+                'label' => $item['label'],
+                'default_value' => $item['default_value'],
+                'is_builtin' => true,
+                'sort_order' => $item['sort_order'] ?? 0,
+            ]);
         }
     }
 

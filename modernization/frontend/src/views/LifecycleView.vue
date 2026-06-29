@@ -2,108 +2,108 @@
   <section class="page-stack">
     <div class="toolbar">
       <div>
-        <h2>全周期管理</h2>
-        <span class="muted">合同任务书、项目实施进展、整改闭环和专家认证</span>
+        <h2>{{ texts.t('page.lifecycle.title', '全周期管理') }}</h2>
+        <span class="muted">{{ texts.t('lifecycle.page.subtitle', '合同任务书、项目实施进展、整改闭环和专家认证') }}</span>
       </div>
       <div class="toolbar-actions">
-        <el-input v-model="keyword" clearable placeholder="项目/单位/标题" @keyup.enter="loadActiveTab" />
-        <el-select v-model="status" clearable placeholder="状态" @change="loadActiveTab">
+        <el-input v-model="keyword" clearable :placeholder="texts.t('lifecycle.filter.keyword', '项目/单位/标题')" @keyup.enter="loadActiveTab" />
+        <el-select v-model="status" clearable :placeholder="texts.t('lifecycle.filter.status', '状态')" @change="loadActiveTab">
           <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
-        <el-button :icon="Refresh" :loading="loading" @click="loadActiveTab">刷新</el-button>
+        <el-button :icon="Refresh" :loading="loading" @click="loadActiveTab">{{ texts.t('lifecycle.action.refresh', '刷新') }}</el-button>
       </div>
     </div>
 
     <el-tabs v-model="activeTab" @tab-change="loadActiveTab">
-      <el-tab-pane v-if="canViewTab('task_books')" label="合同任务书" name="task_books">
+      <el-tab-pane v-if="canViewTab('task_books')" :label="texts.t('lifecycle.task_books.tab', '合同任务书')" name="task_books">
         <div class="toolbar">
-          <span class="muted">单位填报任务书，管理员审核通过后作为立项后管理依据。</span>
-          <el-button v-if="session.can('create_task_books')" type="primary" :icon="Plus" @click="openTaskBook()">新增任务书</el-button>
+          <span class="muted">{{ texts.t('lifecycle.task_books.tip', '单位填报任务书，管理员审核通过后作为立项后管理依据。') }}</span>
+          <el-button v-if="session.can('create_task_books')" type="primary" :icon="Plus" @click="openTaskBook()">{{ texts.t('lifecycle.task_books.create', '新增任务书') }}</el-button>
         </div>
         <el-table :data="taskBooks" border v-loading="loading">
-          <el-table-column prop="project.title" label="项目" min-width="220" />
-          <el-table-column prop="unit.name" label="单位" min-width="180" />
-          <el-table-column prop="title" label="任务书标题" min-width="180" />
-          <el-table-column label="状态" width="110"><template #default="{ row }"><el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag></template></el-table-column>
-          <el-table-column prop="submitted_at" label="提交时间" width="170" />
-          <el-table-column label="操作" width="220" fixed="right">
+          <el-table-column prop="project.title" :label="texts.t('lifecycle.column.project', '项目')" min-width="220" />
+          <el-table-column prop="unit.name" :label="texts.t('lifecycle.column.unit', '单位')" min-width="180" />
+          <el-table-column prop="title" :label="texts.t('lifecycle.column.task_title', '任务书标题')" min-width="180" />
+          <el-table-column :label="texts.t('lifecycle.column.status', '状态')" width="110"><template #default="{ row }"><el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag></template></el-table-column>
+          <el-table-column prop="submitted_at" :label="texts.t('lifecycle.column.submitted_at', '提交时间')" width="170" />
+          <el-table-column :label="texts.t('lifecycle.column.actions', '操作')" width="220" fixed="right">
             <template #default="{ row }">
               <div class="table-action-row">
-                <el-button size="small" :icon="View" @click="showText(row.title, row.content)">详情</el-button>
-                <el-button v-if="canEditUnitItem(row, 'update_task_books')" size="small" @click="openTaskBook(row)">编辑</el-button>
-                <el-button v-if="canEditUnitItem(row, 'submit_task_books')" size="small" type="primary" @click="submitItem('task-books', row)">提交</el-button>
-                <el-button v-if="session.can('review_task_books') && row.status === 'submitted'" size="small" type="success" @click="reviewItem('task-books', row)">审核</el-button>
+                <el-button size="small" :icon="View" @click="showText(row.title, row.content)">{{ texts.t('lifecycle.action.detail', '详情') }}</el-button>
+                <el-button v-if="canEditUnitItem(row, 'update_task_books')" size="small" @click="openTaskBook(row)">{{ texts.t('lifecycle.action.edit', '编辑') }}</el-button>
+                <el-button v-if="canEditUnitItem(row, 'submit_task_books')" size="small" type="primary" @click="submitItem('task-books', row)">{{ texts.t('lifecycle.action.submit', '提交') }}</el-button>
+                <el-button v-if="session.can('review_task_books') && row.status === 'submitted'" size="small" type="success" @click="reviewItem('task-books', row)">{{ texts.t('lifecycle.action.review', '审核') }}</el-button>
               </div>
             </template>
           </el-table-column>
         </el-table>
       </el-tab-pane>
 
-      <el-tab-pane v-if="canViewTab('progress')" label="实施进展" name="progress">
+      <el-tab-pane v-if="canViewTab('progress')" :label="texts.t('lifecycle.progress.tab', '实施进展')" name="progress">
         <div class="toolbar">
-          <span class="muted">单位定期提交项目实施情况，管理员确认或退回补正。</span>
-          <el-button v-if="session.can('create_project_progress')" type="primary" :icon="Plus" @click="openProgress()">新增进展</el-button>
+          <span class="muted">{{ texts.t('lifecycle.progress.tip', '单位定期提交项目实施情况，管理员确认或退回补正。') }}</span>
+          <el-button v-if="session.can('create_project_progress')" type="primary" :icon="Plus" @click="openProgress()">{{ texts.t('lifecycle.progress.create', '新增进展') }}</el-button>
         </div>
         <el-table :data="progressRecords" border v-loading="loading">
-          <el-table-column prop="project.title" label="项目" min-width="220" />
-          <el-table-column prop="unit.name" label="单位" min-width="180" />
-          <el-table-column prop="period" label="周期" width="130" />
-          <el-table-column prop="progress_date" label="进展日期" width="130" />
-          <el-table-column label="状态" width="110"><template #default="{ row }"><el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag></template></el-table-column>
-          <el-table-column prop="summary" label="进展摘要" min-width="220" show-overflow-tooltip />
-          <el-table-column label="操作" width="230" fixed="right">
+          <el-table-column prop="project.title" :label="texts.t('lifecycle.column.project', '项目')" min-width="220" />
+          <el-table-column prop="unit.name" :label="texts.t('lifecycle.column.unit', '单位')" min-width="180" />
+          <el-table-column prop="period" :label="texts.t('lifecycle.column.period', '周期')" width="130" />
+          <el-table-column prop="progress_date" :label="texts.t('lifecycle.column.progress_date', '进展日期')" width="130" />
+          <el-table-column :label="texts.t('lifecycle.column.status', '状态')" width="110"><template #default="{ row }"><el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag></template></el-table-column>
+          <el-table-column prop="summary" :label="texts.t('lifecycle.column.summary', '进展摘要')" min-width="220" show-overflow-tooltip />
+          <el-table-column :label="texts.t('lifecycle.column.actions', '操作')" width="230" fixed="right">
             <template #default="{ row }">
               <div class="table-action-row">
-                <el-button size="small" :icon="View" @click="showText('实施进展', progressText(row))">详情</el-button>
-                <el-button v-if="canEditUnitItem(row, 'update_project_progress')" size="small" @click="openProgress(row)">编辑</el-button>
-                <el-button v-if="canEditUnitItem(row, 'submit_project_progress')" size="small" type="primary" @click="submitItem('progress', row)">提交</el-button>
-                <el-button v-if="session.can('review_project_progress') && row.status === 'submitted'" size="small" type="success" @click="reviewItem('progress', row)">审核</el-button>
+                <el-button size="small" :icon="View" @click="showText(texts.t('lifecycle.progress.tab', '实施进展'), progressText(row))">{{ texts.t('lifecycle.action.detail', '详情') }}</el-button>
+                <el-button v-if="canEditUnitItem(row, 'update_project_progress')" size="small" @click="openProgress(row)">{{ texts.t('lifecycle.action.edit', '编辑') }}</el-button>
+                <el-button v-if="canEditUnitItem(row, 'submit_project_progress')" size="small" type="primary" @click="submitItem('progress', row)">{{ texts.t('lifecycle.action.submit', '提交') }}</el-button>
+                <el-button v-if="session.can('review_project_progress') && row.status === 'submitted'" size="small" type="success" @click="reviewItem('progress', row)">{{ texts.t('lifecycle.action.review', '审核') }}</el-button>
               </div>
             </template>
           </el-table-column>
         </el-table>
       </el-tab-pane>
 
-      <el-tab-pane v-if="canViewTab('rectifications')" label="整改闭环" name="rectifications">
+      <el-tab-pane v-if="canViewTab('rectifications')" :label="texts.t('lifecycle.rectifications.tab', '整改闭环')" name="rectifications">
         <div class="toolbar">
-          <span class="muted">管理员发起整改要求，单位提交整改说明，管理员审核闭环。</span>
-          <el-button v-if="session.can('create_rectifications')" type="primary" :icon="Plus" @click="openRectification()">发起整改</el-button>
+          <span class="muted">{{ texts.t('lifecycle.rectifications.tip', '管理员发起整改要求，单位提交整改说明，管理员审核闭环。') }}</span>
+          <el-button v-if="session.can('create_rectifications')" type="primary" :icon="Plus" @click="openRectification()">{{ texts.t('lifecycle.rectifications.create', '发起整改') }}</el-button>
         </div>
         <el-table :data="rectifications" border v-loading="loading">
-          <el-table-column prop="project.title" label="项目" min-width="220" />
-          <el-table-column prop="unit.name" label="单位" min-width="180" />
-          <el-table-column prop="title" label="整改事项" min-width="180" />
-          <el-table-column prop="due_date" label="截止日期" width="130" />
-          <el-table-column label="状态" width="110"><template #default="{ row }"><el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag></template></el-table-column>
-          <el-table-column label="操作" width="240" fixed="right">
+          <el-table-column prop="project.title" :label="texts.t('lifecycle.column.project', '项目')" min-width="220" />
+          <el-table-column prop="unit.name" :label="texts.t('lifecycle.column.unit', '单位')" min-width="180" />
+          <el-table-column prop="title" :label="texts.t('lifecycle.column.rectification_title', '整改事项')" min-width="180" />
+          <el-table-column prop="due_date" :label="texts.t('lifecycle.column.due_date', '截止日期')" width="130" />
+          <el-table-column :label="texts.t('lifecycle.column.status', '状态')" width="110"><template #default="{ row }"><el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag></template></el-table-column>
+          <el-table-column :label="texts.t('lifecycle.column.actions', '操作')" width="240" fixed="right">
             <template #default="{ row }">
               <div class="table-action-row">
-                <el-button size="small" :icon="View" @click="showText(row.title, rectificationText(row))">详情</el-button>
-                <el-button v-if="canSubmitRectification(row)" size="small" type="primary" @click="openRectificationResponse(row)">提交整改</el-button>
-                <el-button v-if="session.can('review_rectifications') && row.status === 'submitted'" size="small" type="success" @click="reviewItem('rectifications', row)">审核</el-button>
+                <el-button size="small" :icon="View" @click="showText(row.title, rectificationText(row))">{{ texts.t('lifecycle.action.detail', '详情') }}</el-button>
+                <el-button v-if="canSubmitRectification(row)" size="small" type="primary" @click="openRectificationResponse(row)">{{ texts.t('lifecycle.rectifications.submit_response', '提交整改') }}</el-button>
+                <el-button v-if="session.can('review_rectifications') && row.status === 'submitted'" size="small" type="success" @click="reviewItem('rectifications', row)">{{ texts.t('lifecycle.action.review', '审核') }}</el-button>
               </div>
             </template>
           </el-table-column>
         </el-table>
       </el-tab-pane>
 
-      <el-tab-pane v-if="canViewTab('expert_certifications')" label="专家认证" name="expert_certifications">
+      <el-tab-pane v-if="canViewTab('expert_certifications')" :label="texts.t('lifecycle.certifications.tab', '专家认证')" name="expert_certifications">
         <div class="toolbar">
-          <span class="muted">专家提交专业方向和资质说明，管理员审核后作为专家库基础信息。</span>
-          <el-button v-if="session.can('submit_expert_certifications')" type="primary" :icon="Plus" @click="openCertification">提交认证</el-button>
+          <span class="muted">{{ texts.t('lifecycle.certifications.tip', '专家提交专业方向和资质说明，管理员审核后作为专家库基础信息。') }}</span>
+          <el-button v-if="session.can('submit_expert_certifications')" type="primary" :icon="Plus" @click="openCertification">{{ texts.t('lifecycle.certifications.create', '提交认证') }}</el-button>
         </div>
         <el-table :data="certifications" border v-loading="loading">
-          <el-table-column prop="user.username" label="专家账号" width="140" />
-          <el-table-column prop="user.name" label="姓名" width="140" />
-          <el-table-column prop="organization" label="单位/机构" min-width="180" />
-          <el-table-column prop="specialty" label="专业方向" min-width="180" />
-          <el-table-column prop="professional_title" label="职称" width="130" />
-          <el-table-column label="状态" width="110"><template #default="{ row }"><el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag></template></el-table-column>
-          <el-table-column label="操作" width="170" fixed="right">
+          <el-table-column prop="user.username" :label="texts.t('lifecycle.column.expert_username', '专家账号')" width="140" />
+          <el-table-column prop="user.name" :label="texts.t('lifecycle.column.name', '姓名')" width="140" />
+          <el-table-column prop="organization" :label="texts.t('lifecycle.column.organization', '单位/机构')" min-width="180" />
+          <el-table-column prop="specialty" :label="texts.t('lifecycle.column.specialty', '专业方向')" min-width="180" />
+          <el-table-column prop="professional_title" :label="texts.t('lifecycle.column.professional_title', '职称')" width="130" />
+          <el-table-column :label="texts.t('lifecycle.column.status', '状态')" width="110"><template #default="{ row }"><el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag></template></el-table-column>
+          <el-table-column :label="texts.t('lifecycle.column.actions', '操作')" width="170" fixed="right">
             <template #default="{ row }">
               <div class="table-action-row">
-                <el-button size="small" :icon="View" @click="showText('专家认证', certificationText(row))">详情</el-button>
-                <el-button v-if="session.can('review_expert_certifications') && row.status === 'submitted'" size="small" type="success" @click="reviewItem('expert-certifications', row)">审核</el-button>
+                <el-button size="small" :icon="View" @click="showText(texts.t('lifecycle.certifications.tab', '专家认证'), certificationText(row))">{{ texts.t('lifecycle.action.detail', '详情') }}</el-button>
+                <el-button v-if="session.can('review_expert_certifications') && row.status === 'submitted'" size="small" type="success" @click="reviewItem('expert-certifications', row)">{{ texts.t('lifecycle.action.review', '审核') }}</el-button>
               </div>
             </template>
           </el-table-column>
@@ -206,8 +206,10 @@ import { ElMessage } from 'element-plus'
 import { Plus, Refresh, View } from '@element-plus/icons-vue'
 import { api } from '../api.js'
 import { useSessionStore } from '../store.js'
+import { useTextStore } from '../texts.js'
 
 const session = useSessionStore()
+const texts = useTextStore()
 const activeTab = ref('task_books')
 const keyword = ref('')
 const status = ref('')

@@ -17,26 +17,26 @@
       <template #header>
         <div class="workflow-head">
           <div>
-            <strong>科研项目申报与管理全流程</strong>
-            <span>按业务全生命周期展示，并标明系统内办理和线下办理节点</span>
+            <strong>{{ texts.t('dashboard.workflow.title', '科研项目申报与管理全流程') }}</strong>
+            <span>{{ texts.t('dashboard.workflow.description', '按业务全生命周期展示，并标明系统内办理和线下办理节点') }}</span>
           </div>
           <el-tag type="primary" effect="plain">{{ currentRoleLabel }}</el-tag>
         </div>
       </template>
 
       <el-tabs v-model="workflowTab" class="workflow-tabs">
-        <el-tab-pane label="业务全生命周期" name="lifecycle">
+        <el-tab-pane :label="texts.t('dashboard.workflow.tab.lifecycle', '业务全生命周期')" name="lifecycle">
           <div class="workflow-legend">
-            <span><i class="legend-dot is-system"></i>系统内办理</span>
-            <span><i class="legend-dot is-offline"></i>线下办理/人工决策</span>
+            <span><i class="legend-dot is-system"></i>{{ texts.t('dashboard.workflow.system', '系统内办理') }}</span>
+            <span><i class="legend-dot is-offline"></i>{{ texts.t('dashboard.workflow.offline', '线下办理/人工决策') }}</span>
           </div>
 
           <div class="workflow-lanes lifecycle-lanes">
             <div v-for="(lane, index) in lifecycleWorkflow" :key="lane.key" class="workflow-lane-wrap">
               <article :class="laneClass(lane)">
                 <div class="workflow-lane-title">
-                  <strong>{{ lane.title }}</strong>
-                  <span>{{ lane.owner }}</span>
+                  <strong>{{ laneText(lane, 'title') }}</strong>
+                  <span>{{ laneText(lane, 'owner') }}</span>
                 </div>
                 <div class="workflow-step-list">
                   <div v-for="step in lane.steps" :key="step.code" :class="stepClass(step)">
@@ -44,8 +44,8 @@
                       <b>{{ step.code }}</b>
                       <el-tag size="small" :type="stepTagType(step)" effect="plain">{{ stepKindLabel(step) }}</el-tag>
                     </div>
-                    <strong>{{ step.title }}</strong>
-                    <span>{{ step.body }}</span>
+                    <strong>{{ stepText(lane, step, 'title') }}</strong>
+                    <span>{{ stepText(lane, step, 'body') }}</span>
                   </div>
                 </div>
               </article>
@@ -54,18 +54,18 @@
           </div>
 
           <div class="workflow-outcomes lifecycle-notes">
-            <span>已上线：注册审核、批次申报、附件、分级审核、合同任务书、实施进展、整改闭环、专家认证、验收和延期。</span>
-            <span>线下：局领导办公会、经费拨付、部分立项决策仍按现实业务办理。</span>
+            <span>{{ texts.t('dashboard.workflow.online_note', '已上线：注册审核、批次申报、附件、分级审核、合同任务书、实施进展、整改闭环、专家认证、验收和延期。') }}</span>
+            <span>{{ texts.t('dashboard.workflow.offline_note', '线下：局领导办公会、经费拨付、部分立项决策仍按现实业务办理。') }}</span>
           </div>
         </el-tab-pane>
 
-        <el-tab-pane label="系统申报审核" name="application">
+        <el-tab-pane :label="texts.t('dashboard.workflow.tab.application', '系统申报审核')" name="application">
           <div class="workflow-lanes">
             <div v-for="(lane, index) in applicationWorkflow" :key="lane.key" class="workflow-lane-wrap">
               <article :class="laneClass(lane)">
                 <div class="workflow-lane-title">
-                  <strong>{{ lane.title }}</strong>
-                  <span>{{ lane.owner }}</span>
+                  <strong>{{ laneText(lane, 'title') }}</strong>
+                  <span>{{ laneText(lane, 'owner') }}</span>
                 </div>
                 <div class="workflow-step-list">
                   <div v-for="step in lane.steps" :key="step.code" :class="stepClass(step)">
@@ -73,8 +73,8 @@
                       <b>{{ step.code }}</b>
                       <el-tag size="small" :type="stepTagType(step)" effect="plain">{{ stepKindLabel(step) }}</el-tag>
                     </div>
-                    <strong>{{ step.title }}</strong>
-                    <span>{{ step.body }}</span>
+                    <strong>{{ stepText(lane, step, 'title') }}</strong>
+                    <span>{{ stepText(lane, step, 'body') }}</span>
                   </div>
                 </div>
               </article>
@@ -89,13 +89,13 @@
           </div>
         </el-tab-pane>
 
-        <el-tab-pane label="系统验收审核" name="acceptance">
+        <el-tab-pane :label="texts.t('dashboard.workflow.tab.acceptance', '系统验收审核')" name="acceptance">
           <div class="workflow-lanes">
             <div v-for="(lane, index) in acceptanceWorkflow" :key="lane.key" class="workflow-lane-wrap">
               <article :class="laneClass(lane)">
                 <div class="workflow-lane-title">
-                  <strong>{{ lane.title }}</strong>
-                  <span>{{ lane.owner }}</span>
+                  <strong>{{ laneText(lane, 'title') }}</strong>
+                  <span>{{ laneText(lane, 'owner') }}</span>
                 </div>
                 <div class="workflow-step-list">
                   <div v-for="step in lane.steps" :key="step.code" :class="stepClass(step)">
@@ -103,8 +103,8 @@
                       <b>{{ step.code }}</b>
                       <el-tag size="small" :type="stepTagType(step)" effect="plain">{{ stepKindLabel(step) }}</el-tag>
                     </div>
-                    <strong>{{ step.title }}</strong>
-                    <span>{{ step.body }}</span>
+                    <strong>{{ stepText(lane, step, 'title') }}</strong>
+                    <span>{{ stepText(lane, step, 'body') }}</span>
                   </div>
                 </div>
               </article>
@@ -225,9 +225,11 @@ import { Files, Refresh } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api.js'
 import { useSessionStore } from '../store.js'
+import { useTextStore } from '../texts.js'
 
 const router = useRouter()
 const session = useSessionStore()
+const texts = useTextStore()
 const loading = ref(false)
 const summary = ref(null)
 const workflowTab = ref('lifecycle')
@@ -363,7 +365,7 @@ const lifecycleWorkflow = [
     steps: [
       { code: '06', title: '专家评审', body: '项目评审评分推荐，形成评审意见。', kind: 'system' },
       { code: '13B', title: '验收评审', body: '验收阶段形成评分和专家意见。', kind: 'system' },
-      { code: '专家库', title: '专家认证', body: '专家提交专业方向和资质说明，管理员审核后沉淀为专家库资料。', kind: 'system' }
+      { code: '专家库', textKey: 'expert_pool', title: '专家认证', body: '专家提交专业方向和资质说明，管理员审核后沉淀为专家库资料。', kind: 'system' }
     ]
   },
   {
@@ -390,7 +392,7 @@ const applicationWorkflow = [
       { code: '01', title: '注册审核通过', body: '单位和账号启用后才可申报。', ...systemStep },
       { code: '02', title: '选择开放批次', body: '填写项目、预算和类别，保存草稿。', ...systemStep },
       { code: '03', title: '上传附件提交', body: '提交后进入区县审核；未审核前可撤回。', ...systemStep },
-      { code: '补正', title: '退回修改', body: '任一阶段退回后，单位修改再提交。', ...systemStep }
+      { code: '补正', textKey: 'supplement', title: '退回修改', body: '任一阶段退回后，单位修改再提交。', ...systemStep }
     ]
   },
   {
@@ -442,7 +444,7 @@ const acceptanceWorkflow = [
       { code: '01', title: '发起验收', body: '已通过或验收中项目可创建验收草稿。', ...systemStep },
       { code: '02', title: '上传验收材料', body: '补充验收报告、附件和说明。', ...systemStep },
       { code: '03', title: '提交验收', body: '提交后进入区县验收审核。', ...systemStep },
-      { code: '延期', title: '延期申请', body: '验收阶段可提交延期说明。', ...systemStep }
+      { code: '延期', textKey: 'extension', title: '延期申请', body: '验收阶段可提交延期说明。', ...systemStep }
     ]
   },
   {
@@ -544,6 +546,10 @@ const actionLabels = {
   'message.read_all': '全部消息已读',
   'dictionary_item.created': '字典创建',
   'dictionary_item.updated': '字典修改',
+  'system_text.created': '文案创建',
+  'system_text.updated': '文案修改',
+  'system_text.reset': '文案回滚',
+  'system_text.deleted': '文案删除',
   'setting.updated': '配置修改',
   'project.exported': '项目导出',
   'review_tasks.exported': '审核任务导出',
@@ -566,6 +572,14 @@ function securityEventAction(value) {
 
 function actionLabel(value) {
   return actionLabels[value] || value || '-'
+}
+
+function laneText(lane, field) {
+  return texts.t(`workflow.lane.${lane.key}.${field}`, lane[field])
+}
+
+function stepText(lane, step, field) {
+  return texts.t(`workflow.step.${lane.key}.${step.textKey || step.code}.${field}`, step[field])
 }
 
 function goMetric(item) {

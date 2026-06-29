@@ -3,13 +3,13 @@
   <el-container v-else class="shell gov-shell">
     <el-aside width="248px" class="sidebar">
       <div class="brand">
-        <strong>科技项目管理</strong>
-        <span>公共服务后台</span>
+        <strong>{{ texts.t('app.brand.title', '科技项目管理') }}</strong>
+        <span>{{ texts.t('app.brand.subtitle', '公共服务后台') }}</span>
       </div>
       <el-menu :default-active="$route.path" router>
         <el-menu-item v-for="item in visibleMenus" :key="item.path" :index="item.path">
           <el-icon><component :is="menuIcon(item.key)" /></el-icon>
-          <span>{{ item.label }}</span>
+          <span>{{ menuLabel(item) }}</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -17,10 +17,10 @@
       <el-header class="topbar">
         <div class="topbar-title">
           <strong>{{ title }}</strong>
-          <span>阿拉善盟科技计划项目管理信息系统</span>
+          <span>{{ texts.t('app.topbar.subtitle', '阿拉善盟科技计划项目管理信息系统') }}</span>
         </div>
         <div class="topbar-actions">
-          <el-tooltip content="站内消息" placement="bottom">
+          <el-tooltip :content="texts.t('app.message.tooltip', '站内消息')" placement="bottom">
             <el-badge :value="unreadMessages" :hidden="unreadMessages === 0" :max="99">
               <el-button :icon="Bell" circle @click="router.push('/messages')" />
             </el-badge>
@@ -28,16 +28,16 @@
           <el-dropdown trigger="click" @command="handleAccountCommand">
             <el-button class="account-button">
               <el-icon><User /></el-icon>
-              <span class="account-name">{{ session.user?.name || session.user?.username || '当前账号' }}</span>
+              <span class="account-name">{{ session.user?.name || session.user?.username || texts.t('app.account.default_name', '当前账号') }}</span>
               <span class="account-role">{{ roleLabel(session.role) }}</span>
               <el-icon class="el-icon--right"><ArrowDown /></el-icon>
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item command="profile" :icon="User">个人资料</el-dropdown-item>
-                <el-dropdown-item command="password" :icon="Lock">修改密码</el-dropdown-item>
-                <el-dropdown-item divided command="switch" :icon="SwitchButton">切换账号</el-dropdown-item>
-                <el-dropdown-item command="logout" :icon="SwitchButton">退出登录</el-dropdown-item>
+                <el-dropdown-item command="profile" :icon="User">{{ texts.t('app.profile', '个人资料') }}</el-dropdown-item>
+                <el-dropdown-item command="password" :icon="Lock">{{ texts.t('app.change_password', '修改密码') }}</el-dropdown-item>
+                <el-dropdown-item divided command="switch" :icon="SwitchButton">{{ texts.t('app.switch_account', '切换账号') }}</el-dropdown-item>
+                <el-dropdown-item command="logout" :icon="SwitchButton">{{ texts.t('app.logout', '退出登录') }}</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -78,13 +78,15 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ArrowDown, Bell, Checked, Collection, Connection, DataLine, FolderChecked, FolderOpened, House, Lock, Message, OfficeBuilding, Operation, Setting, SwitchButton, Tickets, User, Warning } from '@element-plus/icons-vue'
+import { ArrowDown, Bell, Checked, Collection, Connection, DataLine, Document, FolderChecked, FolderOpened, House, Lock, Message, OfficeBuilding, Operation, Setting, SwitchButton, Tickets, User, Warning } from '@element-plus/icons-vue'
 import { api } from './api.js'
 import { useSessionStore } from './store.js'
+import { useTextStore } from './texts.js'
 
 const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
+const texts = useTextStore()
 const passwordVisible = ref(false)
 const savingPassword = ref(false)
 const profileVisible = ref(false)
@@ -113,27 +115,29 @@ const iconMap = {
   roles: Operation,
   security: Warning,
   dictionary_items: Collection,
+  system_texts: Document,
   settings: Setting
 }
-const titles = {
-  '/dashboard': '运行概览',
-  '/projects': '项目申报',
-  '/application-batches': '申报批次',
-  '/acceptance': '验收管理',
-  '/lifecycle': '全周期管理',
-  '/units': '单位管理',
-  '/users': '账号管理',
-  '/unit-profile': '单位资料',
-  '/reviews': '审核任务',
-  '/messages': '站内消息',
-  '/migration': '迁移准备',
-  '/operation-logs': '操作日志',
-  '/public-home': '首页管理',
-  '/mail-center': '邮件中心',
-  '/roles': '角色权限',
-  '/security': '安全中心',
-  '/dictionary-items': '数据字典',
-  '/settings': '系统配置'
+const titleKeys = {
+  '/dashboard': ['page.dashboard.title', '运行概览'],
+  '/projects': ['page.projects.title', '项目申报'],
+  '/application-batches': ['page.application_batches.title', '申报批次'],
+  '/acceptance': ['page.acceptance.title', '验收管理'],
+  '/lifecycle': ['page.lifecycle.title', '全周期管理'],
+  '/units': ['page.units.title', '单位管理'],
+  '/users': ['page.users.title', '账号管理'],
+  '/unit-profile': ['page.unit_profile.title', '单位资料'],
+  '/reviews': ['page.reviews.title', '审核任务'],
+  '/messages': ['page.messages.title', '站内消息'],
+  '/migration': ['page.migration.title', '迁移准备'],
+  '/operation-logs': ['page.operation_logs.title', '操作日志'],
+  '/public-home': ['page.public_home.title', '首页管理'],
+  '/mail-center': ['page.mail_center.title', '邮件中心'],
+  '/roles': ['page.roles.title', '角色权限'],
+  '/security': ['page.security.title', '安全中心'],
+  '/dictionary-items': ['page.dictionary_items.title', '数据字典'],
+  '/system-texts': ['page.system_texts.title', '系统文案'],
+  '/settings': ['page.settings.title', '系统配置']
 }
 const roleLabels = {
   super_admin: '超级管理员',
@@ -145,10 +149,17 @@ const roleLabels = {
 }
 
 const visibleMenus = computed(() => session.menus.length ? session.menus : [])
-const title = computed(() => titles[route.path] || '项目申报系统')
+const title = computed(() => {
+  const titleConfig = titleKeys[route.path]
+  return titleConfig ? texts.t(titleConfig[0], titleConfig[1]) : '项目申报系统'
+})
 
 function menuIcon(key) {
   return iconMap[key] || DataLine
+}
+
+function menuLabel(item) {
+  return texts.t(`menu.${item.key}`, item.label)
 }
 
 function roleLabel(role) {
@@ -256,6 +267,7 @@ watch(() => route.path, () => {
 onMounted(() => {
   window.addEventListener('messages:changed', refreshUnreadMessages)
   window.addEventListener('auth:expired', handleSessionExpired)
+  texts.loadTexts()
   refreshUnreadMessages()
 })
 

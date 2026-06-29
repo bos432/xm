@@ -21,6 +21,7 @@ import MigrationView from './views/MigrationView.vue'
 import OperationLogsView from './views/OperationLogsView.vue'
 import UnitsView from './views/UnitsView.vue'
 import DictionaryItemsView from './views/DictionaryItemsView.vue'
+import SystemTextsView from './views/SystemTextsView.vue'
 import UsersView from './views/UsersView.vue'
 
 const router = createRouter({
@@ -48,6 +49,7 @@ const router = createRouter({
     { path: '/roles', component: RolesView, meta: { permission: 'manage_roles' } },
     { path: '/security', component: SecurityCenterView, meta: { permission: 'manage_security' } },
     { path: '/dictionary-items', component: DictionaryItemsView, meta: { permission: 'manage_dictionaries' } },
+    { path: '/system-texts', component: SystemTextsView, meta: { permission: 'manage_system_texts' } },
     { path: '/settings', component: SettingsView, meta: { permission: 'manage_settings' } }
   ]
 })

@@ -19,9 +19,9 @@
         </dl>
       </el-card>
       <el-card shadow="never" class="settings-card">
-        <template #header>首页内容</template>
-        <p>导航、公告、下载、服务事项和 logo/banner 请进入首页管理维护。</p>
-        <el-button type="primary" plain @click="router.push('/public-home')">进入首页管理</el-button>
+        <template #header>{{ texts.t('settings.public_home.card_title', '首页内容') }}</template>
+        <p>{{ texts.t('settings.public_home.card_body', '导航、公告、下载、服务事项和 logo/banner 请进入首页管理维护。') }}</p>
+        <el-button type="primary" plain @click="router.push('/public-home')">{{ texts.t('settings.public_home.button', '进入首页管理') }}</el-button>
       </el-card>
       <el-card shadow="never" class="settings-card">
         <template #header>测试邮件</template>
@@ -64,8 +64,10 @@ import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api.js'
+import { useTextStore } from '../texts.js'
 
 const router = useRouter()
+const texts = useTextStore()
 const loading = ref(false)
 const testingMail = ref(false)
 const groups = ref([])

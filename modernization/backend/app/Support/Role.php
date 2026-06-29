@@ -95,6 +95,7 @@ final class Role
             ['code' => 'manage_home_content', 'name' => '首页内容', 'group' => '门户'],
             ['code' => 'manage_home_assets', 'name' => '首页素材', 'group' => '门户'],
             ['code' => 'manage_dictionaries', 'name' => '数据字典', 'group' => '系统'],
+            ['code' => 'manage_system_texts', 'name' => '系统文案', 'group' => '高风险'],
             ['code' => 'view_migration', 'name' => '迁移准备', 'group' => '系统'],
             ['code' => 'view_operation_logs', 'name' => '操作日志', 'group' => '系统'],
             ['code' => 'manage_settings', 'name' => '系统配置', 'group' => '高风险'],
@@ -143,6 +144,7 @@ final class Role
                 'manage_mail',
                 'manage_roles',
                 'manage_security',
+                'manage_system_texts',
             ],
             self::ADMIN => $adminBusiness,
             self::COUNTY, self::DEPARTMENT, self::EXPERT => [
@@ -153,6 +155,7 @@ final class Role
                 'view_task_books',
                 'view_project_progress',
                 'view_rectifications',
+                'view_expert_certifications',
             ],
             self::UNIT => [
                 'view_projects',
@@ -172,6 +175,7 @@ final class Role
                 'submit_project_progress',
                 'view_rectifications',
                 'submit_rectifications',
+                'view_expert_certifications',
             ],
             default => [],
         };
@@ -272,6 +276,7 @@ final class Role
             ['key' => 'roles', 'path' => '/roles', 'label' => '角色权限', 'permission' => 'manage_roles'],
             ['key' => 'security', 'path' => '/security', 'label' => '安全中心', 'permission' => 'manage_security'],
             ['key' => 'dictionary_items', 'path' => '/dictionary-items', 'label' => '数据字典', 'permission' => 'manage_dictionaries'],
+            ['key' => 'system_texts', 'path' => '/system-texts', 'label' => '系统文案', 'permission' => 'manage_system_texts'],
             ['key' => 'settings', 'path' => '/settings', 'label' => '系统配置', 'permission' => 'manage_settings'],
             ['key' => 'migration', 'path' => '/migration', 'label' => '迁移准备', 'permission' => 'view_migration'],
             ['key' => 'operation_logs', 'path' => '/operation-logs', 'label' => '操作日志', 'permission' => 'view_operation_logs'],
