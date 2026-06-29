@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\SystemSetting;
 use App\Models\Unit;
 use App\Models\User;
 use App\Support\AuditLogger;
@@ -197,6 +198,10 @@ class AuthController extends Controller
                 "您正在重置项目申报系统账号密码。\n\n请在 60 分钟内打开以下链接设置新密码：\n{$link}\n\n如果不是本人操作，请忽略本邮件。",
                 function ($message) use ($data) {
                     $message->to($data['email'])->subject('项目申报系统密码重置');
+
+                    if ($fromAddress = $this->configuredMailFromAddress()) {
+                        $message->from($fromAddress, config('mail.from.name'));
+                    }
                 }
             );
 
@@ -328,6 +333,21 @@ class AuthController extends Controller
         $expected = Cache::pull($key);
 
         return $expected !== null && (int) $expected === $answer;
+    }
+
+    private function configuredMailFromAddress(): ?string
+    {
+        $address = trim((string) SystemSetting::query()
+            ->where('key', 'mail.from_address')
+            ->value('value'));
+
+        if ($address !== '' && filter_var($address, FILTER_VALIDATE_EMAIL)) {
+            return $address;
+        }
+
+        $configured = trim((string) config('mail.from.address'));
+
+        return filter_var($configured, FILTER_VALIDATE_EMAIL) ? $configured : null;
     }
 
     private function captchaCacheKey(string $id): string

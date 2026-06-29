@@ -59,6 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/projects/{project}/reviews', [ReviewController::class, 'store']);
 
     Route::get('/settings', [SystemSettingController::class, 'index']);
+    Route::get('/settings/runtime', [SystemSettingController::class, 'runtime']);
     Route::put('/settings/{setting}', [SystemSettingController::class, 'update']);
     Route::get('/public-home', [PublicHomeAdminController::class, 'index']);
     Route::put('/public-home/sections/{section:key}', [PublicHomeAdminController::class, 'updateSection']);

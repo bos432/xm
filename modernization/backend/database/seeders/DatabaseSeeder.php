@@ -34,7 +34,7 @@ class DatabaseSeeder extends Seeder
         $settings = [
             ['key' => 'sms.provider', 'value' => '', 'group' => 'sms', 'is_secret' => false, 'description' => '短信供应商标识'],
             ['key' => 'sms.api_key', 'value' => '', 'group' => 'sms', 'is_secret' => true, 'description' => '短信接口密钥'],
-            ['key' => 'mail.from_address', 'value' => '', 'group' => 'mail', 'is_secret' => false, 'description' => '系统邮件发件地址'],
+            ['key' => 'mail.from_address', 'value' => '', 'group' => 'mail', 'is_secret' => false, 'description' => '可选发件地址覆盖；SMTP 主机、账号、密码在生产 .env 配置'],
             ['key' => 'workflow.default_first_stage', 'value' => 'county', 'group' => 'workflow', 'is_secret' => false, 'description' => '项目提交后的第一审核角色'],
         ];
 

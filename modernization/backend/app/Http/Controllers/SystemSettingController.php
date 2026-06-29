@@ -21,10 +21,44 @@ class SystemSettingController extends Controller
 
         return SystemSetting::query()
             ->select(['id', 'key', 'value', 'group', 'is_secret', 'description'])
+            ->where('key', '!=', 'public.homepage_content')
             ->orderBy('group')
             ->orderBy('key')
             ->get()
             ->map(fn (SystemSetting $setting) => $this->maskSecretValue($setting));
+    }
+
+    public function runtime(Request $request)
+    {
+        if (! Role::canManageSettings($request->user()->role)) {
+            abort(403, '无权查看系统配置');
+        }
+
+        $smtp = config('mail.mailers.smtp', []);
+        $mailer = (string) config('mail.default', 'log');
+        $databaseFrom = trim((string) SystemSetting::query()
+            ->where('key', 'mail.from_address')
+            ->value('value'));
+
+        return response()->json([
+            'mail' => [
+                'mailer' => $mailer,
+                'is_smtp' => $mailer === 'smtp',
+                'host' => (string) ($smtp['host'] ?? ''),
+                'port' => (string) ($smtp['port'] ?? ''),
+                'encryption' => (string) ($smtp['encryption'] ?? ''),
+                'username' => $this->maskRuntimeValue((string) ($smtp['username'] ?? '')),
+                'password_configured' => (string) ($smtp['password'] ?? '') !== '',
+                'from_address' => $databaseFrom !== '' ? $databaseFrom : (string) config('mail.from.address'),
+                'from_name' => (string) config('mail.from.name'),
+                'from_source' => $databaseFrom !== '' ? 'system_setting' : 'env',
+                'app_url' => (string) config('app.url'),
+            ],
+            'paths' => [
+                'env' => '/www/wwwroot/nxm.zlck888.com/shared/.env',
+                'homepage' => '/public-home',
+            ],
+        ]);
     }
 
     public function update(Request $request, SystemSetting $setting)
@@ -34,11 +68,11 @@ class SystemSettingController extends Controller
         }
 
         $data = $request->validate([
-            'value' => ['required', 'string', 'max:5000'],
+            'value' => [$setting->is_secret ? 'nullable' : 'required', 'string', 'max:5000'],
             'description' => ['nullable', 'string', 'max:500'],
         ]);
 
-        if ($setting->is_secret && $data['value'] === '') {
+        if ($setting->is_secret && blank($data['value'] ?? null)) {
             unset($data['value']);
         }
 
@@ -60,5 +94,18 @@ class SystemSettingController extends Controller
         }
 
         return $setting;
+    }
+
+    private function maskRuntimeValue(string $value): string
+    {
+        if ($value === '') {
+            return '';
+        }
+
+        if (strlen($value) <= 4) {
+            return '****';
+        }
+
+        return substr($value, 0, 2).'****'.substr($value, -2);
     }
 }

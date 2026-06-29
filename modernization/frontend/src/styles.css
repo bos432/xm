@@ -82,7 +82,8 @@ body { margin: 0; }
   .gov-topbar { height: auto; }
   .gov-masthead-grid,
   .gov-main-grid,
-  .gov-columns { grid-template-columns: 1fr; }
+  .gov-columns,
+  .settings-overview-grid { grid-template-columns: 1fr; }
   .gov-quick-row,
   .gov-data-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .gov-brand-row strong { font-size: 23px; }
@@ -125,6 +126,53 @@ body { margin: 0; }
 .table-action-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .compact-grid > div { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; display: grid; gap: 6px; }
 .compact-grid strong { font-size: 20px; color: var(--gov-blue); }
+.settings-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.settings-card .el-card__body {
+  min-height: 188px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.settings-card p {
+  margin: 0;
+  color: #516276;
+  line-height: 1.7;
+}
+.settings-card code {
+  color: var(--gov-blue);
+  background: #edf5ff;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+.settings-runtime-list {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.settings-runtime-list div {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 10px;
+}
+.settings-runtime-list dt {
+  color: #6b7c8f;
+}
+.settings-runtime-list dd {
+  margin: 0;
+  color: #24364a;
+  overflow-wrap: anywhere;
+}
+.settings-value {
+  display: block;
+  max-height: 72px;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  color: #24364a;
+}
 .gov-shell .el-main { padding: 18px; background: var(--gov-bg); }
 .gov-shell .el-menu { border-right: 0; }
 .gov-shell .el-menu-item.is-active {
