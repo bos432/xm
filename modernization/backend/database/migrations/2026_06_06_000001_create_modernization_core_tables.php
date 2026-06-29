@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('address', 500)->nullable();
             $table->string('region_code', 50)->nullable()->index();
             $table->string('status', 40)->default('active')->index();
-            $table->json('metadata')->nullable();
+            $table->longText('metadata')->nullable();
             $table->timestamps();
         });
 
@@ -63,7 +63,7 @@ return new class extends Migration
             $table->decimal('budget_amount', 14, 2)->nullable();
             $table->timestamp('submitted_at')->nullable();
             $table->string('current_reviewer_role', 40)->nullable()->index();
-            $table->json('metadata')->nullable();
+            $table->longText('metadata')->nullable();
             $table->timestamps();
         });
 
@@ -80,7 +80,7 @@ return new class extends Migration
             $table->unsignedBigInteger('size_bytes')->default(0);
             $table->string('sha256', 64)->nullable()->index();
             $table->string('purpose', 80)->default('application')->index();
-            $table->json('metadata')->nullable();
+            $table->longText('metadata')->nullable();
             $table->timestamps();
         });
 
@@ -94,7 +94,7 @@ return new class extends Migration
             $table->decimal('score', 5, 2)->nullable();
             $table->text('comment')->nullable();
             $table->timestamp('reviewed_at')->nullable()->index();
-            $table->json('metadata')->nullable();
+            $table->longText('metadata')->nullable();
             $table->timestamps();
         });
 
@@ -115,7 +115,7 @@ return new class extends Migration
             $table->string('label', 200);
             $table->unsignedInteger('sort_order')->default(0);
             $table->boolean('is_active')->default(true)->index();
-            $table->json('metadata')->nullable();
+            $table->longText('metadata')->nullable();
             $table->timestamps();
             $table->unique(['group', 'code']);
         });
@@ -128,7 +128,7 @@ return new class extends Migration
             $table->string('title', 200);
             $table->text('body')->nullable();
             $table->timestamp('read_at')->nullable()->index();
-            $table->json('metadata')->nullable();
+            $table->longText('metadata')->nullable();
             $table->timestamps();
         });
 
@@ -140,7 +140,7 @@ return new class extends Migration
             $table->unsignedBigInteger('target_id')->nullable()->index();
             $table->string('ip_address', 80)->nullable();
             $table->string('user_agent', 500)->nullable();
-            $table->json('payload')->nullable();
+            $table->longText('payload')->nullable();
             $table->timestamps();
         });
 
@@ -152,8 +152,8 @@ return new class extends Migration
             $table->string('status', 40)->default('pending')->index();
             $table->timestamp('started_at')->nullable();
             $table->timestamp('finished_at')->nullable();
-            $table->json('summary')->nullable();
-            $table->json('metadata')->nullable();
+            $table->longText('summary')->nullable();
+            $table->longText('metadata')->nullable();
             $table->timestamps();
         });
 
@@ -167,7 +167,7 @@ return new class extends Migration
             $table->unsignedInteger('insert_statement_count')->default(0);
             $table->unsignedInteger('estimated_row_count')->default(0);
             $table->unsignedInteger('warning_count')->default(0);
-            $table->json('metadata')->nullable();
+            $table->longText('metadata')->nullable();
             $table->timestamps();
         });
     }
