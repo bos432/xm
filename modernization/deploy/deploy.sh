@@ -9,6 +9,7 @@ COMPOSER_BIN="${COMPOSER_BIN:-$APP_ROOT/shared/composer.phar}"
 NODE_BIN="${NODE_BIN:-node}"
 NPM_BIN="${NPM_BIN:-npm}"
 WEB_USER="${WEB_USER:-www:www}"
+RUN_SEED="${RUN_SEED:-0}"
 
 RELEASE_ID="$(date +%Y%m%d%H%M%S)"
 RELEASE_DIR="$APP_ROOT/releases/$RELEASE_ID"
@@ -93,8 +94,18 @@ log "Installing backend dependencies"
 "$PHP_BIN" composer.phar config -g policy.advisories.block false
 "$PHP_BIN" composer.phar install --no-dev --optimize-autoloader --no-interaction
 
+if ! grep -q '^APP_KEY=base64:' .env; then
+  log "Generating Laravel application key"
+  "$PHP_BIN" artisan key:generate --force
+fi
+
 log "Running database migrations"
 "$PHP_BIN" artisan migrate --force
+
+if [ "$RUN_SEED" = "1" ]; then
+  log "Seeding initial production data"
+  "$PHP_BIN" artisan db:seed --force
+fi
 
 log "Refreshing Laravel caches"
 "$PHP_BIN" artisan config:clear
