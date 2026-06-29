@@ -13,6 +13,79 @@
       </el-card>
     </div>
 
+    <el-card shadow="never" class="workflow-card">
+      <template #header>
+        <div class="workflow-head">
+          <div>
+            <strong>科研项目申报与管理全流程</strong>
+            <span>按当前系统角色和状态流转整理</span>
+          </div>
+          <el-tag type="primary" effect="plain">{{ currentRoleLabel }}</el-tag>
+        </div>
+      </template>
+
+      <el-tabs v-model="workflowTab" class="workflow-tabs">
+        <el-tab-pane label="项目申报流程" name="application">
+          <div class="workflow-lanes">
+            <div v-for="(lane, index) in applicationWorkflow" :key="lane.key" class="workflow-lane-wrap">
+              <article :class="laneClass(lane)">
+                <div class="workflow-lane-title">
+                  <strong>{{ lane.title }}</strong>
+                  <span>{{ lane.owner }}</span>
+                </div>
+                <div class="workflow-step-list">
+                  <div v-for="step in lane.steps" :key="step.code" class="workflow-step">
+                    <b>{{ step.code }}</b>
+                    <strong>{{ step.title }}</strong>
+                    <span>{{ step.body }}</span>
+                  </div>
+                </div>
+              </article>
+              <span v-if="index < applicationWorkflow.length - 1" class="workflow-arrow">→</span>
+            </div>
+          </div>
+
+          <div class="workflow-outcomes">
+            <span>通过：进入下一审核阶段，管理员终审后变为“已通过”。</span>
+            <span>退回：回到申报单位，修改后可再次提交。</span>
+            <span>驳回：申报链结束，项目状态为“已驳回”。</span>
+          </div>
+        </el-tab-pane>
+
+        <el-tab-pane label="项目验收流程" name="acceptance">
+          <div class="workflow-lanes">
+            <div v-for="(lane, index) in acceptanceWorkflow" :key="lane.key" class="workflow-lane-wrap">
+              <article :class="laneClass(lane)">
+                <div class="workflow-lane-title">
+                  <strong>{{ lane.title }}</strong>
+                  <span>{{ lane.owner }}</span>
+                </div>
+                <div class="workflow-step-list">
+                  <div v-for="step in lane.steps" :key="step.code" class="workflow-step">
+                    <b>{{ step.code }}</b>
+                    <strong>{{ step.title }}</strong>
+                    <span>{{ step.body }}</span>
+                  </div>
+                </div>
+              </article>
+              <span v-if="index < acceptanceWorkflow.length - 1" class="workflow-arrow">→</span>
+            </div>
+          </div>
+
+          <div class="workflow-outcomes">
+            <span>通过：验收申请继续流转到下一阶段。</span>
+            <span>退回：单位补充验收材料后可再次提交。</span>
+            <span>终审关闭：项目状态变为“已关闭”，完成归档。</span>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+
+      <div class="workflow-role-note">
+        <strong>当前角色关注点</strong>
+        <span>{{ currentRoleTip }}</span>
+      </div>
+    </el-card>
+
     <el-card v-if="summary?.migration" shadow="never">
       <template #header>迁移与上线门禁</template>
       <div class="metric-grid compact-grid">
@@ -111,10 +184,13 @@ import { computed, onMounted, ref } from 'vue'
 import { Files, Refresh } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { api } from '../api.js'
+import { useSessionStore } from '../store.js'
 
 const router = useRouter()
+const session = useSessionStore()
 const loading = ref(false)
 const summary = ref(null)
+const workflowTab = ref('application')
 const metrics = computed(() => {
   const base = [
     {
@@ -173,6 +249,126 @@ const baseline = [
   { area: '配置', current: '数据库和接口凭据写在 PHP 配置', target: '.env + 配置表，敏感值脱敏展示' },
   { area: '前端', current: '静态模板和旧组件库混杂', target: 'Vue 3 工作台，角色化导航和任务列表' }
 ]
+const workflowRoleLabels = {
+  super_admin: '超级管理员',
+  admin: '管理员终审',
+  unit: '申报单位',
+  county: '区县审核',
+  department: '部门审核',
+  expert: '专家评审'
+}
+const workflowRoleTips = {
+  unit: '重点处理单位资料、项目草稿、附件上传、提交申报、退回补正，以及立项后的验收材料提交。',
+  county: '重点处理项目和验收的区县审核任务，审核通过后流转部门，退回则由单位补正。',
+  department: '重点处理部门审核任务，确认业务合规性后流转专家评审或后续验收阶段。',
+  expert: '重点处理专家评审和验收评审，项目申报阶段以评分推荐为主。',
+  admin: '重点处理批次、单位账号、项目终审、进入验收、验收终审关闭和延期审批。',
+  super_admin: '除业务终审外，还负责系统配置、权限、安全、邮件和首页素材等高风险配置。'
+}
+const applicationWorkflow = [
+  {
+    key: 'unit-apply',
+    role: 'unit',
+    title: '申报单位',
+    owner: '单位账号',
+    steps: [
+      { code: '01', title: '注册审核通过', body: '单位和账号启用后才可申报。' },
+      { code: '02', title: '选择开放批次', body: '填写项目、预算和类别，保存草稿。' },
+      { code: '03', title: '上传附件提交', body: '提交后进入区县审核；未审核前可撤回。' },
+      { code: '补正', title: '退回修改', body: '任一阶段退回后，单位修改再提交。' }
+    ]
+  },
+  {
+    key: 'county-apply',
+    role: 'county',
+    title: '区县审核',
+    owner: '归口/区县',
+    steps: [
+      { code: '04', title: '属地初审', body: '可通过、退回或驳回项目。' }
+    ]
+  },
+  {
+    key: 'department-apply',
+    role: 'department',
+    title: '部门审核',
+    owner: '主管部门',
+    steps: [
+      { code: '05', title: '业务审核', body: '通过后进入专家评审。' }
+    ]
+  },
+  {
+    key: 'expert-apply',
+    role: 'expert',
+    title: '专家评审',
+    owner: '评审专家',
+    steps: [
+      { code: '06', title: '评分推荐', body: '推荐后流转管理员终审。' }
+    ]
+  },
+  {
+    key: 'admin-apply',
+    role: 'admin',
+    roles: ['admin', 'super_admin'],
+    title: '科技局终审',
+    owner: '管理员',
+    steps: [
+      { code: '07', title: '终审立项', body: '终审通过后项目状态为已通过。' },
+      { code: '08', title: '转入验收', body: '管理员将已通过项目转入验收阶段。' }
+    ]
+  }
+]
+const acceptanceWorkflow = [
+  {
+    key: 'unit-acceptance',
+    role: 'unit',
+    title: '申报单位',
+    owner: '项目承担单位',
+    steps: [
+      { code: '01', title: '发起验收', body: '已通过或验收中项目可创建验收草稿。' },
+      { code: '02', title: '上传验收材料', body: '补充验收报告、附件和说明。' },
+      { code: '03', title: '提交验收', body: '提交后进入区县验收审核。' },
+      { code: '延期', title: '延期申请', body: '验收阶段可提交延期说明。' }
+    ]
+  },
+  {
+    key: 'county-acceptance',
+    role: 'county',
+    title: '区县审核',
+    owner: '归口/区县',
+    steps: [
+      { code: '04', title: '验收初审', body: '审核材料完整性和属地意见。' }
+    ]
+  },
+  {
+    key: 'department-acceptance',
+    role: 'department',
+    title: '部门审核',
+    owner: '主管部门',
+    steps: [
+      { code: '05', title: '业务复核', body: '确认任务完成和材料合规。' }
+    ]
+  },
+  {
+    key: 'expert-acceptance',
+    role: 'expert',
+    title: '专家评审',
+    owner: '评审专家',
+    steps: [
+      { code: '06', title: '验收评审', body: '形成评分和评审意见。' }
+    ]
+  },
+  {
+    key: 'admin-acceptance',
+    role: 'admin',
+    roles: ['admin', 'super_admin'],
+    title: '科技局终审',
+    owner: '管理员',
+    steps: [
+      { code: '07', title: '终审关闭', body: '终审通过或关闭后项目归档。' },
+      { code: '08', title: '延期审批', body: '处理单位提交的延期申请。' }
+    ]
+  }
+]
 const failedLoginReasons = {
   unknown_account: '未知账号',
   inactive_account: '账号停用',
@@ -227,6 +423,9 @@ const actionLabels = {
   'user.exported': '账号导出',
   'operation_log.exported': '导出日志'
 }
+const currentWorkflowRole = computed(() => (session.role === 'super_admin' ? 'admin' : session.role))
+const currentRoleLabel = computed(() => workflowRoleLabels[session.role] || session.role || '未登录')
+const currentRoleTip = computed(() => workflowRoleTips[session.role] || '登录后可按角色查看当前关注的流程节点。')
 
 function failedLoginReason(value) {
   return failedLoginReasons[value] || value || '-'
@@ -242,6 +441,14 @@ function actionLabel(value) {
 
 function goMetric(item) {
   if (item.to) router.push(item.to)
+}
+
+function laneIsActive(lane) {
+  return (lane.roles || [lane.role]).includes(currentWorkflowRole.value)
+}
+
+function laneClass(lane) {
+  return ['workflow-lane', { 'is-current': laneIsActive(lane) }]
 }
 
 function openRelatedLogs(row) {
@@ -271,5 +478,173 @@ onMounted(loadSummary)
 <style scoped>
 .metric-link {
   cursor: pointer;
+}
+
+.workflow-card :deep(.el-card__header) {
+  background: #f8fbff;
+}
+
+.workflow-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.workflow-head div {
+  display: grid;
+  gap: 4px;
+}
+
+.workflow-head strong {
+  color: var(--gov-blue-dark);
+  font-size: 18px;
+}
+
+.workflow-head span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.workflow-tabs :deep(.el-tabs__header) {
+  margin-bottom: 14px;
+}
+
+.workflow-lanes {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  padding: 2px 2px 10px;
+}
+
+.workflow-lane-wrap {
+  min-width: 218px;
+  display: flex;
+  align-items: stretch;
+}
+
+.workflow-lane {
+  width: 218px;
+  min-height: 286px;
+  border: 1px solid #cfdceb;
+  border-top: 4px solid var(--gov-blue);
+  background: #ffffff;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.workflow-lane.is-current {
+  border-color: var(--gov-red);
+  border-top-color: var(--gov-red);
+  box-shadow: inset 0 0 0 2px rgba(201, 36, 43, 0.08);
+}
+
+.workflow-lane-title {
+  min-height: 66px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #e1e8f0;
+  background: #f4f8fc;
+  display: grid;
+  gap: 4px;
+}
+
+.workflow-lane-title strong {
+  color: #1f2d3d;
+  font-size: 16px;
+}
+
+.workflow-lane-title span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.workflow-step-list {
+  padding: 12px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.workflow-step {
+  min-height: 86px;
+  border: 1px solid #dce6f1;
+  background: #fbfdff;
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.workflow-step b {
+  width: fit-content;
+  min-width: 30px;
+  height: 22px;
+  padding: 0 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gov-blue);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.workflow-lane.is-current .workflow-step b {
+  background: var(--gov-red);
+}
+
+.workflow-step strong {
+  color: #24364a;
+  line-height: 1.4;
+}
+
+.workflow-step span {
+  color: #5f6f82;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.workflow-arrow {
+  width: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gov-blue);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.workflow-outcomes,
+.workflow-role-note {
+  margin-top: 12px;
+  border: 1px solid #dce6f1;
+  background: #f8fbff;
+  padding: 12px 14px;
+}
+
+.workflow-outcomes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.workflow-outcomes span,
+.workflow-role-note span {
+  color: #516276;
+  line-height: 1.7;
+}
+
+.workflow-role-note {
+  display: grid;
+  gap: 5px;
+}
+
+.workflow-role-note strong {
+  color: var(--gov-blue-dark);
+}
+
+@media (max-width: 900px) {
+  .workflow-outcomes {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
