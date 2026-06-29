@@ -1,7 +1,5 @@
 <?php
 
-use App\Console\Commands\ImportLegacyCoreData;
-use App\Console\Commands\ImportLegacyRecords;
 use App\Http\Middleware\EnsureActiveUser;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -16,10 +14,6 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withCommands([
-        ImportLegacyCoreData::class,
-        ImportLegacyRecords::class,
-    ])
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->api(prepend: [
             EnsureFrontendRequestsAreStateful::class,
