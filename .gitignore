@@ -37,9 +37,12 @@ inc/
 js/
 lib/
 public/
+!modernization/backend/public/
+!modernization/backend/public/index.php
 ueditor/
 index.php
 index.html
+!modernization/backend/public/index.php
 !modernization/frontend/index.html
 
 # Legacy runtime/cache
