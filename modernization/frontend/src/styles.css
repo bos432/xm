@@ -38,8 +38,27 @@ body { margin: 0; }
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
 }
-.topbar div { display: flex; flex-direction: column; gap: 4px; }
+.topbar-title {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.topbar-title strong,
+.topbar-title span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.topbar-actions {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
 .page-stack { display: grid; gap: 16px; }
 .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .metric-grid {
@@ -246,6 +265,28 @@ body { margin: 0; }
   align-items: center;
   color: var(--gov-blue) !important;
   background: #f4f8fc;
+}
+.account-button {
+  min-height: 34px;
+  padding: 0 10px;
+  border-color: #c8d6e5;
+  background: #f4f8fc;
+  color: var(--gov-blue);
+}
+.account-button span {
+  color: inherit;
+}
+.account-name {
+  max-width: 128px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.account-role {
+  padding-left: 8px;
+  margin-left: 2px;
+  border-left: 1px solid #c8d6e5;
+  color: #5f6f82 !important;
 }
 .auth-page {
   min-height: 100vh;

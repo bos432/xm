@@ -15,27 +15,32 @@
     </el-aside>
     <el-container>
       <el-header class="topbar">
-        <div>
+        <div class="topbar-title">
           <strong>{{ title }}</strong>
           <span>阿拉善盟科技计划项目管理信息系统</span>
         </div>
-        <div class="toolbar-actions">
-          <span class="user-chip">{{ session.user?.name || session.user?.username }} · {{ roleLabel(session.role) }}</span>
+        <div class="topbar-actions">
           <el-tooltip content="站内消息" placement="bottom">
             <el-badge :value="unreadMessages" :hidden="unreadMessages === 0" :max="99">
               <el-button :icon="Bell" circle @click="router.push('/messages')" />
             </el-badge>
           </el-tooltip>
-          <el-tooltip content="个人资料" placement="bottom">
-            <el-button :icon="User" circle @click="openProfile" />
-          </el-tooltip>
-          <el-tooltip content="修改密码" placement="bottom">
-            <el-button :icon="Lock" circle @click="passwordVisible = true" />
-          </el-tooltip>
-          <el-tooltip content="切换账号" placement="bottom">
-            <el-button :icon="SwitchButton" @click="switchAccount">切换账号</el-button>
-          </el-tooltip>
-          <el-button :icon="SwitchButton" @click="logout">退出</el-button>
+          <el-dropdown trigger="click" @command="handleAccountCommand">
+            <el-button class="account-button">
+              <el-icon><User /></el-icon>
+              <span class="account-name">{{ session.user?.name || session.user?.username || '当前账号' }}</span>
+              <span class="account-role">{{ roleLabel(session.role) }}</span>
+              <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="profile" :icon="User">个人资料</el-dropdown-item>
+                <el-dropdown-item command="password" :icon="Lock">修改密码</el-dropdown-item>
+                <el-dropdown-item divided command="switch" :icon="SwitchButton">切换账号</el-dropdown-item>
+                <el-dropdown-item command="logout" :icon="SwitchButton">退出登录</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </el-header>
       <el-main>
@@ -73,7 +78,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Bell, Checked, Collection, Connection, DataLine, FolderChecked, FolderOpened, House, Lock, Message, OfficeBuilding, Operation, Setting, SwitchButton, Tickets, User, Warning } from '@element-plus/icons-vue'
+import { ArrowDown, Bell, Checked, Collection, Connection, DataLine, FolderChecked, FolderOpened, House, Lock, Message, OfficeBuilding, Operation, Setting, SwitchButton, Tickets, User, Warning } from '@element-plus/icons-vue'
 import { api } from './api.js'
 import { useSessionStore } from './store.js'
 
@@ -203,6 +208,27 @@ function switchAccount() {
   passwordVisible.value = false
   profileVisible.value = false
   router.replace('/login?switch=1')
+}
+
+function handleAccountCommand(command) {
+  if (command === 'profile') {
+    openProfile()
+    return
+  }
+
+  if (command === 'password') {
+    passwordVisible.value = true
+    return
+  }
+
+  if (command === 'switch') {
+    switchAccount()
+    return
+  }
+
+  if (command === 'logout') {
+    logout()
+  }
 }
 
 function handleSessionExpired() {
