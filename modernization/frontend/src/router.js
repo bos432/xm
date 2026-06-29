@@ -12,6 +12,7 @@ import SettingsView from './views/SettingsView.vue'
 import PublicHomeManageView from './views/PublicHomeManageView.vue'
 import ApplicationBatchesView from './views/ApplicationBatchesView.vue'
 import AcceptanceView from './views/AcceptanceView.vue'
+import LifecycleView from './views/LifecycleView.vue'
 import MailCenterView from './views/MailCenterView.vue'
 import RolesView from './views/RolesView.vue'
 import SecurityCenterView from './views/SecurityCenterView.vue'
@@ -34,6 +35,7 @@ const router = createRouter({
     { path: '/projects', component: ProjectsView, meta: { permission: 'view_projects' } },
     { path: '/application-batches', component: ApplicationBatchesView, meta: { permission: 'manage_application_batches' } },
     { path: '/acceptance', component: AcceptanceView, meta: { permissionAny: ['submit_acceptance', 'manage_acceptance', 'review_acceptance'] } },
+    { path: '/lifecycle', component: LifecycleView, meta: { permission: 'view_lifecycle' } },
     { path: '/units', component: UnitsView, meta: { permission: 'manage_units' } },
     { path: '/users', component: UsersView, meta: { permission: 'manage_users' } },
     { path: '/unit-profile', component: UnitsView, meta: { permission: 'view_own_unit' } },

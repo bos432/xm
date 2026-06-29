@@ -17,6 +17,7 @@ use App\Http\Controllers\PublicHomeAdminController;
 use App\Http\Controllers\PublicHomeController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectExportController;
+use App\Http\Controllers\ProjectLifecycleController;
 use App\Http\Controllers\RbacController;
 use App\Http\Controllers\ReviewExportController;
 use App\Http\Controllers\ReviewController;
@@ -70,6 +71,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/acceptance/{acceptance}/reviews', [AcceptanceController::class, 'review']);
     Route::post('/acceptance/{acceptance}/files', [AcceptanceController::class, 'uploadFile']);
     Route::post('/acceptance/{acceptance}/extensions', [AcceptanceController::class, 'extension']);
+
+    Route::get('/lifecycle/task-books', [ProjectLifecycleController::class, 'taskBooks']);
+    Route::post('/projects/{project}/task-books', [ProjectLifecycleController::class, 'storeTaskBook']);
+    Route::put('/lifecycle/task-books/{taskBook}', [ProjectLifecycleController::class, 'updateTaskBook']);
+    Route::post('/lifecycle/task-books/{taskBook}/submit', [ProjectLifecycleController::class, 'submitTaskBook']);
+    Route::post('/lifecycle/task-books/{taskBook}/review', [ProjectLifecycleController::class, 'reviewTaskBook']);
+    Route::get('/lifecycle/progress', [ProjectLifecycleController::class, 'progress']);
+    Route::post('/projects/{project}/progress', [ProjectLifecycleController::class, 'storeProgress']);
+    Route::put('/lifecycle/progress/{progress}', [ProjectLifecycleController::class, 'updateProgress']);
+    Route::post('/lifecycle/progress/{progress}/submit', [ProjectLifecycleController::class, 'submitProgress']);
+    Route::post('/lifecycle/progress/{progress}/review', [ProjectLifecycleController::class, 'reviewProgress']);
+    Route::get('/lifecycle/rectifications', [ProjectLifecycleController::class, 'rectifications']);
+    Route::post('/projects/{project}/rectifications', [ProjectLifecycleController::class, 'storeRectification']);
+    Route::post('/lifecycle/rectifications/{rectification}/submit', [ProjectLifecycleController::class, 'submitRectification']);
+    Route::post('/lifecycle/rectifications/{rectification}/review', [ProjectLifecycleController::class, 'reviewRectification']);
+    Route::get('/lifecycle/expert-certifications', [ProjectLifecycleController::class, 'expertCertifications']);
+    Route::post('/lifecycle/expert-certifications', [ProjectLifecycleController::class, 'storeExpertCertification']);
+    Route::post('/lifecycle/expert-certifications/{certification}/review', [ProjectLifecycleController::class, 'reviewExpertCertification']);
 
     Route::post('/projects/{project}/files', [FileController::class, 'store']);
     Route::get('/files/{file}/download', [FileController::class, 'download']);

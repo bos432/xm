@@ -18,7 +18,7 @@
         <div class="workflow-head">
           <div>
             <strong>科研项目申报与管理全流程</strong>
-            <span>按业务全生命周期展示，并标明系统内办理、线下办理和待模块化节点</span>
+            <span>按业务全生命周期展示，并标明系统内办理和线下办理节点</span>
           </div>
           <el-tag type="primary" effect="plain">{{ currentRoleLabel }}</el-tag>
         </div>
@@ -29,7 +29,6 @@
           <div class="workflow-legend">
             <span><i class="legend-dot is-system"></i>系统内办理</span>
             <span><i class="legend-dot is-offline"></i>线下办理/人工决策</span>
-            <span><i class="legend-dot is-planned"></i>待后续模块化</span>
           </div>
 
           <div class="workflow-lanes lifecycle-lanes">
@@ -55,9 +54,8 @@
           </div>
 
           <div class="workflow-outcomes lifecycle-notes">
-            <span>已上线：注册审核、批次申报、附件、区县/部门/专家/管理员审核、验收和延期。</span>
+            <span>已上线：注册审核、批次申报、附件、分级审核、合同任务书、实施进展、整改闭环、专家认证、验收和延期。</span>
             <span>线下：局领导办公会、经费拨付、部分立项决策仍按现实业务办理。</span>
-            <span>待模块化：合同任务书、项目实施过程管理、整改闭环可作为下一轮建设。</span>
           </div>
         </el-tab-pane>
 
@@ -300,7 +298,7 @@ const workflowRoleLabels = {
   expert: '专家评审'
 }
 const workflowRoleTips = {
-  unit: '重点处理单位资料、项目申报、附件上传、退回补正、验收材料、延期申请；合同任务书和实施过程后续可继续模块化。',
+  unit: '重点处理单位资料、项目申报、附件上传、退回补正、合同任务书、实施进展、整改材料、验收材料和延期申请。',
   county: '重点处理项目和验收的区县审核任务，审核通过后流转部门，退回则由单位补正。',
   department: '重点处理部门审核、形式审查、业务合规复核，并衔接专家评审和验收阶段。',
   expert: '重点处理专家评审和验收评审，项目申报阶段以评分推荐为主。',
@@ -327,10 +325,10 @@ const lifecycleWorkflow = [
       { code: '01', title: '单位注册与审核', body: '单位注册后待审核，启用单位和账号后才能申报。', kind: 'system' },
       { code: '02', title: '项目申报材料', body: '选择开放批次，填写项目资料并上传申报附件。', kind: 'system' },
       { code: '03', title: '补充完善', body: '审核退回后补正材料，可再次提交进入审核。', kind: 'system' },
-      { code: '08', title: '合同任务书', body: '旧流程中的任务书填写、提交和初审，建议后续独立模块化。', kind: 'planned' },
-      { code: '10', title: '项目实施', body: '项目实施过程、阶段进展和材料归集目前以线下管理为主。', kind: 'offline' },
+      { code: '08', title: '合同任务书', body: '任务书填写、提交和管理员审核已纳入全周期管理。', kind: 'system' },
+      { code: '10', title: '项目实施', body: '单位可提交阶段进展、存在问题和下一步计划，管理员确认或退回。', kind: 'system' },
       { code: '11', title: '验收材料与延期', body: '提交验收材料，必要时发起延期申请。', kind: 'system' },
-      { code: '14', title: '整改闭环', body: '验收退回可补充材料；完整整改闭环建议后续细化。', kind: 'planned' }
+      { code: '14', title: '整改闭环', body: '管理员发起整改要求，单位提交整改说明，管理员审核闭环。', kind: 'system' }
     ]
   },
   {
@@ -352,7 +350,7 @@ const lifecycleWorkflow = [
     steps: [
       { code: '05', title: '形式审查', body: '对应旧流程“形式审查”，不通过则退回补正或驳回。', kind: 'system' },
       { code: '07', title: '立项启动', body: '立项结果确认、合同任务书启动和归档衔接。', kind: 'offline' },
-      { code: '09', title: '任务书审查', body: '任务书初审、形式审查和立项完成节点待模块化。', kind: 'planned' },
+      { code: '09', title: '任务书审查', body: '任务书审核通过后作为立项后管理依据。', kind: 'system' },
       { code: '13', title: '验收复核', body: '验收业务复核后流转专家或管理员终审。', kind: 'system' },
       { code: '15', title: '归档管理', body: '验收关闭后项目归档，后续可补充成果登记。', kind: 'system' }
     ]
@@ -365,7 +363,7 @@ const lifecycleWorkflow = [
     steps: [
       { code: '06', title: '专家评审', body: '项目评审评分推荐，形成评审意见。', kind: 'system' },
       { code: '13B', title: '验收评审', body: '验收阶段形成评分和专家意见。', kind: 'system' },
-      { code: '专家库', title: '专家认证', body: '旧流程中的专家认证可作为专家库增强能力。', kind: 'planned' }
+      { code: '专家库', title: '专家认证', body: '专家提交专业方向和资质说明，管理员审核后沉淀为专家库资料。', kind: 'system' }
     ]
   },
   {
@@ -529,6 +527,19 @@ const actionLabels = {
   'project_file.invalid_path': '附件路径异常',
   'project_file.downloaded': '附件下载',
   'project_file.deleted': '附件删除',
+  'task_book.created': '任务书创建',
+  'task_book.updated': '任务书修改',
+  'task_book.submitted': '任务书提交',
+  'task_book.reviewed': '任务书审核',
+  'project_progress.created': '实施进展创建',
+  'project_progress.updated': '实施进展修改',
+  'project_progress.submitted': '实施进展提交',
+  'project_progress.reviewed': '实施进展审核',
+  'rectification.created': '整改要求创建',
+  'rectification.submitted': '整改材料提交',
+  'rectification.reviewed': '整改审核',
+  'expert_certification.submitted': '专家认证提交',
+  'expert_certification.reviewed': '专家认证审核',
   'message.read': '消息已读',
   'message.read_all': '全部消息已读',
   'dictionary_item.created': '字典创建',

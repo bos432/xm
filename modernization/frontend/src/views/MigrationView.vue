@@ -1,5 +1,12 @@
 <template>
   <section class="page-stack">
+    <el-alert
+      title="迁移准备用于旧系统历史数据导入前体检：先备份旧库和 upload 附件，生成 dry-run 报告，处理缺失文件/字段映射/账号冲突后，再执行正式迁移。新系统日常使用不依赖这里。"
+      type="info"
+      show-icon
+      :closable="false"
+    />
+
     <el-card shadow="never">
       <template #header>旧新并行状态</template>
       <div class="migration-summary">
