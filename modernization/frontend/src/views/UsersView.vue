@@ -40,10 +40,13 @@
           <span v-else>-</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="128" align="center">
+      <el-table-column label="操作" width="168" align="center">
         <template #default="{ row }">
           <el-tooltip content="编辑账号" placement="top">
             <el-button :icon="Edit" circle size="small" @click="openEdit(row)" />
+          </el-tooltip>
+          <el-tooltip v-if="canResetPassword" content="重置密码" placement="top">
+            <el-button :icon="Lock" circle size="small" @click="openPasswordReset(row)" />
           </el-tooltip>
           <el-tooltip v-if="session.can('view_operation_logs')" content="查看账号日志" placement="top">
             <el-button :icon="Files" circle size="small" @click="openUserLogs(row)" />
@@ -78,7 +81,7 @@
         </el-form-item>
         <el-form-item label="手机"><el-input v-model="form.mobile" /></el-form-item>
         <el-form-item label="邮箱"><el-input v-model="form.email" /></el-form-item>
-        <el-form-item :label="editingUser ? '重置密码' : '初始密码'">
+        <el-form-item v-if="!editingUser" label="初始密码">
           <el-input v-model="form.password" type="password" show-password />
         </el-form-item>
         <el-form-item label="状态"><el-switch v-model="form.is_active" active-text="启用" inactive-text="停用" /></el-form-item>
@@ -88,13 +91,32 @@
         <el-button type="primary" :loading="saving" @click="saveUser">保存</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog v-model="passwordVisible" title="超级管理员重置密码" width="460px">
+      <el-alert title="重置后该账号当前登录会话将被撤销，需要使用新密码重新登录。" type="warning" show-icon :closable="false" />
+      <el-form :model="passwordForm" label-position="top" class="mt-16">
+        <el-form-item label="账号">
+          <el-input :model-value="passwordUser?.username || ''" disabled />
+        </el-form-item>
+        <el-form-item label="新密码">
+          <el-input v-model="passwordForm.password" type="password" show-password />
+        </el-form-item>
+        <el-form-item label="确认新密码">
+          <el-input v-model="passwordForm.password_confirmation" type="password" show-password />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="passwordVisible = false">取消</el-button>
+        <el-button type="primary" :loading="savingPassword" @click="resetPassword">确认重置</el-button>
+      </template>
+    </el-dialog>
   </section>
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Download, Edit, Files, Plus, Search } from '@element-plus/icons-vue'
+import { Download, Edit, Files, Lock, Plus, Search } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api, downloadApi } from '../api.js'
 import { useSessionStore } from '../store.js'
@@ -112,6 +134,7 @@ const roleOptions = [
 ]
 const loading = ref(false)
 const saving = ref(false)
+const savingPassword = ref(false)
 const keyword = ref('')
 const role = ref('')
 const isActive = ref('')
@@ -119,9 +142,13 @@ const pendingRegistration = ref(false)
 const users = ref([])
 const units = ref([])
 const dialogVisible = ref(false)
+const passwordVisible = ref(false)
 const editingUser = ref(null)
+const passwordUser = ref(null)
 const form = reactive(emptyForm())
+const passwordForm = reactive({ password: '', password_confirmation: '' })
 const pagination = reactive({ current_page: 1, per_page: 20, total: 0 })
+const canResetPassword = computed(() => session.role === 'super_admin')
 
 function emptyForm() {
   return { username: '', name: '', role: 'unit', unit_id: null, mobile: '', email: '', password: '', is_active: true }
@@ -205,6 +232,12 @@ function openEdit(row) {
   dialogVisible.value = true
 }
 
+function openPasswordReset(row) {
+  passwordUser.value = row
+  Object.assign(passwordForm, { password: '', password_confirmation: '' })
+  passwordVisible.value = true
+}
+
 function openUserLogs(row) {
   router.push(`/operation-logs?target_type=${encodeURIComponent('App\\Models\\User')}&target_id=${row.id}`)
 }
@@ -215,13 +248,30 @@ async function saveUser() {
     const path = editingUser.value ? `/users/${editingUser.value.id}` : '/users'
     const method = editingUser.value ? 'PUT' : 'POST'
     const body = { ...form }
-    if (editingUser.value && !body.password) delete body.password
+    if (editingUser.value) delete body.password
     await api(path, { method, body: JSON.stringify(body) })
     ElMessage.success('账号已保存')
     dialogVisible.value = false
     await loadUsers()
   } finally {
     saving.value = false
+  }
+}
+
+async function resetPassword() {
+  if (!passwordUser.value) return
+
+  savingPassword.value = true
+  try {
+    await api(`/users/${passwordUser.value.id}/password`, {
+      method: 'PUT',
+      body: JSON.stringify(passwordForm)
+    })
+    ElMessage.success('密码已重置，该账号需重新登录')
+    passwordVisible.value = false
+    await loadUsers()
+  } finally {
+    savingPassword.value = false
   }
 }
 

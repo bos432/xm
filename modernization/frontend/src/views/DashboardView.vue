@@ -514,6 +514,7 @@ const actionLabels = {
   'auth.profile_updated': '资料修改',
   'user.created': '账号创建',
   'user.updated': '账号修改',
+  'user.password_reset': '超管重置密码',
   'unit.created': '单位创建',
   'unit.updated': '单位修改',
   'project.created': '项目创建',

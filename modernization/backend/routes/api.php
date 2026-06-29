@@ -120,6 +120,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dictionaries', [DictionaryController::class, 'index']);
     Route::apiResource('dictionary-items', DictionaryItemController::class)->except(['destroy']);
     Route::get('/users/export.csv', [UserExportController::class, 'csv']);
+    Route::put('/users/{user}/password', [UserController::class, 'resetPassword']);
     Route::apiResource('users', UserController::class)->except(['destroy']);
     Route::get('/units/me', [UnitController::class, 'me']);
     Route::get('/units/export.csv', [UnitExportController::class, 'csv']);

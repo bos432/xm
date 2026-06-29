@@ -112,6 +112,7 @@ const actionOptions = [
   { label: '资料修改', value: 'auth.profile_updated' },
   { label: '账号创建', value: 'user.created' },
   { label: '账号修改', value: 'user.updated' },
+  { label: '超管重置密码', value: 'user.password_reset' },
   { label: '账号会话撤销', value: 'user.tokens_revoked' },
   { label: '单位创建', value: 'unit.created' },
   { label: '单位修改', value: 'unit.updated' },

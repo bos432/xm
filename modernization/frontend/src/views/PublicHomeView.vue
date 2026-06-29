@@ -46,7 +46,6 @@
           <aside class="gov-login-box">
             <div class="gov-box-title">
               <strong>用户登录</strong>
-              <RouterLink to="/register">单位注册</RouterLink>
             </div>
             <el-form :model="loginForm" label-position="top" @submit.prevent="submitLogin">
               <el-form-item label="登录名">

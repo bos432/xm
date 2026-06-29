@@ -178,9 +178,9 @@ class UserManagementTest extends TestCase
         ]);
     }
 
-    public function test_admin_password_reset_revokes_existing_tokens(): void
+    public function test_super_admin_password_reset_revokes_existing_tokens(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'super_admin']);
         $user = User::factory()->create([
             'username' => 'reset-user',
             'password' => Hash::make('old-password'),
@@ -191,26 +191,44 @@ class UserManagementTest extends TestCase
 
         Sanctum::actingAs($admin);
 
-        $this->putJson("/api/users/{$user->id}", [
-            'name' => $user->name,
-            'username' => $user->username,
-            'email' => $user->email,
-            'mobile' => $user->mobile,
+        $this->putJson("/api/users/{$user->id}/password", [
             'password' => 'new-password',
-            'role' => $user->role,
-            'unit_id' => $user->unit_id,
-            'is_active' => true,
-        ])->assertOk()
-            ->assertJsonPath('is_active', true);
+            'password_confirmation' => 'new-password',
+        ])->assertOk();
 
         $this->assertSame(0, $user->tokens()->count());
         $this->assertTrue(Hash::check('new-password', $user->refresh()->password));
+        $this->assertDatabaseHas('operation_logs', [
+            'user_id' => $admin->id,
+            'action' => 'user.password_reset',
+            'target_type' => User::class,
+            'target_id' => $user->id,
+        ]);
         $this->assertDatabaseHas('operation_logs', [
             'user_id' => $admin->id,
             'action' => 'user.tokens_revoked',
             'target_type' => User::class,
             'target_id' => $user->id,
         ]);
+    }
+
+    public function test_business_admin_cannot_reset_user_password(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $user = User::factory()->create([
+            'username' => 'business-reset-user',
+            'password' => Hash::make('old-password'),
+            'role' => 'unit',
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        $this->putJson("/api/users/{$user->id}/password", [
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ])->assertForbidden();
+
+        $this->assertTrue(Hash::check('old-password', $user->refresh()->password));
     }
 
     public function test_inactive_user_token_is_rejected_by_active_middleware(): void

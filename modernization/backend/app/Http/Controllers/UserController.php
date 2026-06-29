@@ -84,6 +84,8 @@ class UserController extends Controller
         $this->guardSuperAdminRole($request, $data['role'], $user);
         if (($data['password'] ?? '') === '') {
             unset($data['password']);
+        } elseif ($request->user()->role !== Role::SUPER_ADMIN) {
+            abort(403, '只有超级管理员可以重置账号密码');
         }
         $passwordWillChange = array_key_exists('password', $data);
 
@@ -104,6 +106,29 @@ class UserController extends Controller
         }
 
         return $user->refresh()->load(['unit', 'additionalRoles']);
+    }
+
+    public function resetPassword(Request $request, User $user)
+    {
+        $this->authorizeUserManagement($request);
+
+        if ($request->user()->role !== Role::SUPER_ADMIN) {
+            abort(403, '只有超级管理员可以重置账号密码');
+        }
+
+        $data = $request->validate([
+            'password' => ['required', 'string', 'min:8', 'max:200', 'confirmed'],
+        ]);
+
+        $user->update(['password' => $data['password']]);
+
+        $this->auditLogger->record($request, 'user.password_reset', $user, [
+            'username' => $user->username,
+            'role' => $user->role,
+        ]);
+        $this->revokeTokens($request, $user, 'super_admin_password_reset');
+
+        return response()->json(['message' => '密码已重置']);
     }
 
     private function authorizeUserManagement(Request $request): void
