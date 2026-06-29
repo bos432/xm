@@ -17,12 +17,7 @@ class ImportLegacyRecords extends Command
 
     protected $description = 'Preview legacy migration records for future database import. Defaults to dry-run and does not write data.';
 
-    public function __construct(private readonly LegacyRecordImportService $imports)
-    {
-        parent::__construct();
-    }
-
-    public function handle(): int
+    public function handle(LegacyRecordImportService $imports): int
     {
         if ($this->option('execute')) {
             $this->error('Real database imports are not implemented yet. Run without --execute to preview records.');
@@ -35,8 +30,8 @@ class ImportLegacyRecords extends Command
             $results = [];
             $exitCode = self::SUCCESS;
 
-            foreach (array_keys($this->imports->supportedTargets()) as $item) {
-                $result = $this->imports->preview($item, $this->option('report'));
+            foreach (array_keys($imports->supportedTargets()) as $item) {
+                $result = $imports->preview($item, $this->option('report'));
                 $results[$item] = $result;
                 if ($this->printPreviewResult($item, $result) === self::FAILURE) {
                     $exitCode = self::FAILURE;
@@ -50,13 +45,13 @@ class ImportLegacyRecords extends Command
             return $exitCode;
         }
 
-        if (! array_key_exists($target, $this->imports->supportedTargets())) {
+        if (! array_key_exists($target, $imports->supportedTargets())) {
             $this->error('Unsupported target: '.$target);
 
             return self::FAILURE;
         }
 
-        $result = $this->imports->preview($target, $this->option('report'));
+        $result = $imports->preview($target, $this->option('report'));
         $exitCode = $this->printPreviewResult($target, $result);
         if ($exitCode === self::SUCCESS) {
             $this->writeOutputIfRequested($result);
