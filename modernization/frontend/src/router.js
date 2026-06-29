@@ -2,6 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useSessionStore } from './store.js'
 import PublicHomeView from './views/PublicHomeView.vue'
 import LoginView from './views/LoginView.vue'
+import RegisterUnitView from './views/RegisterUnitView.vue'
+import ForgotPasswordView from './views/ForgotPasswordView.vue'
+import ResetPasswordView from './views/ResetPasswordView.vue'
 import DashboardView from './views/DashboardView.vue'
 import ProjectsView from './views/ProjectsView.vue'
 import ReviewTasksView from './views/ReviewTasksView.vue'
@@ -19,6 +22,9 @@ const router = createRouter({
   routes: [
     { path: '/', component: PublicHomeView, meta: { public: true } },
     { path: '/login', component: LoginView, meta: { guest: true } },
+    { path: '/register', component: RegisterUnitView, meta: { guest: true } },
+    { path: '/forgot-password', component: ForgotPasswordView, meta: { guest: true } },
+    { path: '/reset-password', component: ResetPasswordView, meta: { guest: true } },
     { path: '/dashboard', component: DashboardView, meta: { permission: 'view_dashboard' } },
     { path: '/projects', component: ProjectsView, meta: { permission: 'view_projects' } },
     { path: '/units', component: UnitsView, meta: { permission: 'manage_units' } },

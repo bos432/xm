@@ -3,10 +3,11 @@
     <div class="toolbar">
       <el-input v-model="keyword" clearable placeholder="按姓名、账号、手机、邮箱搜索" @keyup.enter="reloadUsers" />
       <div class="toolbar-actions">
-        <el-select v-model="role" clearable placeholder="角色" @change="reloadUsers">
+        <el-button :type="pendingRegistration ? 'primary' : 'default'" @click="togglePendingRegistration">待审核注册</el-button>
+        <el-select v-model="role" clearable placeholder="角色" @change="handleStandardFilterChange">
           <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
-        <el-select v-model="isActive" clearable placeholder="状态" @change="reloadUsers">
+        <el-select v-model="isActive" clearable placeholder="状态" @change="handleStandardFilterChange">
           <el-option label="启用" value="1" />
           <el-option label="停用" value="0" />
         </el-select>
@@ -31,6 +32,13 @@
       <el-table-column prop="last_login_ip" label="登录IP" width="140" />
       <el-table-column label="状态" width="100">
         <template #default="{ row }"><el-tag :type="row.is_active ? 'success' : 'info'">{{ row.is_active ? '启用' : '停用' }}</el-tag></template>
+      </el-table-column>
+      <el-table-column label="注册来源" width="120">
+        <template #default="{ row }">
+          <el-tag v-if="row.unit?.metadata?.registration_status === 'pending' && !row.is_active" type="warning">待审核注册</el-tag>
+          <el-tag v-else-if="row.unit?.metadata?.registration_status === 'approved'" type="success">公开注册</el-tag>
+          <span v-else>-</span>
+        </template>
       </el-table-column>
       <el-table-column label="操作" width="128" align="center">
         <template #default="{ row }">
@@ -87,11 +95,12 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Download, Edit, Files, Plus, Search } from '@element-plus/icons-vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { api, downloadApi } from '../api.js'
 import { useSessionStore } from '../store.js'
 
 const router = useRouter()
+const route = useRoute()
 const session = useSessionStore()
 const roleOptions = [
   { label: '管理员', value: 'admin' },
@@ -105,6 +114,7 @@ const saving = ref(false)
 const keyword = ref('')
 const role = ref('')
 const isActive = ref('')
+const pendingRegistration = ref(false)
 const users = ref([])
 const units = ref([])
 const dialogVisible = ref(false)
@@ -139,6 +149,7 @@ function buildUserQuery() {
   if (keyword.value) params.set('keyword', keyword.value)
   if (role.value) params.set('role', role.value)
   if (isActive.value) params.set('is_active', isActive.value)
+  if (pendingRegistration.value) params.set('pending_registration', '1')
   if (pagination.current_page > 1) params.set('page', pagination.current_page)
   return params.toString() ? `?${params.toString()}` : ''
 }
@@ -151,6 +162,20 @@ function reloadUsers() {
 function changePage(page) {
   pagination.current_page = page
   loadUsers()
+}
+
+function togglePendingRegistration() {
+  pendingRegistration.value = !pendingRegistration.value
+  if (pendingRegistration.value) {
+    role.value = ''
+    isActive.value = ''
+  }
+  reloadUsers()
+}
+
+function handleStandardFilterChange() {
+  if (role.value || isActive.value) pendingRegistration.value = false
+  reloadUsers()
 }
 
 async function loadUnits() {
@@ -204,6 +229,7 @@ async function exportUsers() {
   if (keyword.value) params.set('keyword', keyword.value)
   if (role.value) params.set('role', role.value)
   if (isActive.value) params.set('is_active', isActive.value)
+  if (pendingRegistration.value) params.set('pending_registration', '1')
   const query = params.toString() ? `?${params.toString()}` : ''
   try {
     await downloadApi(`/users/export.csv${query}`, `users-${new Date().toISOString().slice(0, 10)}.csv`)
@@ -213,6 +239,7 @@ async function exportUsers() {
 }
 
 onMounted(async () => {
+  pendingRegistration.value = route.query.pending_registration === '1'
   await Promise.all([loadUsers(), loadUnits()])
 })
 </script>

@@ -37,6 +37,18 @@ class UserController extends Controller
             });
         }
 
+        if ($request->boolean('pending_registration')) {
+            $query->where('role', Role::UNIT)
+                ->where('is_active', false)
+                ->whereHas('unit', function ($query) {
+                    $query->where('status', 'suspended')
+                        ->where(function ($query) {
+                            $query->where('metadata', 'like', '%"registration_status":"pending"%')
+                                ->orWhere('metadata', 'like', '%"registration_status": "pending"%');
+                        });
+                });
+        }
+
         return $query->paginate(20);
     }
 

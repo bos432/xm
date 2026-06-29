@@ -115,23 +115,24 @@ import { api } from '../api.js'
 const router = useRouter()
 const loading = ref(false)
 const summary = ref(null)
-const metrics = computed(() => [
-  {
+const metrics = computed(() => {
+  const base = [
+    {
     label: '项目总数',
     value: summary.value?.projects?.total ?? 0,
     note: `待处理 ${summary.value?.projects?.submitted_or_reviewing ?? 0}`
-  },
-  {
+    },
+    {
     label: '待审任务',
     value: summary.value?.reviews?.pending ?? 0,
     note: '按当前角色统计'
-  },
-  {
+    },
+    {
     label: '未读消息',
     value: summary.value?.messages?.unread ?? 0,
     note: '当前账号'
-  },
-  summary.value?.security
+    },
+    summary.value?.security
     ? {
         label: '待延期',
         value: summary.value?.acceptance?.pending_extensions ?? 0,
@@ -143,7 +144,19 @@ const metrics = computed(() => [
         value: summary.value?.projects?.by_status?.reviewing ?? 0,
         note: '当前可见范围'
       }
-])
+  ]
+
+  if (summary.value?.registrations) {
+    base.push({
+      label: '注册待审',
+      value: summary.value.registrations.pending_units ?? 0,
+      note: `待启用账号 ${summary.value.registrations.pending_users ?? 0}`,
+      to: '/units?pending_registration=1'
+    })
+  }
+
+  return base
+})
 
 const baseline = [
   { area: '框架', current: 'ThinkPHP 3.1.2，旧 API 和大控制器', target: 'Laravel 11 API，按领域拆分控制器和模型' },

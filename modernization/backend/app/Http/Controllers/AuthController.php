@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Unit;
 use App\Models\User;
 use App\Support\AuditLogger;
 use App\Support\Role;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -85,6 +89,162 @@ class AuthController extends Controller
             'token' => $user->createToken('web')->plainTextToken,
             'user' => $this->userPayload($user),
         ]);
+    }
+
+    public function registerUnit(Request $request)
+    {
+        $data = $request->validate([
+            'unit_name' => ['required', 'string', 'max:200'],
+            'credit_code' => ['required', 'string', 'max:80', 'unique:units,credit_code'],
+            'contact_name' => ['required', 'string', 'max:100'],
+            'contact_mobile' => ['required', 'string', 'max:40'],
+            'email' => ['required', 'email', 'max:120', 'unique:users,email'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'region_code' => ['nullable', 'string', 'max:50'],
+            'username' => ['required', 'string', 'max:100', 'unique:users,username'],
+            'password' => ['required', 'string', 'min:8', 'confirmed', 'max:200'],
+            'captcha_id' => ['required', 'string', 'max:100'],
+            'captcha_answer' => ['required', 'integer'],
+        ]);
+
+        if (! $this->captchaIsValid($data['captcha_id'], (int) $data['captcha_answer'])) {
+            $this->auditLogger->record($request, 'auth.registration_captcha_failed', null, [
+                'username' => $data['username'],
+                'reason' => 'invalid_captcha',
+            ]);
+
+            return response()->json(['message' => '验证码错误'], 422);
+        }
+
+        [$unit, $user] = DB::transaction(function () use ($data) {
+            $unit = Unit::create([
+                'name' => $data['unit_name'],
+                'credit_code' => $data['credit_code'],
+                'contact_name' => $data['contact_name'],
+                'contact_mobile' => $data['contact_mobile'],
+                'email' => $data['email'],
+                'address' => $data['address'] ?? null,
+                'region_code' => $data['region_code'] ?? null,
+                'status' => 'suspended',
+                'metadata' => [
+                    'registration_status' => 'pending',
+                    'registered_at' => now()->toDateTimeString(),
+                ],
+            ]);
+
+            $user = User::create([
+                'unit_id' => $unit->id,
+                'name' => $data['contact_name'],
+                'username' => $data['username'],
+                'email' => $data['email'],
+                'mobile' => $data['contact_mobile'],
+                'password' => $data['password'],
+                'role' => Role::UNIT,
+                'is_active' => false,
+            ]);
+
+            return [$unit, $user];
+        });
+
+        $this->auditLogger->record($request, 'auth.unit_registered', $user, [
+            'unit_id' => $unit->id,
+            'username' => $user->username,
+            'registration_status' => 'pending',
+        ]);
+
+        return response()->json([
+            'message' => '注册申请已提交，请等待管理员审核启用。',
+            'unit' => $unit,
+            'user' => $user->load('unit'),
+        ], 201);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email', 'max:120'],
+            'captcha_id' => ['required', 'string', 'max:100'],
+            'captcha_answer' => ['required', 'integer'],
+        ]);
+
+        if (! $this->captchaIsValid($data['captcha_id'], (int) $data['captcha_answer'])) {
+            $this->auditLogger->record($request, 'auth.password_reset_captcha_failed', null, [
+                'email' => $data['email'],
+                'reason' => 'invalid_captcha',
+            ]);
+
+            return response()->json(['message' => '验证码错误'], 422);
+        }
+
+        $user = User::query()->where('email', $data['email'])->first();
+
+        if ($user) {
+            $token = Str::random(64);
+            DB::table('password_reset_tokens')->updateOrInsert(
+                ['email' => $data['email']],
+                [
+                    'token' => hash('sha256', $token),
+                    'created_at' => now(),
+                ]
+            );
+
+            $link = url('/reset-password?'.http_build_query([
+                'email' => $data['email'],
+                'token' => $token,
+            ]));
+
+            Mail::raw(
+                "您正在重置项目申报系统账号密码。\n\n请在 60 分钟内打开以下链接设置新密码：\n{$link}\n\n如果不是本人操作，请忽略本邮件。",
+                function ($message) use ($data) {
+                    $message->to($data['email'])->subject('项目申报系统密码重置');
+                }
+            );
+
+            $this->auditLogger->record($request, 'auth.password_reset_requested', $user, [
+                'email' => $data['email'],
+            ]);
+        }
+
+        return response()->json([
+            'message' => '如果邮箱已绑定账号，系统将发送密码重置邮件。',
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $data = $request->validate([
+            'email' => ['required', 'email', 'max:120'],
+            'token' => ['required', 'string', 'max:200'],
+            'password' => ['required', 'string', 'min:8', 'confirmed', 'max:200'],
+        ]);
+
+        $row = DB::table('password_reset_tokens')->where('email', $data['email'])->first();
+        $expiresAt = now()->subMinutes((int) config('auth.passwords.users.expire', 60));
+
+        if (
+            ! $row
+            || ! hash_equals((string) $row->token, hash('sha256', $data['token']))
+            || ! $row->created_at
+            || Carbon::parse($row->created_at)->lt($expiresAt)
+        ) {
+            return response()->json(['message' => '密码重置链接无效或已过期'], 422);
+        }
+
+        $user = User::query()->where('email', $data['email'])->first();
+        if (! $user) {
+            DB::table('password_reset_tokens')->where('email', $data['email'])->delete();
+
+            return response()->json(['message' => '密码重置链接无效或已过期'], 422);
+        }
+
+        $user->update(['password' => $data['password']]);
+        $user->tokens()->delete();
+        DB::table('password_reset_tokens')->where('email', $data['email'])->delete();
+        $this->auditLogger->record($request, 'auth.password_reset_completed', $user, [
+            'email' => $data['email'],
+        ]);
+
+        return response()->json(['message' => '密码已重置，请重新登录。']);
     }
 
     public function me(Request $request)

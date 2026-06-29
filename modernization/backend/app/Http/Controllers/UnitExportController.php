@@ -35,12 +35,21 @@ class UnitExportController extends Controller
             });
         }
 
+        if ($request->boolean('pending_registration')) {
+            $query->where('status', 'suspended')
+                ->where(function ($query) {
+                    $query->where('metadata', 'like', '%"registration_status":"pending"%')
+                        ->orWhere('metadata', 'like', '%"registration_status": "pending"%');
+                });
+        }
+
         $units = $query->get();
 
         $this->auditLogger->record($request, 'unit.exported', null, [
             'format' => 'csv',
             'status' => $request->query('status'),
             'keyword' => $request->query('keyword'),
+            'pending_registration' => $request->boolean('pending_registration'),
             'count' => $units->count(),
         ]);
 

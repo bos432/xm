@@ -31,6 +31,14 @@ class UnitController extends Controller
             });
         }
 
+        if ($request->boolean('pending_registration')) {
+            $query->where('status', 'suspended')
+                ->where(function ($query) {
+                    $query->where('metadata', 'like', '%"registration_status":"pending"%')
+                        ->orWhere('metadata', 'like', '%"registration_status": "pending"%');
+                });
+        }
+
         return $query->paginate(20);
     }
 
@@ -69,7 +77,8 @@ class UnitController extends Controller
         $this->authorizeUnitManagement($request);
 
         $wasActive = $unit->status === 'active';
-        $unit->update($this->validatedData($request, $unit));
+        $data = $this->applyRegistrationReviewState($request, $unit, $this->validatedData($request, $unit));
+        $unit->update($data);
 
         $this->auditLogger->record($request, 'unit.updated', $unit, [
             'name' => $unit->name,
@@ -106,6 +115,29 @@ class UnitController extends Controller
             'status' => ['required', 'in:active,suspended,archived'],
             'metadata' => ['nullable', 'array'],
         ]);
+    }
+
+    private function applyRegistrationReviewState(Request $request, Unit $unit, array $data): array
+    {
+        if (($data['status'] ?? $unit->status) !== 'active') {
+            return $data;
+        }
+
+        $metadata = is_array($unit->metadata) ? $unit->metadata : [];
+        if (array_key_exists('metadata', $data) && is_array($data['metadata'])) {
+            $metadata = array_merge($metadata, $data['metadata']);
+        }
+
+        if (($metadata['registration_status'] ?? null) !== 'pending') {
+            return $data;
+        }
+
+        $metadata['registration_status'] = 'approved';
+        $metadata['reviewed_at'] = now()->toDateTimeString();
+        $metadata['reviewed_by'] = $request->user()->id;
+        $data['metadata'] = $metadata;
+
+        return $data;
     }
 
     private function revokeUnitUserTokens(Request $request, Unit $unit): void

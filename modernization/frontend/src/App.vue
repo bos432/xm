@@ -1,10 +1,10 @@
 <template>
-  <RouterView v-if="$route.meta.public || $route.path === '/login'" />
-  <el-container v-else class="shell">
+  <RouterView v-if="$route.meta.public || $route.meta.guest" />
+  <el-container v-else class="shell gov-shell">
     <el-aside width="248px" class="sidebar">
       <div class="brand">
-        <strong>项目申报系统</strong>
-        <span>Modern Workspace</span>
+        <strong>科技项目管理</strong>
+        <span>公共服务后台</span>
       </div>
       <el-menu :default-active="$route.path" router>
         <el-menu-item v-for="item in visibleMenus" :key="item.path" :index="item.path">
@@ -17,9 +17,10 @@
       <el-header class="topbar">
         <div>
           <strong>{{ title }}</strong>
-          <span>旧新并行测试环境</span>
+          <span>阿拉善盟科技计划项目管理信息系统</span>
         </div>
         <div class="toolbar-actions">
+          <span class="user-chip">{{ session.user?.name || session.user?.username }} · {{ roleLabel(session.role) }}</span>
           <el-tooltip content="站内消息" placement="bottom">
             <el-badge :value="unreadMessages" :hidden="unreadMessages === 0" :max="99">
               <el-button :icon="Bell" circle @click="router.push('/messages')" />
@@ -116,12 +117,23 @@ const titles = {
   '/dictionary-items': '数据字典',
   '/settings': '系统配置'
 }
+const roleLabels = {
+  admin: '管理员',
+  unit: '单位用户',
+  county: '区县审核',
+  department: '部门审核',
+  expert: '专家评审'
+}
 
 const visibleMenus = computed(() => session.menus.length ? session.menus : [])
 const title = computed(() => titles[route.path] || '项目申报系统')
 
 function menuIcon(key) {
   return iconMap[key] || DataLine
+}
+
+function roleLabel(role) {
+  return roleLabels[role] || role || '-'
 }
 
 function openProfile() {

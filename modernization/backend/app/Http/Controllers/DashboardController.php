@@ -6,6 +6,8 @@ use App\Models\Message;
 use App\Models\MigrationBatch;
 use App\Models\OperationLog;
 use App\Models\Project;
+use App\Models\Unit;
+use App\Models\User;
 use App\Support\Role;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -54,6 +56,7 @@ class DashboardController extends Controller
             'acceptance' => [
                 'pending_extensions' => 0,
             ],
+            'registrations' => null,
             'operation_logs' => [
                 'recent' => OperationLog::query()
                     ->with('user:id,name,username,role')
@@ -69,6 +72,27 @@ class DashboardController extends Controller
             $summary['acceptance']['pending_extensions'] = Project::query()
                 ->get()
                 ->sum(fn (Project $project) => $project->pendingExtensionRequestsCount());
+
+            $summary['registrations'] = [
+                'pending_units' => Unit::query()
+                    ->where('status', 'suspended')
+                    ->where(function ($query) {
+                        $query->where('metadata', 'like', '%"registration_status":"pending"%')
+                            ->orWhere('metadata', 'like', '%"registration_status": "pending"%');
+                    })
+                    ->count(),
+                'pending_users' => User::query()
+                    ->where('role', Role::UNIT)
+                    ->where('is_active', false)
+                    ->whereHas('unit', function ($query) {
+                        $query->where('status', 'suspended')
+                            ->where(function ($query) {
+                                $query->where('metadata', 'like', '%"registration_status":"pending"%')
+                                    ->orWhere('metadata', 'like', '%"registration_status": "pending"%');
+                            });
+                    })
+                    ->count(),
+            ];
 
             $securityEventActions = [
                 'auth.login_failed',

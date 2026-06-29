@@ -4,7 +4,8 @@
       <div class="toolbar">
         <el-input v-model="keyword" clearable placeholder="按单位名称、统一信用代码、联系人搜索" @keyup.enter="reloadUnits" />
         <div class="toolbar-actions">
-          <el-select v-model="status" clearable placeholder="状态" @change="reloadUnits">
+          <el-button :type="pendingRegistration ? 'primary' : 'default'" @click="togglePendingRegistration">待审核注册</el-button>
+          <el-select v-model="status" clearable placeholder="状态" @change="handleStatusChange">
             <el-option label="正常" value="active" />
             <el-option label="暂停" value="suspended" />
             <el-option label="归档" value="archived" />
@@ -23,8 +24,15 @@
         <el-table-column prop="contact_name" label="联系人" width="120" />
         <el-table-column prop="contact_mobile" label="联系电话" width="150" />
         <el-table-column prop="region_code" label="区域" width="110" />
-        <el-table-column label="状态" width="110">
+        <el-table-column label="状态" width="130">
           <template #default="{ row }"><el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag></template>
+        </el-table-column>
+        <el-table-column label="注册来源" width="120">
+          <template #default="{ row }">
+            <el-tag v-if="row.metadata?.registration_status === 'pending' && row.status === 'suspended'" type="warning">待审核注册</el-tag>
+            <el-tag v-else-if="row.metadata?.registration_status === 'approved'" type="success">公开注册</el-tag>
+            <span v-else>-</span>
+          </template>
         </el-table-column>
         <el-table-column label="操作" width="128" align="center">
           <template #default="{ row }">
@@ -91,17 +99,19 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Download, Edit, Files, Plus, Search } from '@element-plus/icons-vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { api, downloadApi } from '../api.js'
 import { useSessionStore } from '../store.js'
 
 const router = useRouter()
+const route = useRoute()
 const session = useSessionStore()
 const isAdmin = computed(() => session.can('manage_units'))
 const loading = ref(false)
 const saving = ref(false)
 const keyword = ref('')
 const status = ref('')
+const pendingRegistration = ref(false)
 const units = ref([])
 const profile = ref(null)
 const dialogVisible = ref(false)
@@ -144,6 +154,7 @@ function buildUnitQuery() {
   const params = new URLSearchParams()
   if (keyword.value) params.set('keyword', keyword.value)
   if (status.value) params.set('status', status.value)
+  if (pendingRegistration.value) params.set('pending_registration', '1')
   if (pagination.current_page > 1) params.set('page', pagination.current_page)
   return params.toString() ? `?${params.toString()}` : ''
 }
@@ -156,6 +167,17 @@ function reloadUnits() {
 function changePage(page) {
   pagination.current_page = page
   loadUnits()
+}
+
+function togglePendingRegistration() {
+  pendingRegistration.value = !pendingRegistration.value
+  if (pendingRegistration.value) status.value = ''
+  reloadUnits()
+}
+
+function handleStatusChange() {
+  if (status.value) pendingRegistration.value = false
+  reloadUnits()
 }
 
 function openCreate() {
@@ -201,6 +223,7 @@ async function exportUnits() {
   const params = new URLSearchParams()
   if (keyword.value) params.set('keyword', keyword.value)
   if (status.value) params.set('status', status.value)
+  if (pendingRegistration.value) params.set('pending_registration', '1')
   const query = params.toString() ? `?${params.toString()}` : ''
   try {
     await downloadApi(`/units/export.csv${query}`, `units-${new Date().toISOString().slice(0, 10)}.csv`)
@@ -209,5 +232,8 @@ async function exportUnits() {
   }
 }
 
-onMounted(loadUnits)
+onMounted(() => {
+  pendingRegistration.value = route.query.pending_registration === '1'
+  loadUnits()
+})
 </script>

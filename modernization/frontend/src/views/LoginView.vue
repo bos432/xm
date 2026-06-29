@@ -1,11 +1,12 @@
 <template>
-  <main class="login-page">
-    <section class="login-panel">
-      <div>
-        <p class="eyebrow">测试环境</p>
-        <h1>项目申报系统</h1>
-        <p>新系统承接新增项目，旧系统保留历史查询。</p>
+  <main class="auth-page gov-auth-page">
+    <section class="auth-card">
+      <div class="auth-card-head">
+        <RouterLink to="/">返回首页</RouterLink>
+        <span>用户登录</span>
       </div>
+      <h1>项目管理系统登录</h1>
+      <p>申报单位、审核单位、专家和管理员按角色登录办理业务。</p>
       <el-alert
         v-if="route.query.switch"
         title="已退出当前账号，请重新登录"
@@ -14,7 +15,7 @@
         :closable="false"
       />
       <el-form :model="form" label-position="top" @submit.prevent="submit">
-        <el-form-item label="账号">
+        <el-form-item label="登录名">
           <el-input v-model="form.username" autocomplete="username" />
         </el-form-item>
         <el-form-item label="密码">
@@ -23,13 +24,16 @@
         <el-form-item label="验证码">
           <div class="captcha-row">
             <el-input v-model="form.captcha_answer" inputmode="numeric" autocomplete="off" :placeholder="captcha.question || '加载中'" />
-            <el-button :icon="Refresh" circle :loading="captchaLoading" @click="loadCaptcha" />
+            <el-button :icon="Refresh" :loading="captchaLoading" @click="loadCaptcha" />
           </div>
         </el-form-item>
         <el-alert v-if="error" :title="error" type="error" show-icon :closable="false" />
         <el-button type="primary" native-type="submit" :loading="loading" class="full-button">登录</el-button>
-        <el-button class="full-button secondary-action" @click="clearAndReload">切换账号</el-button>
       </el-form>
+      <div class="auth-links">
+        <RouterLink to="/register">单位注册</RouterLink>
+        <RouterLink to="/forgot-password">忘记密码</RouterLink>
+      </div>
     </section>
   </main>
 </template>
@@ -48,7 +52,7 @@ const loading = ref(false)
 const captchaLoading = ref(false)
 const error = ref('')
 const captcha = reactive({ id: '', question: '' })
-const form = reactive({ username: 'admin', password: 'ChangeMe-2026', captcha_id: '', captcha_answer: '' })
+const form = reactive({ username: '', password: '', captcha_id: '', captcha_answer: '' })
 
 async function loadCaptcha() {
   captchaLoading.value = true
@@ -75,15 +79,6 @@ async function submit() {
   } finally {
     loading.value = false
   }
-}
-
-function clearAndReload() {
-  session.clearSession()
-  error.value = ''
-  form.password = ''
-  form.captcha_answer = ''
-  router.replace('/login?switch=1')
-  loadCaptcha()
 }
 
 onMounted(loadCaptcha)

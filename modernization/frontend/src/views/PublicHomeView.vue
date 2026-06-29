@@ -1,44 +1,167 @@
 <template>
-  <main class="public-home">
-    <header class="public-nav">
-      <strong>{{ home.nav.title }}</strong>
-      <nav>
-        <a v-for="link in home.nav.links" :key="link.label" :href="link.href">{{ link.label }}</a>
+  <main class="gov-portal">
+    <div class="gov-topbar">
+      <div class="gov-wrap">
+        <span>在线帮助</span>
+        <span>全站导航</span>
+        <span>本平台为互联网非涉密平台，请勿上传涉密资料</span>
+        <div class="gov-topbar-links">
+          <RouterLink to="/login">登录</RouterLink>
+          <RouterLink to="/register">单位注册</RouterLink>
+          <RouterLink to="/forgot-password">忘记密码</RouterLink>
+        </div>
+      </div>
+    </div>
+
+    <header class="gov-header">
+      <div class="gov-wrap gov-brand-row">
+        <div class="gov-emblem">科</div>
+        <div>
+          <strong>{{ home.nav.title || '阿拉善盟科技计划项目管理信息系统' }}</strong>
+          <span>科技计划项目申报、审核、评审与验收公共服务平台</span>
+        </div>
+      </div>
+      <nav class="gov-main-nav">
+        <div class="gov-wrap">
+          <a v-for="link in home.nav.links" :key="link.label" :href="link.href">{{ link.label }}</a>
+          <RouterLink to="/login">项目管理入口</RouterLink>
+        </div>
       </nav>
     </header>
 
     <section v-if="loading" class="public-empty">正在加载首页内容...</section>
     <section v-else-if="loadError" class="public-empty">首页内容暂时无法加载</section>
     <section v-else-if="!hasHomeContent" class="public-empty">首页内容暂未配置</section>
+
     <template v-else>
-      <section class="public-hero">
-        <div class="hero-copy">
-          <p class="eyebrow">{{ home.hero.eyebrow }}</p>
-          <h1>{{ home.hero.title }}</h1>
-          <p>{{ home.hero.description }}</p>
-          <div class="public-actions">
-            <RouterLink v-if="home.hero.primary_action.label && isRouterTarget(home.hero.primary_action.href)" class="primary-link" :to="home.hero.primary_action.href">
-              {{ home.hero.primary_action.label }}
-            </RouterLink>
-            <a v-else-if="home.hero.primary_action.label" class="primary-link" :href="actionHref(home.hero.primary_action)">{{ home.hero.primary_action.label }}</a>
-            <RouterLink v-if="home.hero.secondary_action.label && isRouterTarget(home.hero.secondary_action.href)" class="secondary-link" :to="home.hero.secondary_action.href">
-              {{ home.hero.secondary_action.label }}
-            </RouterLink>
-            <a v-else-if="home.hero.secondary_action.label" class="secondary-link" :href="actionHref(home.hero.secondary_action)">{{ home.hero.secondary_action.label }}</a>
+      <section class="gov-masthead">
+        <div class="gov-wrap gov-masthead-grid">
+          <div class="gov-banner">
+            <p>{{ home.hero.eyebrow || '科技计划项目申报服务' }}</p>
+            <h1>{{ home.hero.title }}</h1>
+            <span>{{ home.hero.description }}</span>
           </div>
+
+          <aside class="gov-login-box">
+            <div class="gov-box-title">
+              <strong>用户登录</strong>
+              <RouterLink to="/register">单位注册</RouterLink>
+            </div>
+            <el-form :model="loginForm" label-position="top" @submit.prevent="submitLogin">
+              <el-form-item label="登录名">
+                <el-input v-model="loginForm.username" autocomplete="username" />
+              </el-form-item>
+              <el-form-item label="密码">
+                <el-input v-model="loginForm.password" type="password" autocomplete="current-password" show-password />
+              </el-form-item>
+              <el-form-item label="验证码">
+                <div class="captcha-row">
+                  <el-input v-model="loginForm.captcha_answer" inputmode="numeric" :placeholder="captcha.question || '加载中'" />
+                  <el-button :icon="Refresh" :loading="captchaLoading" @click="loadCaptcha" />
+                </div>
+              </el-form-item>
+              <el-alert v-if="loginError" :title="loginError" type="error" show-icon :closable="false" />
+              <el-button type="primary" native-type="submit" :loading="loginLoading" class="full-button">登录系统</el-button>
+            </el-form>
+            <div class="gov-login-links">
+              <RouterLink to="/forgot-password">忘记密码</RouterLink>
+              <RouterLink to="/register">新单位注册</RouterLink>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="gov-wrap gov-quick-row" aria-label="申报服务入口">
+        <RouterLink v-if="isRouterTarget(home.hero.primary_action.href)" class="gov-quick-card primary" :to="home.hero.primary_action.href || '/login'">
+          <strong>{{ home.hero.primary_action.label || '项目申报入口' }}</strong>
+          <span>项目填报、附件上传、提交审核</span>
+        </RouterLink>
+        <a v-else class="gov-quick-card primary" :href="actionHref(home.hero.primary_action.href)">
+          <strong>{{ home.hero.primary_action.label || '项目申报入口' }}</strong>
+          <span>项目填报、附件上传、提交审核</span>
+        </a>
+        <a class="gov-quick-card" href="#notices">
+          <strong>通知公告</strong>
+          <span>申报指南、公示公告、工作通知</span>
+        </a>
+        <a class="gov-quick-card" href="#downloads">
+          <strong>资料下载</strong>
+          <span>申报书、承诺书、操作手册</span>
+        </a>
+        <a class="gov-quick-card" href="#services">
+          <strong>办事服务</strong>
+          <span>审核、评审、验收、延期办理</span>
+        </a>
+      </section>
+
+      <section class="gov-wrap gov-main-grid">
+        <div class="gov-news-panel" id="notices">
+          <div class="gov-section-head">
+            <strong>通知公告</strong>
+            <span>Notice</span>
+          </div>
+          <ul class="gov-news-list">
+            <li v-for="item in home.notices" :key="item.id || item.title">
+              <button type="button" @click="selectedNotice = item">{{ item.title }}</button>
+              <time>{{ item.date }}</time>
+            </li>
+            <li v-if="home.notices.length === 0"><span>暂无通知</span></li>
+          </ul>
         </div>
 
-        <div class="hero-panel" aria-label="平台服务状态">
-          <span>当前服务</span>
-          <strong>{{ home.hero.status_title }}</strong>
-          <div v-for="item in home.hero.status_items" :key="item.label">
-            <small>{{ item.label }}</small>
-            <b>{{ item.value }}</b>
+        <aside class="gov-side-panel">
+          <div class="gov-section-head compact">
+            <strong>重要提示</strong>
+          </div>
+          <template v-if="selectedNotice">
+            <b>{{ selectedNotice.title }}</b>
+            <p>{{ selectedNotice.summary || selectedNotice.body }}</p>
+            <a v-if="selectedNotice.href" :href="selectedNotice.href">查看详情</a>
+          </template>
+          <template v-else>
+            <b>{{ home.hero.status_title || '平台运行正常' }}</b>
+            <p>请申报单位按通知要求准备材料，完成注册审核后登录系统办理。</p>
+          </template>
+          <div class="gov-status-list">
+            <span v-for="item in home.hero.status_items" :key="item.label">{{ item.label }}：{{ item.value }}</span>
+          </div>
+        </aside>
+      </section>
+
+      <section class="gov-wrap gov-columns">
+        <div class="gov-news-panel" id="downloads">
+          <div class="gov-section-head">
+            <strong>资料下载</strong>
+            <span>Download</span>
+          </div>
+          <ul class="gov-news-list">
+            <li v-for="item in home.downloads" :key="item.id || item.title">
+              <a v-if="item.download_url" :href="item.download_url">{{ item.title }}</a>
+              <button v-else type="button" @click="selectedDownload = item">{{ item.title }}</button>
+              <time>{{ item.date }}</time>
+            </li>
+            <li v-if="home.downloads.length === 0"><span>暂无资料</span></li>
+          </ul>
+        </div>
+
+        <div class="gov-news-panel" id="services">
+          <div class="gov-section-head">
+            <strong>在线服务</strong>
+            <span>Service</span>
+          </div>
+          <div class="gov-service-list">
+            <article v-for="service in home.services" :key="service.title">
+              <span>{{ service.code }}</span>
+              <div>
+                <strong>{{ service.title }}</strong>
+                <p>{{ service.description }}</p>
+              </div>
+            </article>
           </div>
         </div>
       </section>
 
-      <section id="notices" class="public-section feature-strip">
+      <section class="gov-wrap gov-data-strip">
         <article v-for="item in home.highlights" :key="item.label">
           <span>{{ item.label }}</span>
           <strong>{{ item.value }}</strong>
@@ -46,95 +169,31 @@
         </article>
       </section>
 
-      <section class="public-section public-two-column">
-        <div class="portal-card">
-          <div class="portal-card-title">
-            <strong>通知公告</strong>
-            <a href="#notices">更多</a>
-          </div>
-          <ul class="portal-list">
-            <li v-for="item in home.notices" :key="item.id || item.title">
-              <button type="button" @click="selectedNotice = item">{{ item.title }}</button>
-              <span>{{ item.date }}</span>
-            </li>
-            <li v-if="home.notices.length === 0"><span>暂无通知</span></li>
-          </ul>
-        </div>
-
-        <aside class="notice-detail">
-          <template v-if="selectedNotice">
-            <span>公告详情</span>
-            <strong>{{ selectedNotice.title }}</strong>
-            <p>{{ selectedNotice.summary || selectedNotice.body }}</p>
-            <a v-if="selectedNotice.href" class="primary-link" :href="selectedNotice.href">查看详情</a>
-            <RouterLink v-else-if="isRouterTarget(home.hero.primary_action.href)" class="primary-link" :to="home.hero.primary_action.href">
-              {{ home.hero.primary_action.label }}
-            </RouterLink>
-          </template>
-          <template v-else>
-            <span>公告详情</span>
-            <strong>暂无通知</strong>
-          </template>
-        </aside>
-      </section>
-
-      <section id="services" class="public-section">
-        <div class="section-heading">
-          <p class="eyebrow">Online Services</p>
-          <h2>服务事项</h2>
-        </div>
-        <div class="service-grid">
-          <article v-for="service in home.services" :key="service.title">
-            <span>{{ service.code }}</span>
-            <strong>{{ service.title }}</strong>
-            <p>{{ service.description }}</p>
-          </article>
-        </div>
-      </section>
-
-      <section id="downloads" class="public-section public-two-column public-band">
-        <div class="portal-card">
-          <div class="portal-card-title">
-            <strong>资料下载</strong>
-            <a href="#downloads">更多</a>
-          </div>
-          <ul class="portal-list">
-            <li v-for="item in home.downloads" :key="item.id || item.title">
-              <button type="button" @click="selectedDownload = item">{{ item.title }}</button>
-              <span>{{ item.date }}</span>
-            </li>
-            <li v-if="home.downloads.length === 0"><span>暂无资料</span></li>
-          </ul>
-        </div>
-
-        <aside class="notice-detail">
-          <template v-if="selectedDownload">
-            <span>资料说明</span>
-            <strong>{{ selectedDownload.title }}</strong>
-            <p>{{ selectedDownload.summary }}</p>
-            <small v-if="selectedDownload.original_name">{{ selectedDownload.original_name }} {{ formatSize(selectedDownload.size_bytes) }}</small>
-            <a v-if="selectedDownload.download_url" class="secondary-link" :href="selectedDownload.download_url">下载资料</a>
-          </template>
-          <template v-else>
-            <span>资料说明</span>
-            <strong>暂无资料</strong>
-          </template>
-        </aside>
-      </section>
-
-      <footer class="public-footer">{{ home.footer }}</footer>
+      <footer class="gov-footer">{{ home.footer }}</footer>
     </template>
   </main>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { Refresh } from '@element-plus/icons-vue'
+import { api } from '../api.js'
+import { useSessionStore } from '../store.js'
 
+const router = useRouter()
+const session = useSessionStore()
 const home = ref(emptyHomeContent())
 const selectedNotice = ref(null)
 const selectedDownload = ref(null)
 const loading = ref(false)
 const loadError = ref(false)
+const loginLoading = ref(false)
+const captchaLoading = ref(false)
+const loginError = ref('')
+const captcha = reactive({ id: '', question: '' })
+const loginForm = reactive({ username: '', password: '', captcha_id: '', captcha_answer: '' })
 const hasHomeContent = computed(() => Boolean(
   home.value.nav.title ||
   home.value.hero.title ||
@@ -152,8 +211,8 @@ function emptyHomeContent() {
       eyebrow: '',
       title: '',
       description: '',
-      primary_action: { label: '', href: '#' },
-      secondary_action: { label: '', href: '#' },
+      primary_action: { label: '', href: '/login' },
+      secondary_action: { label: '', href: '#notices' },
       status_title: '',
       status_items: []
     },
@@ -191,6 +250,14 @@ function normalizeHomeContent(payload) {
   }
 }
 
+function isRouterTarget(href) {
+  return typeof href === 'string' && href.startsWith('/')
+}
+
+function actionHref(href) {
+  return href || '/login'
+}
+
 async function loadHomeContent() {
   loading.value = true
   loadError.value = false
@@ -210,21 +277,36 @@ async function loadHomeContent() {
   }
 }
 
-function isRouterTarget(href) {
-  return typeof href === 'string' && href.startsWith('/')
+async function loadCaptcha() {
+  captchaLoading.value = true
+  try {
+    const result = await api('/auth/captcha')
+    captcha.id = result.captcha_id
+    captcha.question = result.question
+    loginForm.captcha_id = result.captcha_id
+    loginForm.captcha_answer = ''
+  } finally {
+    captchaLoading.value = false
+  }
 }
 
-function actionHref(action) {
-  return action?.href || '#'
+async function submitLogin() {
+  loginLoading.value = true
+  loginError.value = ''
+  try {
+    await session.login(loginForm)
+    ElMessage.success('登录成功')
+    router.push('/dashboard')
+  } catch (err) {
+    loginError.value = err.message || '登录失败'
+    await loadCaptcha()
+  } finally {
+    loginLoading.value = false
+  }
 }
 
-function formatSize(bytes) {
-  const value = Number(bytes || 0)
-  if (!value) return ''
-  if (value < 1024) return `${value} B`
-  if (value < 1024 * 1024) return `${Math.round(value / 1024)} KB`
-  return `${(value / 1024 / 1024).toFixed(1)} MB`
-}
-
-onMounted(loadHomeContent)
+onMounted(() => {
+  loadHomeContent()
+  loadCaptcha()
+})
 </script>

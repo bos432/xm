@@ -40,6 +40,18 @@ class UserExportController extends Controller
             });
         }
 
+        if ($request->boolean('pending_registration')) {
+            $query->where('role', Role::UNIT)
+                ->where('is_active', false)
+                ->whereHas('unit', function ($query) {
+                    $query->where('status', 'suspended')
+                        ->where(function ($query) {
+                            $query->where('metadata', 'like', '%"registration_status":"pending"%')
+                                ->orWhere('metadata', 'like', '%"registration_status": "pending"%');
+                        });
+                });
+        }
+
         $users = $query->get();
 
         $this->auditLogger->record($request, 'user.exported', null, [
@@ -47,6 +59,7 @@ class UserExportController extends Controller
             'role' => $request->query('role'),
             'is_active' => $request->query('is_active'),
             'keyword' => $request->query('keyword'),
+            'pending_registration' => $request->boolean('pending_registration'),
             'count' => $users->count(),
         ]);
 
