@@ -43,6 +43,45 @@ cd /www/wwwroot/nxm.zlck888.com
 bash ./deploy.sh
 ```
 
+## GitHub SSH Deploy Key
+
+This production server uses a GitHub Deploy Key for repository access. Use the SSH
+repository URL for deployment:
+
+```bash
+git@github.com:bos432/xm.git
+```
+
+Do not use the HTTPS URL with a GitHub account password. GitHub no longer accepts
+password authentication for Git operations, so this pattern will fail:
+
+```bash
+REPO_URL=https://github.com/bos432/xm.git
+```
+
+Before deployment, verify the server can authenticate with GitHub:
+
+```bash
+ssh -T git@github.com
+```
+
+The standard BT Panel terminal command for this project is:
+
+```bash
+cd /www/wwwroot/nxm.zlck888.com
+
+APP_ROOT=/www/wwwroot/nxm.zlck888.com \
+REPO_URL=git@github.com:bos432/xm.git \
+BRANCH=main \
+PHP_BIN=/www/server/php/83/bin/php \
+RUN_SEED=1 \
+bash ./deploy.sh
+```
+
+If `ssh -T git@github.com` fails, check `/root/.ssh/config`, the deploy key
+private file on the server, and GitHub repository Settings -> Deploy keys. The
+current deploy key name is `项目申报系统2.0`.
+
 Frontend dependencies are installed with:
 
 ```bash
@@ -55,7 +94,7 @@ Optional environment variables:
 
 ```bash
 APP_ROOT=/www/wwwroot/nxm.zlck888.com \
-REPO_URL=https://github.com/bos432/xm.git \
+REPO_URL=git@github.com:bos432/xm.git \
 BRANCH=main \
 PHP_BIN=/www/server/php/83/bin/php \
 bash ./deploy.sh
