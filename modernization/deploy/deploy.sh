@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 APP_ROOT="${APP_ROOT:-/www/wwwroot/nxm.zlck888.com}"
-REPO_URL="${REPO_URL:-https://github.com/bos432/xm.git}"
+REPO_URL="${REPO_URL:-git@github.com:bos432/xm.git}"
 BRANCH="${BRANCH:-main}"
 PHP_BIN="${PHP_BIN:-/www/server/php/83/bin/php}"
 COMPOSER_BIN="${COMPOSER_BIN:-$APP_ROOT/shared/composer.phar}"
@@ -48,7 +48,9 @@ if [ ! -f "$COMPOSER_BIN" ]; then
     log "Migrating existing composer.phar to shared"
     cp "$APP_ROOT/backend/composer.phar" "$COMPOSER_BIN"
   else
-    fail "Missing composer.phar. Expected $COMPOSER_BIN"
+    log "Downloading Composer to shared/composer.phar"
+    "$PHP_BIN" -r "copy('https://getcomposer.org/composer-stable.phar', '$COMPOSER_BIN');" \
+      || fail "Unable to download Composer. Put composer.phar at $COMPOSER_BIN and retry."
   fi
 fi
 
@@ -88,6 +90,7 @@ ln -s "$SHARED_DIR/bootstrap-cache" bootstrap/cache
 cp "$COMPOSER_BIN" composer.phar
 
 log "Installing backend dependencies"
+"$PHP_BIN" composer.phar config -g policy.advisories.block false
 "$PHP_BIN" composer.phar install --no-dev --optimize-autoloader --no-interaction
 
 log "Running database migrations"
