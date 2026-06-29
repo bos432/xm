@@ -1,5 +1,5 @@
 <template>
-  <RouterView v-if="$route.path === '/login'" />
+  <RouterView v-if="$route.meta.public || $route.path === '/login'" />
   <el-container v-else class="shell">
     <el-aside width="248px" class="sidebar">
       <div class="brand">
@@ -99,7 +99,7 @@ const iconMap = {
   settings: Setting
 }
 const titles = {
-  '/': '运行概览',
+  '/dashboard': '运行概览',
   '/projects': '项目申报',
   '/units': '单位管理',
   '/users': '账号管理',

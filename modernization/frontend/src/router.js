@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useSessionStore } from './store.js'
+import PublicHomeView from './views/PublicHomeView.vue'
 import LoginView from './views/LoginView.vue'
 import DashboardView from './views/DashboardView.vue'
 import ProjectsView from './views/ProjectsView.vue'
@@ -15,8 +16,9 @@ import UsersView from './views/UsersView.vue'
 const router = createRouter({
   history: createWebHistory(),
   routes: [
+    { path: '/', component: PublicHomeView, meta: { public: true } },
     { path: '/login', component: LoginView, meta: { guest: true } },
-    { path: '/', component: DashboardView, meta: { permission: 'view_dashboard' } },
+    { path: '/dashboard', component: DashboardView, meta: { permission: 'view_dashboard' } },
     { path: '/projects', component: ProjectsView, meta: { permission: 'view_projects' } },
     { path: '/units', component: UnitsView, meta: { permission: 'manage_units' } },
     { path: '/users', component: UsersView, meta: { permission: 'manage_users' } },
@@ -32,13 +34,14 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const session = useSessionStore()
+  if (to.meta.public) return true
   if (session.token && !session.user) await session.loadMe().catch(() => {
     session.token = ''
     session.user = null
     localStorage.removeItem('pas_token')
   })
   if (!to.meta.guest && !session.token) return '/login'
-  if (to.meta.guest && session.token) return '/'
+  if (to.meta.guest && session.token) return '/dashboard'
   if (to.meta.permission && !session.can(to.meta.permission)) return '/'
 })
 

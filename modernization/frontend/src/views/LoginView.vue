@@ -59,7 +59,7 @@ async function submit() {
   error.value = ''
   try {
     await session.login(form)
-    router.push('/')
+    router.push('/dashboard')
   } catch (err) {
     error.value = err.message
     await loadCaptcha()

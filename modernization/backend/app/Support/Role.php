@@ -58,7 +58,7 @@ final class Role
     {
         $capabilities = self::capabilities($role);
         $menus = [
-            ['key' => 'dashboard', 'path' => '/', 'label' => '运行概览', 'permission' => 'view_dashboard'],
+            ['key' => 'dashboard', 'path' => '/dashboard', 'label' => '运行概览', 'permission' => 'view_dashboard'],
             ['key' => 'projects', 'path' => '/projects', 'label' => '项目申报', 'permission' => 'view_projects'],
             ['key' => 'units', 'path' => '/units', 'label' => '单位管理', 'permission' => 'manage_units'],
             ['key' => 'users', 'path' => '/users', 'label' => '账号管理', 'permission' => 'manage_users'],
