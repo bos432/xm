@@ -6,6 +6,13 @@
         <h1>项目申报系统</h1>
         <p>新系统承接新增项目，旧系统保留历史查询。</p>
       </div>
+      <el-alert
+        v-if="route.query.switch"
+        title="已退出当前账号，请重新登录"
+        type="info"
+        show-icon
+        :closable="false"
+      />
       <el-form :model="form" label-position="top" @submit.prevent="submit">
         <el-form-item label="账号">
           <el-input v-model="form.username" autocomplete="username" />
@@ -21,6 +28,7 @@
         </el-form-item>
         <el-alert v-if="error" :title="error" type="error" show-icon :closable="false" />
         <el-button type="primary" native-type="submit" :loading="loading" class="full-button">登录</el-button>
+        <el-button class="full-button secondary-action" @click="clearAndReload">切换账号</el-button>
       </el-form>
     </section>
   </main>
@@ -29,10 +37,11 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { Refresh } from '@element-plus/icons-vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api.js'
 import { useSessionStore } from '../store.js'
 
+const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
 const loading = ref(false)
@@ -66,6 +75,15 @@ async function submit() {
   } finally {
     loading.value = false
   }
+}
+
+function clearAndReload() {
+  session.clearSession()
+  error.value = ''
+  form.password = ''
+  form.captcha_answer = ''
+  router.replace('/login?switch=1')
+  loadCaptcha()
 }
 
 onMounted(loadCaptcha)

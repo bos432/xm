@@ -67,6 +67,7 @@ final class Role
             ['key' => 'messages', 'path' => '/messages', 'label' => '站内消息', 'permission' => 'view_messages'],
             ['key' => 'migration', 'path' => '/migration', 'label' => '迁移准备', 'permission' => 'view_migration'],
             ['key' => 'operation_logs', 'path' => '/operation-logs', 'label' => '操作日志', 'permission' => 'view_operation_logs'],
+            ['key' => 'public_home', 'path' => '/public-home', 'label' => '首页管理', 'permission' => 'manage_settings'],
             ['key' => 'dictionary_items', 'path' => '/dictionary-items', 'label' => '数据字典', 'permission' => 'manage_settings'],
             ['key' => 'settings', 'path' => '/settings', 'label' => '系统配置', 'permission' => 'manage_settings'],
         ];

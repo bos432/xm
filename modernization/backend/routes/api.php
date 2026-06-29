@@ -10,6 +10,8 @@ use App\Http\Controllers\MigrationBatchController;
 use App\Http\Controllers\MigrationReadinessController;
 use App\Http\Controllers\OperationLogController;
 use App\Http\Controllers\OperationLogExportController;
+use App\Http\Controllers\PublicHomeAdminController;
+use App\Http\Controllers\PublicHomeController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectExportController;
 use App\Http\Controllers\ReviewExportController;
@@ -23,6 +25,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/auth/captcha', [AuthController::class, 'captcha'])->middleware('throttle:30,1');
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::get('/public/homepage', [PublicHomeController::class, 'index']);
+Route::get('/public/homepage/downloads/{item}', [PublicHomeController::class, 'download']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('active')->group(function () {
@@ -53,6 +57,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/settings', [SystemSettingController::class, 'index']);
     Route::put('/settings/{setting}', [SystemSettingController::class, 'update']);
+    Route::get('/public-home', [PublicHomeAdminController::class, 'index']);
+    Route::put('/public-home/sections/{section:key}', [PublicHomeAdminController::class, 'updateSection']);
+    Route::post('/public-home/items', [PublicHomeAdminController::class, 'storeItem']);
+    Route::put('/public-home/items/{item}', [PublicHomeAdminController::class, 'updateItem']);
+    Route::delete('/public-home/items/{item}', [PublicHomeAdminController::class, 'destroyItem']);
+    Route::post('/public-home/items/{item}/file', [PublicHomeAdminController::class, 'uploadFile']);
 
     Route::get('/messages', [MessageController::class, 'index']);
     Route::post('/messages/read-all', [MessageController::class, 'markAllRead']);

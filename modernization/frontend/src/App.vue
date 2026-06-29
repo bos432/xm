@@ -31,6 +31,9 @@
           <el-tooltip content="修改密码" placement="bottom">
             <el-button :icon="Lock" circle @click="passwordVisible = true" />
           </el-tooltip>
+          <el-tooltip content="切换账号" placement="bottom">
+            <el-button :icon="SwitchButton" @click="switchAccount">切换账号</el-button>
+          </el-tooltip>
           <el-button :icon="SwitchButton" @click="logout">退出</el-button>
         </div>
       </el-header>
@@ -69,7 +72,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Bell, Checked, Collection, Connection, DataLine, FolderOpened, Lock, OfficeBuilding, Setting, SwitchButton, Tickets, User } from '@element-plus/icons-vue'
+import { Bell, Checked, Collection, Connection, DataLine, FolderOpened, House, Lock, OfficeBuilding, Setting, SwitchButton, Tickets, User } from '@element-plus/icons-vue'
 import { api } from './api.js'
 import { useSessionStore } from './store.js'
 
@@ -95,6 +98,7 @@ const iconMap = {
   messages: Bell,
   migration: Connection,
   operation_logs: Tickets,
+  public_home: House,
   dictionary_items: Collection,
   settings: Setting
 }
@@ -108,6 +112,7 @@ const titles = {
   '/messages': '站内消息',
   '/migration': '迁移准备',
   '/operation-logs': '操作日志',
+  '/public-home': '首页管理',
   '/dictionary-items': '数据字典',
   '/settings': '系统配置'
 }
@@ -163,9 +168,17 @@ async function updatePassword() {
 }
 
 async function logout() {
-  await session.logout()
+  session.logout()
   unreadMessages.value = 0
-  router.push('/login')
+  router.replace('/login')
+}
+
+function switchAccount() {
+  session.clearSession()
+  unreadMessages.value = 0
+  passwordVisible.value = false
+  profileVisible.value = false
+  router.replace('/login?switch=1')
 }
 
 function handleSessionExpired() {

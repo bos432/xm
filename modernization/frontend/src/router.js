@@ -6,6 +6,7 @@ import DashboardView from './views/DashboardView.vue'
 import ProjectsView from './views/ProjectsView.vue'
 import ReviewTasksView from './views/ReviewTasksView.vue'
 import SettingsView from './views/SettingsView.vue'
+import PublicHomeManageView from './views/PublicHomeManageView.vue'
 import MessagesView from './views/MessagesView.vue'
 import MigrationView from './views/MigrationView.vue'
 import OperationLogsView from './views/OperationLogsView.vue'
@@ -27,6 +28,7 @@ const router = createRouter({
     { path: '/messages', component: MessagesView, meta: { permission: 'view_messages' } },
     { path: '/migration', component: MigrationView, meta: { permission: 'view_migration' } },
     { path: '/operation-logs', component: OperationLogsView, meta: { permission: 'view_operation_logs' } },
+    { path: '/public-home', component: PublicHomeManageView, meta: { permission: 'manage_settings' } },
     { path: '/dictionary-items', component: DictionaryItemsView, meta: { permission: 'manage_settings' } },
     { path: '/settings', component: SettingsView, meta: { permission: 'manage_settings' } }
   ]

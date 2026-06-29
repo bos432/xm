@@ -26,8 +26,20 @@ export const useSessionStore = defineStore('session', {
       if (!this.token) return
       this.user = await api('/auth/me')
     },
-    async logout() {
-      if (this.token) await api('/auth/logout', { method: 'POST' }).catch(() => null)
+    logout() {
+      const token = this.token
+      this.clearSession()
+      if (!token) return
+
+      void fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      }).catch(() => null)
+    },
+    clearSession() {
       this.token = ''
       this.user = null
       localStorage.removeItem('pas_token')
