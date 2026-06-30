@@ -58,6 +58,11 @@
         <el-form-item label="允许项目类型"><el-input v-model="form.allowed_project_types_text" placeholder="多个用逗号分隔；留空表示不限" /></el-form-item>
         <el-form-item label="指南说明" class="wide-field"><el-input v-model="form.guide" type="textarea" :rows="4" /></el-form-item>
         <el-form-item label="附件要求" class="wide-field"><el-input v-model="form.attachment_requirements" type="textarea" :rows="4" /></el-form-item>
+        <el-form-item label="验收必传材料" class="wide-field">
+          <el-checkbox-group v-model="form.acceptance_required_materials">
+            <el-checkbox v-for="item in materialCategories" :key="item.value" :label="item.value">{{ item.label }}</el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="editorVisible = false">取消</el-button>
@@ -87,6 +92,12 @@ const statusLabels = {
   closed: { label: '关闭', type: 'warning' },
   archived: { label: '归档', type: 'info' }
 }
+const materialCategories = [
+  { label: '验收申请书', value: 'acceptance_application' },
+  { label: '项目总结', value: 'project_summary' },
+  { label: '财务材料', value: 'financial' },
+  { label: '成果证明', value: 'achievement' }
+]
 
 function emptyForm() {
   return {
@@ -98,6 +109,7 @@ function emptyForm() {
     allowed_project_types_text: '',
     guide: '',
     attachment_requirements: '',
+    acceptance_required_materials: [],
     metadata: {}
   }
 }
@@ -127,6 +139,7 @@ function openEditor(row = null) {
   Object.assign(form, emptyForm(), row || {})
   form.allowed_categories_text = (row?.allowed_categories || []).join('，')
   form.allowed_project_types_text = (row?.allowed_project_types || []).join('，')
+  form.acceptance_required_materials = [...(row?.metadata?.acceptance_required_materials || [])]
   dateRange.value = row ? [row.starts_at, row.ends_at].filter(Boolean) : []
   editorVisible.value = true
 }
@@ -144,7 +157,10 @@ async function saveBatch() {
       allowed_project_types: splitList(form.allowed_project_types_text),
       guide: form.guide || null,
       attachment_requirements: form.attachment_requirements || null,
-      metadata: form.metadata || {}
+      metadata: {
+        ...(form.metadata || {}),
+        acceptance_required_materials: form.acceptance_required_materials || []
+      }
     }
     await api(form.id ? `/application-batches/${form.id}` : '/application-batches', {
       method: form.id ? 'PUT' : 'POST',

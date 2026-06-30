@@ -21,6 +21,12 @@
       </div>
     </div>
 
+    <el-tabs v-if="showScopeTabs" v-model="scope" @tab-change="handleScopeChange">
+      <el-tab-pane label="待处理" name="pending" />
+      <el-tab-pane label="已处理" name="reviewed" />
+      <el-tab-pane label="全部可见" name="visible" />
+    </el-tabs>
+
     <el-table :data="acceptances" border v-loading="loading">
       <el-table-column label="项目" min-width="240">
         <template #default="{ row }">
@@ -154,11 +160,30 @@
         <section v-if="detail.timeline?.length">
           <div class="section-title">验收阶段</div>
           <el-steps :active="timelineActiveIndex(detail.timeline)" finish-status="success" process-status="process" align-center>
-            <el-step v-for="item in detail.timeline" :key="item.key" :title="item.label" :description="timelineDescription(item)" />
+            <el-step
+              v-for="item in detail.timeline"
+              :key="item.key"
+              :title="item.label"
+              :description="timelineDescription(item)"
+              :status="timelineStepStatus(item)"
+              @click="selectedTimelineKey = item.key"
+            />
           </el-steps>
+          <el-descriptions v-if="selectedTimelineItem" :column="2" border class="mt-16">
+            <el-descriptions-item label="阶段">{{ selectedTimelineItem.label }}</el-descriptions-item>
+            <el-descriptions-item label="状态">{{ timelineStatusLabel(selectedTimelineItem.status) }}</el-descriptions-item>
+            <el-descriptions-item label="处理人">{{ selectedTimelineItem.handler || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="处理时间">{{ selectedTimelineItem.handled_at || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="处理结果">{{ decisionLabel(selectedTimelineItem.decision) }}</el-descriptions-item>
+            <el-descriptions-item label="评分">{{ selectedTimelineItem.score ?? '-' }}</el-descriptions-item>
+            <el-descriptions-item label="意见" :span="2">{{ selectedTimelineItem.comment || '-' }}</el-descriptions-item>
+          </el-descriptions>
         </section>
         <section>
-          <div class="section-title">验收材料</div>
+          <div class="section-title">
+            <span>验收材料</span>
+            <el-tag v-if="requiredMaterialLabels.length" type="warning" effect="plain">必传：{{ requiredMaterialLabels.join('、') }}</el-tag>
+          </div>
           <el-table :data="detail.project?.files || []" border size="small">
             <el-table-column prop="original_name" label="文件名" min-width="220" />
             <el-table-column label="材料分类" min-width="130">
@@ -192,12 +217,15 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Refresh, Upload, View } from '@element-plus/icons-vue'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api.js'
 import { useSessionStore } from '../store.js'
 
+const route = useRoute()
+const router = useRouter()
 const session = useSessionStore()
 const loading = ref(false)
 const saving = ref(false)
@@ -206,6 +234,7 @@ const acceptances = ref([])
 const projectOptions = ref([])
 const keyword = ref('')
 const status = ref('')
+const scope = ref(defaultScope())
 const createVisible = ref(false)
 const submitVisible = ref(false)
 const reviewVisible = ref(false)
@@ -214,6 +243,7 @@ const uploadVisible = ref(false)
 const detailVisible = ref(false)
 const currentAcceptance = ref(null)
 const detail = ref(null)
+const selectedTimelineKey = ref('')
 const createForm = reactive({ project_id: '', summary: '' })
 const submitForm = reactive({ summary: '' })
 const reviewForm = reactive({ decision: 'approve', score: null, comment: '' })
@@ -237,6 +267,16 @@ const materialCategories = [
   { label: '其他', value: 'other' }
 ]
 const materialCategoryMap = Object.fromEntries(materialCategories.map((item) => [item.value, item.label]))
+const showScopeTabs = computed(() => session.can('review_acceptance') || session.can('manage_acceptance'))
+const selectedTimelineItem = computed(() => detail.value?.timeline?.find((item) => item.key === selectedTimelineKey.value) || detail.value?.timeline?.[0] || null)
+const requiredMaterialLabels = computed(() => {
+  const required = detail.value?.project?.application_batch?.metadata?.acceptance_required_materials || []
+  return required.map((item) => materialCategoryLabel(item)).filter(Boolean)
+})
+
+function defaultScope() {
+  return ['admin', 'super_admin'].includes(session.role) ? 'visible' : 'pending'
+}
 
 function statusMeta(value) {
   return statusLabels[value] || { label: value || '-', type: 'info' }
@@ -248,6 +288,15 @@ function roleLabel(value) {
 
 function materialCategoryLabel(value) {
   return materialCategoryMap[value] || value || '未分类'
+}
+
+function decisionLabel(value) {
+  const labels = { submitted: '已提交', approve: '通过', return: '退回修改', reject: '驳回', close: '终审关闭' }
+  return labels[value] || value || '-'
+}
+
+function timelineStatusLabel(value) {
+  return { done: '已完成', current: '当前待处理', pending: '待流转', error: '异常' }[value] || value || '-'
 }
 
 function projectOptionLabel(item) {
@@ -297,11 +346,17 @@ async function loadAcceptances() {
     const params = new URLSearchParams()
     if (keyword.value) params.set('keyword', keyword.value)
     if (status.value) params.set('status', status.value)
+    if (showScopeTabs.value && scope.value) params.set('scope', scope.value)
     const result = await api(`/acceptance${params.toString() ? `?${params.toString()}` : ''}`)
     acceptances.value = result.data || result
   } finally {
     loading.value = false
   }
+}
+
+async function handleScopeChange() {
+  await router.replace({ path: route.path, query: { ...route.query, scope: scope.value } })
+  await loadAcceptances()
 }
 
 async function createAcceptance() {
@@ -396,6 +451,7 @@ async function uploadFile({ file }) {
 
 async function openDetail(row) {
   detail.value = await api(`/acceptance/${row.id}`)
+  selectedTimelineKey.value = detail.value.timeline?.find((item) => item.status === 'current')?.key || detail.value.timeline?.find((item) => item.status === 'done')?.key || detail.value.timeline?.[0]?.key || ''
   detailVisible.value = true
 }
 
@@ -410,12 +466,25 @@ function timelineDescription(item) {
   const parts = []
   if (item.handler) parts.push(item.handler)
   if (item.handled_at) parts.push(item.handled_at)
-  if (item.decision) parts.push(item.decision)
+  if (item.decision) parts.push(decisionLabel(item.decision))
   return parts.join(' / ') || (item.status === 'current' ? '当前待处理' : '待流转')
 }
 
+function timelineStepStatus(item) {
+  if (['return', 'reject'].includes(item.decision)) return 'error'
+  if (item.status === 'done') return 'success'
+  if (item.status === 'current') return 'process'
+  return 'wait'
+}
+
 onMounted(() => {
+  scope.value = route.query.scope || defaultScope()
   loadAcceptances()
   searchProjects()
+})
+
+watch(() => route.query.scope, () => {
+  scope.value = route.query.scope || defaultScope()
+  loadAcceptances()
 })
 </script>

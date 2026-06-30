@@ -309,19 +309,19 @@ const roleFocusMetrics = computed(() => {
 
   if (['county', 'department', 'expert'].includes(session.role)) {
     return [
-      { label: '项目待审', value: focus.review_pending ?? 0, note: '当前阶段待处理', to: '/reviews' },
-      { label: '项目已审', value: focus.review_done ?? 0, note: '本人处理记录', to: '/reviews?tab=results' },
-      { label: '验收待审', value: focus.acceptance_pending ?? 0, note: '当前阶段待处理', to: '/acceptance' },
-      { label: '验收已审', value: focus.acceptance_done ?? 0, note: '本人验收记录', to: '/acceptance' }
+      { label: '项目待审', value: focus.review_pending ?? 0, note: '当前阶段待处理', to: '/reviews?tab=tasks' },
+      { label: '项目已审', value: focus.review_done ?? 0, note: '本人处理记录', to: `/reviews?tab=results&stage=${session.role}` },
+      { label: '验收待审', value: focus.acceptance_pending ?? 0, note: '当前阶段待处理', to: '/acceptance?scope=pending' },
+      { label: '验收已审', value: focus.acceptance_done ?? 0, note: '本人验收记录', to: '/acceptance?scope=reviewed' }
     ]
   }
 
   if (['admin', 'super_admin'].includes(session.role)) {
     const items = [
-      { label: '待终审项目', value: focus.final_review_pending ?? 0, note: '科技局终审', to: '/reviews' },
+      { label: '待终审项目', value: focus.final_review_pending ?? 0, note: '科技局终审', to: '/reviews?tab=tasks' },
       { label: '待延期处理', value: focus.pending_extensions ?? 0, note: '延期申请', to: '/projects?pending_extension=1' },
       { label: '注册待审核', value: focus.pending_registrations ?? 0, note: '单位和账号启用', to: '/units?pending_registration=1' },
-      { label: '异常登录', value: focus.security_events_24h ?? 0, note: '24 小时安全事件', to: '/security' }
+      { label: '异常登录', value: focus.security_events_24h ?? 0, note: '24 小时安全事件', to: '/security?keyword=auth' }
     ]
 
     if (session.role === 'super_admin') {

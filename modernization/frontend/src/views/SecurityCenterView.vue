@@ -13,8 +13,14 @@
       <el-form :model="policies" label-position="top" class="home-manager-grid">
         <el-form-item label="登录失败阈值"><el-input-number v-model="policies.login_failure_threshold" :min="1" :max="100" /></el-form-item>
         <el-form-item label="锁定分钟数"><el-input-number v-model="policies.lock_minutes" :min="1" :max="1440" /></el-form-item>
+        <el-form-item label="登录限流/分钟"><el-input-number v-model="policies.login_throttle_per_minute" :min="1" :max="300" /></el-form-item>
+        <el-form-item label="临时放宽登录限流"><el-switch v-model="policies.login_throttle_relaxed" /></el-form-item>
+        <el-form-item label="放宽后限流/分钟"><el-input-number v-model="policies.login_throttle_relaxed_per_minute" :min="1" :max="1000" /></el-form-item>
         <el-form-item label="启用 IP 白名单"><el-switch v-model="policies.ip_whitelist_enabled" /></el-form-item>
         <el-form-item label="启用 IP 黑名单"><el-switch v-model="policies.ip_blacklist_enabled" /></el-form-item>
+        <el-form-item label="测试白名单 IP" class="wide-field">
+          <el-input v-model="policies.login_throttle_whitelist_ips" type="textarea" :rows="3" placeholder="多个 IP 用英文逗号分隔，仅用于登录限流验收放宽" />
+        </el-form-item>
       </el-form>
       <el-button type="primary" :loading="savingPolicy" @click="savePolicies">保存策略</el-button>
     </el-card>
@@ -101,8 +107,10 @@
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Refresh } from '@element-plus/icons-vue'
+import { useRoute } from 'vue-router'
 import { api } from '../api.js'
 
+const route = useRoute()
 const activeTab = ref('events')
 const loading = ref(false)
 const savingPolicy = ref(false)
@@ -111,7 +119,16 @@ const events = ref([])
 const locks = ref([])
 const ipRules = ref([])
 const blockVisible = ref(false)
-const policies = reactive({ login_failure_threshold: 5, lock_minutes: 30, ip_whitelist_enabled: false, ip_blacklist_enabled: true })
+const policies = reactive({
+  login_failure_threshold: 5,
+  lock_minutes: 30,
+  login_throttle_per_minute: 5,
+  login_throttle_relaxed: false,
+  login_throttle_relaxed_per_minute: 60,
+  login_throttle_whitelist_ips: '',
+  ip_whitelist_enabled: false,
+  ip_blacklist_enabled: true
+})
 const blockForm = reactive({ kind: 'lock', identity_type: 'username', identity_value: '', rule_type: 'blacklist', cidr: '', description: '' })
 
 function severityType(value) {
@@ -183,5 +200,8 @@ async function deleteRule(row) {
   await loadLocks()
 }
 
-onMounted(loadAll)
+onMounted(() => {
+  eventKeyword.value = route.query.keyword || ''
+  loadAll()
+})
 </script>

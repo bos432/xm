@@ -407,9 +407,9 @@ async function searchProjects(keyword = '', context = '') {
 
 async function ensureProjectOption(id) {
   if (!id || projectOptions.value.some((item) => String(item.id) === String(id))) return
-  const params = new URLSearchParams({ keyword: String(id), limit: '30' })
+  const params = new URLSearchParams({ keyword: String(id), limit: '1' })
   const options = await api(`/projects/options?${params.toString()}`)
-  projectOptions.value = [...projectOptions.value, ...options].filter((item, index, arr) => arr.findIndex((other) => other.id === item.id) === index)
+  projectOptions.value = [...options, ...projectOptions.value].filter((item, index, arr) => arr.findIndex((other) => String(other.id) === String(item.id)) === index)
 }
 
 async function loadBatches() {
@@ -431,7 +431,7 @@ async function searchUnits(keyword = '') {
 
 async function applyRouteQuery() {
   const routeProjectId = Array.isArray(route.query.project_id) ? route.query.project_id[0] : route.query.project_id
-  projectId.value = routeProjectId || ''
+  projectId.value = routeProjectId ? Number(routeProjectId) : ''
   if (projectId.value) await ensureProjectOption(projectId.value)
 }
 

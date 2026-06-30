@@ -118,6 +118,10 @@ class SecurityController extends Controller
             'lock_minutes' => RuntimeConfig::intValue('security.lock_minutes', 30),
             'ip_whitelist_enabled' => RuntimeConfig::boolValue('security.ip_whitelist_enabled', false),
             'ip_blacklist_enabled' => RuntimeConfig::boolValue('security.ip_blacklist_enabled', true),
+            'login_throttle_per_minute' => RuntimeConfig::intValue('security.login_throttle_per_minute', 5),
+            'login_throttle_relaxed' => RuntimeConfig::boolValue('security.login_throttle_relaxed', false),
+            'login_throttle_relaxed_per_minute' => RuntimeConfig::intValue('security.login_throttle_relaxed_per_minute', 60),
+            'login_throttle_whitelist_ips' => RuntimeConfig::value('security.login_throttle_whitelist_ips', '') ?? '',
         ]);
     }
 
@@ -130,12 +134,20 @@ class SecurityController extends Controller
             'lock_minutes' => ['required', 'integer', 'min:1', 'max:1440'],
             'ip_whitelist_enabled' => ['required', 'boolean'],
             'ip_blacklist_enabled' => ['required', 'boolean'],
+            'login_throttle_per_minute' => ['required', 'integer', 'min:1', 'max:300'],
+            'login_throttle_relaxed' => ['required', 'boolean'],
+            'login_throttle_relaxed_per_minute' => ['required', 'integer', 'min:1', 'max:1000'],
+            'login_throttle_whitelist_ips' => ['nullable', 'string', 'max:2000'],
         ]);
 
         RuntimeConfig::set('security.login_failure_threshold', (string) $data['login_failure_threshold'], 'security', false, '登录失败锁定阈值');
         RuntimeConfig::set('security.lock_minutes', (string) $data['lock_minutes'], 'security', false, '达到阈值后的锁定分钟数');
         RuntimeConfig::set('security.ip_whitelist_enabled', $data['ip_whitelist_enabled'] ? '1' : '0', 'security', false, '是否启用 IP 白名单');
         RuntimeConfig::set('security.ip_blacklist_enabled', $data['ip_blacklist_enabled'] ? '1' : '0', 'security', false, '是否启用 IP 黑名单');
+        RuntimeConfig::set('security.login_throttle_per_minute', (string) $data['login_throttle_per_minute'], 'security', false, '登录接口每分钟限制');
+        RuntimeConfig::set('security.login_throttle_relaxed', $data['login_throttle_relaxed'] ? '1' : '0', 'security', false, '是否临时放宽登录限流');
+        RuntimeConfig::set('security.login_throttle_relaxed_per_minute', (string) $data['login_throttle_relaxed_per_minute'], 'security', false, '临时放宽后的每分钟限制');
+        RuntimeConfig::set('security.login_throttle_whitelist_ips', $data['login_throttle_whitelist_ips'] ?? '', 'security', false, '登录限流测试白名单 IP');
         $this->auditLogger->record($request, 'security.policies_updated', null);
 
         return $this->policies($request);

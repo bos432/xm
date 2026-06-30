@@ -31,7 +31,7 @@ use App\Http\Controllers\UserExportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/auth/captcha', [AuthController::class, 'captcha'])->middleware('throttle:30,1');
-Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:auth-login');
 Route::post('/auth/register-unit', [AuthController::class, 'registerUnit'])->middleware('throttle:5,1');
 Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');

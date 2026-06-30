@@ -28,15 +28,30 @@ class AcceptanceController extends Controller
         }
 
         $query = AcceptanceApplication::query()
-            ->with(['project.unit', 'unit', 'submitter'])
+            ->with(['project.unit', 'project.applicationBatch', 'unit', 'submitter'])
             ->latest();
 
         if ($request->user()->role === Role::UNIT) {
             $query->where('unit_id', $request->user()->unit_id);
         } elseif (in_array($request->user()->role, [Role::COUNTY, Role::DEPARTMENT, Role::EXPERT], true)) {
-            $query->where('current_reviewer_role', $request->user()->role);
-        } elseif ($request->user()->role === Role::SUPER_ADMIN && $request->boolean('tasks_only')) {
-            $query->where('current_reviewer_role', Role::ADMIN);
+            $stage = Role::reviewerStageFor($request->user()->role);
+            $scope = $request->query('scope', 'pending');
+
+            if ($scope === 'reviewed') {
+                $query->whereHas('reviews', fn ($query) => $query->where('stage', $stage));
+            } elseif ($scope === 'visible') {
+                $query->where(function ($query) use ($stage): void {
+                    $query->where('current_reviewer_role', $stage)
+                        ->orWhereHas('reviews', fn ($query) => $query->where('stage', $stage));
+                });
+            } else {
+                $query->where('current_reviewer_role', $stage);
+            }
+        } elseif (in_array($request->user()->role, Role::adminRoles(), true)) {
+            $scope = $request->query('scope', $request->boolean('tasks_only') ? 'pending' : 'visible');
+            if ($scope === 'pending') {
+                $query->where('current_reviewer_role', Role::ADMIN);
+            }
         }
 
         if ($status = $request->query('status')) {
@@ -64,6 +79,7 @@ class AcceptanceController extends Controller
         $acceptance->load([
             'project.unit',
             'project.owner',
+            'project.applicationBatch',
             'unit',
             'submitter',
             'reviews.reviewer',
@@ -119,6 +135,14 @@ class AcceptanceController extends Controller
         $data = $request->validate([
             'summary' => ['nullable', 'string', 'max:5000'],
         ]);
+
+        $missingMaterials = $this->missingRequiredMaterials($acceptance);
+        if ($missingMaterials !== []) {
+            return response()->json([
+                'message' => '验收材料未齐全，缺少：'.implode('、', $missingMaterials),
+                'missing_materials' => $missingMaterials,
+            ], 422);
+        }
 
         $acceptance->update([
             'summary' => $data['summary'] ?? $acceptance->summary,
@@ -304,6 +328,55 @@ class AcceptanceController extends Controller
         if ($request->user()->role === Role::UNIT && $acceptance->unit_id !== $request->user()->unit_id) {
             abort(403, '无权查看该验收');
         }
+
+        if (in_array($request->user()->role, [Role::COUNTY, Role::DEPARTMENT, Role::EXPERT], true)) {
+            $stage = Role::reviewerStageFor($request->user()->role);
+            $isCurrentReviewer = $acceptance->current_reviewer_role === $stage;
+            $hasReviewed = $acceptance->reviews()->where('stage', $stage)->exists();
+
+            if (! $isCurrentReviewer && ! $hasReviewed) {
+                abort(403, '无权查看该验收');
+            }
+        }
+    }
+
+    private function missingRequiredMaterials(AcceptanceApplication $acceptance): array
+    {
+        $acceptance->loadMissing(['project.applicationBatch', 'project.files']);
+        $required = collect($acceptance->project?->applicationBatch?->metadata['acceptance_required_materials'] ?? [])
+            ->filter()
+            ->values();
+
+        if ($required->isEmpty()) {
+            return [];
+        }
+
+        $uploaded = $acceptance->project->files
+            ->where('purpose', 'acceptance')
+            ->filter(fn (ProjectFile $file) => (int) ($file->metadata['acceptance_id'] ?? 0) === (int) $acceptance->id)
+            ->map(fn (ProjectFile $file) => $file->metadata['material_category'] ?? null)
+            ->filter()
+            ->unique()
+            ->values();
+
+        $labels = $this->materialCategoryLabels();
+
+        return $required
+            ->reject(fn (string $category) => $uploaded->contains($category))
+            ->map(fn (string $category) => $labels[$category] ?? $category)
+            ->values()
+            ->all();
+    }
+
+    private function materialCategoryLabels(): array
+    {
+        return [
+            'acceptance_application' => '验收申请书',
+            'project_summary' => '项目总结',
+            'financial' => '财务材料',
+            'achievement' => '成果证明',
+            'other' => '其他',
+        ];
     }
 
     private function authorizeUnitProject(Request $request, Project $project): void

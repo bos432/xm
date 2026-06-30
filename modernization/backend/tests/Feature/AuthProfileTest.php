@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Unit;
 use App\Models\User;
+use App\Support\RuntimeConfig;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
@@ -84,7 +85,29 @@ class AuthProfileTest extends TestCase
             'username' => 'limited-user',
             'password' => 'wrong-password',
             ...$this->validCaptchaPayload(),
-        ])->assertTooManyRequests();
+        ])->assertTooManyRequests()
+            ->assertJsonPath('message', '登录过于频繁，请稍后再试');
+    }
+
+    public function test_login_throttle_can_be_relaxed_for_whitelisted_test_ip(): void
+    {
+        RuntimeConfig::set('security.login_throttle_per_minute', '1', 'security', false, '登录接口每分钟限制');
+        RuntimeConfig::set('security.login_throttle_whitelist_ips', '127.0.0.1', 'security', false, '登录限流测试白名单 IP');
+        RuntimeConfig::set('security.login_throttle_relaxed_per_minute', '10', 'security', false, '临时放宽后的每分钟限制');
+
+        User::factory()->create([
+            'username' => 'whitelist-user',
+            'password' => Hash::make('secret-password'),
+            'role' => 'unit',
+        ]);
+
+        for ($attempt = 0; $attempt < 3; $attempt++) {
+            $this->postJson('/api/auth/login', [
+                'username' => 'whitelist-user',
+                'password' => 'wrong-password',
+                ...$this->validCaptchaPayload(),
+            ])->assertUnprocessable();
+        }
     }
 
     public function test_captcha_can_be_generated_for_login(): void

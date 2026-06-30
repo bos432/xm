@@ -41,18 +41,22 @@
         </template>
       </el-table-column>
       <el-table-column prop="submitted_at" label="提交时间" width="180" />
-      <el-table-column label="操作" width="330" fixed="right">
+      <el-table-column label="操作" width="260" fixed="right">
         <template #default="{ row }">
-          <el-tooltip content="查看详情" placement="top"><el-button size="small" :icon="View" circle @click="openDetail(row)" /></el-tooltip>
-          <el-tooltip content="查看全周期记录" placement="top"><el-button size="small" :icon="Connection" circle @click="openLifecycle(row)" /></el-tooltip>
-          <el-tooltip v-if="canEdit(row)" content="编辑" placement="top"><el-button size="small" :icon="Edit" circle @click="openEdit(row)" /></el-tooltip>
-          <el-tooltip v-if="canEdit(row)" content="附件" placement="top"><el-button size="small" :icon="Upload" circle @click="openUpload(row)" /></el-tooltip>
-          <el-tooltip v-if="canSubmit(row)" content="提交" placement="top"><el-button size="small" type="primary" :icon="Promotion" circle @click="submitProject(row)" /></el-tooltip>
-          <el-tooltip v-if="canWithdraw(row)" content="撤回" placement="top"><el-button size="small" :icon="Back" circle @click="withdrawProject(row)" /></el-tooltip>
-          <el-tooltip v-if="canRequestExtension(row)" content="申请延期" placement="top"><el-button size="small" :icon="Refresh" circle @click="openExtension(row)" /></el-tooltip>
-          <el-tooltip v-if="canEnterAcceptance(row)" content="进入验收" placement="top"><el-button size="small" type="success" :icon="Checked" circle @click="enterAcceptance(row)" /></el-tooltip>
-          <el-tooltip v-if="canClose(row)" content="关闭验收" placement="top"><el-button size="small" type="success" :icon="CircleCheck" circle @click="openClose(row)" /></el-tooltip>
-          <el-tooltip v-if="canDelete(row)" content="删除" placement="top"><el-button size="small" type="danger" :icon="Delete" circle @click="deleteProject(row)" /></el-tooltip>
+          <div class="table-action-row">
+            <el-button size="small" :icon="View" @click="openDetail(row)">详情</el-button>
+            <el-button size="small" :icon="Connection" @click="openLifecycle(row)">全周期</el-button>
+            <el-dropdown v-if="moreActions(row).length" trigger="click" @command="(command) => runMoreAction(command, row)">
+              <el-button size="small">更多</el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item v-for="action in moreActions(row)" :key="action.command" :command="action.command" :disabled="action.disabled">
+                    {{ action.label }}
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -209,7 +213,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Back, Checked, CircleCheck, CloseBold, Connection, Delete, Download, Edit, Files, Plus, Promotion, Refresh, Search, Upload, UploadFilled, View } from '@element-plus/icons-vue'
+import { Checked, CloseBold, Connection, Delete, Download, Files, Plus, Refresh, Search, UploadFilled, View } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api, downloadApi } from '../api.js'
 import { useSessionStore } from '../store.js'
@@ -335,6 +339,39 @@ function canReviewExtension(row) {
 function pendingExtensionCount(row) {
   if (row.pending_extension_requests_count !== undefined) return Number(row.pending_extension_requests_count || 0)
   return (row.metadata?.extension_requests || []).filter((item) => (item.status || 'pending') === 'pending').length
+}
+
+function moreActions(row) {
+  const actions = []
+  if (canEdit(row)) {
+    actions.push({ command: 'edit', label: '编辑' })
+    actions.push({ command: 'upload', label: '附件' })
+  }
+  if (canSubmit(row)) actions.push({ command: 'submit', label: '提交' })
+  if (canWithdraw(row)) actions.push({ command: 'withdraw', label: '撤回' })
+  if (canRequestExtension(row)) actions.push({ command: 'extension', label: '申请延期' })
+  if (canEnterAcceptance(row)) actions.push({ command: 'enterAcceptance', label: '进入验收' })
+  if (canClose(row)) actions.push({ command: 'close', label: '关闭验收' })
+  if (session.can('review_projects')) actions.push({ command: 'reviews', label: '审核记录' })
+  if (session.can('view_operation_logs')) actions.push({ command: 'logs', label: '操作日志' })
+  if (canDelete(row)) actions.push({ command: 'delete', label: '删除' })
+  return actions
+}
+
+function runMoreAction(command, row) {
+  const handlers = {
+    edit: () => openEdit(row),
+    upload: () => openUpload(row),
+    submit: () => submitProject(row),
+    withdraw: () => withdrawProject(row),
+    extension: () => openExtension(row),
+    enterAcceptance: () => enterAcceptance(row),
+    close: () => openClose(row),
+    reviews: () => openReviewResults(row),
+    logs: () => openProjectLogs(row),
+    delete: () => deleteProject(row)
+  }
+  handlers[command]?.()
 }
 
 function resetForm() {

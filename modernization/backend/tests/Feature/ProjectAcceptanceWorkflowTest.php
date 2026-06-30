@@ -3,6 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Project;
+use App\Models\AcceptanceApplication;
+use App\Models\AcceptanceReview;
+use App\Models\ApplicationBatch;
+use App\Models\ProjectFile;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,6 +16,145 @@ use Tests\TestCase;
 class ProjectAcceptanceWorkflowTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_reviewer_can_filter_pending_and_reviewed_acceptance_records(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $county = User::factory()->create(['role' => 'county']);
+        $pendingProject = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'status' => Project::STATUS_ACCEPTANCE,
+        ]);
+        $reviewedProject = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'status' => Project::STATUS_CLOSED,
+        ]);
+        $pendingAcceptance = AcceptanceApplication::create([
+            'project_id' => $pendingProject->id,
+            'unit_id' => $unit->id,
+            'submitted_by' => $owner->id,
+            'status' => AcceptanceApplication::STATUS_SUBMITTED,
+            'current_reviewer_role' => 'county',
+            'submitted_at' => now(),
+        ]);
+        $reviewedAcceptance = AcceptanceApplication::create([
+            'project_id' => $reviewedProject->id,
+            'unit_id' => $unit->id,
+            'submitted_by' => $owner->id,
+            'status' => AcceptanceApplication::STATUS_CLOSED,
+            'current_reviewer_role' => null,
+            'submitted_at' => now(),
+        ]);
+        AcceptanceReview::create([
+            'acceptance_application_id' => $reviewedAcceptance->id,
+            'reviewer_id' => $county->id,
+            'stage' => 'county',
+            'decision' => 'approve',
+            'reviewed_at' => now(),
+        ]);
+
+        Sanctum::actingAs($county);
+
+        $pending = collect($this->getJson('/api/acceptance?scope=pending')->assertOk()->json('data'));
+        $reviewed = collect($this->getJson('/api/acceptance?scope=reviewed')->assertOk()->json('data'));
+        $visible = collect($this->getJson('/api/acceptance?scope=visible')->assertOk()->json('data'));
+
+        $this->assertTrue($pending->pluck('id')->contains($pendingAcceptance->id));
+        $this->assertFalse($pending->pluck('id')->contains($reviewedAcceptance->id));
+        $this->assertTrue($reviewed->pluck('id')->contains($reviewedAcceptance->id));
+        $this->assertFalse($reviewed->pluck('id')->contains($pendingAcceptance->id));
+        $this->assertTrue($visible->pluck('id')->contains($pendingAcceptance->id));
+        $this->assertTrue($visible->pluck('id')->contains($reviewedAcceptance->id));
+        $this->getJson("/api/acceptance/{$reviewedAcceptance->id}")->assertOk();
+    }
+
+    public function test_unit_cannot_view_other_unit_acceptance_record(): void
+    {
+        $ownUnit = Unit::factory()->create();
+        $otherUnit = Unit::factory()->create();
+        $user = User::factory()->create(['unit_id' => $ownUnit->id, 'role' => 'unit']);
+        $owner = User::factory()->create(['unit_id' => $otherUnit->id, 'role' => 'unit']);
+        $project = Project::factory()->create([
+            'unit_id' => $otherUnit->id,
+            'owner_id' => $owner->id,
+            'status' => Project::STATUS_ACCEPTANCE,
+        ]);
+        $acceptance = AcceptanceApplication::create([
+            'project_id' => $project->id,
+            'unit_id' => $otherUnit->id,
+            'submitted_by' => $owner->id,
+            'status' => AcceptanceApplication::STATUS_SUBMITTED,
+            'current_reviewer_role' => 'county',
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->getJson('/api/acceptance')->assertOk()
+            ->assertJsonCount(0, 'data');
+        $this->getJson("/api/acceptance/{$acceptance->id}")->assertForbidden();
+    }
+
+    public function test_acceptance_submit_requires_configured_material_categories(): void
+    {
+        $batch = ApplicationBatch::create([
+            'name' => '验收材料批次',
+            'code' => 'ACCEPT-MATERIALS',
+            'status' => ApplicationBatch::STATUS_OPEN,
+            'metadata' => [
+                'acceptance_required_materials' => ['acceptance_application', 'project_summary'],
+            ],
+        ]);
+        $unit = Unit::factory()->create();
+        $user = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $project = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $user->id,
+            'application_batch_id' => $batch->id,
+            'status' => Project::STATUS_ACCEPTANCE,
+        ]);
+        $acceptance = AcceptanceApplication::create([
+            'project_id' => $project->id,
+            'unit_id' => $unit->id,
+            'submitted_by' => $user->id,
+            'status' => AcceptanceApplication::STATUS_DRAFT,
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $this->postJson("/api/acceptance/{$acceptance->id}/submit", [
+            'summary' => '提交验收',
+        ])->assertUnprocessable()
+            ->assertJsonPath('missing_materials.0', '验收申请书')
+            ->assertJsonPath('missing_materials.1', '项目总结');
+
+        foreach (['acceptance_application', 'project_summary'] as $category) {
+            ProjectFile::create([
+                'project_id' => $project->id,
+                'uploaded_by' => $user->id,
+                'disk' => 'local',
+                'path' => 'project-files/test.pdf',
+                'original_name' => $category.'.pdf',
+                'mime_type' => 'application/pdf',
+                'extension' => 'pdf',
+                'size_bytes' => 10,
+                'sha256' => str_repeat('a', 64),
+                'purpose' => 'acceptance',
+                'metadata' => [
+                    'acceptance_id' => $acceptance->id,
+                    'material_category' => $category,
+                ],
+            ]);
+        }
+
+        $this->postJson("/api/acceptance/{$acceptance->id}/submit", [
+            'summary' => '材料齐全',
+        ])->assertOk()
+            ->assertJsonPath('status', AcceptanceApplication::STATUS_SUBMITTED)
+            ->assertJsonPath('current_reviewer_role', 'county');
+    }
 
     public function test_admin_can_start_acceptance_and_close_project(): void
     {
