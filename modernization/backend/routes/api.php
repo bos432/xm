@@ -28,7 +28,26 @@ use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UnitExportController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserExportController;
+use App\Support\RuntimeConfig;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\RateLimiter;
+
+RateLimiter::for('auth-login', function ($request) {
+    $ip = (string) $request->ip();
+    $whitelist = collect(explode(',', RuntimeConfig::value('security.login_throttle_whitelist_ips', '') ?? ''))
+        ->map(fn (string $item) => trim($item))
+        ->filter()
+        ->all();
+
+    if (RuntimeConfig::boolValue('security.login_throttle_relaxed', false) || in_array($ip, $whitelist, true)) {
+        return Limit::perMinute(max(1, RuntimeConfig::intValue('security.login_throttle_relaxed_per_minute', 60)))
+            ->by($ip.'|'.(string) $request->input('username', ''));
+    }
+
+    return Limit::perMinute(max(1, RuntimeConfig::intValue('security.login_throttle_per_minute', 5)))
+        ->by($ip.'|'.(string) $request->input('username', ''));
+});
 
 Route::get('/auth/captcha', [AuthController::class, 'captcha'])->middleware('throttle:30,1');
 Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:auth-login');
