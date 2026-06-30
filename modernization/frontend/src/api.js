@@ -22,7 +22,10 @@ export async function api(path, options = {}) {
   if (!response.ok) {
     if (response.status === 401) expireSession()
     const error = await response.json().catch(() => ({ message: '请求失败' }))
-    throw new Error(error.message || '请求失败')
+    const requestError = new Error(error.message || '请求失败')
+    requestError.status = response.status
+    Object.assign(requestError, error)
+    throw requestError
   }
 
   if (response.status === 204) return null

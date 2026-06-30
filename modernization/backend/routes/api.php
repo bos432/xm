@@ -50,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     Route::get('/projects/export.csv', [ProjectExportController::class, 'csv']);
+    Route::get('/projects/options', [ProjectController::class, 'options']);
     Route::apiResource('projects', ProjectController::class);
     Route::post('/projects/{project}/submit', [ProjectController::class, 'submit']);
     Route::post('/projects/{project}/withdraw', [ProjectController::class, 'withdraw']);
@@ -108,6 +109,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/settings/groups/{group}', [SystemSettingController::class, 'updateGroup']);
     Route::post('/settings/mail/test', [SystemSettingController::class, 'testMail']);
     Route::put('/settings/{setting}', [SystemSettingController::class, 'update']);
+    Route::get('/system-texts/export.csv', [SystemTextController::class, 'exportCsv']);
     Route::get('/system-texts', [SystemTextController::class, 'index']);
     Route::post('/system-texts', [SystemTextController::class, 'store']);
     Route::put('/system-texts/{systemText}', [SystemTextController::class, 'update']);

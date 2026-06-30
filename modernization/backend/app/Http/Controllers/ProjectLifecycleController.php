@@ -23,7 +23,7 @@ class ProjectLifecycleController extends Controller
         $this->authorizePermission($request, 'view_task_books');
 
         return $this->projectScoped(ProjectTaskBook::query(), $request)
-            ->with(['project.unit', 'unit', 'submitter', 'reviewer'])
+            ->with(['project.unit', 'project.applicationBatch', 'unit', 'submitter', 'reviewer'])
             ->latest()
             ->paginate(20);
     }
@@ -106,7 +106,7 @@ class ProjectLifecycleController extends Controller
         $this->authorizePermission($request, 'view_project_progress');
 
         return $this->projectScoped(ProjectProgressRecord::query(), $request, false)
-            ->with(['project.unit', 'unit', 'submitter', 'reviewer'])
+            ->with(['project.unit', 'project.applicationBatch', 'unit', 'submitter', 'reviewer'])
             ->latest()
             ->paginate(20);
     }
@@ -195,7 +195,7 @@ class ProjectLifecycleController extends Controller
         $this->authorizePermission($request, 'view_rectifications');
 
         return $this->projectScoped(ProjectRectification::query(), $request)
-            ->with(['project.unit', 'unit', 'creator', 'submitter', 'reviewer'])
+            ->with(['project.unit', 'project.applicationBatch', 'unit', 'creator', 'submitter', 'reviewer'])
             ->latest()
             ->paginate(20);
     }
@@ -348,12 +348,31 @@ class ProjectLifecycleController extends Controller
             $query->where('status', $request->query('status'));
         }
 
+        if ($request->filled('unit_id') && in_array($request->user()->role, Role::adminRoles(), true)) {
+            $query->where('unit_id', $request->query('unit_id'));
+        }
+
+        if ($request->filled('batch_id')) {
+            $query->whereHas('project', fn (Builder $query) => $query
+                ->where('application_batch_id', $request->query('batch_id')));
+        }
+
+        if ($request->filled('project_status')) {
+            $query->whereHas('project', fn (Builder $query) => $query
+                ->where('status', $request->query('project_status')));
+        }
+
         if ($request->filled('keyword')) {
             $keyword = $request->query('keyword');
             $query->where(function (Builder $query) use ($keyword, $hasTitle): void {
                 if ($hasTitle) {
                     $query->where('title', 'like', "%{$keyword}%")
-                        ->orWhereHas('project', fn (Builder $query) => $query->where('title', 'like', "%{$keyword}%"))
+                        ->orWhereHas('project', fn (Builder $query) => $query
+                            ->where('title', 'like', "%{$keyword}%")
+                            ->orWhere('legacy_id', 'like', "%{$keyword}%")
+                            ->orWhereHas('applicationBatch', fn (Builder $query) => $query
+                                ->where('name', 'like', "%{$keyword}%")
+                                ->orWhere('code', 'like', "%{$keyword}%")))
                         ->orWhereHas('unit', fn (Builder $query) => $query->where('name', 'like', "%{$keyword}%"));
 
                     return;
@@ -361,7 +380,12 @@ class ProjectLifecycleController extends Controller
 
                 $query->where('summary', 'like', "%{$keyword}%")
                     ->orWhere('period', 'like', "%{$keyword}%")
-                    ->orWhereHas('project', fn (Builder $query) => $query->where('title', 'like', "%{$keyword}%"))
+                    ->orWhereHas('project', fn (Builder $query) => $query
+                        ->where('title', 'like', "%{$keyword}%")
+                        ->orWhere('legacy_id', 'like', "%{$keyword}%")
+                        ->orWhereHas('applicationBatch', fn (Builder $query) => $query
+                            ->where('name', 'like', "%{$keyword}%")
+                            ->orWhere('code', 'like', "%{$keyword}%")))
                     ->orWhereHas('unit', fn (Builder $query) => $query->where('name', 'like', "%{$keyword}%"));
             });
         }

@@ -61,7 +61,7 @@ class AcceptanceController extends Controller
     {
         $this->authorizeAccess($request, $acceptance);
 
-        return $acceptance->load([
+        $acceptance->load([
             'project.unit',
             'project.owner',
             'unit',
@@ -70,6 +70,10 @@ class AcceptanceController extends Controller
             'extensions',
             'project.files' => fn ($query) => $query->where('purpose', 'acceptance')->latest(),
         ]);
+
+        $acceptance->setAttribute('timeline', $this->acceptanceTimeline($acceptance));
+
+        return $acceptance;
     }
 
     public function store(Request $request, Project $project)
@@ -250,6 +254,45 @@ class AcceptanceController extends Controller
         return Role::userCan($request->user(), 'submit_acceptance')
             || Role::userCan($request->user(), 'manage_acceptance')
             || Role::userCan($request->user(), 'review_acceptance');
+    }
+
+    private function acceptanceTimeline(AcceptanceApplication $acceptance): array
+    {
+        $acceptance->loadMissing(['submitter', 'reviews.reviewer']);
+        $reviews = $acceptance->reviews->keyBy('stage');
+
+        $stages = [
+            ['key' => 'submitted', 'label' => '单位提交', 'role' => Role::UNIT],
+            ['key' => Role::COUNTY, 'label' => '区县审核', 'role' => Role::COUNTY],
+            ['key' => Role::DEPARTMENT, 'label' => '部门审核', 'role' => Role::DEPARTMENT],
+            ['key' => Role::EXPERT, 'label' => '专家评审', 'role' => Role::EXPERT],
+            ['key' => Role::ADMIN, 'label' => '科技局终审关闭', 'role' => Role::ADMIN],
+        ];
+
+        return collect($stages)->map(function (array $stage) use ($acceptance, $reviews): array {
+            if ($stage['key'] === 'submitted') {
+                return [
+                    ...$stage,
+                    'status' => $acceptance->submitted_at ? 'done' : 'pending',
+                    'handler' => $acceptance->submitter?->name ?: $acceptance->submitter?->username,
+                    'handled_at' => $acceptance->submitted_at?->toDateTimeString(),
+                    'decision' => $acceptance->submitted_at ? 'submitted' : null,
+                    'comment' => $acceptance->summary,
+                ];
+            }
+
+            $review = $reviews->get($stage['key']);
+
+            return [
+                ...$stage,
+                'status' => $review ? 'done' : ($acceptance->current_reviewer_role === $stage['key'] ? 'current' : 'pending'),
+                'handler' => $review?->reviewer?->name ?: $review?->reviewer?->username,
+                'handled_at' => $review?->reviewed_at?->toDateTimeString(),
+                'decision' => $review?->decision,
+                'score' => $review?->score,
+                'comment' => $review?->comment,
+            ];
+        })->all();
     }
 
     private function authorizeAccess(Request $request, AcceptanceApplication $acceptance): void

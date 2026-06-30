@@ -44,6 +44,7 @@
       <el-table-column label="操作" width="330" fixed="right">
         <template #default="{ row }">
           <el-tooltip content="查看详情" placement="top"><el-button size="small" :icon="View" circle @click="openDetail(row)" /></el-tooltip>
+          <el-tooltip content="查看全周期记录" placement="top"><el-button size="small" :icon="Connection" circle @click="openLifecycle(row)" /></el-tooltip>
           <el-tooltip v-if="canEdit(row)" content="编辑" placement="top"><el-button size="small" :icon="Edit" circle @click="openEdit(row)" /></el-tooltip>
           <el-tooltip v-if="canEdit(row)" content="附件" placement="top"><el-button size="small" :icon="Upload" circle @click="openUpload(row)" /></el-tooltip>
           <el-tooltip v-if="canSubmit(row)" content="提交" placement="top"><el-button size="small" type="primary" :icon="Promotion" circle @click="submitProject(row)" /></el-tooltip>
@@ -133,6 +134,13 @@
           <el-descriptions-item label="摘要" :span="2">{{ detail.summary || '-' }}</el-descriptions-item>
         </el-descriptions>
 
+        <section v-if="detail.timeline?.length">
+          <div class="section-title">项目阶段</div>
+          <el-steps :active="timelineActiveIndex(detail.timeline)" finish-status="success" process-status="process" align-center>
+            <el-step v-for="item in detail.timeline" :key="item.key" :title="item.label" :description="timelineDescription(item)" />
+          </el-steps>
+        </section>
+
         <section v-if="detail.metadata?.extension_requests?.length">
           <div class="section-title">延期记录</div>
           <el-table :data="detail.metadata.extension_requests" border size="small">
@@ -201,7 +209,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Back, Checked, CircleCheck, CloseBold, Delete, Download, Edit, Files, Plus, Promotion, Refresh, Search, Upload, UploadFilled, View } from '@element-plus/icons-vue'
+import { Back, Checked, CircleCheck, CloseBold, Connection, Delete, Download, Edit, Files, Plus, Promotion, Refresh, Search, Upload, UploadFilled, View } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api, downloadApi } from '../api.js'
 import { useSessionStore } from '../store.js'
@@ -542,6 +550,10 @@ function openReviewResults(row) {
   router.push(`/reviews?tab=results&project_id=${row.id}`)
 }
 
+function openLifecycle(row) {
+  router.push(`/lifecycle?project_id=${row.id}`)
+}
+
 function openProjectLogs(row) {
   router.push(`/operation-logs?target_type=${encodeURIComponent('App\\Models\\Project')}&target_id=${row.id}`)
 }
@@ -610,6 +622,21 @@ function formatBytes(value) {
   if (size < 1024) return `${size} B`
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
   return `${(size / 1024 / 1024).toFixed(1)} MB`
+}
+
+function timelineActiveIndex(items) {
+  const currentIndex = items.findIndex((item) => item.status === 'current')
+  if (currentIndex >= 0) return currentIndex
+  const doneIndexes = items.map((item, index) => (item.status === 'done' ? index : -1)).filter((index) => index >= 0)
+  return doneIndexes.length ? Math.max(...doneIndexes) + 1 : 0
+}
+
+function timelineDescription(item) {
+  const parts = []
+  if (item.handler) parts.push(item.handler)
+  if (item.handled_at) parts.push(item.handled_at)
+  if (item.decision) parts.push(decisionLabel(item.decision))
+  return parts.join(' / ') || (item.status === 'current' ? '当前待处理' : '待流转')
 }
 
 watch(status, reloadProjects)

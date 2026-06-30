@@ -51,7 +51,20 @@
 
     <el-dialog v-model="createVisible" title="发起验收" width="520px">
       <el-form :model="createForm" label-position="top">
-        <el-form-item label="项目 ID"><el-input v-model="createForm.project_id" placeholder="填写已通过或验收中项目 ID" /></el-form-item>
+        <el-form-item label="项目">
+          <el-select
+            v-model="createForm.project_id"
+            clearable
+            filterable
+            remote
+            reserve-keyword
+            :remote-method="(keyword) => searchProjects(keyword, 'acceptance')"
+            :loading="projectOptionsLoading"
+            placeholder="搜索已通过或验收中项目"
+          >
+            <el-option v-for="item in projectOptions" :key="item.id" :label="projectOptionLabel(item)" :value="item.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="验收说明"><el-input v-model="createForm.summary" type="textarea" :rows="4" /></el-form-item>
       </el-form>
       <template #footer>
@@ -117,6 +130,13 @@
     </el-dialog>
 
     <el-dialog v-model="uploadVisible" title="上传验收材料" width="520px">
+      <el-form label-position="top">
+        <el-form-item label="材料分类">
+          <el-select v-model="uploadCategory" placeholder="请选择材料分类">
+            <el-option v-for="item in materialCategories" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+      </el-form>
       <el-upload drag :show-file-list="false" :http-request="uploadFile">
         <el-icon><Upload /></el-icon>
         <div>拖拽文件到这里或点击选择</div>
@@ -131,10 +151,19 @@
           <el-descriptions-item label="状态">{{ statusMeta(detail.status).label }}</el-descriptions-item>
           <el-descriptions-item label="说明" :span="2">{{ detail.summary || '-' }}</el-descriptions-item>
         </el-descriptions>
+        <section v-if="detail.timeline?.length">
+          <div class="section-title">验收阶段</div>
+          <el-steps :active="timelineActiveIndex(detail.timeline)" finish-status="success" process-status="process" align-center>
+            <el-step v-for="item in detail.timeline" :key="item.key" :title="item.label" :description="timelineDescription(item)" />
+          </el-steps>
+        </section>
         <section>
           <div class="section-title">验收材料</div>
           <el-table :data="detail.project?.files || []" border size="small">
             <el-table-column prop="original_name" label="文件名" min-width="220" />
+            <el-table-column label="材料分类" min-width="130">
+              <template #default="{ row }">{{ materialCategoryLabel(row.metadata?.material_category) }}</template>
+            </el-table-column>
             <el-table-column prop="extension" label="类型" width="80" />
           </el-table>
         </section>
@@ -172,7 +201,9 @@ import { useSessionStore } from '../store.js'
 const session = useSessionStore()
 const loading = ref(false)
 const saving = ref(false)
+const projectOptionsLoading = ref(false)
 const acceptances = ref([])
+const projectOptions = ref([])
 const keyword = ref('')
 const status = ref('')
 const createVisible = ref(false)
@@ -187,6 +218,7 @@ const createForm = reactive({ project_id: '', summary: '' })
 const submitForm = reactive({ summary: '' })
 const reviewForm = reactive({ decision: 'approve', score: null, comment: '' })
 const extensionForm = reactive({ reason: '', expected_date: '', extension_id: null, decision: 'approved', comment: '' })
+const uploadCategory = ref('acceptance_application')
 const statusLabels = {
   draft: { label: '草稿', type: 'info' },
   submitted: { label: '已提交', type: 'warning' },
@@ -197,6 +229,14 @@ const statusLabels = {
   closed: { label: '已关闭', type: 'info' }
 }
 const roleLabels = { county: '区县审核', department: '部门审核', expert: '专家评审', admin: '管理员终审' }
+const materialCategories = [
+  { label: '验收申请书', value: 'acceptance_application' },
+  { label: '项目总结', value: 'project_summary' },
+  { label: '财务材料', value: 'financial' },
+  { label: '成果证明', value: 'achievement' },
+  { label: '其他', value: 'other' }
+]
+const materialCategoryMap = Object.fromEntries(materialCategories.map((item) => [item.value, item.label]))
 
 function statusMeta(value) {
   return statusLabels[value] || { label: value || '-', type: 'info' }
@@ -204,6 +244,31 @@ function statusMeta(value) {
 
 function roleLabel(value) {
   return roleLabels[value] || value || '-'
+}
+
+function materialCategoryLabel(value) {
+  return materialCategoryMap[value] || value || '未分类'
+}
+
+function projectOptionLabel(item) {
+  const parts = [item.title || `项目 ${item.id}`]
+  if (item.unit?.name) parts.push(item.unit.name)
+  if (item.batch?.name) parts.push(item.batch.name)
+  parts.push(statusMeta(item.status).label)
+  return parts.filter(Boolean).join(' / ')
+}
+
+async function searchProjects(keyword = '', context = 'acceptance') {
+  projectOptionsLoading.value = true
+  try {
+    const params = new URLSearchParams()
+    if (keyword) params.set('keyword', keyword)
+    if (context) params.set('context', context)
+    params.set('limit', '30')
+    projectOptions.value = await api(`/projects/options?${params.toString()}`)
+  } finally {
+    projectOptionsLoading.value = false
+  }
 }
 
 function reviewerStage() {
@@ -315,6 +380,7 @@ async function saveExtension() {
 
 function openUpload(row) {
   currentAcceptance.value = row
+  uploadCategory.value = 'acceptance_application'
   uploadVisible.value = true
 }
 
@@ -322,6 +388,7 @@ async function uploadFile({ file }) {
   const body = new FormData()
   body.append('file', file)
   body.append('purpose', 'acceptance')
+  body.append('metadata[material_category]', uploadCategory.value)
   await api(`/acceptance/${currentAcceptance.value.id}/files`, { method: 'POST', body })
   ElMessage.success('验收材料已上传')
   uploadVisible.value = false
@@ -332,5 +399,23 @@ async function openDetail(row) {
   detailVisible.value = true
 }
 
-onMounted(loadAcceptances)
+function timelineActiveIndex(items) {
+  const currentIndex = items.findIndex((item) => item.status === 'current')
+  if (currentIndex >= 0) return currentIndex
+  const doneIndexes = items.map((item, index) => (item.status === 'done' ? index : -1)).filter((index) => index >= 0)
+  return doneIndexes.length ? Math.max(...doneIndexes) + 1 : 0
+}
+
+function timelineDescription(item) {
+  const parts = []
+  if (item.handler) parts.push(item.handler)
+  if (item.handled_at) parts.push(item.handled_at)
+  if (item.decision) parts.push(item.decision)
+  return parts.join(' / ') || (item.status === 'current' ? '当前待处理' : '待流转')
+}
+
+onMounted(() => {
+  loadAcceptances()
+  searchProjects()
+})
 </script>

@@ -11,6 +11,7 @@
           <el-option v-for="item in groups" :key="item" :label="item" :value="item" />
         </el-select>
         <el-button :icon="Refresh" :loading="loading" @click="loadTexts">刷新</el-button>
+        <el-button :icon="Download" @click="exportTexts">导出文案</el-button>
         <el-button type="primary" :icon="Plus" @click="openText()">新增文案</el-button>
       </div>
     </div>
@@ -87,8 +88,8 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete, Edit, Plus, Refresh, RefreshLeft } from '@element-plus/icons-vue'
-import { api } from '../api.js'
+import { Delete, Download, Edit, Plus, Refresh, RefreshLeft } from '@element-plus/icons-vue'
+import { api, downloadApi } from '../api.js'
 import { useTextStore } from '../texts.js'
 
 const textStore = useTextStore()
@@ -181,6 +182,14 @@ async function deleteText(row) {
   ElMessage.success('文案已删除')
   await loadTexts()
   await textStore.loadTexts(true)
+}
+
+async function exportTexts() {
+  const params = new URLSearchParams()
+  if (keyword.value) params.set('keyword', keyword.value)
+  if (group.value) params.set('group', group.value)
+  const query = params.toString() ? `?${params.toString()}` : ''
+  await downloadApi(`/system-texts/export.csv${query}`, `system-texts-${new Date().toISOString().slice(0, 10)}.csv`)
 }
 
 onMounted(loadTexts)

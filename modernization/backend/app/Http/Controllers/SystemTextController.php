@@ -71,6 +71,67 @@ class SystemTextController extends Controller
         ]);
     }
 
+    public function exportCsv(Request $request)
+    {
+        $this->authorizeManage($request);
+        $this->syncBuiltInTexts();
+
+        $query = SystemText::query();
+
+        if ($group = $request->query('group')) {
+            $query->where('group', $group);
+        }
+
+        if ($keyword = $request->query('keyword')) {
+            $query->where(function ($query) use ($keyword): void {
+                $query->where('key', 'like', '%'.$keyword.'%')
+                    ->orWhere('label', 'like', '%'.$keyword.'%')
+                    ->orWhere('default_value', 'like', '%'.$keyword.'%')
+                    ->orWhere('value', 'like', '%'.$keyword.'%');
+            });
+        }
+
+        $rows = $query
+            ->orderBy('group')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        $this->auditLogger->record($request, 'system_text.exported', null, [
+            'group' => $group,
+            'keyword' => $keyword,
+            'count' => $rows->count(),
+        ]);
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="system-texts-'.now()->format('YmdHis').'.csv"',
+        ];
+
+        return response()->stream(function () use ($rows): void {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, ['分组', '键名', '名称', '默认值', '覆盖值', '当前生效值', '启用', '内置', '排序', '说明']);
+
+            foreach ($rows as $row) {
+                fputcsv($handle, [
+                    $row->group,
+                    $row->key,
+                    $row->label,
+                    $row->default_value,
+                    $row->value,
+                    $row->resolvedValue(),
+                    $row->is_active ? '是' : '否',
+                    $row->is_builtin ? '是' : '否',
+                    $row->sort_order,
+                    $row->description,
+                ]);
+            }
+
+            fclose($handle);
+        }, 200, $headers);
+    }
+
     public function store(Request $request)
     {
         $this->authorizeManage($request);

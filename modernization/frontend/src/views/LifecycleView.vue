@@ -7,6 +7,28 @@
       </div>
       <div class="toolbar-actions">
         <el-input v-model="keyword" clearable :placeholder="texts.t('lifecycle.filter.keyword', '项目/单位/标题')" @keyup.enter="loadActiveTab" />
+        <el-select
+          v-model="projectId"
+          clearable
+          filterable
+          remote
+          reserve-keyword
+          :remote-method="searchProjects"
+          :loading="projectOptionsLoading"
+          :placeholder="texts.t('lifecycle.filter.project', '选择项目')"
+          @change="loadActiveTab"
+        >
+          <el-option v-for="item in projectOptions" :key="item.id" :label="projectOptionLabel(item)" :value="item.id" />
+        </el-select>
+        <el-select v-model="batchId" clearable :placeholder="texts.t('lifecycle.filter.batch', '申报批次')" @change="loadActiveTab">
+          <el-option v-for="batch in batches" :key="batch.id" :label="batch.name" :value="batch.id" />
+        </el-select>
+        <el-select v-if="session.can('manage_units')" v-model="unitId" clearable filterable remote :remote-method="searchUnits" :placeholder="texts.t('lifecycle.filter.unit', '申报单位')" @change="loadActiveTab">
+          <el-option v-for="unit in unitOptions" :key="unit.id" :label="unit.name" :value="unit.id" />
+        </el-select>
+        <el-select v-model="projectStatus" clearable :placeholder="texts.t('lifecycle.filter.project_status', '项目状态')" @change="loadActiveTab">
+          <el-option v-for="item in projectStatusOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
         <el-select v-model="status" clearable :placeholder="texts.t('lifecycle.filter.status', '状态')" @change="loadActiveTab">
           <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
@@ -21,7 +43,12 @@
           <el-button v-if="session.can('create_task_books')" type="primary" :icon="Plus" @click="openTaskBook()">{{ texts.t('lifecycle.task_books.create', '新增任务书') }}</el-button>
         </div>
         <el-table :data="taskBooks" border v-loading="loading">
-          <el-table-column prop="project.title" :label="texts.t('lifecycle.column.project', '项目')" min-width="220" />
+          <el-table-column :label="texts.t('lifecycle.column.project', '项目')" min-width="260">
+            <template #default="{ row }">
+              <strong>{{ row.project?.title || '-' }}</strong>
+              <div class="muted">{{ projectMetaText(row.project) }}</div>
+            </template>
+          </el-table-column>
           <el-table-column prop="unit.name" :label="texts.t('lifecycle.column.unit', '单位')" min-width="180" />
           <el-table-column prop="title" :label="texts.t('lifecycle.column.task_title', '任务书标题')" min-width="180" />
           <el-table-column :label="texts.t('lifecycle.column.status', '状态')" width="110"><template #default="{ row }"><el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag></template></el-table-column>
@@ -45,7 +72,12 @@
           <el-button v-if="session.can('create_project_progress')" type="primary" :icon="Plus" @click="openProgress()">{{ texts.t('lifecycle.progress.create', '新增进展') }}</el-button>
         </div>
         <el-table :data="progressRecords" border v-loading="loading">
-          <el-table-column prop="project.title" :label="texts.t('lifecycle.column.project', '项目')" min-width="220" />
+          <el-table-column :label="texts.t('lifecycle.column.project', '项目')" min-width="260">
+            <template #default="{ row }">
+              <strong>{{ row.project?.title || '-' }}</strong>
+              <div class="muted">{{ projectMetaText(row.project) }}</div>
+            </template>
+          </el-table-column>
           <el-table-column prop="unit.name" :label="texts.t('lifecycle.column.unit', '单位')" min-width="180" />
           <el-table-column prop="period" :label="texts.t('lifecycle.column.period', '周期')" width="130" />
           <el-table-column prop="progress_date" :label="texts.t('lifecycle.column.progress_date', '进展日期')" width="130" />
@@ -70,7 +102,12 @@
           <el-button v-if="session.can('create_rectifications')" type="primary" :icon="Plus" @click="openRectification()">{{ texts.t('lifecycle.rectifications.create', '发起整改') }}</el-button>
         </div>
         <el-table :data="rectifications" border v-loading="loading">
-          <el-table-column prop="project.title" :label="texts.t('lifecycle.column.project', '项目')" min-width="220" />
+          <el-table-column :label="texts.t('lifecycle.column.project', '项目')" min-width="260">
+            <template #default="{ row }">
+              <strong>{{ row.project?.title || '-' }}</strong>
+              <div class="muted">{{ projectMetaText(row.project) }}</div>
+            </template>
+          </el-table-column>
           <el-table-column prop="unit.name" :label="texts.t('lifecycle.column.unit', '单位')" min-width="180" />
           <el-table-column prop="title" :label="texts.t('lifecycle.column.rectification_title', '整改事项')" min-width="180" />
           <el-table-column prop="due_date" :label="texts.t('lifecycle.column.due_date', '截止日期')" width="130" />
@@ -113,7 +150,21 @@
 
     <el-dialog v-model="taskBookVisible" :title="taskBookForm.id ? '编辑任务书' : '新增任务书'" width="620px">
       <el-form :model="taskBookForm" label-position="top">
-        <el-form-item label="项目 ID"><el-input v-model="taskBookForm.project_id" :disabled="Boolean(taskBookForm.id)" /></el-form-item>
+        <el-form-item label="项目">
+          <el-select
+            v-model="taskBookForm.project_id"
+            clearable
+            filterable
+            remote
+            reserve-keyword
+            :disabled="Boolean(taskBookForm.id)"
+            :remote-method="searchProjects"
+            :loading="projectOptionsLoading"
+            placeholder="搜索项目名称、单位或批次"
+          >
+            <el-option v-for="item in projectOptions" :key="item.id" :label="projectOptionLabel(item)" :value="item.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="任务书标题"><el-input v-model="taskBookForm.title" /></el-form-item>
         <el-form-item label="任务书内容"><el-input v-model="taskBookForm.content" type="textarea" :rows="8" /></el-form-item>
       </el-form>
@@ -125,7 +176,21 @@
 
     <el-dialog v-model="progressVisible" :title="progressForm.id ? '编辑实施进展' : '新增实施进展'" width="620px">
       <el-form :model="progressForm" label-position="top">
-        <el-form-item label="项目 ID"><el-input v-model="progressForm.project_id" :disabled="Boolean(progressForm.id)" /></el-form-item>
+        <el-form-item label="项目">
+          <el-select
+            v-model="progressForm.project_id"
+            clearable
+            filterable
+            remote
+            reserve-keyword
+            :disabled="Boolean(progressForm.id)"
+            :remote-method="searchProjects"
+            :loading="projectOptionsLoading"
+            placeholder="搜索项目名称、单位或批次"
+          >
+            <el-option v-for="item in projectOptions" :key="item.id" :label="projectOptionLabel(item)" :value="item.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="周期"><el-input v-model="progressForm.period" placeholder="例如 2026 年第二季度" /></el-form-item>
         <el-form-item label="进展日期"><el-date-picker v-model="progressForm.progress_date" type="date" value-format="YYYY-MM-DD" /></el-form-item>
         <el-form-item label="进展摘要"><el-input v-model="progressForm.summary" type="textarea" :rows="5" /></el-form-item>
@@ -140,7 +205,20 @@
 
     <el-dialog v-model="rectificationVisible" title="发起整改要求" width="620px">
       <el-form :model="rectificationForm" label-position="top">
-        <el-form-item label="项目 ID"><el-input v-model="rectificationForm.project_id" /></el-form-item>
+        <el-form-item label="项目">
+          <el-select
+            v-model="rectificationForm.project_id"
+            clearable
+            filterable
+            remote
+            reserve-keyword
+            :remote-method="(keyword) => searchProjects(keyword, 'rectification')"
+            :loading="projectOptionsLoading"
+            placeholder="搜索已通过或验收中项目"
+          >
+            <el-option v-for="item in projectOptions" :key="item.id" :label="projectOptionLabel(item)" :value="item.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="整改事项"><el-input v-model="rectificationForm.title" /></el-form-item>
         <el-form-item label="整改要求"><el-input v-model="rectificationForm.requirement" type="textarea" :rows="6" /></el-form-item>
         <el-form-item label="截止日期"><el-date-picker v-model="rectificationForm.due_date" type="date" value-format="YYYY-MM-DD" /></el-form-item>
@@ -201,24 +279,34 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Refresh, View } from '@element-plus/icons-vue'
+import { useRoute } from 'vue-router'
 import { api } from '../api.js'
 import { useSessionStore } from '../store.js'
 import { useTextStore } from '../texts.js'
 
+const route = useRoute()
 const session = useSessionStore()
 const texts = useTextStore()
 const activeTab = ref('task_books')
 const keyword = ref('')
 const status = ref('')
+const projectId = ref('')
+const batchId = ref('')
+const unitId = ref('')
+const projectStatus = ref('')
 const loading = ref(false)
 const saving = ref(false)
+const projectOptionsLoading = ref(false)
 const taskBooks = ref([])
 const progressRecords = ref([])
 const rectifications = ref([])
 const certifications = ref([])
+const projectOptions = ref([])
+const batches = ref([])
+const unitOptions = ref([])
 const taskBookVisible = ref(false)
 const progressVisible = ref(false)
 const rectificationVisible = ref(false)
@@ -242,6 +330,16 @@ const statusOptions = [
   { label: '已提交', value: 'submitted' },
   { label: '退回修改', value: 'returned' },
   { label: '已通过', value: 'approved' },
+  { label: '已驳回', value: 'rejected' }
+]
+const projectStatusOptions = [
+  { label: '草稿', value: 'draft' },
+  { label: '已提交', value: 'submitted' },
+  { label: '退回修改', value: 'returned' },
+  { label: '审核中', value: 'reviewing' },
+  { label: '已通过', value: 'approved' },
+  { label: '验收中', value: 'acceptance' },
+  { label: '已关闭', value: 'closed' },
   { label: '已驳回', value: 'rejected' }
 ]
 const statusLabels = {
@@ -272,7 +370,69 @@ function query() {
   const params = new URLSearchParams()
   if (keyword.value) params.set('keyword', keyword.value)
   if (status.value) params.set('status', status.value)
+  if (projectId.value) params.set('project_id', projectId.value)
+  if (batchId.value) params.set('batch_id', batchId.value)
+  if (unitId.value) params.set('unit_id', unitId.value)
+  if (projectStatus.value) params.set('project_status', projectStatus.value)
   return params.toString() ? `?${params.toString()}` : ''
+}
+
+function projectOptionLabel(item) {
+  const parts = [item.title || `项目 ${item.id}`]
+  if (item.unit?.name) parts.push(item.unit.name)
+  if (item.batch?.name) parts.push(item.batch.name)
+  parts.push(statusMeta(item.status).label)
+  return parts.filter(Boolean).join(' / ')
+}
+
+function projectMetaText(project) {
+  const parts = []
+  if (project?.application_batch?.name) parts.push(`批次：${project.application_batch.name}`)
+  if (project?.status) parts.push(`状态：${statusMeta(project.status).label}`)
+  return parts.join('；') || '-'
+}
+
+async function searchProjects(keyword = '', context = '') {
+  projectOptionsLoading.value = true
+  try {
+    const params = new URLSearchParams()
+    if (keyword) params.set('keyword', keyword)
+    if (context) params.set('context', context)
+    params.set('limit', '30')
+    projectOptions.value = await api(`/projects/options?${params.toString()}`)
+  } finally {
+    projectOptionsLoading.value = false
+  }
+}
+
+async function ensureProjectOption(id) {
+  if (!id || projectOptions.value.some((item) => String(item.id) === String(id))) return
+  const params = new URLSearchParams({ keyword: String(id), limit: '30' })
+  const options = await api(`/projects/options?${params.toString()}`)
+  projectOptions.value = [...projectOptions.value, ...options].filter((item, index, arr) => arr.findIndex((other) => other.id === item.id) === index)
+}
+
+async function loadBatches() {
+  try {
+    const result = await api('/application-batches')
+    batches.value = result.data || result
+  } catch {
+    batches.value = await api('/public/application-batches/open')
+  }
+}
+
+async function searchUnits(keyword = '') {
+  if (!session.can('manage_units')) return
+  const params = new URLSearchParams()
+  if (keyword) params.set('keyword', keyword)
+  const result = await api(`/units${params.toString() ? `?${params.toString()}` : ''}`)
+  unitOptions.value = result.data || result
+}
+
+async function applyRouteQuery() {
+  const routeProjectId = Array.isArray(route.query.project_id) ? route.query.project_id[0] : route.query.project_id
+  projectId.value = routeProjectId || ''
+  if (projectId.value) await ensureProjectOption(projectId.value)
 }
 
 async function loadActiveTab() {
@@ -340,6 +500,11 @@ function openTaskBook(row = null) {
   Object.assign(taskBookForm, row
     ? { id: row.id, project_id: row.project_id, title: row.title || '', content: row.content || '' }
     : { id: null, project_id: '', title: '', content: '' })
+  if (row?.project) {
+    projectOptions.value = [row.project, ...projectOptions.value].filter((item, index, arr) => arr.findIndex((other) => other.id === item.id) === index)
+  } else {
+    searchProjects()
+  }
   taskBookVisible.value = true
 }
 
@@ -361,6 +526,11 @@ function openProgress(row = null) {
   Object.assign(progressForm, row
     ? { id: row.id, project_id: row.project_id, period: row.period || '', progress_date: row.progress_date || '', summary: row.summary || '', issues: row.issues || '', next_plan: row.next_plan || '' }
     : { id: null, project_id: '', period: '', progress_date: '', summary: '', issues: '', next_plan: '' })
+  if (row?.project) {
+    projectOptions.value = [row.project, ...projectOptions.value].filter((item, index, arr) => arr.findIndex((other) => other.id === item.id) === index)
+  } else {
+    searchProjects()
+  }
   progressVisible.value = true
 }
 
@@ -389,6 +559,7 @@ async function saveProgress() {
 
 function openRectification() {
   Object.assign(rectificationForm, { project_id: '', title: '', requirement: '', due_date: '' })
+  searchProjects('', 'rectification')
   rectificationVisible.value = true
 }
 
@@ -492,8 +663,15 @@ function certificationText(row) {
   return `机构：${row.organization || '-'}\n专业方向：${row.specialty || '-'}\n职称：${row.professional_title || '-'}\n证书编号：${row.certificate_no || '-'}\n\n资质说明：\n${row.summary || '-'}\n\n审核意见：\n${row.review_comment || '-'}`
 }
 
-onMounted(() => {
+onMounted(async () => {
   activeTab.value = availableTabs.value[0] || activeTab.value
+  await Promise.all([loadBatches(), searchProjects(), searchUnits()])
+  await applyRouteQuery()
+  loadActiveTab()
+})
+
+watch(() => route.query.project_id, async () => {
+  await applyRouteQuery()
   loadActiveTab()
 })
 </script>

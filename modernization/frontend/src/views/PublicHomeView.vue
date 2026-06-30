@@ -193,6 +193,8 @@ const loadError = ref(false)
 const loginLoading = ref(false)
 const captchaLoading = ref(false)
 const loginError = ref('')
+const retryAfter = ref(0)
+let retryTimer = null
 const captcha = reactive({ id: '', question: '' })
 const loginForm = reactive({ username: '', password: '', captcha_id: '', captcha_answer: '' })
 const hasHomeContent = computed(() => Boolean(
@@ -317,16 +319,36 @@ async function loadCaptcha() {
 async function submitLogin() {
   loginLoading.value = true
   loginError.value = ''
+  retryAfter.value = 0
   try {
     await session.login(loginForm)
     ElMessage.success('登录成功')
     router.push('/dashboard')
   } catch (err) {
-    loginError.value = err.message || '登录失败'
+    startRetryCountdown(err.retry_after_seconds || 0)
+    loginError.value = retryAfter.value > 0 ? `${err.message}，${retryAfter.value} 秒后可重试` : (err.message || '登录失败')
     await loadCaptcha()
   } finally {
     loginLoading.value = false
   }
+}
+
+function startRetryCountdown(seconds) {
+  if (retryTimer) clearInterval(retryTimer)
+  retryAfter.value = Number(seconds || 0)
+  if (!retryAfter.value) return
+
+  retryTimer = setInterval(() => {
+    retryAfter.value = Math.max(0, retryAfter.value - 1)
+    if (retryAfter.value > 0) {
+      loginError.value = `登录过于频繁，请稍后再试，${retryAfter.value} 秒后可重试`
+      return
+    }
+
+    clearInterval(retryTimer)
+    retryTimer = null
+    loginError.value = ''
+  }, 1000)
 }
 
 onMounted(() => {

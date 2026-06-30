@@ -107,6 +107,7 @@ const pagination = reactive({ current_page: 1, per_page: 30, total: 0 })
 const actionOptions = [
   { label: '登录成功', value: 'auth.login' },
   { label: '登录失败', value: 'auth.login_failed' },
+  { label: '登录限流', value: 'auth.throttled' },
   { label: '验证码失败', value: 'auth.captcha_failed' },
   { label: '修改密码', value: 'auth.password_updated' },
   { label: '资料修改', value: 'auth.profile_updated' },
@@ -154,6 +155,7 @@ const actionOptions = [
   { label: '文案修改', value: 'system_text.updated' },
   { label: '文案回滚', value: 'system_text.reset' },
   { label: '文案删除', value: 'system_text.deleted' },
+  { label: '文案导出', value: 'system_text.exported' },
   { label: '配置修改', value: 'setting.updated' },
   { label: '项目导出', value: 'project.exported' },
   { label: '审核任务导出', value: 'review_tasks.exported' },

@@ -83,6 +83,86 @@ class ProjectController extends Controller
             });
     }
 
+    public function options(Request $request)
+    {
+        if (! Role::userCan($request->user(), 'view_projects')) {
+            abort(403, '无权访问项目');
+        }
+
+        $query = $this->visibleProjectsQuery($request)
+            ->with(['unit:id,name', 'applicationBatch:id,name,code'])
+            ->select([
+                'id',
+                'unit_id',
+                'application_batch_id',
+                'legacy_id',
+                'title',
+                'status',
+                'metadata',
+                'submitted_at',
+                'updated_at',
+            ]);
+
+        if ($request->filled('keyword')) {
+            $keyword = $request->query('keyword');
+            $query->where(function ($query) use ($keyword): void {
+                $query->where('title', 'like', "%{$keyword}%")
+                    ->orWhere('legacy_id', 'like', "%{$keyword}%")
+                    ->orWhere('id', $keyword)
+                    ->orWhereHas('unit', fn ($query) => $query->where('name', 'like', "%{$keyword}%"))
+                    ->orWhereHas('applicationBatch', fn ($query) => $query
+                        ->where('name', 'like', "%{$keyword}%")
+                        ->orWhere('code', 'like', "%{$keyword}%"));
+            });
+        }
+
+        if ($request->filled('batch_id')) {
+            $query->where('application_batch_id', $request->query('batch_id'));
+        }
+
+        if ($request->filled('unit_id') && in_array($request->user()->role, Role::adminRoles(), true)) {
+            $query->where('unit_id', $request->query('unit_id'));
+        }
+
+        if ($request->filled('status')) {
+            $query->whereIn('status', array_filter(explode(',', (string) $request->query('status'))));
+        }
+
+        if ($request->query('context') === 'rectification') {
+            $query->whereIn('status', [
+                Project::STATUS_APPROVED,
+                Project::STATUS_ACCEPTANCE,
+            ]);
+        } elseif ($request->query('context') === 'acceptance') {
+            $query->whereIn('status', [
+                Project::STATUS_APPROVED,
+                Project::STATUS_ACCEPTANCE,
+            ]);
+        }
+
+        $limit = min(max((int) $request->query('limit', 20), 1), 50);
+
+        return $query
+            ->latest('updated_at')
+            ->limit($limit)
+            ->get()
+            ->map(fn (Project $project) => [
+                'id' => $project->id,
+                'title' => $project->title,
+                'code' => $project->metadata['project_code'] ?? $project->legacy_id ?? 'P'.$project->id,
+                'status' => $project->status,
+                'unit' => $project->unit ? [
+                    'id' => $project->unit->id,
+                    'name' => $project->unit->name,
+                ] : null,
+                'batch' => $project->applicationBatch ? [
+                    'id' => $project->applicationBatch->id,
+                    'name' => $project->applicationBatch->name,
+                    'code' => $project->applicationBatch->code,
+                ] : null,
+            ]);
+    }
+
     public function store(StoreProjectRequest $request)
     {
         $this->authorizeUnitApplicant($request);
@@ -108,12 +188,17 @@ class ProjectController extends Controller
     {
         $this->authorizeProjectAccess($request, $project);
 
-        return $project->load([
+        $project->load([
             'unit', 'owner',
             'applicationBatch',
             'files' => fn ($q) => $q->latest(),
             'reviews' => fn ($q) => $q->with('reviewer')->latest('reviewed_at'),
+            'acceptanceApplications' => fn ($q) => $q->with(['submitter', 'reviews.reviewer'])->latest(),
         ]);
+
+        $project->setAttribute('timeline', $this->projectTimeline($project));
+
+        return $project;
     }
 
     public function update(StoreProjectRequest $request, Project $project)
@@ -392,6 +477,79 @@ class ProjectController extends Controller
         if (! in_array($request->user()->role, Role::adminRoles(), true)) {
             abort(403, '只有管理员可以处理项目验收');
         }
+    }
+
+    private function visibleProjectsQuery(Request $request)
+    {
+        $user = $request->user();
+        $query = Project::query();
+
+        if ($user->role === Role::UNIT) {
+            return $query->where('unit_id', $user->unit_id);
+        }
+
+        if (in_array($user->role, [Role::COUNTY, Role::DEPARTMENT, Role::EXPERT], true)) {
+            $stage = Role::reviewerStageFor($user->role);
+
+            return $query->where(function ($query) use ($stage): void {
+                $query->where('current_reviewer_role', $stage)
+                    ->orWhereHas('reviews', fn ($query) => $query->where('stage', $stage));
+            });
+        }
+
+        return $query;
+    }
+
+    private function projectTimeline(Project $project): array
+    {
+        $project->loadMissing(['reviews.reviewer', 'acceptanceApplications.reviews.reviewer']);
+        $reviews = $project->reviews->keyBy('stage');
+        $acceptance = $project->acceptanceApplications->first();
+
+        $stages = [
+            ['key' => 'submitted', 'label' => '单位提交', 'role' => Role::UNIT],
+            ['key' => Role::COUNTY, 'label' => '区县审核', 'role' => Role::COUNTY],
+            ['key' => Role::DEPARTMENT, 'label' => '部门审核', 'role' => Role::DEPARTMENT],
+            ['key' => Role::EXPERT, 'label' => '专家评审', 'role' => Role::EXPERT],
+            ['key' => Role::ADMIN, 'label' => '科技局终审', 'role' => Role::ADMIN],
+            ['key' => 'acceptance', 'label' => '验收阶段', 'role' => null],
+        ];
+
+        return collect($stages)->map(function (array $stage) use ($project, $reviews, $acceptance): array {
+            if ($stage['key'] === 'submitted') {
+                return [
+                    ...$stage,
+                    'status' => $project->submitted_at ? 'done' : 'pending',
+                    'handler' => $project->owner?->name ?: $project->owner?->username,
+                    'handled_at' => $project->submitted_at?->toDateTimeString(),
+                    'decision' => $project->submitted_at ? 'submitted' : null,
+                    'comment' => null,
+                ];
+            }
+
+            if ($stage['key'] === 'acceptance') {
+                return [
+                    ...$stage,
+                    'status' => $acceptance ? 'done' : ($project->status === Project::STATUS_APPROVED ? 'current' : 'pending'),
+                    'handler' => $acceptance?->submitter?->name ?: $acceptance?->submitter?->username,
+                    'handled_at' => $acceptance?->submitted_at?->toDateTimeString(),
+                    'decision' => $acceptance?->status,
+                    'comment' => $acceptance?->summary,
+                ];
+            }
+
+            $review = $reviews->get($stage['key']);
+
+            return [
+                ...$stage,
+                'status' => $review ? 'done' : ($project->current_reviewer_role === $stage['key'] ? 'current' : 'pending'),
+                'handler' => $review?->reviewer?->name ?: $review?->reviewer?->username,
+                'handled_at' => $review?->reviewed_at?->toDateTimeString(),
+                'decision' => $review?->decision,
+                'score' => $review?->score,
+                'comment' => $review?->comment,
+            ];
+        })->all();
     }
 
     private function authorizeProjectAccess(Request $request, Project $project): void

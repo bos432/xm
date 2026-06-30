@@ -13,6 +13,17 @@
       </el-card>
     </div>
 
+    <el-card v-if="roleFocusMetrics.length" shadow="never">
+      <template #header>{{ currentRoleLabel }}重点事项</template>
+      <div class="metric-grid compact-grid">
+        <div v-for="item in roleFocusMetrics" :key="item.label" :class="{ 'metric-link': item.to }" @click="goMetric(item)">
+          <span>{{ item.label }}</span>
+          <strong>{{ item.value }}</strong>
+          <small>{{ item.note }}</small>
+        </div>
+      </div>
+    </el-card>
+
     <el-card shadow="never" class="workflow-card">
       <template #header>
         <div class="workflow-head">
@@ -284,6 +295,47 @@ const metrics = computed(() => {
 
   return base
 })
+const roleFocusMetrics = computed(() => {
+  const focus = summary.value?.role_focus || {}
+
+  if (session.role === 'unit') {
+    return [
+      { label: '我的草稿', value: focus.draft_projects ?? 0, note: '待完善后提交', to: '/projects?status=draft' },
+      { label: '退回修改', value: focus.returned_projects ?? 0, note: '需补正项目', to: '/projects?status=returned' },
+      { label: '验收待提交', value: focus.acceptance_to_submit ?? 0, note: '草稿或退回验收', to: '/acceptance?status=draft' },
+      { label: '整改待提交', value: focus.rectifications_to_submit ?? 0, note: '待反馈整改材料', to: '/lifecycle?tab=rectifications' }
+    ]
+  }
+
+  if (['county', 'department', 'expert'].includes(session.role)) {
+    return [
+      { label: '项目待审', value: focus.review_pending ?? 0, note: '当前阶段待处理', to: '/reviews' },
+      { label: '项目已审', value: focus.review_done ?? 0, note: '本人处理记录', to: '/reviews?tab=results' },
+      { label: '验收待审', value: focus.acceptance_pending ?? 0, note: '当前阶段待处理', to: '/acceptance' },
+      { label: '验收已审', value: focus.acceptance_done ?? 0, note: '本人验收记录', to: '/acceptance' }
+    ]
+  }
+
+  if (['admin', 'super_admin'].includes(session.role)) {
+    const items = [
+      { label: '待终审项目', value: focus.final_review_pending ?? 0, note: '科技局终审', to: '/reviews' },
+      { label: '待延期处理', value: focus.pending_extensions ?? 0, note: '延期申请', to: '/projects?pending_extension=1' },
+      { label: '注册待审核', value: focus.pending_registrations ?? 0, note: '单位和账号启用', to: '/units?pending_registration=1' },
+      { label: '异常登录', value: focus.security_events_24h ?? 0, note: '24 小时安全事件', to: '/security' }
+    ]
+
+    if (session.role === 'super_admin') {
+      items.push(
+        { label: '邮件失败', value: focus.mail_failed ?? 0, note: '邮件中心待处理', to: '/mail-center' },
+        { label: '锁定数量', value: focus.active_locks ?? 0, note: '账号/IP 锁定', to: '/security' }
+      )
+    }
+
+    return items
+  }
+
+  return []
+})
 
 const baseline = [
   { area: '框架', current: 'ThinkPHP 3.1.2，旧 API 和大控制器', target: 'Laravel 11 API，按领域拆分控制器和模型' },
@@ -498,6 +550,7 @@ const failedLoginReasons = {
 const securityEventActions = {
   'auth.login_failed': '登录失败',
   'auth.login': '登录成功',
+  'auth.throttled': '登录限流',
   'auth.captcha_failed': '验证码失败',
   'security.login_blocked': '登录拦截',
   'security.ip_blacklisted': '黑名单拦截',
@@ -550,6 +603,7 @@ const actionLabels = {
   'system_text.updated': '文案修改',
   'system_text.reset': '文案回滚',
   'system_text.deleted': '文案删除',
+  'system_text.exported': '文案导出',
   'setting.updated': '配置修改',
   'project.exported': '项目导出',
   'review_tasks.exported': '审核任务导出',

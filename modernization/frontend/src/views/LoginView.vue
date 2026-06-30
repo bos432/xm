@@ -51,6 +51,8 @@ const session = useSessionStore()
 const loading = ref(false)
 const captchaLoading = ref(false)
 const error = ref('')
+const retryAfter = ref(0)
+let retryTimer = null
 const captcha = reactive({ id: '', question: '' })
 const form = reactive({ username: '', password: '', captcha_id: '', captcha_answer: '' })
 
@@ -70,15 +72,35 @@ async function loadCaptcha() {
 async function submit() {
   loading.value = true
   error.value = ''
+  retryAfter.value = 0
   try {
     await session.login(form)
     router.push('/dashboard')
   } catch (err) {
-    error.value = err.message
+    startRetryCountdown(err.retry_after_seconds || 0)
+    error.value = retryAfter.value > 0 ? `${err.message}，${retryAfter.value} 秒后可重试` : err.message
     await loadCaptcha()
   } finally {
     loading.value = false
   }
+}
+
+function startRetryCountdown(seconds) {
+  if (retryTimer) clearInterval(retryTimer)
+  retryAfter.value = Number(seconds || 0)
+  if (!retryAfter.value) return
+
+  retryTimer = setInterval(() => {
+    retryAfter.value = Math.max(0, retryAfter.value - 1)
+    if (retryAfter.value > 0) {
+      error.value = `登录过于频繁，请稍后再试，${retryAfter.value} 秒后可重试`
+      return
+    }
+
+    clearInterval(retryTimer)
+    retryTimer = null
+    error.value = ''
+  }, 1000)
 }
 
 onMounted(loadCaptcha)
