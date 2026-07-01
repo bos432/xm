@@ -74,11 +74,8 @@ class AcceptanceController extends Controller
 
         if ($request->has('e2e')) {
             $request->boolean('e2e')
-                ? $query->where('metadata', 'like', '%"e2e":true%')
-                : $query->where(function ($query): void {
-                    $query->whereNull('metadata')
-                        ->orWhere('metadata', 'not like', '%"e2e":true%');
-                });
+                ? $query->where(fn ($query) => $this->e2eAcceptanceQuery($query))
+                : $query->where(fn ($query) => $this->nonE2eAcceptanceQuery($query));
         }
 
         return $query->paginate(20);
@@ -481,5 +478,40 @@ class AcceptanceController extends Controller
         $name = trim(preg_replace('/\s+/u', ' ', $name) ?? '');
 
         return $name !== '' ? $name : 'attachment.'.$file->getClientOriginalExtension();
+    }
+
+    private function e2eAcceptanceQuery($query): void
+    {
+        $query->where('metadata', 'like', '%"e2e":true%')
+            ->orWhere('metadata', 'like', '%"e2e": true%')
+            ->orWhereHas('project', fn ($query) => $this->e2eProjectRelationQuery($query));
+    }
+
+    private function nonE2eAcceptanceQuery($query): void
+    {
+        $query->where(function ($query): void {
+            $query->whereNull('metadata')
+                ->orWhere(function ($query): void {
+                    $query->where('metadata', 'not like', '%"e2e":true%')
+                        ->where('metadata', 'not like', '%"e2e": true%');
+                });
+        })
+            ->whereDoesntHave('project', fn ($query) => $this->e2eProjectRelationQuery($query));
+    }
+
+    private function e2eProjectRelationQuery($query): void
+    {
+        $query->where('metadata', 'like', '%"e2e":true%')
+            ->orWhere('metadata', 'like', '%"e2e": true%')
+            ->orWhere('title', 'like', '%E2E-%')
+            ->orWhereHas('applicationBatch', fn ($query) => $this->e2eBatchRelationQuery($query));
+    }
+
+    private function e2eBatchRelationQuery($query): void
+    {
+        $query->where('name', 'like', '%E2E-%')
+            ->orWhere('code', 'like', '%E2E-%')
+            ->orWhere('metadata', 'like', '%"e2e":true%')
+            ->orWhere('metadata', 'like', '%"e2e": true%');
     }
 }

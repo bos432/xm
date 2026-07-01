@@ -13,7 +13,12 @@
           <el-option label="关闭" value="closed" />
           <el-option label="归档" value="archived" />
         </el-select>
+        <el-select v-model="e2eFilter" clearable placeholder="测试数据" @change="loadBatches">
+          <el-option label="只看测试数据" value="1" />
+          <el-option label="排除测试数据" value="0" />
+        </el-select>
         <el-button :icon="Refresh" :loading="loading" @click="loadBatches">刷新</el-button>
+        <el-button v-if="session.role === 'super_admin'" type="warning" @click="archiveE2eBatches">归档测试批次</el-button>
         <el-button type="primary" :icon="Plus" @click="openEditor()">新增批次</el-button>
       </div>
     </div>
@@ -74,15 +79,18 @@
 
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Edit, Plus, Refresh } from '@element-plus/icons-vue'
 import { api } from '../api.js'
+import { useSessionStore } from '../store.js'
 
+const session = useSessionStore()
 const loading = ref(false)
 const saving = ref(false)
 const batches = ref([])
 const keyword = ref('')
 const status = ref('')
+const e2eFilter = ref('')
 const editorVisible = ref(false)
 const dateRange = ref([])
 const form = reactive(emptyForm())
@@ -129,6 +137,7 @@ async function loadBatches() {
     const params = new URLSearchParams()
     if (keyword.value) params.set('keyword', keyword.value)
     if (status.value) params.set('status', status.value)
+    if (e2eFilter.value !== '') params.set('e2e', e2eFilter.value)
     const result = await api(`/application-batches${params.toString() ? `?${params.toString()}` : ''}`)
     batches.value = result.data || result
   } finally {
@@ -178,6 +187,13 @@ async function saveBatch() {
 async function changeStatus(row, action) {
   await api(`/application-batches/${row.id}/${action}`, { method: 'POST' })
   ElMessage.success('批次状态已更新')
+  await loadBatches()
+}
+
+async function archiveE2eBatches() {
+  await ElMessageBox.confirm('归档后测试批次不再作为开放批次使用，但数据不会删除。确认归档全部测试批次？', '归档测试批次', { type: 'warning' })
+  const result = await api('/application-batches/archive-e2e', { method: 'POST' })
+  ElMessage.success(`已归档 ${result.archived_count || 0} 个测试批次`)
   await loadBatches()
 }
 

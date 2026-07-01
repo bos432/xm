@@ -17,6 +17,67 @@ class ProjectAcceptanceWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_admin_can_filter_e2e_projects_and_acceptances(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $admin = User::factory()->create(['role' => 'admin']);
+        $e2eBatch = ApplicationBatch::create([
+            'name' => 'E2E 筛选批次',
+            'code' => 'E2E-FILTER-BATCH',
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
+        $businessBatch = ApplicationBatch::create([
+            'name' => '正式筛选批次',
+            'code' => 'BUSINESS-FILTER-BATCH',
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
+        $e2eProject = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'application_batch_id' => $e2eBatch->id,
+            'title' => 'E2E-筛选项目',
+            'status' => Project::STATUS_ACCEPTANCE,
+        ]);
+        $businessProject = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'application_batch_id' => $businessBatch->id,
+            'title' => '正式筛选项目',
+            'status' => Project::STATUS_ACCEPTANCE,
+        ]);
+        AcceptanceApplication::create([
+            'project_id' => $e2eProject->id,
+            'unit_id' => $unit->id,
+            'submitted_by' => $owner->id,
+            'status' => AcceptanceApplication::STATUS_SUBMITTED,
+            'current_reviewer_role' => 'admin',
+        ]);
+        AcceptanceApplication::create([
+            'project_id' => $businessProject->id,
+            'unit_id' => $unit->id,
+            'submitted_by' => $owner->id,
+            'status' => AcceptanceApplication::STATUS_SUBMITTED,
+            'current_reviewer_role' => 'admin',
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        $e2eProjects = collect($this->getJson('/api/projects?e2e=1')->assertOk()->json('data'));
+        $businessProjects = collect($this->getJson('/api/projects?e2e=0')->assertOk()->json('data'));
+        $e2eAcceptances = collect($this->getJson('/api/acceptance?scope=visible&e2e=1')->assertOk()->json('data'));
+        $businessAcceptances = collect($this->getJson('/api/acceptance?scope=visible&e2e=0')->assertOk()->json('data'));
+
+        $this->assertTrue($e2eProjects->pluck('id')->contains($e2eProject->id));
+        $this->assertFalse($e2eProjects->pluck('id')->contains($businessProject->id));
+        $this->assertTrue($businessProjects->pluck('id')->contains($businessProject->id));
+        $this->assertFalse($businessProjects->pluck('id')->contains($e2eProject->id));
+        $this->assertTrue($e2eAcceptances->pluck('project_id')->contains($e2eProject->id));
+        $this->assertFalse($e2eAcceptances->pluck('project_id')->contains($businessProject->id));
+        $this->assertTrue($businessAcceptances->pluck('project_id')->contains($businessProject->id));
+        $this->assertFalse($businessAcceptances->pluck('project_id')->contains($e2eProject->id));
+    }
+
     public function test_reviewer_can_filter_pending_and_reviewed_acceptance_records(): void
     {
         $unit = Unit::factory()->create();

@@ -13,6 +13,10 @@
         <el-select v-model="applicationBatchId" clearable placeholder="申报批次" @change="reloadProjects" @clear="reloadProjects">
           <el-option v-for="batch in openBatches" :key="batch.id" :label="batch.name" :value="batch.id" />
         </el-select>
+        <el-select v-if="canFilterE2e" v-model="e2eFilter" clearable placeholder="测试数据" @change="reloadProjects" @clear="reloadProjects">
+          <el-option label="只看测试数据" value="1" />
+          <el-option label="排除测试数据" value="0" />
+        </el-select>
         <el-switch v-if="session.can('manage_acceptance')" v-model="pendingExtensionOnly" active-text="待延期" @change="reloadProjects" />
         <el-tooltip content="查询项目" placement="top">
           <el-button type="primary" :icon="Search" circle @click="reloadProjects" />
@@ -273,6 +277,7 @@ const openBatches = ref([])
 const category = ref('')
 const projectType = ref('')
 const applicationBatchId = ref('')
+const e2eFilter = ref('')
 const pendingExtensionOnly = ref(false)
 const dialogVisible = ref(false)
 const uploadVisible = ref(false)
@@ -289,6 +294,7 @@ const closeForm = reactive({ comment: '' })
 const pagination = reactive({ current_page: 1, per_page: 20, total: 0 })
 const unitCanWriteProjects = computed(() => session.role !== 'unit' || session.user?.unit?.status === 'active')
 const canCreate = computed(() => session.can('create_projects') && unitCanWriteProjects.value)
+const canFilterE2e = computed(() => ['admin', 'super_admin'].includes(session.role))
 
 function statusMeta(value) {
   return statusLabels[value] || { label: value || '-', type: 'info' }
@@ -413,6 +419,7 @@ function buildProjectQuery() {
   if (projectType.value) params.set('project_type', projectType.value)
   if (applicationBatchId.value) params.set('application_batch_id', applicationBatchId.value)
   if (route.query.unit_id) params.set('unit_id', route.query.unit_id)
+  if (canFilterE2e.value && e2eFilter.value !== '') params.set('e2e', e2eFilter.value)
   if (pendingExtensionOnly.value) params.set('pending_extension', '1')
   if (pagination.current_page > 1) params.set('page', pagination.current_page)
   return params.toString() ? `?${params.toString()}` : ''
@@ -425,6 +432,7 @@ function applyRouteQuery() {
   projectType.value = typeof route.query.project_type === 'string' ? route.query.project_type : ''
   const batchId = route.query.application_batch_id || route.query.batch_id
   applicationBatchId.value = batchId ? Number(batchId) : ''
+  e2eFilter.value = canFilterE2e.value && typeof route.query.e2e === 'string' ? route.query.e2e : ''
   pendingExtensionOnly.value = route.query.pending_extension === '1'
   pagination.current_page = route.query.page ? Number(route.query.page) || 1 : 1
 }
@@ -441,6 +449,8 @@ async function syncRouteQuery() {
   setOrDelete('category', category.value)
   setOrDelete('project_type', projectType.value)
   setOrDelete('application_batch_id', applicationBatchId.value)
+  if (canFilterE2e.value) setOrDelete('e2e', e2eFilter.value)
+  else delete query.e2e
   setOrDelete('pending_extension', pendingExtensionOnly.value ? '1' : '')
   setOrDelete('page', pagination.current_page > 1 ? pagination.current_page : '')
   delete query.project_id
@@ -663,6 +673,7 @@ async function exportProjects() {
   if (category.value) params.set('category', category.value)
   if (projectType.value) params.set('project_type', projectType.value)
   if (applicationBatchId.value) params.set('application_batch_id', applicationBatchId.value)
+  if (canFilterE2e.value && e2eFilter.value !== '') params.set('e2e', e2eFilter.value)
   if (pendingExtensionOnly.value) params.set('pending_extension', '1')
   const query = params.toString() ? `?${params.toString()}` : ''
   try {

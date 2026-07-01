@@ -61,6 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/application-batches', [ApplicationBatchController::class, 'index']);
     Route::post('/application-batches', [ApplicationBatchController::class, 'store']);
+    Route::post('/application-batches/archive-e2e', [ApplicationBatchController::class, 'archiveE2e']);
     Route::get('/application-batches/{applicationBatch}', [ApplicationBatchController::class, 'show']);
     Route::put('/application-batches/{applicationBatch}', [ApplicationBatchController::class, 'update']);
     Route::post('/application-batches/{applicationBatch}/open', [ApplicationBatchController::class, 'open']);

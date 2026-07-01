@@ -64,11 +64,8 @@ class ProjectController extends Controller
 
         if ($request->has('e2e')) {
             $request->boolean('e2e')
-                ? $query->where('metadata', 'like', '%"e2e":true%')
-                : $query->where(function ($query): void {
-                    $query->whereNull('metadata')
-                        ->orWhere('metadata', 'not like', '%"e2e":true%');
-                });
+                ? $query->where(fn ($query) => $this->e2eProjectQuery($query))
+                : $query->where(fn ($query) => $this->nonE2eProjectQuery($query));
         }
 
         if ($request->filled('keyword')) {
@@ -637,5 +634,34 @@ class ProjectController extends Controller
         if ($types && ! in_array($data['project_type'] ?? null, $types, true)) {
             abort(422, '项目类型不在当前批次允许范围内');
         }
+    }
+
+    private function e2eProjectQuery($query): void
+    {
+        $query->where('metadata', 'like', '%"e2e":true%')
+            ->orWhere('metadata', 'like', '%"e2e": true%')
+            ->orWhere('title', 'like', '%E2E-%')
+            ->orWhereHas('applicationBatch', fn ($query) => $this->e2eBatchRelationQuery($query));
+    }
+
+    private function nonE2eProjectQuery($query): void
+    {
+        $query->where(function ($query): void {
+            $query->whereNull('metadata')
+                ->orWhere(function ($query): void {
+                    $query->where('metadata', 'not like', '%"e2e":true%')
+                        ->where('metadata', 'not like', '%"e2e": true%');
+                });
+        })
+            ->where('title', 'not like', '%E2E-%')
+            ->whereDoesntHave('applicationBatch', fn ($query) => $this->e2eBatchRelationQuery($query));
+    }
+
+    private function e2eBatchRelationQuery($query): void
+    {
+        $query->where('name', 'like', '%E2E-%')
+            ->orWhere('code', 'like', '%E2E-%')
+            ->orWhere('metadata', 'like', '%"e2e":true%')
+            ->orWhere('metadata', 'like', '%"e2e": true%');
     }
 }

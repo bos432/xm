@@ -31,6 +31,12 @@ class ApplicationBatchController extends Controller
             });
         }
 
+        if ($request->has('e2e')) {
+            $request->boolean('e2e')
+                ? $query->where(fn ($query) => $this->e2eBatchQuery($query))
+                : $query->where(fn ($query) => $this->nonE2eBatchQuery($query));
+        }
+
         return $query->paginate(20);
     }
 
@@ -93,6 +99,30 @@ class ApplicationBatchController extends Controller
         return $this->changeStatus($request, $applicationBatch, ApplicationBatch::STATUS_ARCHIVED, 'application_batch.archived');
     }
 
+    public function archiveE2e(Request $request)
+    {
+        if ($request->user()->role !== Role::SUPER_ADMIN) {
+            abort(403, '只有超级管理员可以批量归档测试批次');
+        }
+
+        $batches = ApplicationBatch::query()
+            ->where(fn ($query) => $this->e2eBatchQuery($query))
+            ->where('status', '!=', ApplicationBatch::STATUS_ARCHIVED)
+            ->get();
+
+        $batches->each(fn (ApplicationBatch $batch) => $batch->update(['status' => ApplicationBatch::STATUS_ARCHIVED]));
+
+        $this->auditLogger->record($request, 'application_batch.e2e_archived', null, [
+            'count' => $batches->count(),
+            'batch_ids' => $batches->pluck('id')->all(),
+        ]);
+
+        return response()->json([
+            'archived_count' => $batches->count(),
+            'batch_ids' => $batches->pluck('id')->all(),
+        ]);
+    }
+
     private function changeStatus(Request $request, ApplicationBatch $batch, string $status, string $action)
     {
         $this->authorizeManage($request);
@@ -139,5 +169,26 @@ class ApplicationBatchController extends Controller
         if (! Role::userCan($request->user(), 'manage_application_batches')) {
             abort(403, '无权维护申报批次');
         }
+    }
+
+    private function e2eBatchQuery($query): void
+    {
+        $query->where('metadata', 'like', '%"e2e":true%')
+            ->orWhere('metadata', 'like', '%"e2e": true%')
+            ->orWhere('name', 'like', '%E2E-%')
+            ->orWhere('code', 'like', '%E2E-%');
+    }
+
+    private function nonE2eBatchQuery($query): void
+    {
+        $query->where(function ($query): void {
+            $query->whereNull('metadata')
+                ->orWhere(function ($query): void {
+                    $query->where('metadata', 'not like', '%"e2e":true%')
+                        ->where('metadata', 'not like', '%"e2e": true%');
+                });
+        })
+            ->where('name', 'not like', '%E2E-%')
+            ->where('code', 'not like', '%E2E-%');
     }
 }

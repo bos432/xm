@@ -16,6 +16,10 @@
           <el-option label="已通过" value="approved" />
           <el-option label="已关闭" value="closed" />
         </el-select>
+        <el-select v-if="canFilterE2e" v-model="e2eFilter" clearable placeholder="测试数据" @change="reloadAcceptances" @clear="reloadAcceptances">
+          <el-option label="只看测试数据" value="1" />
+          <el-option label="排除测试数据" value="0" />
+        </el-select>
         <el-button :icon="Refresh" :loading="loading" @click="loadAcceptances">刷新</el-button>
         <el-button v-if="session.can('submit_acceptance')" type="primary" :icon="Plus" @click="createVisible = true">发起验收</el-button>
       </div>
@@ -260,6 +264,7 @@ const reviewForm = reactive({ decision: 'approve', score: null, comment: '' })
 const extensionForm = reactive({ reason: '', expected_date: '', extension_id: null, decision: 'approved', comment: '' })
 const uploadCategory = ref('acceptance_application')
 const projectId = ref('')
+const e2eFilter = ref('')
 const statusLabels = {
   draft: { label: '草稿', type: 'info' },
   submitted: { label: '已提交', type: 'warning' },
@@ -279,6 +284,7 @@ const materialCategories = [
 ]
 const materialCategoryMap = Object.fromEntries(materialCategories.map((item) => [item.value, item.label]))
 const showScopeTabs = computed(() => session.can('review_acceptance') || session.can('manage_acceptance'))
+const canFilterE2e = computed(() => ['admin', 'super_admin'].includes(session.role))
 const selectedTimelineItem = computed(() => detail.value?.timeline?.find((item) => item.key === selectedTimelineKey.value) || detail.value?.timeline?.[0] || null)
 const submitRequiredMaterialLabels = computed(() => currentAcceptance.value?.project?.application_batch?.metadata?.acceptance_required_materials?.map((item) => materialCategoryLabel(item)).filter(Boolean) || [])
 const requiredMaterialLabels = computed(() => {
@@ -359,6 +365,7 @@ async function loadAcceptances() {
     if (keyword.value) params.set('keyword', keyword.value)
     if (status.value) params.set('status', status.value)
     if (projectId.value) params.set('project_id', projectId.value)
+    if (canFilterE2e.value && e2eFilter.value !== '') params.set('e2e', e2eFilter.value)
     if (showScopeTabs.value && scope.value) params.set('scope', scope.value)
     const result = await api(`/acceptance${params.toString() ? `?${params.toString()}` : ''}`)
     acceptances.value = result.data || result
@@ -371,6 +378,7 @@ function applyRouteQuery() {
   keyword.value = typeof route.query.keyword === 'string' ? route.query.keyword : ''
   status.value = typeof route.query.status === 'string' ? route.query.status : ''
   projectId.value = typeof route.query.project_id === 'string' ? route.query.project_id : ''
+  e2eFilter.value = canFilterE2e.value && typeof route.query.e2e === 'string' ? route.query.e2e : ''
   scope.value = typeof route.query.scope === 'string' ? route.query.scope : defaultScope()
 }
 
@@ -384,6 +392,8 @@ async function syncRouteQuery() {
   setOrDelete('keyword', keyword.value)
   setOrDelete('status', status.value)
   setOrDelete('project_id', projectId.value)
+  if (canFilterE2e.value) setOrDelete('e2e', e2eFilter.value)
+  else delete query.e2e
   if (showScopeTabs.value) setOrDelete('scope', scope.value)
   else delete query.scope
 
