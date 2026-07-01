@@ -65,7 +65,10 @@ class AcceptanceController extends Controller
         if ($keyword = $request->query('keyword')) {
             $query->whereHas('project', function ($query) use ($keyword): void {
                 $query->where('title', 'like', '%'.$keyword.'%')
-                    ->orWhereHas('unit', fn ($query) => $query->where('name', 'like', '%'.$keyword.'%'));
+                    ->orWhereHas('unit', fn ($query) => $query->where('name', 'like', '%'.$keyword.'%'))
+                    ->orWhereHas('applicationBatch', fn ($query) => $query
+                        ->where('name', 'like', '%'.$keyword.'%')
+                        ->orWhere('code', 'like', '%'.$keyword.'%'));
             });
         }
 

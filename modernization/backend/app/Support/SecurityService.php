@@ -37,12 +37,19 @@ final class SecurityService
                 ->first();
 
             if ($lock && $lock->isLocked()) {
+                $retryAfter = $lock->locked_until
+                    ? max(1, now()->diffInSeconds($lock->locked_until, false))
+                    : max(60, RuntimeConfig::intValue('security.lock_minutes', 30) * 60);
                 $this->recordEvent($request, 'security.login_blocked', 'high', $username, null, [
                     'identity_type' => $type,
                     'identity_value' => $value,
                     'locked_until' => $lock->locked_until?->toDateTimeString(),
+                    'retry_after_seconds' => $retryAfter,
                 ]);
-                abort(423, '登录失败次数过多，请稍后再试或联系管理员解锁');
+                abort(response()->json([
+                    'message' => '登录失败次数过多，请稍后再试或联系管理员解锁',
+                    'retry_after_seconds' => $retryAfter,
+                ], 423));
             }
 
             if ($lock && ! $lock->isLocked()) {

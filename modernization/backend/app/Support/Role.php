@@ -265,6 +265,7 @@ final class Role
             ['key' => 'application_batches', 'path' => '/application-batches', 'label' => '申报批次', 'permission' => 'manage_application_batches'],
             ['key' => 'acceptance', 'path' => '/acceptance', 'label' => '验收管理', 'permission' => 'submit_acceptance'],
             ['key' => 'acceptance_admin', 'path' => '/acceptance', 'label' => '验收管理', 'permission' => 'manage_acceptance'],
+            ['key' => 'acceptance_review', 'path' => '/acceptance?scope=pending', 'label' => '验收管理', 'permission' => 'review_acceptance'],
             ['key' => 'lifecycle', 'path' => '/lifecycle', 'label' => '全周期管理', 'permission' => 'view_lifecycle'],
             ['key' => 'units', 'path' => '/units', 'label' => '单位管理', 'permission' => 'manage_units'],
             ['key' => 'users', 'path' => '/users', 'label' => '账号管理', 'permission' => 'manage_users'],
@@ -289,11 +290,12 @@ final class Role
                 return false;
             }
 
-            if (in_array($menu['path'], $seenPaths, true)) {
+            $basePath = strtok($menu['path'], '?') ?: $menu['path'];
+            if (in_array($basePath, $seenPaths, true)) {
                 return false;
             }
 
-            $seenPaths[] = $menu['path'];
+            $seenPaths[] = $basePath;
 
             return true;
         }));

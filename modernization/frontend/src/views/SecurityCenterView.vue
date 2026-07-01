@@ -10,6 +10,13 @@
 
     <el-card shadow="never">
       <template #header>安全策略</template>
+      <el-alert
+        style="margin-bottom: 16px"
+        :title="throttleStatusText"
+        type="info"
+        show-icon
+        :closable="false"
+      />
       <el-form :model="policies" label-position="top" class="home-manager-grid">
         <el-form-item label="登录失败阈值"><el-input-number v-model="policies.login_failure_threshold" :min="1" :max="100" /></el-form-item>
         <el-form-item label="锁定分钟数"><el-input-number v-model="policies.lock_minutes" :min="1" :max="1440" /></el-form-item>
@@ -104,7 +111,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Refresh } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
@@ -130,6 +137,17 @@ const policies = reactive({
   ip_blacklist_enabled: true
 })
 const blockForm = reactive({ kind: 'lock', identity_type: 'username', identity_value: '', rule_type: 'blacklist', cidr: '', description: '' })
+const throttleStatusText = computed(() => {
+  const parts = [
+    `普通限流 ${policies.login_throttle_per_minute} 次/分钟`,
+    policies.login_throttle_relaxed
+      ? `临时放宽中：${policies.login_throttle_relaxed_per_minute} 次/分钟`
+      : '未开启临时放宽',
+  ]
+  const whitelist = String(policies.login_throttle_whitelist_ips || '').trim()
+  if (whitelist) parts.push(`测试白名单：${whitelist}`)
+  return parts.join('；')
+})
 
 function severityType(value) {
   return value === 'high' ? 'danger' : value === 'medium' ? 'warning' : 'info'
@@ -203,5 +221,10 @@ async function deleteRule(row) {
 onMounted(() => {
   eventKeyword.value = route.query.keyword || ''
   loadAll()
+})
+
+watch(() => route.query.keyword, () => {
+  eventKeyword.value = route.query.keyword || ''
+  loadEvents()
 })
 </script>

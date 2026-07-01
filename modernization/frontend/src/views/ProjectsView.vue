@@ -1,16 +1,16 @@
 <template>
   <section class="page-stack">
     <div class="toolbar">
-      <el-segmented v-model="status" :options="statusOptions" />
+      <el-segmented v-model="status" :options="statusOptions" @change="reloadProjects" />
       <div class="toolbar-actions">
-        <el-input v-model="keyword" clearable placeholder="按项目、单位、账号搜索" @keyup.enter="reloadProjects" />
-        <el-select v-model="category" clearable placeholder="类别" @change="reloadProjects">
+        <el-input v-model="keyword" clearable placeholder="按项目、单位、账号搜索" @keyup.enter="reloadProjects" @clear="reloadProjects" />
+        <el-select v-model="category" clearable placeholder="类别" @change="reloadProjects" @clear="reloadProjects">
           <el-option v-for="item in projectCategoryOptions" :key="item.code" :label="item.label" :value="item.label" />
         </el-select>
-        <el-select v-model="projectType" clearable placeholder="类型" @change="reloadProjects">
+        <el-select v-model="projectType" clearable placeholder="类型" @change="reloadProjects" @clear="reloadProjects">
           <el-option v-for="item in projectTypeOptions" :key="item.code" :label="item.label" :value="item.label" />
         </el-select>
-        <el-select v-model="applicationBatchId" clearable placeholder="申报批次" @change="reloadProjects">
+        <el-select v-model="applicationBatchId" clearable placeholder="申报批次" @change="reloadProjects" @clear="reloadProjects">
           <el-option v-for="batch in openBatches" :key="batch.id" :label="batch.name" :value="batch.id" />
         </el-select>
         <el-switch v-if="session.can('manage_acceptance')" v-model="pendingExtensionOnly" active-text="待延期" @change="reloadProjects" />
@@ -410,13 +410,45 @@ function buildProjectQuery() {
   if (category.value) params.set('category', category.value)
   if (projectType.value) params.set('project_type', projectType.value)
   if (applicationBatchId.value) params.set('application_batch_id', applicationBatchId.value)
+  if (route.query.unit_id) params.set('unit_id', route.query.unit_id)
   if (pendingExtensionOnly.value) params.set('pending_extension', '1')
   if (pagination.current_page > 1) params.set('page', pagination.current_page)
   return params.toString() ? `?${params.toString()}` : ''
 }
 
 function applyRouteQuery() {
+  status.value = typeof route.query.status === 'string' ? route.query.status : ''
+  keyword.value = typeof route.query.keyword === 'string' ? route.query.keyword : ''
+  category.value = typeof route.query.category === 'string' ? route.query.category : ''
+  projectType.value = typeof route.query.project_type === 'string' ? route.query.project_type : ''
+  const batchId = route.query.application_batch_id || route.query.batch_id
+  applicationBatchId.value = batchId ? Number(batchId) : ''
   pendingExtensionOnly.value = route.query.pending_extension === '1'
+  pagination.current_page = route.query.page ? Number(route.query.page) || 1 : 1
+}
+
+async function syncRouteQuery() {
+  const query = { ...route.query }
+  const setOrDelete = (key, value) => {
+    if (value === '' || value === null || value === undefined || value === false) delete query[key]
+    else query[key] = String(value)
+  }
+
+  setOrDelete('status', status.value)
+  setOrDelete('keyword', keyword.value)
+  setOrDelete('category', category.value)
+  setOrDelete('project_type', projectType.value)
+  setOrDelete('application_batch_id', applicationBatchId.value)
+  setOrDelete('pending_extension', pendingExtensionOnly.value ? '1' : '')
+  setOrDelete('page', pagination.current_page > 1 ? pagination.current_page : '')
+  delete query.project_id
+
+  const current = JSON.stringify(route.query)
+  const next = JSON.stringify(query)
+  if (current === next) return false
+
+  await router.replace({ path: route.path, query })
+  return true
 }
 
 async function openRouteProject() {
@@ -425,14 +457,18 @@ async function openRouteProject() {
   }
 }
 
-function reloadProjects() {
+async function reloadProjects() {
   pagination.current_page = 1
-  loadProjects()
+  const routeChanged = await syncRouteQuery()
+  if (routeChanged) return
+  await loadProjects()
 }
 
-function changePage(page) {
+async function changePage(page) {
   pagination.current_page = page
-  loadProjects()
+  const routeChanged = await syncRouteQuery()
+  if (routeChanged) return
+  await loadProjects()
 }
 
 async function openCreate() {
@@ -676,11 +712,10 @@ function timelineDescription(item) {
   return parts.join(' / ') || (item.status === 'current' ? '当前待处理' : '待流转')
 }
 
-watch(status, reloadProjects)
-watch(() => route.query.pending_extension, () => {
+watch(() => route.query, () => {
   applyRouteQuery()
-  reloadProjects()
-})
+  loadProjects()
+}, { deep: true })
 watch(() => route.query.project_id, openRouteProject)
 onMounted(async () => {
   applyRouteQuery()

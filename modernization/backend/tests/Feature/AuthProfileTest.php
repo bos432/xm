@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\SecurityLock;
 use App\Support\RuntimeConfig;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -65,6 +66,26 @@ class AuthProfileTest extends TestCase
         ]);
     }
 
+    public function test_acceptance_reviewers_receive_acceptance_menu_entry(): void
+    {
+        User::factory()->create([
+            'username' => 'county-user',
+            'password' => Hash::make('secret-password'),
+            'role' => 'county',
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'username' => 'county-user',
+            'password' => 'secret-password',
+            ...$this->validCaptchaPayload(),
+        ]);
+
+        $response->assertOk();
+
+        $menus = collect($response->json('user.menus'));
+        $this->assertTrue($menus->contains(fn (array $menu) => $menu['path'] === '/acceptance?scope=pending'));
+    }
+
     public function test_login_route_is_rate_limited(): void
     {
         User::factory()->create([
@@ -86,7 +107,14 @@ class AuthProfileTest extends TestCase
             'password' => 'wrong-password',
             ...$this->validCaptchaPayload(),
         ])->assertTooManyRequests()
-            ->assertJsonPath('message', '登录过于频繁，请稍后再试');
+            ->assertJsonPath('message', '登录过于频繁，请稍后再试')
+            ->assertJsonStructure(['retry_after_seconds']);
+
+        $this->assertDatabaseHas('security_events', [
+            'type' => 'auth.throttled',
+            'username' => 'limited-user',
+            'ip_address' => '127.0.0.1',
+        ]);
     }
 
     public function test_login_throttle_can_be_relaxed_for_whitelisted_test_ip(): void
@@ -108,6 +136,31 @@ class AuthProfileTest extends TestCase
                 ...$this->validCaptchaPayload(),
             ])->assertUnprocessable();
         }
+    }
+
+    public function test_locked_login_response_includes_retry_after_seconds(): void
+    {
+        User::factory()->create([
+            'username' => 'locked-user',
+            'password' => Hash::make('secret-password'),
+            'role' => 'unit',
+        ]);
+        SecurityLock::create([
+            'identity_type' => 'username',
+            'identity_value' => 'locked-user',
+            'failed_count' => 5,
+            'reason' => 'invalid_password',
+            'is_active' => true,
+            'locked_until' => now()->addMinutes(5),
+        ]);
+
+        $this->postJson('/api/auth/login', [
+            'username' => 'locked-user',
+            'password' => 'secret-password',
+            ...$this->validCaptchaPayload(),
+        ])->assertStatus(423)
+            ->assertJsonPath('message', '登录失败次数过多，请稍后再试或联系管理员解锁')
+            ->assertJsonStructure(['retry_after_seconds']);
     }
 
     public function test_captcha_can_be_generated_for_login(): void

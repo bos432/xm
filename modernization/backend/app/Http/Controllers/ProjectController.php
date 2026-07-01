@@ -43,8 +43,12 @@ class ProjectController extends Controller
             $query->where('project_type', $projectType);
         }
 
-        if ($batchId = $request->query('application_batch_id')) {
+        if ($batchId = $request->query('application_batch_id', $request->query('batch_id'))) {
             $query->where('application_batch_id', $batchId);
+        }
+
+        if ($request->filled('unit_id') && in_array($request->user()->role, Role::adminRoles(), true)) {
+            $query->where('unit_id', $request->query('unit_id'));
         }
 
         if ($request->boolean('pending_extension')) {

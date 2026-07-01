@@ -6,8 +6,8 @@
         <span class="muted">单位提交验收材料，区县、部门、专家和管理员分阶段处理</span>
       </div>
       <div class="toolbar-actions">
-        <el-input v-model="keyword" clearable placeholder="项目/单位" @keyup.enter="loadAcceptances" />
-        <el-select v-model="status" clearable placeholder="状态" @change="loadAcceptances">
+        <el-input v-model="keyword" clearable placeholder="项目/单位" @keyup.enter="reloadAcceptances" @clear="reloadAcceptances" />
+        <el-select v-model="status" clearable placeholder="状态" @change="reloadAcceptances" @clear="reloadAcceptances">
           <el-option label="草稿" value="draft" />
           <el-option label="已提交" value="submitted" />
           <el-option label="审核中" value="reviewing" />
@@ -249,6 +249,7 @@ const submitForm = reactive({ summary: '' })
 const reviewForm = reactive({ decision: 'approve', score: null, comment: '' })
 const extensionForm = reactive({ reason: '', expected_date: '', extension_id: null, decision: 'approved', comment: '' })
 const uploadCategory = ref('acceptance_application')
+const projectId = ref('')
 const statusLabels = {
   draft: { label: '草稿', type: 'info' },
   submitted: { label: '已提交', type: 'warning' },
@@ -346,6 +347,7 @@ async function loadAcceptances() {
     const params = new URLSearchParams()
     if (keyword.value) params.set('keyword', keyword.value)
     if (status.value) params.set('status', status.value)
+    if (projectId.value) params.set('project_id', projectId.value)
     if (showScopeTabs.value && scope.value) params.set('scope', scope.value)
     const result = await api(`/acceptance${params.toString() ? `?${params.toString()}` : ''}`)
     acceptances.value = result.data || result
@@ -354,9 +356,42 @@ async function loadAcceptances() {
   }
 }
 
-async function handleScopeChange() {
-  await router.replace({ path: route.path, query: { ...route.query, scope: scope.value } })
+function applyRouteQuery() {
+  keyword.value = typeof route.query.keyword === 'string' ? route.query.keyword : ''
+  status.value = typeof route.query.status === 'string' ? route.query.status : ''
+  projectId.value = typeof route.query.project_id === 'string' ? route.query.project_id : ''
+  scope.value = typeof route.query.scope === 'string' ? route.query.scope : defaultScope()
+}
+
+async function syncRouteQuery() {
+  const query = { ...route.query }
+  const setOrDelete = (key, value) => {
+    if (value === '' || value === null || value === undefined) delete query[key]
+    else query[key] = String(value)
+  }
+
+  setOrDelete('keyword', keyword.value)
+  setOrDelete('status', status.value)
+  setOrDelete('project_id', projectId.value)
+  if (showScopeTabs.value) setOrDelete('scope', scope.value)
+  else delete query.scope
+
+  const current = JSON.stringify(route.query)
+  const next = JSON.stringify(query)
+  if (current === next) return false
+
+  await router.replace({ path: route.path, query })
+  return true
+}
+
+async function reloadAcceptances() {
+  const routeChanged = await syncRouteQuery()
+  if (routeChanged) return
   await loadAcceptances()
+}
+
+async function handleScopeChange() {
+  await reloadAcceptances()
 }
 
 async function createAcceptance() {
@@ -478,13 +513,13 @@ function timelineStepStatus(item) {
 }
 
 onMounted(() => {
-  scope.value = route.query.scope || defaultScope()
+  applyRouteQuery()
   loadAcceptances()
   searchProjects()
 })
 
-watch(() => route.query.scope, () => {
-  scope.value = route.query.scope || defaultScope()
+watch(() => route.query, () => {
+  applyRouteQuery()
   loadAcceptances()
-})
+}, { deep: true })
 </script>

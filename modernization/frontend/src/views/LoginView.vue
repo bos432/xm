@@ -28,7 +28,9 @@
           </div>
         </el-form-item>
         <el-alert v-if="error" :title="error" type="error" show-icon :closable="false" />
-        <el-button type="primary" native-type="submit" :loading="loading" class="full-button">登录</el-button>
+        <el-button type="primary" native-type="submit" :loading="loading" :disabled="retryAfter > 0" class="full-button">
+          {{ retryAfter > 0 ? `${retryAfter} 秒后可重试` : '登录' }}
+        </el-button>
       </el-form>
       <div class="auth-links">
         <RouterLink to="/register">单位注册</RouterLink>
