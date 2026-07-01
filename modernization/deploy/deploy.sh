@@ -67,10 +67,11 @@ git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$SOURCE_DIR"
 
 log "Building frontend"
 cd "$SOURCE_DIR/modernization/frontend"
-if ! "$NPM_BIN" ci --include=optional --no-audit --no-fund; then
+if ! "$NPM_BIN" ci --include=dev --include=optional --no-audit --no-fund; then
   log "WARNING: npm ci failed, falling back to npm install for platform optional dependencies"
-  "$NPM_BIN" install --include=optional --no-audit --no-fund
+  "$NPM_BIN" install --include=dev --include=optional --no-audit --no-fund
 fi
+[ -x "node_modules/.bin/vite" ] || fail "Frontend build dependency vite is missing; check npm dev dependency installation"
 log "Using frontend API base: $FRONTEND_API_BASE"
 VITE_API_BASE="$FRONTEND_API_BASE" "$NPM_BIN" run build
 
