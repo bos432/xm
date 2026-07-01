@@ -19,6 +19,16 @@
             show-icon
             :closable="false"
           />
+          <div class="asset-status-panel">
+            <div v-for="item in assetStatusItems" :key="item.key" class="asset-status-item">
+              <span>{{ item.label }}</span>
+              <el-tag :type="item.uploaded ? 'success' : 'warning'">{{ item.uploaded ? '已上传' : '未上传' }}</el-tag>
+            </div>
+            <div class="asset-status-item wide">
+              <span>公开首页当前批次</span>
+              <el-tag :type="currentBatchTagType">{{ currentBatchLabel }}</el-tag>
+            </div>
+          </div>
           <div class="asset-grid">
             <div class="asset-box">
               <strong>首页 Logo</strong>
@@ -252,10 +262,29 @@ const activeSection = ref('nav')
 const activeItemSection = ref('notice')
 const sections = ref([])
 const items = ref([])
+const publicHome = ref(null)
 const itemEditorVisible = ref(false)
 const assetVersion = ref(Date.now())
 const assetForms = reactive({ logo_alt: '', banner_alt: '' })
 const canManageHomeAssets = computed(() => session.can('manage_home_assets') || session.can('public_home.manage_assets'))
+const assetStatusItems = computed(() => [
+  { key: 'logo', label: 'Logo', uploaded: Boolean(assetFor('nav', 'logo')) },
+  { key: 'favicon', label: 'Favicon', uploaded: Boolean(assetFor('nav', 'favicon')) },
+  { key: 'banner', label: 'Banner', uploaded: Boolean(assetFor('hero', 'banner')) }
+])
+const currentPublicBatch = computed(() => publicHome.value?.current_batch || null)
+const currentBatchIsE2e = computed(() => isLikelyE2eBatch(currentPublicBatch.value))
+const currentBatchLabel = computed(() => {
+  if (!currentPublicBatch.value) return '未展示'
+  if (currentBatchIsE2e.value) return `测试批次：${currentPublicBatch.value.name || currentPublicBatch.value.code}`
+
+  return currentPublicBatch.value.name || currentPublicBatch.value.code || '已配置'
+})
+const currentBatchTagType = computed(() => {
+  if (!currentPublicBatch.value) return 'warning'
+
+  return currentBatchIsE2e.value ? 'danger' : 'success'
+})
 
 const itemTabs = [
   { name: 'notice', label: '通知公告' },
@@ -309,9 +338,13 @@ function itemsFor(section) {
 async function loadContent() {
   loading.value = true
   try {
-    const result = await api('/public-home')
+    const [result, homepage] = await Promise.all([
+      api('/public-home'),
+      api('/public/homepage')
+    ])
     sections.value = result.sections || []
     items.value = result.items || []
+    publicHome.value = homepage || null
     fillSectionForms()
   } finally {
     loading.value = false
@@ -375,6 +408,13 @@ function formatBytes(value) {
   if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(2)} MB`
   if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${bytes} B`
+}
+
+function isLikelyE2eBatch(batch) {
+  if (!batch) return false
+  const value = `${batch.name || ''} ${batch.code || ''}`.toUpperCase()
+
+  return value.includes('E2E-')
 }
 
 async function saveSection(key) {

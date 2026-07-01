@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Http\Requests\StorePublicHomeFileRequest;
+use App\Models\ApplicationBatch;
 use App\Models\PublicHomeItem;
 use App\Models\PublicHomeSection;
 use App\Models\User;
@@ -50,6 +51,42 @@ class PublicHomeManagementTest extends TestCase
         $this->assertSame(['第一', '第二'], collect($response->json('nav.links'))->pluck('label')->all());
         $this->assertSame(['较新公告', '较早公告'], collect($response->json('notices'))->pluck('title')->all());
         $this->assertSame('页脚', $response->json('footer'));
+    }
+
+    public function test_public_homepage_excludes_e2e_batches_from_current_batch(): void
+    {
+        PublicHomeSection::create(['key' => 'nav', 'title' => '门户']);
+
+        ApplicationBatch::create([
+            'name' => 'E2E 测试批次',
+            'code' => 'E2E-OPEN',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+            'metadata' => ['e2e' => true],
+        ]);
+        ApplicationBatch::create([
+            'name' => '早期测试批次',
+            'code' => 'E2E-LEGACY',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
+        $businessBatch = ApplicationBatch::create([
+            'name' => '正式业务批次',
+            'code' => 'BUSINESS-OPEN',
+            'starts_at' => now()->subDays(2),
+            'ends_at' => now()->addDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
+
+        $response = $this->getJson('/api/public/homepage')->assertOk();
+
+        $this->assertSame($businessBatch->id, $response->json('current_batch.id'));
+        $batchNames = collect($response->json('open_batches'))->pluck('name');
+        $this->assertTrue($batchNames->contains('正式业务批次'));
+        $this->assertFalse($batchNames->contains('E2E 测试批次'));
+        $this->assertFalse($batchNames->contains('早期测试批次'));
     }
 
     public function test_only_admin_can_manage_public_home_content(): void

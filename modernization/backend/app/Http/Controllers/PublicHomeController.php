@@ -196,7 +196,26 @@ class PublicHomeController extends Controller
                 $query->whereNull('ends_at')->orWhere('ends_at', '>=', now());
             })
             ->orderByDesc('starts_at')
-            ->get(['id', 'name', 'code', 'starts_at', 'ends_at', 'guide']);
+            ->get(['id', 'name', 'code', 'starts_at', 'ends_at', 'guide', 'metadata'])
+            ->reject(fn (ApplicationBatch $batch) => $this->isE2eBatch($batch))
+            ->map(fn (ApplicationBatch $batch) => [
+                'id' => $batch->id,
+                'name' => $batch->name,
+                'code' => $batch->code,
+                'starts_at' => $batch->starts_at,
+                'ends_at' => $batch->ends_at,
+                'guide' => $batch->guide,
+            ])
+            ->values();
+    }
+
+    private function isE2eBatch(ApplicationBatch $batch): bool
+    {
+        $metadata = is_array($batch->metadata) ? $batch->metadata : [];
+        $identity = strtoupper(trim($batch->code.' '.$batch->name));
+
+        return in_array($metadata['e2e'] ?? false, [true, 1, '1', 'true'], true)
+            || str_contains($identity, 'E2E-');
     }
 
     private function hasAllowedDownloadFile(PublicHomeItem $item): bool

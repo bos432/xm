@@ -115,6 +115,7 @@ test('super admin can inspect homepage assets and security center', async ({ pag
   await expect(page.getByText('首页 Logo')).toBeVisible()
   await expect(page.getByText('站点图标 Favicon')).toBeVisible()
   await expect(page.getByText('首页 Banner')).toBeVisible()
+  await expect(page.getByText('公开首页当前批次')).toBeVisible()
   await saveScreenshot(page, 'super-admin-home-assets')
 
   await page.goto('/security')
