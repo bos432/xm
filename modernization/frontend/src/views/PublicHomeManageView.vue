@@ -14,7 +14,7 @@
         <el-tab-pane label="品牌素材" name="brand">
           <el-alert
             v-if="!session.can('manage_home_assets')"
-            title="只有超级管理员可以上传或删除首页 logo、banner。"
+            title="只有超级管理员可以上传或删除首页 logo、banner 和站点图标。"
             type="info"
             show-icon
             :closable="false"
@@ -30,6 +30,18 @@
                   <el-button :icon="Upload" :disabled="!session.can('manage_home_assets')">替换 Logo</el-button>
                 </el-upload>
                 <el-button :icon="Delete" type="danger" :disabled="!assetFor('nav', 'logo') || !session.can('manage_home_assets')" @click="deleteAsset('nav', 'logo')">删除</el-button>
+              </div>
+            </div>
+            <div class="asset-box">
+              <strong>站点图标 Favicon</strong>
+              <img v-if="assetFor('nav', 'favicon')" class="favicon-preview" :src="`/api/public/homepage/assets/nav/favicon?t=${assetVersion}`" alt="站点图标" />
+              <span v-else class="muted">未上传，浏览器使用默认图标</span>
+              <span class="muted">建议上传 ico、png 或 svg，大小不超过 512KB。</span>
+              <div class="table-action-row">
+                <el-upload :show-file-list="false" :disabled="!session.can('manage_home_assets')" :http-request="(options) => uploadAsset('nav', 'favicon', options)">
+                  <el-button :icon="Upload" :disabled="!session.can('manage_home_assets')">替换图标</el-button>
+                </el-upload>
+                <el-button :icon="Delete" type="danger" :disabled="!assetFor('nav', 'favicon') || !session.can('manage_home_assets')" @click="deleteAsset('nav', 'favicon')">删除</el-button>
               </div>
             </div>
             <div class="asset-box">
@@ -434,7 +446,7 @@ async function uploadAsset(sectionKey, type, options) {
   const data = new FormData()
   data.append('type', type)
   data.append('file', options.file)
-  data.append('alt', type === 'logo' ? assetForms.logo_alt : assetForms.banner_alt)
+  data.append('alt', assetAlt(type))
   try {
     await api(`/public-home/sections/${sectionKey}/asset`, { method: 'POST', body: data })
     ElMessage.success('品牌素材已上传')
@@ -445,6 +457,13 @@ async function uploadAsset(sectionKey, type, options) {
     options.onError?.(error)
     ElMessage.error(error.message || '素材上传失败')
   }
+}
+
+function assetAlt(type) {
+  if (type === 'logo') return assetForms.logo_alt
+  if (type === 'banner') return assetForms.banner_alt
+
+  return sectionForms.nav.title || '站点图标'
 }
 
 async function deleteAsset(sectionKey, type) {

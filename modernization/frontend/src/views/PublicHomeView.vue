@@ -182,6 +182,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import { api } from '../api.js'
+import { setFavicon } from '../favicon.js'
 import { useSessionStore } from '../store.js'
 import { useTextStore } from '../texts.js'
 
@@ -215,7 +216,7 @@ const hasHomeContent = computed(() => Boolean(
 function emptyHomeContent() {
   return {
     nav: { title: '', links: [] },
-    brand: { logo_url: null, logo_alt: '系统标识' },
+    brand: { logo_url: null, logo_alt: '系统标识', favicon_url: null },
     hero: {
       eyebrow: '',
       title: '',
@@ -248,7 +249,8 @@ function normalizeHomeContent(payload) {
     },
     brand: {
       logo_url: payload.brand?.logo_url || null,
-      logo_alt: payload.brand?.logo_alt || '系统标识'
+      logo_alt: payload.brand?.logo_alt || '系统标识',
+      favicon_url: payload.brand?.favicon_url || null
     },
     hero: {
       eyebrow: payload.hero?.eyebrow || '',
@@ -294,6 +296,7 @@ async function loadHomeContent() {
     const response = await fetch('/api/public/homepage', { headers: { Accept: 'application/json' } })
     if (!response.ok) throw new Error('load_failed')
     home.value = normalizeHomeContent(await response.json())
+    setFavicon(home.value.brand.favicon_url)
     selectedNotice.value = home.value.notices[0] || null
     selectedDownload.value = home.value.downloads[0] || null
   } catch {

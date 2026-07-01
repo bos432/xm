@@ -128,6 +128,36 @@ class PublicHomeManagementTest extends TestCase
         Storage::disk('local')->assertExists($item->file_path);
     }
 
+    public function test_super_admin_can_manage_public_home_favicon_asset(): void
+    {
+        Storage::fake('local');
+        $admin = User::factory()->create(['role' => 'super_admin']);
+        Sanctum::actingAs($admin);
+        $section = PublicHomeSection::create(['key' => 'nav', 'title' => '门户']);
+
+        $this->postJson("/api/public-home/sections/{$section->key}/asset", [
+            'type' => 'favicon',
+            'file' => UploadedFile::fake()->image('favicon.png', 64, 64),
+        ])->assertOk()
+            ->assertJsonPath('metadata.assets.favicon.extension', 'png');
+
+        $section->refresh();
+        Storage::disk('local')->assertExists($section->metadata['assets']['favicon']['path']);
+
+        $homepage = $this->getJson('/api/public/homepage')->assertOk();
+        $faviconUrl = $homepage->json('brand.favicon_url');
+        $this->assertIsString($faviconUrl);
+        $this->assertStringStartsWith('/api/public/homepage/assets/nav/favicon', $faviconUrl);
+        $this->get($faviconUrl)->assertOk();
+
+        $this->deleteJson("/api/public-home/sections/{$section->key}/asset/favicon")
+            ->assertOk()
+            ->assertJsonMissingPath('metadata.assets.favicon');
+
+        Storage::disk('local')->assertMissing($section->metadata['assets']['favicon']['path']);
+        $this->getJson('/api/public/homepage')->assertOk()->assertJsonPath('brand.favicon_url', null);
+    }
+
     public function test_public_download_requires_enabled_item_and_existing_file(): void
     {
         Storage::fake('local');

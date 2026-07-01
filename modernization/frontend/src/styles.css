@@ -162,6 +162,11 @@ body { margin: 0; }
   border: 1px solid var(--border);
   border-radius: 4px;
 }
+.asset-box img.favicon-preview {
+  width: 72px;
+  height: 72px;
+  padding: 12px;
+}
 .permission-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

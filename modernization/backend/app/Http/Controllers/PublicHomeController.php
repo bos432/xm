@@ -31,7 +31,7 @@ class PublicHomeController extends Controller
 
     public function asset(string $section, string $type)
     {
-        if (! in_array($section, ['nav', 'hero'], true) || ! in_array($type, ['logo', 'banner'], true)) {
+        if (! in_array($section, ['nav', 'hero'], true) || ! in_array($type, ['logo', 'banner', 'favicon'], true)) {
             abort(404);
         }
 
@@ -91,11 +91,15 @@ class PublicHomeController extends Controller
     private function brandPayload(Collection $sections): array
     {
         $nav = $sections->get('nav');
-        $asset = $nav ? $this->assetMetadata($nav, 'logo') : null;
+        $logo = $nav ? $this->assetMetadata($nav, 'logo') : null;
+        $favicon = $nav ? $this->assetMetadata($nav, 'favicon') : null;
 
         return [
-            'logo_url' => $asset && $this->hasAllowedAssetFile($asset, 'logo') ? '/api/public/homepage/assets/nav/logo' : null,
-            'logo_alt' => $asset['alt'] ?? ($nav?->title ?: '系统标识'),
+            'logo_url' => $logo && $this->hasAllowedAssetFile($logo, 'logo') ? '/api/public/homepage/assets/nav/logo' : null,
+            'logo_alt' => $logo['alt'] ?? ($nav?->title ?: '系统标识'),
+            'favicon_url' => $favicon && $this->hasAllowedAssetFile($favicon, 'favicon')
+                ? '/api/public/homepage/assets/nav/favicon?v='.substr((string) ($favicon['sha256'] ?? ''), 0, 12)
+                : null,
         ];
     }
 
@@ -246,7 +250,7 @@ class PublicHomeController extends Controller
 
         if (! is_string($raw) || $raw === '') {
             return [
-                'brand' => ['logo_url' => null, 'logo_alt' => '系统标识'],
+                'brand' => ['logo_url' => null, 'logo_alt' => '系统标识', 'favicon_url' => null],
                 'nav' => ['title' => '', 'links' => []],
                 'hero' => [
                     'eyebrow' => '',

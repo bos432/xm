@@ -18,12 +18,16 @@ class StorePublicHomeAssetRequest extends FormRequest
     public function rules(): array
     {
         $type = (string) $this->input('type', 'logo');
-        $maxKb = $type === 'banner' ? 8192 : 2048;
-        $extensions = ['jpg', 'jpeg', 'png', 'webp', 'svg'];
+        $maxKb = match ($type) {
+            'banner' => 8192,
+            'favicon' => 512,
+            default => 2048,
+        };
+        $extensions = $type === 'favicon' ? ['ico', 'jpg', 'jpeg', 'png', 'webp', 'svg'] : ['jpg', 'jpeg', 'png', 'webp', 'svg'];
         $blockedExtensions = $this->extensionList(RuntimeConfig::value('upload.blocked_extensions', config('modernization.upload_blocked_extensions')));
 
         return [
-            'type' => ['required', 'in:logo,banner'],
+            'type' => ['required', 'in:logo,banner,favicon'],
             'alt' => ['nullable', 'string', 'max:160'],
             'file' => [
                 'required',

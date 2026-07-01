@@ -128,7 +128,7 @@ class PublicHomeAdminController extends Controller
         $this->authorizeAssetManage($request);
 
         $type = $request->string('type')->toString();
-        if (($type === 'logo' && $section->key !== 'nav') || ($type === 'banner' && $section->key !== 'hero')) {
+        if (($type === 'banner' && $section->key !== 'hero') || (in_array($type, ['logo', 'favicon'], true) && $section->key !== 'nav')) {
             abort(422, '素材类型与首页区域不匹配');
         }
 
@@ -180,7 +180,7 @@ class PublicHomeAdminController extends Controller
     {
         $this->authorizeAssetManage($request);
 
-        if (! in_array($type, ['logo', 'banner'], true)) {
+        if (! in_array($type, ['logo', 'banner', 'favicon'], true)) {
             abort(404);
         }
 
