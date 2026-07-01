@@ -224,6 +224,46 @@ class PublicHomeManagementTest extends TestCase
         $this->getJson('/api/public/homepage')->assertOk()->assertJsonPath('brand.favicon_url', null);
     }
 
+    public function test_public_home_notice_rich_text_image_upload_and_sanitization(): void
+    {
+        Storage::fake('local');
+        PublicHomeSection::create(['key' => 'nav', 'title' => '门户']);
+        $admin = User::factory()->create(['role' => 'admin']);
+        Sanctum::actingAs($admin);
+
+        $upload = $this->postJson('/api/public-home/rich-text-image', [
+            'file' => UploadedFile::fake()->image('notice.png', 320, 180),
+        ])->assertOk()
+            ->assertJsonPath('original_name', 'notice.png')
+            ->json();
+
+        $this->assertStringStartsWith('/api/public/homepage/rich-text-images/', $upload['url']);
+        Storage::disk('local')->assertExists($upload['path']);
+        $this->get($upload['url'])->assertOk();
+
+        $item = $this->postJson('/api/public-home/items', [
+            'section' => 'notice',
+            'title' => '图文公告',
+            'summary' => '摘要',
+            'body' => '<h2>正文</h2><script>alert(1)</script><p onclick="alert(1)">内容</p><img src="'.$upload['url'].'" onerror="alert(1)"><a href="javascript:alert(1)">危险链接</a>',
+            'sort_order' => 10,
+            'is_active' => true,
+        ])->assertCreated()
+            ->json();
+
+        $this->assertStringContainsString('<h2>正文</h2>', $item['body']);
+        $this->assertStringContainsString('<img src="'.$upload['url'].'">', $item['body']);
+        $this->assertStringNotContainsString('<script', $item['body']);
+        $this->assertStringNotContainsString('onclick', $item['body']);
+        $this->assertStringNotContainsString('onerror', $item['body']);
+        $this->assertStringNotContainsString('javascript:', $item['body']);
+
+        $homepage = $this->getJson('/api/public/homepage')->assertOk();
+        $body = $homepage->json('notices.0.body');
+        $this->assertStringContainsString($upload['url'], $body);
+        $this->assertStringNotContainsString('alert(1)', $body);
+    }
+
     public function test_public_download_requires_enabled_item_and_existing_file(): void
     {
         Storage::fake('local');

@@ -6,6 +6,7 @@ use App\Models\PublicHomeItem;
 use App\Models\PublicHomeSection;
 use App\Models\SystemSetting;
 use App\Models\ApplicationBatch;
+use App\Support\RichTextSanitizer;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
@@ -50,6 +51,22 @@ class PublicHomeController extends Controller
         }
 
         return Storage::disk($asset['disk'])->response($asset['path'], $asset['original_name'] ?? $type);
+    }
+
+    public function richTextImage(string $filename)
+    {
+        if (! preg_match('/^[a-f0-9-]+\.(jpe?g|png|webp|gif)$/i', $filename)) {
+            abort(404);
+        }
+
+        $path = 'public-home/rich-text-images/'.$filename;
+        if (! Storage::disk(config('filesystems.default'))->exists($path)) {
+            abort(404, '图片不存在');
+        }
+
+        return Storage::disk(config('filesystems.default'))->response($path, $filename, [
+            'Cache-Control' => 'public, max-age=31536000',
+        ]);
     }
 
     private function homepageContent(): array
@@ -158,7 +175,7 @@ class PublicHomeController extends Controller
             'title' => $item->title ?? '',
             'date' => $item->published_at?->toDateString(),
             'summary' => $item->summary ?? '',
-            'body' => $item->body ?? '',
+            'body' => RichTextSanitizer::clean($item->body) ?? '',
             'href' => $item->href,
         ])->values()->all();
     }

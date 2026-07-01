@@ -116,7 +116,8 @@
           </div>
           <template v-if="selectedNotice">
             <b>{{ selectedNotice.title }}</b>
-            <p>{{ selectedNotice.summary || selectedNotice.body }}</p>
+            <div v-if="selectedNotice.body" class="rich-content gov-notice-body" v-html="selectedNotice.body" />
+            <p v-else>{{ selectedNotice.summary }}</p>
             <a v-if="selectedNotice.href" :href="selectedNotice.href">查看详情</a>
           </template>
           <template v-else>

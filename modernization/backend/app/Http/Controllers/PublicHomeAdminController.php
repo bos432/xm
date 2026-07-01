@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StorePublicHomeFileRequest;
 use App\Http\Requests\StorePublicHomeAssetRequest;
+use App\Http\Requests\StorePublicHomeRichTextImageRequest;
 use App\Models\PublicHomeItem;
 use App\Models\PublicHomeSection;
 use App\Support\AuditLogger;
+use App\Support\RichTextSanitizer;
 use App\Support\Role;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -177,6 +179,31 @@ class PublicHomeAdminController extends Controller
         return response()->json($section->refresh());
     }
 
+    public function uploadRichTextImage(StorePublicHomeRichTextImageRequest $request)
+    {
+        $this->authorizeManage($request);
+
+        $uploaded = $request->file('file');
+        $extension = strtolower($uploaded->getClientOriginalExtension());
+        $filename = (string) Str::uuid().'.'.$extension;
+        $path = $uploaded->storeAs('public-home/rich-text-images', $filename);
+
+        $this->auditLogger->record($request, 'public_home.rich_text_image_uploaded', null, [
+            'filename' => $filename,
+            'extension' => $extension,
+            'size_bytes' => $uploaded->getSize(),
+        ]);
+
+        return response()->json([
+            'url' => '/api/public/homepage/rich-text-images/'.$filename,
+            'original_name' => $this->safeOriginalName($uploaded),
+            'mime_type' => $uploaded->getMimeType(),
+            'size_bytes' => $uploaded->getSize(),
+            'sha256' => hash_file('sha256', $uploaded->getRealPath()),
+            'path' => $path,
+        ]);
+    }
+
     public function deleteAsset(Request $request, PublicHomeSection $section, string $type)
     {
         $this->authorizeAssetManage($request);
@@ -211,7 +238,7 @@ class PublicHomeAdminController extends Controller
 
     private function validateItem(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'section' => ['required', 'string', Rule::in(PublicHomeItem::SECTIONS)],
             'title' => ['nullable', 'string', 'max:255'],
             'label' => ['nullable', 'string', 'max:200'],
@@ -225,6 +252,10 @@ class PublicHomeAdminController extends Controller
             'is_active' => ['required', 'boolean'],
             'metadata' => ['nullable', 'array'],
         ]);
+
+        $data['body'] = RichTextSanitizer::clean($data['body'] ?? null);
+
+        return $data;
     }
 
     private function authorizeManage(Request $request): void

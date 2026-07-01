@@ -37,6 +37,7 @@ Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])-
 Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1');
 Route::get('/public/homepage', [PublicHomeController::class, 'index']);
 Route::get('/public/homepage/downloads/{item}', [PublicHomeController::class, 'download']);
+Route::get('/public/homepage/rich-text-images/{filename}', [PublicHomeController::class, 'richTextImage']);
 Route::get('/public/homepage/assets/{section}/{type}', [PublicHomeController::class, 'asset']);
 Route::get('/public/application-batches/open', [ApplicationBatchController::class, 'openBatches']);
 Route::get('/public/system-texts', [SystemTextController::class, 'publicIndex']);
@@ -124,6 +125,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/public-home/items/{item}', [PublicHomeAdminController::class, 'updateItem']);
     Route::delete('/public-home/items/{item}', [PublicHomeAdminController::class, 'destroyItem']);
     Route::post('/public-home/items/{item}/file', [PublicHomeAdminController::class, 'uploadFile']);
+    Route::post('/public-home/rich-text-image', [PublicHomeAdminController::class, 'uploadRichTextImage']);
 
     Route::get('/messages', [MessageController::class, 'index']);
     Route::post('/messages/read-all', [MessageController::class, 'markAllRead']);

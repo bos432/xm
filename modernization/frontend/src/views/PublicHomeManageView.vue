@@ -183,7 +183,7 @@
       </el-tabs>
     </el-card>
 
-    <el-dialog v-model="itemEditorVisible" :title="itemForm.id ? '编辑首页内容' : '新增首页内容'" width="680px">
+    <el-dialog v-model="itemEditorVisible" :title="itemForm.id ? '编辑首页内容' : '新增首页内容'" width="880px">
       <el-form :model="itemForm" label-position="top" class="home-manager-grid">
         <el-form-item label="类型">
           <el-select v-model="itemForm.section" disabled>
@@ -232,7 +232,7 @@
             <el-input v-model="itemForm.summary" type="textarea" :rows="3" />
           </el-form-item>
           <el-form-item v-if="itemForm.section === 'notice'" label="详情" class="wide-field">
-            <el-input v-model="itemForm.body" type="textarea" :rows="6" />
+            <RichTextEditor v-model="itemForm.body" />
           </el-form-item>
           <el-form-item v-if="itemForm.section === 'notice'" label="外部链接">
             <el-input v-model="itemForm.href" />
@@ -252,6 +252,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Edit, Plus, Refresh, Upload } from '@element-plus/icons-vue'
 import { api } from '../api.js'
+import RichTextEditor from '../components/RichTextEditor.vue'
 import { useSessionStore } from '../store.js'
 
 const session = useSessionStore()
