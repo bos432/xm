@@ -8,6 +8,7 @@ PHP_BIN="${PHP_BIN:-/www/server/php/83/bin/php}"
 COMPOSER_BIN="${COMPOSER_BIN:-$APP_ROOT/shared/composer.phar}"
 NODE_BIN="${NODE_BIN:-node}"
 NPM_BIN="${NPM_BIN:-npm}"
+FRONTEND_API_BASE="${FRONTEND_API_BASE:-/api}"
 WEB_USER="${WEB_USER:-www:www}"
 RUN_SEED="${RUN_SEED:-0}"
 SKIP_LOGIN_HEALTH="${SKIP_LOGIN_HEALTH:-0}"
@@ -70,7 +71,8 @@ if ! "$NPM_BIN" ci --include=optional --no-audit --no-fund; then
   log "WARNING: npm ci failed, falling back to npm install for platform optional dependencies"
   "$NPM_BIN" install --include=optional --no-audit --no-fund
 fi
-"$NPM_BIN" run build
+log "Using frontend API base: $FRONTEND_API_BASE"
+VITE_API_BASE="$FRONTEND_API_BASE" "$NPM_BIN" run build
 
 log "Preparing release directories"
 cp -a "$SOURCE_DIR/modernization/backend" "$BACKEND_DIR"
