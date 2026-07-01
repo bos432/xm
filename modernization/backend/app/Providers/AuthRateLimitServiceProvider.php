@@ -8,6 +8,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Carbon;
 
 class AuthRateLimitServiceProvider extends ServiceProvider
 {
@@ -39,7 +40,11 @@ class AuthRateLimitServiceProvider extends ServiceProvider
                 ->filter()
                 ->all();
 
-            if (RuntimeConfig::boolValue('security.login_throttle_relaxed', false) || in_array($ip, $whitelist, true)) {
+            $relaxedUntil = RuntimeConfig::value('security.login_throttle_relaxed_until');
+            $relaxedActive = RuntimeConfig::boolValue('security.login_throttle_relaxed', false)
+                && $this->relaxedUntilIsActive($relaxedUntil);
+
+            if ($relaxedActive || in_array($ip, $whitelist, true)) {
                 return Limit::perMinute(max(1, RuntimeConfig::intValue('security.login_throttle_relaxed_per_minute', 60)))
                     ->by($ip.'|'.(string) $request->input('username', ''))
                     ->response($respond);
@@ -49,5 +54,18 @@ class AuthRateLimitServiceProvider extends ServiceProvider
                 ->by($ip.'|'.(string) $request->input('username', ''))
                 ->response($respond);
         });
+    }
+
+    private function relaxedUntilIsActive(?string $value): bool
+    {
+        if (! filled($value)) {
+            return true;
+        }
+
+        try {
+            return Carbon::parse($value)->isFuture();
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }

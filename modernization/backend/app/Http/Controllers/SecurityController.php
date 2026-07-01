@@ -8,6 +8,7 @@ use App\Models\SecurityLock;
 use App\Support\AuditLogger;
 use App\Support\Role;
 use App\Support\RuntimeConfig;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class SecurityController extends Controller
@@ -113,15 +114,23 @@ class SecurityController extends Controller
     {
         $this->authorizeManage($request);
 
+        $relaxedUntil = RuntimeConfig::value('security.login_throttle_relaxed_until');
+        $relaxedConfigured = RuntimeConfig::boolValue('security.login_throttle_relaxed', false);
+        $relaxedActive = $relaxedConfigured && $this->relaxedUntilIsActive($relaxedUntil);
+
         return response()->json([
             'login_failure_threshold' => RuntimeConfig::intValue('security.login_failure_threshold', 5),
             'lock_minutes' => RuntimeConfig::intValue('security.lock_minutes', 30),
             'ip_whitelist_enabled' => RuntimeConfig::boolValue('security.ip_whitelist_enabled', false),
             'ip_blacklist_enabled' => RuntimeConfig::boolValue('security.ip_blacklist_enabled', true),
             'login_throttle_per_minute' => RuntimeConfig::intValue('security.login_throttle_per_minute', 5),
-            'login_throttle_relaxed' => RuntimeConfig::boolValue('security.login_throttle_relaxed', false),
+            'login_throttle_relaxed' => $relaxedConfigured,
+            'login_throttle_relaxed_active' => $relaxedActive,
             'login_throttle_relaxed_per_minute' => RuntimeConfig::intValue('security.login_throttle_relaxed_per_minute', 60),
             'login_throttle_whitelist_ips' => RuntimeConfig::value('security.login_throttle_whitelist_ips', '') ?? '',
+            'login_throttle_relaxed_until' => $relaxedUntil,
+            'login_throttle_relaxed_by' => RuntimeConfig::value('security.login_throttle_relaxed_by', '') ?? '',
+            'login_throttle_relaxed_reason' => RuntimeConfig::value('security.login_throttle_relaxed_reason', '') ?? '',
         ]);
     }
 
@@ -138,6 +147,8 @@ class SecurityController extends Controller
             'login_throttle_relaxed' => ['required', 'boolean'],
             'login_throttle_relaxed_per_minute' => ['required', 'integer', 'min:1', 'max:1000'],
             'login_throttle_whitelist_ips' => ['nullable', 'string', 'max:2000'],
+            'login_throttle_relaxed_until' => ['nullable', 'date'],
+            'login_throttle_relaxed_reason' => ['nullable', 'string', 'max:500'],
         ]);
 
         RuntimeConfig::set('security.login_failure_threshold', (string) $data['login_failure_threshold'], 'security', false, '登录失败锁定阈值');
@@ -148,7 +159,26 @@ class SecurityController extends Controller
         RuntimeConfig::set('security.login_throttle_relaxed', $data['login_throttle_relaxed'] ? '1' : '0', 'security', false, '是否临时放宽登录限流');
         RuntimeConfig::set('security.login_throttle_relaxed_per_minute', (string) $data['login_throttle_relaxed_per_minute'], 'security', false, '临时放宽后的每分钟限制');
         RuntimeConfig::set('security.login_throttle_whitelist_ips', $data['login_throttle_whitelist_ips'] ?? '', 'security', false, '登录限流测试白名单 IP');
-        $this->auditLogger->record($request, 'security.policies_updated', null);
+        RuntimeConfig::set('security.login_throttle_relaxed_until', $data['login_throttle_relaxed_until'] ?? '', 'security', false, '登录限流临时放宽截止时间');
+        RuntimeConfig::set('security.login_throttle_relaxed_by', $data['login_throttle_relaxed'] ? $request->user()->username : '', 'security', false, '登录限流临时放宽操作人');
+        RuntimeConfig::set('security.login_throttle_relaxed_reason', $data['login_throttle_relaxed_reason'] ?? '', 'security', false, '登录限流临时放宽原因');
+        $this->auditLogger->record($request, 'security.policies_updated', null, [
+            'login_throttle_relaxed' => $data['login_throttle_relaxed'],
+            'login_throttle_relaxed_until' => $data['login_throttle_relaxed_until'] ?? null,
+        ]);
+
+        SecurityEvent::create([
+            'type' => $data['login_throttle_relaxed'] ? 'security.login_throttle_relaxed_enabled' : 'security.login_throttle_relaxed_disabled',
+            'severity' => $data['login_throttle_relaxed'] ? 'medium' : 'info',
+            'user_id' => $request->user()->id,
+            'username' => $request->user()->username,
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 500),
+            'payload' => [
+                'until' => $data['login_throttle_relaxed_until'] ?? null,
+                'reason' => $data['login_throttle_relaxed_reason'] ?? null,
+            ],
+        ]);
 
         return $this->policies($request);
     }
@@ -167,6 +197,19 @@ class SecurityController extends Controller
     {
         if (! Role::userCan($request->user(), 'manage_security')) {
             abort(403, '无权访问安全中心');
+        }
+    }
+
+    private function relaxedUntilIsActive(?string $value): bool
+    {
+        if (! filled($value)) {
+            return true;
+        }
+
+        try {
+            return Carbon::parse($value)->isFuture();
+        } catch (\Throwable) {
+            return false;
         }
     }
 }

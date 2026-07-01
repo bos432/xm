@@ -165,6 +165,14 @@
 
     <el-card v-if="summary?.security" shadow="never">
       <template #header>安全概览</template>
+      <el-alert
+        v-if="summary.security.login_throttle_relaxed?.active"
+        class="mb-12"
+        type="warning"
+        show-icon
+        :closable="false"
+        :title="`登录限流临时放宽中：${summary.security.login_throttle_relaxed.per_minute} 次/分钟${summary.security.login_throttle_relaxed.until ? `，截止 ${summary.security.login_throttle_relaxed.until}` : ''}`"
+      />
       <div class="metric-grid compact-grid security-grid">
         <div>
           <span>24 小时安全事件</span>

@@ -41,6 +41,19 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        User::firstOrCreate(
+            ['username' => 'health_check_user'],
+            [
+                'unit_id' => $adminUnit->id,
+                'name' => '部署健康检查账号',
+                'email' => 'health_check@example.test',
+                'password' => Hash::make('HealthCheck-2026'),
+                'role' => Role::UNIT,
+                'is_active' => true,
+                'metadata' => ['health_check' => true],
+            ]
+        );
+
         User::query()->where('role', 'admin')->update(['role' => Role::SUPER_ADMIN]);
 
         $settings = [
@@ -65,6 +78,13 @@ class DatabaseSeeder extends Seeder
             ['key' => 'security.lock_minutes', 'value' => '30', 'group' => 'security', 'is_secret' => false, 'description' => '达到阈值后的锁定分钟数'],
             ['key' => 'security.ip_whitelist_enabled', 'value' => '0', 'group' => 'security', 'is_secret' => false, 'description' => '是否启用 IP 白名单'],
             ['key' => 'security.ip_blacklist_enabled', 'value' => '1', 'group' => 'security', 'is_secret' => false, 'description' => '是否启用 IP 黑名单'],
+            ['key' => 'security.login_throttle_per_minute', 'value' => '5', 'group' => 'security', 'is_secret' => false, 'description' => '登录接口每分钟限制'],
+            ['key' => 'security.login_throttle_relaxed', 'value' => '0', 'group' => 'security', 'is_secret' => false, 'description' => '是否临时放宽登录限流'],
+            ['key' => 'security.login_throttle_relaxed_per_minute', 'value' => '60', 'group' => 'security', 'is_secret' => false, 'description' => '临时放宽后的每分钟限制'],
+            ['key' => 'security.login_throttle_whitelist_ips', 'value' => '', 'group' => 'security', 'is_secret' => false, 'description' => '登录限流测试白名单 IP'],
+            ['key' => 'security.login_throttle_relaxed_until', 'value' => '', 'group' => 'security', 'is_secret' => false, 'description' => '登录限流临时放宽截止时间'],
+            ['key' => 'security.login_throttle_relaxed_by', 'value' => '', 'group' => 'security', 'is_secret' => false, 'description' => '登录限流临时放宽操作人'],
+            ['key' => 'security.login_throttle_relaxed_reason', 'value' => '', 'group' => 'security', 'is_secret' => false, 'description' => '登录限流临时放宽原因'],
             ['key' => 'workflow.default_first_stage', 'value' => 'county', 'group' => 'workflow', 'is_secret' => false, 'description' => '项目提交后的第一审核角色'],
         ];
 

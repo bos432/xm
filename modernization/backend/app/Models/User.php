@@ -22,6 +22,7 @@ class User extends Authenticatable
         'is_active',
         'last_login_at',
         'last_login_ip',
+        'metadata',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -32,6 +33,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',
+            'metadata' => 'array',
         ];
     }
 

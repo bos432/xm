@@ -22,9 +22,9 @@
     </div>
 
     <el-tabs v-if="showScopeTabs" v-model="scope" @tab-change="handleScopeChange">
-      <el-tab-pane label="待处理" name="pending" />
-      <el-tab-pane label="已处理" name="reviewed" />
-      <el-tab-pane label="全部可见" name="visible" />
+      <el-tab-pane :label="texts.t('acceptance.tab.pending', '待处理')" name="pending" />
+      <el-tab-pane :label="texts.t('acceptance.tab.reviewed', '已处理')" name="reviewed" />
+      <el-tab-pane :label="texts.t('acceptance.tab.visible', '全部可见')" name="visible" />
     </el-tabs>
 
     <el-table :data="acceptances" border v-loading="loading">
@@ -81,6 +81,14 @@
 
     <el-dialog v-model="submitVisible" title="提交验收" width="560px">
       <el-form :model="submitForm" label-position="top">
+        <el-alert
+          v-if="submitRequiredMaterialLabels.length"
+          class="mb-12"
+          type="warning"
+          show-icon
+          :closable="false"
+          :title="`提交前需上传：${submitRequiredMaterialLabels.join('、')}`"
+        />
         <el-form-item label="验收说明"><el-input v-model="submitForm.summary" type="textarea" :rows="5" /></el-form-item>
       </el-form>
       <template #footer>
@@ -223,10 +231,12 @@ import { Plus, Refresh, Upload, View } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api.js'
 import { useSessionStore } from '../store.js'
+import { useTextStore } from '../texts.js'
 
 const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
+const texts = useTextStore()
 const loading = ref(false)
 const saving = ref(false)
 const projectOptionsLoading = ref(false)
@@ -270,6 +280,7 @@ const materialCategories = [
 const materialCategoryMap = Object.fromEntries(materialCategories.map((item) => [item.value, item.label]))
 const showScopeTabs = computed(() => session.can('review_acceptance') || session.can('manage_acceptance'))
 const selectedTimelineItem = computed(() => detail.value?.timeline?.find((item) => item.key === selectedTimelineKey.value) || detail.value?.timeline?.[0] || null)
+const submitRequiredMaterialLabels = computed(() => currentAcceptance.value?.project?.application_batch?.metadata?.acceptance_required_materials?.map((item) => materialCategoryLabel(item)).filter(Boolean) || [])
 const requiredMaterialLabels = computed(() => {
   const required = detail.value?.project?.application_batch?.metadata?.acceptance_required_materials || []
   return required.map((item) => materialCategoryLabel(item)).filter(Boolean)

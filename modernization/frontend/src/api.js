@@ -21,7 +21,9 @@ export async function api(path, options = {}) {
   const response = await fetch(`${API_BASE}${path}`, { ...options, headers })
   if (!response.ok) {
     if (response.status === 401) expireSession()
-    const error = await response.json().catch(() => ({ message: '请求失败' }))
+    const error = await response.json().catch(() => ({
+      message: response.status >= 500 ? '系统繁忙，请稍后再试或联系管理员' : '请求失败'
+    }))
     const requestError = new Error(error.message || '请求失败')
     requestError.status = response.status
     Object.assign(requestError, error)

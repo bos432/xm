@@ -88,6 +88,8 @@ class AuthProfileTest extends TestCase
 
     public function test_login_route_is_rate_limited(): void
     {
+        RuntimeConfig::set('security.login_failure_threshold', '100', 'security', false, '登录失败锁定阈值');
+
         User::factory()->create([
             'username' => 'limited-user',
             'password' => Hash::make('secret-password'),
@@ -119,6 +121,7 @@ class AuthProfileTest extends TestCase
 
     public function test_login_throttle_can_be_relaxed_for_whitelisted_test_ip(): void
     {
+        RuntimeConfig::set('security.login_failure_threshold', '100', 'security', false, '登录失败锁定阈值');
         RuntimeConfig::set('security.login_throttle_per_minute', '1', 'security', false, '登录接口每分钟限制');
         RuntimeConfig::set('security.login_throttle_whitelist_ips', '127.0.0.1', 'security', false, '登录限流测试白名单 IP');
         RuntimeConfig::set('security.login_throttle_relaxed_per_minute', '10', 'security', false, '临时放宽后的每分钟限制');
@@ -136,6 +139,34 @@ class AuthProfileTest extends TestCase
                 ...$this->validCaptchaPayload(),
             ])->assertUnprocessable();
         }
+    }
+
+    public function test_login_throttle_relaxed_mode_expires_automatically(): void
+    {
+        RuntimeConfig::set('security.login_failure_threshold', '100', 'security', false, '登录失败锁定阈值');
+        RuntimeConfig::set('security.login_throttle_per_minute', '1', 'security', false, '登录接口每分钟限制');
+        RuntimeConfig::set('security.login_throttle_relaxed', '1', 'security', false, '是否临时放宽登录限流');
+        RuntimeConfig::set('security.login_throttle_relaxed_per_minute', '10', 'security', false, '临时放宽后的每分钟限制');
+        RuntimeConfig::set('security.login_throttle_relaxed_until', now()->subMinute()->toDateTimeString(), 'security', false, '登录限流临时放宽截止时间');
+
+        User::factory()->create([
+            'username' => 'expired-relaxed-user',
+            'password' => Hash::make('secret-password'),
+            'role' => 'unit',
+        ]);
+
+        $this->postJson('/api/auth/login', [
+            'username' => 'expired-relaxed-user',
+            'password' => 'wrong-password',
+            ...$this->validCaptchaPayload(),
+        ])->assertUnprocessable();
+
+        $this->postJson('/api/auth/login', [
+            'username' => 'expired-relaxed-user',
+            'password' => 'wrong-password',
+            ...$this->validCaptchaPayload(),
+        ])->assertTooManyRequests()
+            ->assertJsonStructure(['retry_after_seconds']);
     }
 
     public function test_locked_login_response_includes_retry_after_seconds(): void
@@ -242,7 +273,7 @@ class AuthProfileTest extends TestCase
         ]);
     }
 
-    public function test_admin_profile_contains_migration_settings_and_logs(): void
+    public function test_admin_profile_contains_migration_and_logs_but_not_sensitive_settings(): void
     {
         User::factory()->create([
             'username' => 'admin-user',
@@ -262,10 +293,10 @@ class AuthProfileTest extends TestCase
         $menus = collect($response->json('user.menus'))->pluck('path');
 
         $this->assertTrue($permissions->contains('view_migration'));
-        $this->assertTrue($permissions->contains('manage_settings'));
+        $this->assertFalse($permissions->contains('manage_settings'));
         $this->assertTrue($permissions->contains('view_operation_logs'));
         $this->assertTrue($menus->contains('/migration'));
-        $this->assertTrue($menus->contains('/settings'));
+        $this->assertFalse($menus->contains('/settings'));
         $this->assertTrue($menus->contains('/operation-logs'));
     }
 

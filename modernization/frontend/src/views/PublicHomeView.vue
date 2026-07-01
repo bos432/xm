@@ -2,12 +2,12 @@
   <main class="gov-portal">
     <div class="gov-topbar">
       <div class="gov-wrap">
-        <span>在线帮助</span>
-        <span>全站导航</span>
-        <span>本平台为互联网非涉密平台，请勿上传涉密资料</span>
+        <span>{{ texts.t('public.toolbar.help', '在线帮助') }}</span>
+        <span>{{ texts.t('public.toolbar.sitemap', '全站导航') }}</span>
+        <span>{{ texts.t('public.toolbar.warning', '本平台为互联网非涉密平台，请勿上传涉密资料') }}</span>
         <div class="gov-topbar-links">
-          <RouterLink to="/login">登录</RouterLink>
-          <RouterLink to="/forgot-password">忘记密码</RouterLink>
+          <RouterLink to="/login">{{ texts.t('auth.login', '登录') }}</RouterLink>
+          <RouterLink to="/forgot-password">{{ texts.t('auth.forgot_password', '忘记密码') }}</RouterLink>
         </div>
       </div>
     </div>
@@ -65,8 +65,8 @@
               </el-button>
             </el-form>
             <div class="gov-login-links">
-              <RouterLink to="/forgot-password">忘记密码</RouterLink>
-              <RouterLink to="/register">新单位注册</RouterLink>
+              <RouterLink to="/forgot-password">{{ texts.t('auth.forgot_password', '忘记密码') }}</RouterLink>
+              <RouterLink to="/register">{{ texts.t('auth.register_unit', '新单位注册') }}</RouterLink>
             </div>
           </aside>
         </div>
@@ -183,9 +183,11 @@ import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import { api } from '../api.js'
 import { useSessionStore } from '../store.js'
+import { useTextStore } from '../texts.js'
 
 const router = useRouter()
 const session = useSessionStore()
+const texts = useTextStore()
 const home = ref(emptyHomeContent())
 const selectedNotice = ref(null)
 const selectedDownload = ref(null)

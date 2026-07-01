@@ -44,10 +44,10 @@
       <el-table-column label="操作" width="260" fixed="right">
         <template #default="{ row }">
           <div class="table-action-row">
-            <el-button size="small" :icon="View" @click="openDetail(row)">详情</el-button>
-            <el-button size="small" :icon="Connection" @click="openLifecycle(row)">全周期</el-button>
+            <el-button size="small" :icon="View" @click="openDetail(row)">{{ texts.t('project.action.detail', '详情') }}</el-button>
+            <el-button size="small" :icon="Connection" @click="openLifecycle(row)">{{ texts.t('project.action.lifecycle', '全周期') }}</el-button>
             <el-dropdown v-if="moreActions(row).length" trigger="click" @command="(command) => runMoreAction(command, row)">
-              <el-button size="small">更多</el-button>
+              <el-button size="small">{{ texts.t('project.action.more', '更多') }}</el-button>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item v-for="action in moreActions(row)" :key="action.command" :command="action.command" :disabled="action.disabled">
@@ -217,10 +217,12 @@ import { Checked, CloseBold, Connection, Delete, Download, Files, Plus, Refresh,
 import { useRoute, useRouter } from 'vue-router'
 import { api, downloadApi } from '../api.js'
 import { useSessionStore } from '../store.js'
+import { useTextStore } from '../texts.js'
 
 const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
+const texts = useTextStore()
 const statusOptions = [
   { label: '全部', value: '' },
   { label: '草稿', value: 'draft' },
@@ -344,17 +346,17 @@ function pendingExtensionCount(row) {
 function moreActions(row) {
   const actions = []
   if (canEdit(row)) {
-    actions.push({ command: 'edit', label: '编辑' })
-    actions.push({ command: 'upload', label: '附件' })
+    actions.push({ command: 'edit', label: texts.t('project.action.edit', '编辑') })
+    actions.push({ command: 'upload', label: texts.t('project.action.files', '附件') })
   }
-  if (canSubmit(row)) actions.push({ command: 'submit', label: '提交' })
-  if (canWithdraw(row)) actions.push({ command: 'withdraw', label: '撤回' })
-  if (canRequestExtension(row)) actions.push({ command: 'extension', label: '申请延期' })
-  if (canEnterAcceptance(row)) actions.push({ command: 'enterAcceptance', label: '进入验收' })
-  if (canClose(row)) actions.push({ command: 'close', label: '关闭验收' })
-  if (session.can('review_projects')) actions.push({ command: 'reviews', label: '审核记录' })
-  if (session.can('view_operation_logs')) actions.push({ command: 'logs', label: '操作日志' })
-  if (canDelete(row)) actions.push({ command: 'delete', label: '删除' })
+  if (canSubmit(row)) actions.push({ command: 'submit', label: texts.t('project.action.submit', '提交') })
+  if (canWithdraw(row)) actions.push({ command: 'withdraw', label: texts.t('project.action.withdraw', '撤回') })
+  if (canRequestExtension(row)) actions.push({ command: 'extension', label: texts.t('project.action.extension', '申请延期') })
+  if (canEnterAcceptance(row)) actions.push({ command: 'enterAcceptance', label: texts.t('project.action.enter_acceptance', '进入验收') })
+  if (canClose(row)) actions.push({ command: 'close', label: texts.t('project.action.close', '关闭验收') })
+  if (session.can('review_projects')) actions.push({ command: 'reviews', label: texts.t('project.action.review_logs', '审核记录') })
+  if (session.can('view_operation_logs')) actions.push({ command: 'logs', label: texts.t('project.action.operation_logs', '操作日志') })
+  if (canDelete(row)) actions.push({ command: 'delete', label: texts.t('project.action.delete', '删除') })
   return actions
 }
 

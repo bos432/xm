@@ -62,6 +62,15 @@ class ProjectController extends Controller
             });
         }
 
+        if ($request->has('e2e')) {
+            $request->boolean('e2e')
+                ? $query->where('metadata', 'like', '%"e2e":true%')
+                : $query->where(function ($query): void {
+                    $query->whereNull('metadata')
+                        ->orWhere('metadata', 'not like', '%"e2e":true%');
+                });
+        }
+
         if ($request->filled('keyword')) {
             $keyword = $request->query('keyword');
             $query->where(function ($query) use ($keyword) {

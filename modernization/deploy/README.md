@@ -43,44 +43,25 @@ cd /www/wwwroot/nxm.zlck888.com
 bash ./deploy.sh
 ```
 
-## GitHub SSH Deploy Key
+## GitHub Repository
 
-This production server uses a GitHub Deploy Key for repository access. Use the SSH
-repository URL for deployment:
-
-```bash
-git@github.com:bos432/xm.git
-```
-
-Do not use the HTTPS URL with a GitHub account password. GitHub no longer accepts
-password authentication for Git operations, so this pattern will fail:
-
-```bash
-REPO_URL=https://github.com/bos432/xm.git
-```
-
-Before deployment, verify the server can authenticate with GitHub:
-
-```bash
-ssh -T git@github.com
-```
-
-The standard BT Panel terminal command for this project is:
+The repository is public, so production deployment should use the public HTTPS
+URL and must not paste a GitHub token into the terminal command:
 
 ```bash
 cd /www/wwwroot/nxm.zlck888.com
 
 APP_ROOT=/www/wwwroot/nxm.zlck888.com \
-REPO_URL=git@github.com:bos432/xm.git \
+REPO_URL=https://github.com/bos432/xm.git \
 BRANCH=main \
 PHP_BIN=/www/server/php/83/bin/php \
 RUN_SEED=1 \
 bash ./deploy.sh
 ```
 
-If `ssh -T git@github.com` fails, check `/root/.ssh/config`, the deploy key
-private file on the server, and GitHub repository Settings -> Deploy keys. The
-current deploy key name is `项目申报系统2.0`.
+SSH deploy keys are still supported as an optional alternative. If using SSH,
+verify `ssh -T git@github.com` before deployment and set
+`REPO_URL=git@github.com:bos432/xm.git`.
 
 Frontend dependencies are installed with:
 
@@ -99,6 +80,21 @@ BRANCH=main \
 PHP_BIN=/www/server/php/83/bin/php \
 bash ./deploy.sh
 ```
+
+## Health Checks
+
+The deploy script checks the homepage, captcha API, public homepage API, local
+login credentials, and the real HTTP login flow. Configure the health-check
+account in `/www/wwwroot/nxm.zlck888.com/shared/.env`:
+
+```env
+HEALTH_CHECK_USERNAME=health_check_user
+HEALTH_CHECK_PASSWORD=replace-with-production-password
+```
+
+`health_check_user` is seeded with `metadata.health_check=true`. Change the
+production password after first seed and keep `.env` in sync. When these two
+variables are absent, the HTTP login health check is skipped with a warning.
 
 ## Rollback
 
@@ -138,3 +134,23 @@ stdout_logfile=/www/wwwroot/nxm.zlck888.com/shared/storage/logs/queue-worker.log
 cd /www/wwwroot/nxm.zlck888.com/current/backend
 /www/server/php/83/bin/php artisan queue:work database --queue=default --tries=3 --timeout=90 --stop-when-empty
 ```
+
+## E2E Smoke Test
+
+Playwright tests read credentials from environment variables and keep generated
+test data online for later regression:
+
+```bash
+cd modernization/frontend
+E2E_BASE_URL=https://nxm.zlck888.com \
+E2E_STAMP=E2E-20260630-103223 \
+E2E_UNIT_USERNAME=... E2E_UNIT_PASSWORD=... \
+E2E_COUNTY_USERNAME=... E2E_COUNTY_PASSWORD=... \
+E2E_DEPARTMENT_USERNAME=... E2E_DEPARTMENT_PASSWORD=... \
+E2E_EXPERT_USERNAME=... E2E_EXPERT_PASSWORD=... \
+E2E_ADMIN_USERNAME=... E2E_ADMIN_PASSWORD=... \
+E2E_SUPER_ADMIN_USERNAME=... E2E_SUPER_ADMIN_PASSWORD=... \
+npm run e2e
+```
+
+HTML reports are written to `modernization/e2e/reports/html`.

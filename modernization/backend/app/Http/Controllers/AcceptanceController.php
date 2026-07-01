@@ -72,6 +72,15 @@ class AcceptanceController extends Controller
             });
         }
 
+        if ($request->has('e2e')) {
+            $request->boolean('e2e')
+                ? $query->where('metadata', 'like', '%"e2e":true%')
+                : $query->where(function ($query): void {
+                    $query->whereNull('metadata')
+                        ->orWhere('metadata', 'not like', '%"e2e":true%');
+                });
+        }
+
         return $query->paginate(20);
     }
 

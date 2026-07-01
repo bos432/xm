@@ -23,6 +23,20 @@
         <el-form-item label="登录限流/分钟"><el-input-number v-model="policies.login_throttle_per_minute" :min="1" :max="300" /></el-form-item>
         <el-form-item label="临时放宽登录限流"><el-switch v-model="policies.login_throttle_relaxed" /></el-form-item>
         <el-form-item label="放宽后限流/分钟"><el-input-number v-model="policies.login_throttle_relaxed_per_minute" :min="1" :max="1000" /></el-form-item>
+        <el-form-item label="放宽截止时间">
+          <el-date-picker
+            v-model="policies.login_throttle_relaxed_until"
+            type="datetime"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            placeholder="留空表示不设截止时间"
+          />
+        </el-form-item>
+        <el-form-item label="放宽原因" class="wide-field">
+          <el-input v-model="policies.login_throttle_relaxed_reason" maxlength="500" show-word-limit placeholder="例如：上线验收、E2E 回归、运维排障" />
+        </el-form-item>
+        <el-form-item label="最近操作人">
+          <el-input v-model="policies.login_throttle_relaxed_by" disabled placeholder="保存放宽策略后自动记录" />
+        </el-form-item>
         <el-form-item label="启用 IP 白名单"><el-switch v-model="policies.ip_whitelist_enabled" /></el-form-item>
         <el-form-item label="启用 IP 黑名单"><el-switch v-model="policies.ip_blacklist_enabled" /></el-form-item>
         <el-form-item label="测试白名单 IP" class="wide-field">
@@ -131,8 +145,12 @@ const policies = reactive({
   lock_minutes: 30,
   login_throttle_per_minute: 5,
   login_throttle_relaxed: false,
+  login_throttle_relaxed_active: false,
   login_throttle_relaxed_per_minute: 60,
   login_throttle_whitelist_ips: '',
+  login_throttle_relaxed_until: '',
+  login_throttle_relaxed_by: '',
+  login_throttle_relaxed_reason: '',
   ip_whitelist_enabled: false,
   ip_blacklist_enabled: true
 })
@@ -141,9 +159,11 @@ const throttleStatusText = computed(() => {
   const parts = [
     `普通限流 ${policies.login_throttle_per_minute} 次/分钟`,
     policies.login_throttle_relaxed
-      ? `临时放宽中：${policies.login_throttle_relaxed_per_minute} 次/分钟`
+      ? `${policies.login_throttle_relaxed_active ? '临时放宽生效中' : '临时放宽已过期'}：${policies.login_throttle_relaxed_per_minute} 次/分钟`
       : '未开启临时放宽',
   ]
+  if (policies.login_throttle_relaxed_until) parts.push(`截止：${policies.login_throttle_relaxed_until}`)
+  if (policies.login_throttle_relaxed_by) parts.push(`操作人：${policies.login_throttle_relaxed_by}`)
   const whitelist = String(policies.login_throttle_whitelist_ips || '').trim()
   if (whitelist) parts.push(`测试白名单：${whitelist}`)
   return parts.join('；')

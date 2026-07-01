@@ -136,8 +136,47 @@ log "Running deployment health checks for $APP_URL"
 curl -fsSI "$APP_URL/" >/dev/null || fail "Homepage health check failed"
 curl -fsS "$APP_URL/api/auth/captcha" >/dev/null || fail "Captcha API health check failed"
 curl -fsS "$APP_URL/api/public/homepage" >/dev/null || fail "Public homepage API health check failed"
+"$PHP_BIN" "$BACKEND_DIR/artisan" health:login-check || fail "Local login health check failed"
+HEALTH_CHECK_USERNAME="$(grep -E '^HEALTH_CHECK_USERNAME=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
+HEALTH_CHECK_PASSWORD="$(grep -E '^HEALTH_CHECK_PASSWORD=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
+if [ -n "$HEALTH_CHECK_USERNAME" ] && [ -n "$HEALTH_CHECK_PASSWORD" ]; then
+  log "Running HTTP login health check"
+  LOGIN_PAYLOAD="$(
+    APP_URL="$APP_URL" HEALTH_CHECK_USERNAME="$HEALTH_CHECK_USERNAME" HEALTH_CHECK_PASSWORD="$HEALTH_CHECK_PASSWORD" \
+    "$PHP_BIN" -r '
+      $base = rtrim(getenv("APP_URL"), "/");
+      $captcha = json_decode(file_get_contents($base."/api/auth/captcha"), true);
+      if (!is_array($captcha) || empty($captcha["captcha_id"]) || empty($captcha["question"])) {
+          fwrite(STDERR, "Unable to fetch captcha\n");
+          exit(2);
+      }
+      preg_match_all("/\d+/", $captcha["question"], $matches);
+      $answer = array_sum(array_map("intval", $matches[0] ?? []));
+      echo json_encode([
+          "username" => getenv("HEALTH_CHECK_USERNAME"),
+          "password" => getenv("HEALTH_CHECK_PASSWORD"),
+          "captcha_id" => $captcha["captcha_id"],
+          "captcha_answer" => $answer,
+      ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    '
+  )" || fail "Unable to build login health check payload"
+  LOGIN_RESPONSE="$(curl -fsS -H 'Accept: application/json' -H 'Content-Type: application/json' -d "$LOGIN_PAYLOAD" "$APP_URL/api/auth/login")" \
+    || fail "HTTP login health check failed"
+  LOGIN_TOKEN="$(
+    LOGIN_RESPONSE="$LOGIN_RESPONSE" "$PHP_BIN" -r '
+      $payload = json_decode(getenv("LOGIN_RESPONSE"), true);
+      echo is_array($payload) ? ($payload["token"] ?? "") : "";
+    '
+  )"
+  [ -n "$LOGIN_TOKEN" ] || fail "HTTP login health check did not return token"
+  curl -fsS -X POST -H "Accept: application/json" -H "Authorization: Bearer $LOGIN_TOKEN" "$APP_URL/api/auth/logout" >/dev/null \
+    || log "WARNING: login health check logout failed; token will expire normally"
+else
+  log "WARNING: HTTP login health check skipped; set HEALTH_CHECK_USERNAME and HEALTH_CHECK_PASSWORD in shared/.env"
+fi
 "$PHP_BIN" "$BACKEND_DIR/artisan" config:show queue.default >/dev/null 2>&1 || log "WARNING: queue config health check skipped"
-if [ "$( "$PHP_BIN" "$BACKEND_DIR/artisan" tinker --execute='echo DB::table("failed_jobs")->count();' 2>/dev/null || echo 0 )" != "0" ]; then
+FAILED_JOBS_COUNT="$("$PHP_BIN" "$BACKEND_DIR/artisan" queue:failed-count 2>/dev/null || echo 0)"
+if [ "$FAILED_JOBS_COUNT" != "0" ]; then
   log "WARNING: failed queue jobs exist; check the mail/queue worker"
 fi
 

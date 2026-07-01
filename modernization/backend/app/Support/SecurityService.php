@@ -74,6 +74,7 @@ final class SecurityService
             $lock->update([
                 'failed_count' => $failedCount,
                 'reason' => $reason,
+                'is_active' => $failedCount >= $threshold,
                 'locked_until' => $failedCount >= $threshold ? now()->addMinutes($lockMinutes) : null,
             ]);
         }

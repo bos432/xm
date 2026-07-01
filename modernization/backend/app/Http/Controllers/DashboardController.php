@@ -18,8 +18,10 @@ use App\Models\SecurityLock;
 use App\Models\Unit;
 use App\Models\User;
 use App\Support\Role;
+use App\Support\RuntimeConfig;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
 
 class DashboardController extends Controller
@@ -139,6 +141,7 @@ class DashboardController extends Controller
                     ->latest()
                     ->limit(5)
                     ->get(),
+                'login_throttle_relaxed' => $this->loginThrottleRelaxedStatus(),
             ];
 
             $summary['migration'] = [
@@ -246,5 +249,29 @@ class DashboardController extends Controller
         }
 
         return json_decode(File::get($path), true);
+    }
+
+    private function loginThrottleRelaxedStatus(): array
+    {
+        $enabled = RuntimeConfig::boolValue('security.login_throttle_relaxed', false);
+        $until = RuntimeConfig::value('security.login_throttle_relaxed_until');
+        $active = $enabled;
+
+        if ($enabled && filled($until)) {
+            try {
+                $active = Carbon::parse($until)->isFuture();
+            } catch (\Throwable) {
+                $active = false;
+            }
+        }
+
+        return [
+            'enabled' => $enabled,
+            'active' => $active,
+            'per_minute' => RuntimeConfig::intValue('security.login_throttle_relaxed_per_minute', 60),
+            'until' => $until,
+            'by' => RuntimeConfig::value('security.login_throttle_relaxed_by', '') ?? '',
+            'reason' => RuntimeConfig::value('security.login_throttle_relaxed_reason', '') ?? '',
+        ];
     }
 }

@@ -99,7 +99,29 @@ export const defaultTexts = {
   'migration.intro': '迁移准备用于旧系统历史数据导入前体检：先备份旧库和 upload 附件，生成 dry-run 报告，处理缺失文件/字段映射/账号冲突后，再执行正式迁移。新系统日常使用不依赖这里。',
   'settings.public_home.card_title': '首页内容',
   'settings.public_home.card_body': '导航、公告、下载、服务事项和 logo/banner 请进入首页管理维护。',
-  'settings.public_home.button': '进入首页管理'
+  'settings.public_home.button': '进入首页管理',
+  'public.toolbar.help': '在线帮助',
+  'public.toolbar.sitemap': '全站导航',
+  'public.toolbar.warning': '本平台为互联网非涉密平台，请勿上传涉密资料',
+  'auth.login': '登录',
+  'auth.forgot_password': '忘记密码',
+  'auth.register_unit': '新单位注册',
+  'project.action.detail': '详情',
+  'project.action.lifecycle': '全周期',
+  'project.action.more': '更多',
+  'project.action.edit': '编辑',
+  'project.action.files': '附件',
+  'project.action.submit': '提交',
+  'project.action.withdraw': '撤回',
+  'project.action.extension': '申请延期',
+  'project.action.enter_acceptance': '进入验收',
+  'project.action.close': '关闭验收',
+  'project.action.review_logs': '审核记录',
+  'project.action.operation_logs': '操作日志',
+  'project.action.delete': '删除',
+  'acceptance.tab.pending': '待处理',
+  'acceptance.tab.reviewed': '已处理',
+  'acceptance.tab.visible': '全部可见'
 }
 
 export const useTextStore = defineStore('texts', {

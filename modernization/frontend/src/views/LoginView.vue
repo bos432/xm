@@ -33,7 +33,7 @@
         </el-button>
       </el-form>
       <div class="auth-links">
-        <RouterLink to="/register">单位注册</RouterLink>
+        <RouterLink to="/register">{{ texts.t('auth.register_unit', '新单位注册') }}</RouterLink>
         <RouterLink to="/forgot-password">忘记密码</RouterLink>
       </div>
     </section>
@@ -46,10 +46,12 @@ import { Refresh } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api.js'
 import { useSessionStore } from '../store.js'
+import { useTextStore } from '../texts.js'
 
 const route = useRoute()
 const router = useRouter()
 const session = useSessionStore()
+const texts = useTextStore()
 const loading = ref(false)
 const captchaLoading = ref(false)
 const error = ref('')
