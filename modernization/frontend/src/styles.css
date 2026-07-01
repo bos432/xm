@@ -167,6 +167,17 @@ body { margin: 0; }
   height: 72px;
   padding: 12px;
 }
+.asset-meta {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #f8fbff;
+  color: #516276;
+  font-size: 12px;
+  line-height: 1.45;
+}
 .permission-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

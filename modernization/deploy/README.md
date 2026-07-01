@@ -94,7 +94,9 @@ HEALTH_CHECK_PASSWORD=replace-with-production-password
 
 `health_check_user` is seeded with `metadata.health_check=true`. Change the
 production password after first seed and keep `.env` in sync. When these two
-variables are absent, the HTTP login health check is skipped with a warning.
+variables are absent, deployment fails before switching releases. For a manual
+emergency deployment only, set `SKIP_LOGIN_HEALTH=1` to skip the local and HTTP
+login health checks with an explicit warning.
 
 ## Rollback
 

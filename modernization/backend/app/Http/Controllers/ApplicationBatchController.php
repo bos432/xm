@@ -123,6 +123,14 @@ class ApplicationBatchController extends Controller
             'guide' => ['nullable', 'string'],
             'attachment_requirements' => ['nullable', 'string'],
             'metadata' => ['nullable', 'array'],
+            'metadata.acceptance_required_materials' => ['nullable', 'array'],
+            'metadata.acceptance_required_materials.*' => ['string', Rule::in([
+                'acceptance_application',
+                'project_summary',
+                'financial',
+                'achievement',
+                'other',
+            ])],
         ]);
     }
 

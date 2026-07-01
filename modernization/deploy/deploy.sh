@@ -10,6 +10,7 @@ NODE_BIN="${NODE_BIN:-node}"
 NPM_BIN="${NPM_BIN:-npm}"
 WEB_USER="${WEB_USER:-www:www}"
 RUN_SEED="${RUN_SEED:-0}"
+SKIP_LOGIN_HEALTH="${SKIP_LOGIN_HEALTH:-0}"
 
 RELEASE_ID="$(date +%Y%m%d%H%M%S)"
 RELEASE_DIR="$APP_ROOT/releases/$RELEASE_ID"
@@ -136,10 +137,17 @@ log "Running deployment health checks for $APP_URL"
 curl -fsSI "$APP_URL/" >/dev/null || fail "Homepage health check failed"
 curl -fsS "$APP_URL/api/auth/captcha" >/dev/null || fail "Captcha API health check failed"
 curl -fsS "$APP_URL/api/public/homepage" >/dev/null || fail "Public homepage API health check failed"
-"$PHP_BIN" "$BACKEND_DIR/artisan" health:login-check || fail "Local login health check failed"
 HEALTH_CHECK_USERNAME="$(grep -E '^HEALTH_CHECK_USERNAME=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
 HEALTH_CHECK_PASSWORD="$(grep -E '^HEALTH_CHECK_PASSWORD=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
-if [ -n "$HEALTH_CHECK_USERNAME" ] && [ -n "$HEALTH_CHECK_PASSWORD" ]; then
+if [ -z "$HEALTH_CHECK_USERNAME" ] || [ -z "$HEALTH_CHECK_PASSWORD" ]; then
+  if [ "$SKIP_LOGIN_HEALTH" = "1" ]; then
+    log "WARNING: login health credentials missing; SKIP_LOGIN_HEALTH=1, login health checks skipped"
+  else
+    fail "login health credentials missing: set HEALTH_CHECK_USERNAME and HEALTH_CHECK_PASSWORD in shared/.env, or set SKIP_LOGIN_HEALTH=1"
+  fi
+else
+  "$PHP_BIN" "$BACKEND_DIR/artisan" health:login-check --username="$HEALTH_CHECK_USERNAME" --password="$HEALTH_CHECK_PASSWORD" \
+    || fail "Local login health check failed"
   log "Running HTTP login health check"
   LOGIN_PAYLOAD="$(
     APP_URL="$APP_URL" HEALTH_CHECK_USERNAME="$HEALTH_CHECK_USERNAME" HEALTH_CHECK_PASSWORD="$HEALTH_CHECK_PASSWORD" \
@@ -171,8 +179,6 @@ if [ -n "$HEALTH_CHECK_USERNAME" ] && [ -n "$HEALTH_CHECK_PASSWORD" ]; then
   [ -n "$LOGIN_TOKEN" ] || fail "HTTP login health check did not return token"
   curl -fsS -X POST -H "Accept: application/json" -H "Authorization: Bearer $LOGIN_TOKEN" "$APP_URL/api/auth/logout" >/dev/null \
     || log "WARNING: login health check logout failed; token will expire normally"
-else
-  log "WARNING: HTTP login health check skipped; set HEALTH_CHECK_USERNAME and HEALTH_CHECK_PASSWORD in shared/.env"
 fi
 "$PHP_BIN" "$BACKEND_DIR/artisan" config:show queue.default >/dev/null 2>&1 || log "WARNING: queue config health check skipped"
 FAILED_JOBS_COUNT="$("$PHP_BIN" "$BACKEND_DIR/artisan" queue:failed-count 2>/dev/null || echo 0)"

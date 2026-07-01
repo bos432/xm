@@ -18,7 +18,7 @@ class HealthCheckLogin extends Command
         $password = (string) ($this->option('password') ?: env('HEALTH_CHECK_PASSWORD', ''));
 
         if ($username === '' || $password === '') {
-            $this->warn('Health login skipped: HEALTH_CHECK_USERNAME or HEALTH_CHECK_PASSWORD is not configured.');
+            $this->warn('Health login credentials missing; local login check skipped.');
 
             return self::SUCCESS;
         }

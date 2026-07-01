@@ -156,6 +156,7 @@ class PublicHomeAdminController extends Controller
             'alt' => $request->input('alt') ?: ($section->title ?: $section->key),
             'uploaded_at' => now()->toDateTimeString(),
             'uploaded_by' => $request->user()->id,
+            'uploaded_by_name' => $request->user()->name ?: $request->user()->username,
         ];
 
         if ($type === 'banner') {
@@ -250,7 +251,7 @@ class PublicHomeAdminController extends Controller
 
     private function authorizeAssetManage(Request $request): void
     {
-        if (! Role::userCan($request->user(), 'manage_home_assets')) {
+        if (! Role::userCan($request->user(), 'manage_home_assets') && ! Role::userCan($request->user(), 'public_home.manage_assets')) {
             abort(403, '只有超级管理员可以维护首页素材');
         }
     }

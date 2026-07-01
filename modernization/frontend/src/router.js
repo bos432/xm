@@ -8,21 +8,22 @@ import ResetPasswordView from './views/ResetPasswordView.vue'
 import DashboardView from './views/DashboardView.vue'
 import ProjectsView from './views/ProjectsView.vue'
 import ReviewTasksView from './views/ReviewTasksView.vue'
-import SettingsView from './views/SettingsView.vue'
-import PublicHomeManageView from './views/PublicHomeManageView.vue'
 import ApplicationBatchesView from './views/ApplicationBatchesView.vue'
 import AcceptanceView from './views/AcceptanceView.vue'
 import LifecycleView from './views/LifecycleView.vue'
-import MailCenterView from './views/MailCenterView.vue'
-import RolesView from './views/RolesView.vue'
-import SecurityCenterView from './views/SecurityCenterView.vue'
 import MessagesView from './views/MessagesView.vue'
-import MigrationView from './views/MigrationView.vue'
 import OperationLogsView from './views/OperationLogsView.vue'
 import UnitsView from './views/UnitsView.vue'
-import DictionaryItemsView from './views/DictionaryItemsView.vue'
-import SystemTextsView from './views/SystemTextsView.vue'
 import UsersView from './views/UsersView.vue'
+
+const DictionaryItemsView = () => import('./views/DictionaryItemsView.vue')
+const MailCenterView = () => import('./views/MailCenterView.vue')
+const MigrationView = () => import('./views/MigrationView.vue')
+const PublicHomeManageView = () => import('./views/PublicHomeManageView.vue')
+const RolesView = () => import('./views/RolesView.vue')
+const SecurityCenterView = () => import('./views/SecurityCenterView.vue')
+const SettingsView = () => import('./views/SettingsView.vue')
+const SystemTextsView = () => import('./views/SystemTextsView.vue')
 
 const router = createRouter({
   history: createWebHistory(),

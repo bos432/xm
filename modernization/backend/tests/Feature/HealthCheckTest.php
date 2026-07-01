@@ -27,6 +27,22 @@ class HealthCheckTest extends TestCase
         ])->assertSuccessful();
     }
 
+    public function test_login_health_check_fails_with_wrong_password(): void
+    {
+        User::factory()->create([
+            'username' => 'health_check_user',
+            'password' => Hash::make('HealthCheck-2026'),
+            'role' => 'unit',
+            'is_active' => true,
+            'metadata' => ['health_check' => true],
+        ]);
+
+        $this->artisan('health:login-check', [
+            '--username' => 'health_check_user',
+            '--password' => 'Wrong-Password',
+        ])->assertFailed();
+    }
+
     public function test_failed_jobs_count_command_does_not_require_tinker(): void
     {
         $this->artisan('queue:failed-count')

@@ -396,6 +396,23 @@ function applyRouteTab() {
   activeTab.value = route.query.tab === 'results' ? 'results' : 'tasks'
 }
 
+function applyRouteFilters() {
+  if (typeof route.query.keyword === 'string') {
+    keyword.value = route.query.keyword
+    resultKeyword.value = route.query.keyword
+  }
+  if (typeof route.query.stage === 'string') resultStage.value = route.query.stage
+  if (typeof route.query.decision === 'string') resultDecision.value = route.query.decision
+  if (typeof route.query.category === 'string') {
+    category.value = route.query.category
+    resultCategory.value = route.query.category
+  }
+  if (typeof route.query.project_type === 'string') {
+    projectType.value = route.query.project_type
+    resultProjectType.value = route.query.project_type
+  }
+}
+
 async function openDetail(row) {
   detail.value = await api(`/projects/${row.id}`)
   detailVisible.value = true
@@ -484,6 +501,7 @@ function formatBytes(value) {
 
 onMounted(async () => {
   applyRouteTab()
+  applyRouteFilters()
   await Promise.all([
     activeTab.value === 'results' ? loadResults() : loadTasks(),
     loadDictionaries()
@@ -506,8 +524,15 @@ watch(() => route.query.project_id, () => {
 
 watch(() => route.query.tab, () => {
   applyRouteTab()
+  applyRouteFilters()
   if (activeTab.value === 'tasks' && tasks.value.length === 0) loadTasks()
   if (activeTab.value === 'results' && results.value.length === 0) loadResults()
+})
+
+watch(() => [route.query.keyword, route.query.stage, route.query.decision, route.query.category, route.query.project_type], () => {
+  applyRouteFilters()
+  if (activeTab.value === 'results') reloadResults()
+  else reloadTasks()
 })
 
 onUnmounted(() => {

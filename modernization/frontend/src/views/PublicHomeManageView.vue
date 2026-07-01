@@ -13,7 +13,7 @@
       <el-tabs v-model="activeSection">
         <el-tab-pane label="品牌素材" name="brand">
           <el-alert
-            v-if="!session.can('manage_home_assets')"
+            v-if="!canManageHomeAssets"
             title="只有超级管理员可以上传或删除首页 logo、banner 和站点图标。"
             type="info"
             show-icon
@@ -24,36 +24,45 @@
               <strong>首页 Logo</strong>
               <img v-if="assetFor('nav', 'logo')" :src="`/api/public/homepage/assets/nav/logo?t=${assetVersion}`" alt="首页 Logo" />
               <span v-else class="muted">未上传，前台显示文字徽标</span>
-              <el-input v-model="assetForms.logo_alt" placeholder="Logo 替代文本" :disabled="!session.can('manage_home_assets')" />
+              <div v-if="assetFor('nav', 'logo')" class="asset-meta">
+                <span v-for="line in assetMetaLines('nav', 'logo')" :key="line">{{ line }}</span>
+              </div>
+              <el-input v-model="assetForms.logo_alt" placeholder="Logo 替代文本" :disabled="!canManageHomeAssets" />
               <div class="table-action-row">
-                <el-upload :show-file-list="false" :disabled="!session.can('manage_home_assets')" :http-request="(options) => uploadAsset('nav', 'logo', options)">
-                  <el-button :icon="Upload" :disabled="!session.can('manage_home_assets')">替换 Logo</el-button>
+                <el-upload :show-file-list="false" :disabled="!canManageHomeAssets" :http-request="(options) => uploadAsset('nav', 'logo', options)">
+                  <el-button :icon="Upload" :disabled="!canManageHomeAssets">替换 Logo</el-button>
                 </el-upload>
-                <el-button :icon="Delete" type="danger" :disabled="!assetFor('nav', 'logo') || !session.can('manage_home_assets')" @click="deleteAsset('nav', 'logo')">删除</el-button>
+                <el-button :icon="Delete" type="danger" :disabled="!assetFor('nav', 'logo') || !canManageHomeAssets" @click="deleteAsset('nav', 'logo')">删除</el-button>
               </div>
             </div>
             <div class="asset-box">
               <strong>站点图标 Favicon</strong>
               <img v-if="assetFor('nav', 'favicon')" class="favicon-preview" :src="`/api/public/homepage/assets/nav/favicon?t=${assetVersion}`" alt="站点图标" />
               <span v-else class="muted">未上传，浏览器使用默认图标</span>
+              <div v-if="assetFor('nav', 'favicon')" class="asset-meta">
+                <span v-for="line in assetMetaLines('nav', 'favicon')" :key="line">{{ line }}</span>
+              </div>
               <span class="muted">建议上传 ico、png 或 svg，大小不超过 512KB。</span>
               <div class="table-action-row">
-                <el-upload :show-file-list="false" :disabled="!session.can('manage_home_assets')" :http-request="(options) => uploadAsset('nav', 'favicon', options)">
-                  <el-button :icon="Upload" :disabled="!session.can('manage_home_assets')">替换图标</el-button>
+                <el-upload :show-file-list="false" :disabled="!canManageHomeAssets" :http-request="(options) => uploadAsset('nav', 'favicon', options)">
+                  <el-button :icon="Upload" :disabled="!canManageHomeAssets">替换图标</el-button>
                 </el-upload>
-                <el-button :icon="Delete" type="danger" :disabled="!assetFor('nav', 'favicon') || !session.can('manage_home_assets')" @click="deleteAsset('nav', 'favicon')">删除</el-button>
+                <el-button :icon="Delete" type="danger" :disabled="!assetFor('nav', 'favicon') || !canManageHomeAssets" @click="deleteAsset('nav', 'favicon')">删除</el-button>
               </div>
             </div>
             <div class="asset-box">
               <strong>首页 Banner</strong>
               <img v-if="assetFor('hero', 'banner')" :src="`/api/public/homepage/assets/hero/banner?t=${assetVersion}`" alt="首页 Banner" />
               <span v-else class="muted">未上传，前台显示蓝色政务背景</span>
-              <el-input v-model="assetForms.banner_alt" placeholder="Banner 替代文本" :disabled="!session.can('manage_home_assets')" />
+              <div v-if="assetFor('hero', 'banner')" class="asset-meta">
+                <span v-for="line in assetMetaLines('hero', 'banner')" :key="line">{{ line }}</span>
+              </div>
+              <el-input v-model="assetForms.banner_alt" placeholder="Banner 替代文本" :disabled="!canManageHomeAssets" />
               <div class="table-action-row">
-                <el-upload :show-file-list="false" :disabled="!session.can('manage_home_assets')" :http-request="(options) => uploadAsset('hero', 'banner', options)">
-                  <el-button :icon="Upload" :disabled="!session.can('manage_home_assets')">替换 Banner</el-button>
+                <el-upload :show-file-list="false" :disabled="!canManageHomeAssets" :http-request="(options) => uploadAsset('hero', 'banner', options)">
+                  <el-button :icon="Upload" :disabled="!canManageHomeAssets">替换 Banner</el-button>
                 </el-upload>
-                <el-button :icon="Delete" type="danger" :disabled="!assetFor('hero', 'banner') || !session.can('manage_home_assets')" @click="deleteAsset('hero', 'banner')">删除</el-button>
+                <el-button :icon="Delete" type="danger" :disabled="!assetFor('hero', 'banner') || !canManageHomeAssets" @click="deleteAsset('hero', 'banner')">删除</el-button>
               </div>
             </div>
           </div>
@@ -229,7 +238,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Edit, Plus, Refresh, Upload } from '@element-plus/icons-vue'
 import { api } from '../api.js'
@@ -246,6 +255,7 @@ const items = ref([])
 const itemEditorVisible = ref(false)
 const assetVersion = ref(Date.now())
 const assetForms = reactive({ logo_alt: '', banner_alt: '' })
+const canManageHomeAssets = computed(() => session.can('manage_home_assets') || session.can('public_home.manage_assets'))
 
 const itemTabs = [
   { name: 'notice', label: '通知公告' },
@@ -345,6 +355,26 @@ function fillSectionForms() {
 
 function assetFor(sectionKey, type) {
   return sectionByKey(sectionKey).metadata?.assets?.[type] || null
+}
+
+function assetMetaLines(sectionKey, type) {
+  const asset = assetFor(sectionKey, type)
+  if (!asset) return []
+
+  return [
+    asset.original_name ? `文件：${asset.original_name}` : '',
+    asset.extension ? `类型：${String(asset.extension).toUpperCase()}` : '',
+    asset.size_bytes ? `大小：${formatBytes(asset.size_bytes)}` : '',
+    asset.uploaded_at ? `上传时间：${asset.uploaded_at}` : '',
+    asset.uploaded_by_name ? `上传人：${asset.uploaded_by_name}` : (asset.uploaded_by ? `上传人ID：${asset.uploaded_by}` : '')
+  ].filter(Boolean)
+}
+
+function formatBytes(value) {
+  const bytes = Number(value || 0)
+  if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(2)} MB`
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${bytes} B`
 }
 
 async function saveSection(key) {
@@ -449,7 +479,7 @@ async function uploadAsset(sectionKey, type, options) {
   data.append('alt', assetAlt(type))
   try {
     await api(`/public-home/sections/${sectionKey}/asset`, { method: 'POST', body: data })
-    ElMessage.success('品牌素材已上传')
+    ElMessage.success(type === 'favicon' ? '站点图标已上传，刷新或重新打开标签页后生效' : '品牌素材已上传')
     options.onSuccess?.()
     assetVersion.value = Date.now()
     await loadContent()

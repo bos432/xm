@@ -410,6 +410,7 @@ class ProjectAcceptanceWorkflowTest extends TestCase
         $ownUnit = Unit::factory()->create();
         $otherUnit = Unit::factory()->create();
         $user = User::factory()->create(['unit_id' => $ownUnit->id, 'role' => 'unit']);
+        $otherOwner = User::factory()->create(['unit_id' => $otherUnit->id, 'role' => 'unit']);
         $ownDraft = Project::factory()->create([
             'unit_id' => $ownUnit->id,
             'owner_id' => $user->id,
@@ -417,6 +418,7 @@ class ProjectAcceptanceWorkflowTest extends TestCase
         ]);
         $otherProject = Project::factory()->create([
             'unit_id' => $otherUnit->id,
+            'owner_id' => $otherOwner->id,
             'status' => Project::STATUS_ACCEPTANCE,
         ]);
 

@@ -96,7 +96,8 @@ const materialCategories = [
   { label: '验收申请书', value: 'acceptance_application' },
   { label: '项目总结', value: 'project_summary' },
   { label: '财务材料', value: 'financial' },
-  { label: '成果证明', value: 'achievement' }
+  { label: '成果证明', value: 'achievement' },
+  { label: '其他', value: 'other' }
 ]
 
 function emptyForm() {

@@ -101,6 +101,7 @@ final class Role
             ['code' => 'review_expert_certifications', 'name' => '审核专家认证', 'group' => '全周期'],
             ['code' => 'manage_home_content', 'name' => '首页内容', 'group' => '门户'],
             ['code' => 'manage_home_assets', 'name' => '首页素材', 'group' => '门户'],
+            ['code' => 'public_home.manage_assets', 'name' => '首页素材维护', 'group' => '门户'],
             ['code' => 'manage_dictionaries', 'name' => '数据字典', 'group' => '系统'],
             ['code' => 'manage_system_texts', 'name' => '系统文案', 'group' => '高风险'],
             ['code' => 'view_migration', 'name' => '迁移准备', 'group' => '系统'],
@@ -157,6 +158,7 @@ final class Role
             self::SUPER_ADMIN => [
                 ...$adminBusiness,
                 'manage_home_assets',
+                'public_home.manage_assets',
                 'manage_settings',
                 'manage_mail',
                 'settings.manage_smtp',

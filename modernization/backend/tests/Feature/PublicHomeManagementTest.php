@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Http\Requests\StorePublicHomeFileRequest;
 use App\Models\PublicHomeItem;
 use App\Models\PublicHomeSection;
 use App\Models\User;
@@ -10,6 +11,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -115,10 +117,6 @@ class PublicHomeManagementTest extends TestCase
         ])->assertUnprocessable();
 
         $this->postJson("/api/public-home/items/{$item->id}/file", [
-            'file' => UploadedFile::fake()->create('../budget.pdf', 10, 'application/pdf'),
-        ])->assertUnprocessable();
-
-        $this->postJson("/api/public-home/items/{$item->id}/file", [
             'file' => UploadedFile::fake()->create('template.docx', 10, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'),
         ])->assertOk()
             ->assertJsonPath('file_original_name', 'template.docx')
@@ -126,6 +124,37 @@ class PublicHomeManagementTest extends TestCase
 
         $item->refresh();
         Storage::disk('local')->assertExists($item->file_path);
+    }
+
+    public function test_public_home_file_request_rejects_path_like_original_names(): void
+    {
+        $request = StorePublicHomeFileRequest::create('/fake-upload', 'POST');
+        $request->setContainer($this->app);
+
+        foreach (['../budget.pdf', 'folder\\budget.pdf', 'budget..pdf'] as $originalName) {
+            $path = tempnam(sys_get_temp_dir(), 'public-home-upload-');
+            file_put_contents($path, "%PDF-1.4\n");
+
+            try {
+                $file = new class ($path, $originalName) extends UploadedFile {
+                    public function __construct(string $path, private readonly string $originalName)
+                    {
+                        parent::__construct($path, 'budget.pdf', 'application/pdf', null, true);
+                    }
+
+                    public function getClientOriginalName(): string
+                    {
+                        return $this->originalName;
+                    }
+                };
+                $validator = Validator::make(['file' => $file], $request->rules());
+
+                $this->assertTrue($validator->fails(), $originalName.' should be rejected');
+                $this->assertStringContainsString('文件名不能包含路径字符', implode(' ', $validator->errors()->all()));
+            } finally {
+                @unlink($path);
+            }
+        }
     }
 
     public function test_super_admin_can_manage_public_home_favicon_asset(): void
