@@ -75,37 +75,211 @@
       @current-change="changePage"
     />
 
-    <el-dialog v-model="dialogVisible" :title="editingProject ? '编辑申报项目' : '新建申报项目'" width="560px">
-      <el-form :model="form" label-position="top">
-        <el-form-item label="项目名称"><el-input v-model="form.title" /></el-form-item>
-        <el-form-item label="申报批次">
-          <el-select v-model="form.application_batch_id" placeholder="请选择开放批次" @change="syncFormOptionsWithBatch">
-            <el-option v-for="batch in openBatches" :key="batch.id" :label="batch.name" :value="batch.id" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="项目类型">
-          <el-select v-model="form.project_type" filterable :allow-create="!selectedBatchProjectTypes.length" clearable placeholder="请选择当前批次允许的项目类型">
-            <el-option v-for="item in formProjectTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="项目类别">
-          <el-select v-model="form.category" filterable :allow-create="!selectedBatchCategories.length" clearable placeholder="请选择当前批次允许的项目类别">
-            <el-option v-for="item in formProjectCategoryOptions" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="项目摘要"><el-input v-model="form.summary" type="textarea" :rows="4" /></el-form-item>
-        <el-form-item label="预算金额（元）">
-          <div class="budget-input-row">
-            <el-input-number v-model="form.budget_amount" :min="0" :precision="2" />
-            <span class="input-unit">元</span>
+    <el-drawer
+      v-model="dialogVisible"
+      :title="editingProject ? '编辑申报项目' : '新建申报项目'"
+      size="88%"
+      class="project-workbench-drawer"
+      destroy-on-close
+    >
+      <div class="project-workbench">
+        <div class="workbench-header">
+          <div>
+            <strong>{{ editingProject ? '完善项目申报材料' : '创建项目申报草稿' }}</strong>
+            <span>{{ selectedBatch?.name || '请选择开放批次' }}</span>
           </div>
-        </el-form-item>
-      </el-form>
+          <div class="workbench-progress">
+            <el-progress :percentage="formCompletion" :stroke-width="8" />
+            <span>{{ formCompletionText }}</span>
+          </div>
+        </div>
+
+        <el-alert
+          v-if="selectedBatch"
+          type="info"
+          :closable="false"
+          show-icon
+          class="batch-hint"
+        >
+          <template #title>
+            当前批次允许类别：{{ selectedBatchCategories.length ? selectedBatchCategories.join('、') : '不限' }}；允许类型：{{ selectedBatchProjectTypes.length ? selectedBatchProjectTypes.join('、') : '不限' }}
+          </template>
+        </el-alert>
+
+        <el-tabs v-model="projectFormTab" tab-position="left" class="project-form-tabs">
+          <el-tab-pane label="基本信息" name="basic">
+            <el-form :model="form" label-position="top" class="project-form-grid">
+              <el-form-item label="项目名称" class="span-2"><el-input v-model="form.title" maxlength="200" show-word-limit /></el-form-item>
+              <el-form-item label="申报批次">
+                <el-select v-model="form.application_batch_id" placeholder="请选择开放批次" @change="syncFormOptionsWithBatch">
+                  <el-option v-for="batch in openBatches" :key="batch.id" :label="batch.name" :value="batch.id" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="指南代码"><el-input v-model="form.metadata.guide_code" placeholder="例如 1006" /></el-form-item>
+              <el-form-item label="项目类型">
+                <el-select v-model="form.project_type" filterable :allow-create="!selectedBatchProjectTypes.length" clearable placeholder="请选择当前批次允许的项目类型">
+                  <el-option v-for="item in formProjectTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="项目类别">
+                <el-select v-model="form.category" filterable :allow-create="!selectedBatchCategories.length" clearable placeholder="请选择当前批次允许的项目类别">
+                  <el-option v-for="item in formProjectCategoryOptions" :key="item.value" :label="item.label" :value="item.value" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="起止年限">
+                <el-date-picker v-model="projectDateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" @change="syncProjectDateRange" />
+              </el-form-item>
+              <el-form-item label="归口管理单位"><el-input v-model="form.metadata.management_unit" placeholder="例如 盟级管理部门 / 旗区科技管理部门" /></el-form-item>
+              <el-form-item label="所属领域"><el-input v-model="form.metadata.field" placeholder="例如 资源综合利用" /></el-form-item>
+              <el-form-item label="研究方向"><el-input v-model="form.metadata.research_direction" placeholder="例如 矿产资源开发利用" /></el-form-item>
+              <el-form-item label="合作单位" class="span-2"><el-input v-model="form.metadata.cooperation_units" placeholder="多个单位用顿号或逗号分隔" /></el-form-item>
+              <el-form-item label="预算金额（元）">
+                <div class="budget-input-row">
+                  <el-input-number v-model="form.budget_amount" :min="0" :precision="2" />
+                  <span class="input-unit">元</span>
+                </div>
+              </el-form-item>
+              <el-form-item label="预算换算"><el-input :model-value="formatWanYuan(form.budget_amount)" disabled /></el-form-item>
+            </el-form>
+          </el-tab-pane>
+
+          <el-tab-pane label="项目概述" name="overview">
+            <el-form :model="form" label-position="top" class="project-form-stack">
+              <el-form-item label="项目摘要"><el-input v-model="form.summary" type="textarea" :rows="4" maxlength="5000" show-word-limit /></el-form-item>
+              <el-form-item label="国内外研究进展与产业发展现状"><el-input v-model="form.metadata.overview" type="textarea" :rows="8" /></el-form-item>
+              <el-form-item label="研究目标与主要内容"><el-input v-model="form.metadata.objectives" type="textarea" :rows="6" /></el-form-item>
+              <el-form-item label="创新点与预期成果"><el-input v-model="form.metadata.innovation" type="textarea" :rows="5" /></el-form-item>
+            </el-form>
+          </el-tab-pane>
+
+          <el-tab-pane label="负责人/成员" name="team">
+            <el-form :model="form.metadata" label-position="top" class="project-form-grid">
+              <div class="form-section-title span-2">项目负责人信息</div>
+              <el-form-item label="姓名"><el-input v-model="form.metadata.leader.name" /></el-form-item>
+              <el-form-item label="性别"><el-select v-model="form.metadata.leader.gender" clearable><el-option label="男" value="男" /><el-option label="女" value="女" /></el-select></el-form-item>
+              <el-form-item label="身份证号"><el-input v-model="form.metadata.leader.id_number" /></el-form-item>
+              <el-form-item label="职称"><el-input v-model="form.metadata.leader.professional_title" /></el-form-item>
+              <el-form-item label="工作单位"><el-input v-model="form.metadata.leader.work_unit" /></el-form-item>
+              <el-form-item label="电子邮箱"><el-input v-model="form.metadata.leader.email" /></el-form-item>
+              <el-form-item label="手机"><el-input v-model="form.metadata.leader.mobile" /></el-form-item>
+              <el-form-item label="固定电话"><el-input v-model="form.metadata.leader.phone" /></el-form-item>
+
+              <div class="form-section-title span-2">项目联系人</div>
+              <el-form-item label="姓名"><el-input v-model="form.metadata.contact.name" /></el-form-item>
+              <el-form-item label="职称"><el-input v-model="form.metadata.contact.professional_title" /></el-form-item>
+              <el-form-item label="工作单位"><el-input v-model="form.metadata.contact.work_unit" /></el-form-item>
+              <el-form-item label="电子邮箱"><el-input v-model="form.metadata.contact.email" /></el-form-item>
+              <el-form-item label="手机"><el-input v-model="form.metadata.contact.mobile" /></el-form-item>
+              <el-form-item label="固定电话"><el-input v-model="form.metadata.contact.phone" /></el-form-item>
+            </el-form>
+
+            <div class="table-section-title">
+              <strong>项目参加成员</strong>
+              <el-button size="small" type="primary" :icon="Plus" @click="addMember">新增成员</el-button>
+            </div>
+            <el-table :data="form.metadata.members" border size="small">
+              <el-table-column type="index" label="序号" width="70" />
+              <el-table-column label="姓名" min-width="130"><template #default="{ row }"><el-input v-model="row.name" /></template></el-table-column>
+              <el-table-column label="性别" width="110"><template #default="{ row }"><el-select v-model="row.gender" clearable><el-option label="男" value="男" /><el-option label="女" value="女" /></el-select></template></el-table-column>
+              <el-table-column label="年龄" width="110"><template #default="{ row }"><el-input-number v-model="row.age" :min="0" :max="120" controls-position="right" /></template></el-table-column>
+              <el-table-column label="证件号码" min-width="180"><template #default="{ row }"><el-input v-model="row.id_number" /></template></el-table-column>
+              <el-table-column label="职称" min-width="130"><template #default="{ row }"><el-input v-model="row.professional_title" /></template></el-table-column>
+              <el-table-column label="学历/学位" min-width="150"><template #default="{ row }"><el-input v-model="row.education" /></template></el-table-column>
+              <el-table-column label="所在单位" min-width="180"><template #default="{ row }"><el-input v-model="row.organization" /></template></el-table-column>
+              <el-table-column label="负责人" width="100"><template #default="{ row }"><el-switch v-model="row.is_leader" /></template></el-table-column>
+              <el-table-column label="操作" width="90" fixed="right"><template #default="{ $index }"><el-button size="small" type="danger" :icon="Delete" circle @click="removeMember($index)" /></template></el-table-column>
+            </el-table>
+          </el-tab-pane>
+
+          <el-tab-pane label="经费预算" name="budget">
+            <div class="table-section-title">
+              <div>
+                <strong>项目经费概算</strong>
+                <span>合计 {{ budgetTotalWan }} 万元，已同步为 {{ formatCurrency(form.budget_amount) }}</span>
+              </div>
+              <el-button size="small" type="primary" :icon="Plus" @click="addBudgetItem">新增经费项</el-button>
+            </div>
+            <el-table :data="form.metadata.budget_items" border size="small">
+              <el-table-column type="index" label="序号" width="70" />
+              <el-table-column label="名称" min-width="160"><template #default="{ row }"><el-input v-model="row.name" placeholder="设备费 / 材料费" /></template></el-table-column>
+              <el-table-column label="费用类型" min-width="140"><template #default="{ row }"><el-select v-model="row.expense_type"><el-option label="直接费用" value="直接费用" /><el-option label="间接费用" value="间接费用" /></el-select></template></el-table-column>
+              <el-table-column label="合计(万元)" width="140"><template #default="{ row }"><el-input-number v-model="row.total" :min="0" :precision="2" controls-position="right" @change="syncBudgetAmountFromItems" /></template></el-table-column>
+              <el-table-column label="专项经费(万元)" width="150"><template #default="{ row }"><el-input-number v-model="row.special_fund" :min="0" :precision="2" controls-position="right" /></template></el-table-column>
+              <el-table-column label="自筹经费(万元)" width="150"><template #default="{ row }"><el-input-number v-model="row.self_fund" :min="0" :precision="2" controls-position="right" /></template></el-table-column>
+              <el-table-column label="备注" min-width="160"><template #default="{ row }"><el-input v-model="row.remark" /></template></el-table-column>
+              <el-table-column label="操作" width="90" fixed="right"><template #default="{ $index }"><el-button size="small" type="danger" :icon="Delete" circle @click="removeBudgetItem($index)" /></template></el-table-column>
+            </el-table>
+          </el-tab-pane>
+
+          <el-tab-pane label="设备材料" name="equipment">
+            <div class="table-section-title">
+              <strong>项目设备材料</strong>
+              <el-button size="small" type="primary" :icon="Plus" @click="addEquipmentItem">新增设备/材料</el-button>
+            </div>
+            <el-table :data="form.metadata.equipment_items" border size="small">
+              <el-table-column type="index" label="序号" width="70" />
+              <el-table-column label="物资名称" min-width="180"><template #default="{ row }"><el-input v-model="row.name" /></template></el-table-column>
+              <el-table-column label="型号规格" min-width="180"><template #default="{ row }"><el-input v-model="row.spec" /></template></el-table-column>
+              <el-table-column label="单价(元)" width="140"><template #default="{ row }"><el-input-number v-model="row.unit_price" :min="0" :precision="2" controls-position="right" @change="syncEquipmentAmount(row)" /></template></el-table-column>
+              <el-table-column label="数量" width="120"><template #default="{ row }"><el-input-number v-model="row.quantity" :min="0" :precision="2" controls-position="right" @change="syncEquipmentAmount(row)" /></template></el-table-column>
+              <el-table-column label="金额(万元)" width="140"><template #default="{ row }"><el-input-number v-model="row.amount" :min="0" :precision="2" controls-position="right" /></template></el-table-column>
+              <el-table-column label="用途" min-width="180"><template #default="{ row }"><el-input v-model="row.purpose" /></template></el-table-column>
+              <el-table-column label="操作" width="90" fixed="right"><template #default="{ $index }"><el-button size="small" type="danger" :icon="Delete" circle @click="removeEquipmentItem($index)" /></template></el-table-column>
+            </el-table>
+          </el-tab-pane>
+
+          <el-tab-pane label="盖章承诺" name="seal">
+            <el-form :model="form.metadata.seal" label-position="top" class="project-form-grid">
+              <el-form-item label="法定代表人"><el-input v-model="form.metadata.seal.legal_representative" placeholder="用于申报承诺和盖章信息" /></el-form-item>
+              <el-form-item label="盖章日期"><el-date-picker v-model="form.metadata.seal.seal_date" type="date" value-format="YYYY-MM-DD" /></el-form-item>
+              <el-form-item label="申报承诺" class="span-2">
+                <el-input
+                  v-model="form.metadata.seal.commitment"
+                  type="textarea"
+                  :rows="5"
+                  placeholder="可填写单位承诺、真实性声明、知识产权和伦理合规说明"
+                />
+              </el-form-item>
+              <el-form-item label="备注" class="span-2"><el-input v-model="form.metadata.seal.remark" type="textarea" :rows="3" /></el-form-item>
+            </el-form>
+            <el-alert
+              type="info"
+              show-icon
+              :closable="false"
+              title="盖章扫描件、承诺书、合作协议等文件请在“附件材料”中上传，便于审核人员集中查看。"
+            />
+          </el-tab-pane>
+
+          <el-tab-pane label="附件材料" name="files">
+            <el-alert v-if="!editingProject" title="请先保存草稿，保存成功后即可在同一入口继续上传项目附件。" type="warning" show-icon :closable="false" />
+            <template v-else>
+              <el-alert title="申报书、预算说明、合作协议、盖章扫描件等材料可在这里集中上传。脚本文件和危险扩展名会被拒绝。" type="info" show-icon :closable="false" />
+              <el-upload class="upload-box compact-upload" drag :http-request="uploadFileFromWorkbench" :show-file-list="false">
+                <el-icon><UploadFilled /></el-icon>
+                <div>拖拽文件到这里或点击选择</div>
+              </el-upload>
+              <el-table :data="workbenchFiles" border size="small">
+                <el-table-column type="index" label="#" width="60" />
+                <el-table-column prop="original_name" label="文件名" min-width="240" />
+                <el-table-column prop="extension" label="类型" width="80" />
+                <el-table-column prop="size_bytes" label="大小" width="120"><template #default="{ row }">{{ formatBytes(row.size_bytes) }}</template></el-table-column>
+                <el-table-column label="操作" width="130"><template #default="{ row }"><el-button size="small" :icon="Download" circle @click="downloadFile(row)" /><el-button size="small" type="danger" :icon="Delete" circle @click="deleteWorkbenchFile(row)" /></template></el-table-column>
+              </el-table>
+            </template>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="saveProject">保存草稿</el-button>
+        <div class="workbench-footer">
+          <el-button @click="dialogVisible = false">关闭</el-button>
+          <el-button @click="goPrevFormStep">上一步</el-button>
+          <el-button @click="goNextFormStep">下一步</el-button>
+          <el-button type="primary" :loading="saving" @click="saveProject">保存草稿</el-button>
+          <el-button v-if="editingProject && canSubmit(editingProject)" type="success" :loading="saving" @click="saveAndSubmitProject">提交审核</el-button>
+        </div>
       </template>
-    </el-dialog>
+    </el-drawer>
 
     <el-dialog v-model="extensionVisible" title="申请延期" width="520px">
       <el-form :model="extensionForm" label-position="top">
@@ -128,24 +302,115 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="uploadVisible" title="上传附件" width="520px">
-      <el-alert title="仅允许 jpg、png、pdf、doc、docx、xls、xlsx、zip，脚本文件会被拒绝。" type="info" show-icon :closable="false" />
-      <el-upload class="upload-box" drag :http-request="uploadFile" :show-file-list="false">
-        <el-icon><UploadFilled /></el-icon>
-        <div>拖拽文件到这里或点击选择</div>
-      </el-upload>
-    </el-dialog>
-
-    <el-drawer v-model="detailVisible" title="项目详情" size="640px">
+    <el-drawer v-model="detailVisible" title="项目详情" size="820px">
       <div v-if="detail" class="detail-stack">
         <el-descriptions :column="2" border>
           <el-descriptions-item label="项目名称" :span="2">{{ detail.title }}</el-descriptions-item>
           <el-descriptions-item label="申报单位">{{ detail.unit?.name || '-' }}</el-descriptions-item>
           <el-descriptions-item label="状态">{{ statusMeta(detail.status).label }}</el-descriptions-item>
+          <el-descriptions-item label="申报批次">{{ detail.application_batch?.name || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="项目类别">{{ detail.category || '-' }}</el-descriptions-item>
           <el-descriptions-item label="项目类型">{{ detail.project_type || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="指南代码">{{ detailMetadata.guide_code || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="起止年限">{{ detailDateRange(detailMetadata) }}</el-descriptions-item>
+          <el-descriptions-item label="归口管理单位">{{ detailMetadata.management_unit || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="所属领域">{{ detailMetadata.field || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="研究方向">{{ detailMetadata.research_direction || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="合作单位">{{ detailMetadata.cooperation_units || '-' }}</el-descriptions-item>
           <el-descriptions-item label="预算金额">{{ formatCurrency(detail.budget_amount) }}</el-descriptions-item>
           <el-descriptions-item label="摘要" :span="2">{{ detail.summary || '-' }}</el-descriptions-item>
         </el-descriptions>
+
+        <section>
+          <div class="section-title">项目概述</div>
+          <el-descriptions :column="1" border>
+            <el-descriptions-item label="国内外研究进展与产业发展现状">{{ detailMetadata.overview || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="研究目标与主要内容">{{ detailMetadata.objectives || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="创新点与预期成果">{{ detailMetadata.innovation || '-' }}</el-descriptions-item>
+          </el-descriptions>
+        </section>
+
+        <section>
+          <div class="section-title">负责人 / 联系人</div>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="负责人">{{ detailMetadata.leader.name || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="负责人手机">{{ detailMetadata.leader.mobile || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="负责人职称">{{ detailMetadata.leader.professional_title || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="负责人单位">{{ detailMetadata.leader.work_unit || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="负责人邮箱">{{ detailMetadata.leader.email || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="负责人电话">{{ detailMetadata.leader.phone || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="联系人">{{ detailMetadata.contact.name || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="联系人手机">{{ detailMetadata.contact.mobile || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="联系人职称">{{ detailMetadata.contact.professional_title || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="联系人单位">{{ detailMetadata.contact.work_unit || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="联系人邮箱">{{ detailMetadata.contact.email || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="联系人电话">{{ detailMetadata.contact.phone || '-' }}</el-descriptions-item>
+          </el-descriptions>
+        </section>
+
+        <section>
+          <div class="section-title">项目参加成员</div>
+          <el-table :data="detailMetadata.members" border size="small" empty-text="暂无成员">
+            <el-table-column type="index" label="序号" width="70" />
+            <el-table-column prop="name" label="姓名" min-width="120" />
+            <el-table-column prop="gender" label="性别" width="80" />
+            <el-table-column prop="age" label="年龄" width="80" />
+            <el-table-column prop="professional_title" label="职称" min-width="120" />
+            <el-table-column prop="education" label="学历/学位" min-width="130" />
+            <el-table-column prop="organization" label="所在单位" min-width="180" />
+            <el-table-column label="负责人" width="90">
+              <template #default="{ row }">{{ row.is_leader ? '是' : '否' }}</template>
+            </el-table-column>
+          </el-table>
+        </section>
+
+        <section>
+          <div class="section-title">经费预算</div>
+          <el-table :data="detailMetadata.budget_items" border size="small" empty-text="暂无预算明细">
+            <el-table-column type="index" label="序号" width="70" />
+            <el-table-column prop="name" label="名称" min-width="160" />
+            <el-table-column prop="expense_type" label="费用类型" width="120" />
+            <el-table-column label="合计(万元)" width="120">
+              <template #default="{ row }">{{ formatNumber(row.total) }}</template>
+            </el-table-column>
+            <el-table-column label="专项经费(万元)" width="140">
+              <template #default="{ row }">{{ formatNumber(row.special_fund) }}</template>
+            </el-table-column>
+            <el-table-column label="自筹经费(万元)" width="140">
+              <template #default="{ row }">{{ formatNumber(row.self_fund) }}</template>
+            </el-table-column>
+            <el-table-column prop="remark" label="备注" min-width="160" />
+          </el-table>
+        </section>
+
+        <section>
+          <div class="section-title">设备材料</div>
+          <el-table :data="detailMetadata.equipment_items" border size="small" empty-text="暂无设备材料">
+            <el-table-column type="index" label="序号" width="70" />
+            <el-table-column prop="name" label="物资名称" min-width="160" />
+            <el-table-column prop="spec" label="型号规格" min-width="160" />
+            <el-table-column label="单价(元)" width="120">
+              <template #default="{ row }">{{ formatNumber(row.unit_price) }}</template>
+            </el-table-column>
+            <el-table-column label="数量" width="100">
+              <template #default="{ row }">{{ formatNumber(row.quantity) }}</template>
+            </el-table-column>
+            <el-table-column label="金额(万元)" width="120">
+              <template #default="{ row }">{{ formatNumber(row.amount) }}</template>
+            </el-table-column>
+            <el-table-column prop="purpose" label="用途" min-width="180" />
+          </el-table>
+        </section>
+
+        <section>
+          <div class="section-title">盖章承诺</div>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="法定代表人">{{ detailMetadata.seal.legal_representative || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="盖章日期">{{ detailMetadata.seal.seal_date || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="申报承诺" :span="2">{{ detailMetadata.seal.commitment || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="备注" :span="2">{{ detailMetadata.seal.remark || '-' }}</el-descriptions-item>
+          </el-descriptions>
+        </section>
 
         <section v-if="detail.timeline?.length">
           <div class="section-title">项目阶段</div>
@@ -222,7 +487,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Checked, CloseBold, Connection, Delete, Download, Files, Plus, Refresh, Search, UploadFilled, View } from '@element-plus/icons-vue'
+import { Checked, CloseBold, Connection, Delete, Download, Files, Plus, Search, UploadFilled, View } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api, downloadApi } from '../api.js'
 import { useSessionStore } from '../store.js'
@@ -285,15 +550,24 @@ const applicationBatchId = ref('')
 const e2eFilter = ref('')
 const pendingExtensionOnly = ref(false)
 const dialogVisible = ref(false)
-const uploadVisible = ref(false)
 const extensionVisible = ref(false)
 const closeVisible = ref(false)
 const detailVisible = ref(false)
 const detail = ref(null)
-const currentProject = ref(null)
 const editingProject = ref(null)
 const actionProject = ref(null)
-const form = reactive({ title: '', application_batch_id: null, category: '', project_type: '', summary: '', budget_amount: 0 })
+const projectFormTab = ref('basic')
+const projectDateRange = ref([])
+const formSteps = ['basic', 'overview', 'team', 'budget', 'equipment', 'seal', 'files']
+const form = reactive({
+  title: '',
+  application_batch_id: null,
+  category: '',
+  project_type: '',
+  summary: '',
+  budget_amount: 0,
+  metadata: emptyProjectMetadata()
+})
 const extensionForm = reactive({ reason: '', expected_date: '' })
 const closeForm = reactive({ comment: '' })
 const pagination = reactive({ current_page: 1, per_page: 20, total: 0 })
@@ -311,6 +585,137 @@ const formProjectTypeOptions = computed(() => {
   if (selectedBatchProjectTypes.value.length) return selectedBatchProjectTypes.value.map((value) => optionFromValue(value))
   return projectTypeOptions.value.map((item) => ({ label: item.label, value: item.label }))
 })
+const workbenchFiles = computed(() => editingProject.value?.files || [])
+const detailMetadata = computed(() => normalizeProjectMetadata(detail.value?.metadata || {}))
+const budgetTotalWan = computed(() => {
+  const total = (form.metadata.budget_items || []).reduce((sum, item) => sum + Number(item.total || 0), 0)
+  return total.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+})
+const formCompletion = computed(() => {
+  const checks = [
+    form.title,
+    form.application_batch_id,
+    form.project_type,
+    form.category,
+    form.summary,
+    form.budget_amount,
+    form.metadata.guide_code,
+    form.metadata.start_date && form.metadata.end_date,
+    form.metadata.management_unit,
+    form.metadata.field,
+    form.metadata.research_direction,
+    form.metadata.overview,
+    form.metadata.objectives,
+    form.metadata.innovation,
+    form.metadata.leader?.name,
+    form.metadata.leader?.mobile,
+    form.metadata.contact?.name,
+    form.metadata.contact?.mobile,
+    form.metadata.members?.length,
+    form.metadata.budget_items?.length,
+    form.metadata.equipment_items?.length,
+    editingProject.value?.files?.length
+  ]
+  const done = checks.filter(Boolean).length
+  return Math.min(100, Math.round((done / checks.length) * 100))
+})
+const formCompletionText = computed(() => {
+  if (formCompletion.value >= 85) return '材料基本完整，可保存并提交审核'
+  if (formCompletion.value >= 55) return '主体信息已填写，建议继续补齐成员、预算和附件'
+  return '先完成基本信息、概述和联系人'
+})
+
+function emptyPerson() {
+  return {
+    name: '',
+    gender: '',
+    id_number: '',
+    professional_title: '',
+    work_unit: '',
+    email: '',
+    mobile: '',
+    phone: ''
+  }
+}
+
+function emptyProjectMetadata() {
+  return {
+    guide_code: '',
+    start_date: '',
+    end_date: '',
+    management_unit: '',
+    field: '',
+    research_direction: '',
+    cooperation_units: '',
+    overview: '',
+    objectives: '',
+    innovation: '',
+    leader: emptyPerson(),
+    contact: emptyPerson(),
+    members: [],
+    budget_items: [],
+    equipment_items: [],
+    seal: {
+      legal_representative: '',
+      commitment: '',
+      seal_date: '',
+      remark: ''
+    }
+  }
+}
+
+function normalizeProjectMetadata(metadata = {}) {
+  const defaults = emptyProjectMetadata()
+  const source = metadata && typeof metadata === 'object' ? metadata : {}
+
+  return {
+    ...defaults,
+    ...source,
+    leader: { ...defaults.leader, ...(source.leader || {}) },
+    contact: { ...defaults.contact, ...(source.contact || {}) },
+    members: Array.isArray(source.members) ? source.members.map(normalizeMember) : [],
+    budget_items: Array.isArray(source.budget_items) ? source.budget_items.map(normalizeBudgetItem) : [],
+    equipment_items: Array.isArray(source.equipment_items) ? source.equipment_items.map(normalizeEquipmentItem) : [],
+    seal: { ...defaults.seal, ...(source.seal || {}) }
+  }
+}
+
+function normalizeMember(member = {}) {
+  return {
+    name: member.name || '',
+    gender: member.gender || '',
+    age: member.age === null || member.age === undefined || member.age === '' ? null : Number(member.age),
+    id_number: member.id_number || '',
+    professional_title: member.professional_title || '',
+    education: member.education || '',
+    organization: member.organization || '',
+    role: member.role || '',
+    task: member.task || '',
+    is_leader: Boolean(member.is_leader)
+  }
+}
+
+function normalizeBudgetItem(item = {}) {
+  return {
+    name: item.name || '',
+    expense_type: item.expense_type || '直接费用',
+    total: Number(item.total || 0),
+    special_fund: Number(item.special_fund || 0),
+    self_fund: Number(item.self_fund || 0),
+    remark: item.remark || ''
+  }
+}
+
+function normalizeEquipmentItem(item = {}) {
+  return {
+    name: item.name || '',
+    spec: item.spec || '',
+    unit_price: Number(item.unit_price || 0),
+    quantity: Number(item.quantity || 0),
+    amount: Number(item.amount || 0),
+    purpose: item.purpose || ''
+  }
+}
 
 function statusMeta(value) {
   return statusLabels[value] || { label: value || '-', type: 'info' }
@@ -383,6 +788,124 @@ function syncFormOptionsWithBatch() {
   }
 }
 
+function syncProjectDateRange() {
+  form.metadata.start_date = projectDateRange.value?.[0] || ''
+  form.metadata.end_date = projectDateRange.value?.[1] || ''
+}
+
+function syncProjectDateRangeFromForm() {
+  projectDateRange.value = form.metadata.start_date && form.metadata.end_date
+    ? [form.metadata.start_date, form.metadata.end_date]
+    : []
+}
+
+function goPrevFormStep() {
+  const index = formSteps.indexOf(projectFormTab.value)
+  projectFormTab.value = formSteps[Math.max(0, index - 1)] || formSteps[0]
+}
+
+function goNextFormStep() {
+  const index = formSteps.indexOf(projectFormTab.value)
+  projectFormTab.value = formSteps[Math.min(formSteps.length - 1, index + 1)] || formSteps[0]
+}
+
+function addMember() {
+  form.metadata.members.push(normalizeMember({}))
+}
+
+function removeMember(index) {
+  form.metadata.members.splice(index, 1)
+}
+
+function addBudgetItem() {
+  form.metadata.budget_items.push(normalizeBudgetItem({}))
+  syncBudgetAmountFromItems()
+}
+
+function removeBudgetItem(index) {
+  form.metadata.budget_items.splice(index, 1)
+  syncBudgetAmountFromItems()
+}
+
+function addEquipmentItem() {
+  form.metadata.equipment_items.push(normalizeEquipmentItem({}))
+}
+
+function removeEquipmentItem(index) {
+  form.metadata.equipment_items.splice(index, 1)
+}
+
+function syncBudgetAmountFromItems() {
+  const totalWan = form.metadata.budget_items.reduce((sum, item) => sum + Number(item.total || 0), 0)
+  if (totalWan > 0) form.budget_amount = Number((totalWan * 10000).toFixed(2))
+}
+
+function syncEquipmentAmount(row) {
+  const amountYuan = Number(row.unit_price || 0) * Number(row.quantity || 0)
+  row.amount = Number((amountYuan / 10000).toFixed(2))
+}
+
+function formatWanYuan(value) {
+  const amount = Number(value || 0)
+  if (!amount) return '0.00 万元'
+  return `${(amount / 10000).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 万元`
+}
+
+function applyProjectToForm(project = {}) {
+  Object.assign(form, {
+    title: project.title || '',
+    category: project.category || '',
+    project_type: project.project_type || '',
+    application_batch_id: project.application_batch_id || project.application_batch?.id || null,
+    summary: project.summary || '',
+    budget_amount: Number(project.budget_amount || 0),
+    metadata: normalizeProjectMetadata(project.metadata || {})
+  })
+  syncProjectDateRangeFromForm()
+  syncFormOptionsWithBatch()
+}
+
+function projectPayload() {
+  syncProjectDateRange()
+  return {
+    title: form.title,
+    application_batch_id: form.application_batch_id,
+    category: form.category,
+    project_type: form.project_type,
+    summary: form.summary,
+    budget_amount: Number(form.budget_amount || 0),
+    metadata: normalizeProjectMetadata(form.metadata)
+  }
+}
+
+function validateProjectDraft() {
+  if (!String(form.title || '').trim()) {
+    projectFormTab.value = 'basic'
+    ElMessage.warning('请先填写项目名称')
+    return false
+  }
+
+  if (!form.application_batch_id) {
+    projectFormTab.value = 'basic'
+    ElMessage.warning('请选择申报批次')
+    return false
+  }
+
+  if (selectedBatchCategories.value.length && !form.category) {
+    projectFormTab.value = 'basic'
+    ElMessage.warning('请选择项目类别')
+    return false
+  }
+
+  if (selectedBatchProjectTypes.value.length && !form.project_type) {
+    projectFormTab.value = 'basic'
+    ElMessage.warning('请选择项目类型')
+    return false
+  }
+
+  return true
+}
+
 function isUserCancel(err) {
   return err === 'cancel' || err === 'close' || err?.message === 'cancel' || err?.message === 'close'
 }
@@ -412,7 +935,7 @@ function moreActions(row) {
 function runMoreAction(command, row) {
   const handlers = {
     edit: () => openEdit(row),
-    upload: () => openUpload(row),
+    upload: () => openWorkbenchFiles(row),
     submit: () => submitProject(row),
     withdraw: () => withdrawProject(row),
     extension: () => openExtension(row),
@@ -426,7 +949,17 @@ function runMoreAction(command, row) {
 }
 
 function resetForm() {
-  Object.assign(form, { title: '', application_batch_id: openBatches.value[0]?.id || null, category: '', project_type: '', summary: '', budget_amount: 0 })
+  Object.assign(form, {
+    title: '',
+    application_batch_id: openBatches.value[0]?.id || null,
+    category: '',
+    project_type: '',
+    summary: '',
+    budget_amount: 0,
+    metadata: emptyProjectMetadata()
+  })
+  projectDateRange.value = []
+  projectFormTab.value = 'basic'
   syncFormOptionsWithBatch()
 }
 
@@ -536,38 +1069,51 @@ async function openCreate() {
 
 async function openEdit(row) {
   if (!projectTypeOptions.value.length && !projectCategoryOptions.value.length) await loadDictionaries()
-  editingProject.value = row
-  Object.assign(form, {
-    title: row.title || '',
-    category: row.category || '',
-    project_type: row.project_type || '',
-    application_batch_id: row.application_batch_id || row.application_batch?.id || null,
-    summary: row.summary || '',
-    budget_amount: Number(row.budget_amount || 0)
-  })
+  const project = row.files ? row : await api(`/projects/${row.id}`)
+  editingProject.value = project
+  projectFormTab.value = 'basic'
+  applyProjectToForm(project)
   dialogVisible.value = true
+}
+
+async function openWorkbenchFiles(row) {
+  await openEdit(row)
+  projectFormTab.value = 'files'
 }
 
 async function saveProject() {
   if (!unitCanWriteProjects.value) {
     ElMessage.error('单位已停用，无法维护申报项目')
-    return
+    return null
   }
+
+  if (!validateProjectDraft()) return null
 
   saving.value = true
   try {
+    const wasEditing = Boolean(editingProject.value)
     const path = editingProject.value ? `/projects/${editingProject.value.id}` : '/projects'
     const method = editingProject.value ? 'PUT' : 'POST'
-    await api(path, { method, body: JSON.stringify(form) })
-    ElMessage.success(editingProject.value ? '项目已保存' : '项目草稿已创建')
-    dialogVisible.value = false
-    resetForm()
+    const saved = await api(path, { method, body: JSON.stringify(projectPayload()) })
+    const fullProject = await api(`/projects/${saved.id}`)
+    editingProject.value = fullProject
+    applyProjectToForm(fullProject)
+    ElMessage.success(wasEditing ? '项目已保存，可继续完善材料' : '项目草稿已创建，可继续上传附件')
     await loadProjects()
+    if (detail.value?.id === fullProject.id) detail.value = fullProject
+    return fullProject
   } catch (err) {
     showActionError(err, '项目保存失败')
+    return null
   } finally {
     saving.value = false
   }
+}
+
+async function saveAndSubmitProject() {
+  const saved = await saveProject()
+  if (!saved) return
+  await submitProject(saved)
 }
 
 async function submitProject(row) {
@@ -580,6 +1126,10 @@ async function submitProject(row) {
     await ElMessageBox.confirm('提交后将进入区县审核，确认提交？', '提交项目', { type: 'warning' })
     await api(`/projects/${row.id}/submit`, { method: 'POST' })
     ElMessage.success('项目已提交审核')
+    if (editingProject.value?.id === row.id) {
+      editingProject.value = await api(`/projects/${row.id}`)
+      dialogVisible.value = false
+    }
     await loadProjects()
   } catch (err) {
     showActionError(err, '项目提交失败')
@@ -721,12 +1271,13 @@ function openFileLogs(row) {
   router.push(`/operation-logs?target_type=${encodeURIComponent('App\\Models\\ProjectFile')}&target_id=${row.id}`)
 }
 
-function openUpload(row) {
-  currentProject.value = row
-  uploadVisible.value = true
-}
+async function uploadFileFromWorkbench({ file }) {
+  if (!editingProject.value?.id) {
+    ElMessage.warning('请先保存草稿，再上传附件')
+    projectFormTab.value = 'basic'
+    return
+  }
 
-async function uploadFile({ file }) {
   if (!unitCanWriteProjects.value) {
     ElMessage.error('单位已停用，无法上传附件')
     return
@@ -735,10 +1286,10 @@ async function uploadFile({ file }) {
   try {
     const body = new FormData()
     body.append('file', file)
-    await api(`/projects/${currentProject.value.id}/files`, { method: 'POST', body })
+    await api(`/projects/${editingProject.value.id}/files`, { method: 'POST', body })
+    editingProject.value = await api(`/projects/${editingProject.value.id}`)
     ElMessage.success('附件已上传')
-    uploadVisible.value = false
-    if (detail.value?.id === currentProject.value.id) await openDetail(currentProject.value)
+    if (detail.value?.id === editingProject.value.id) detail.value = editingProject.value
   } catch (err) {
     showActionError(err, '附件上传失败')
   }
@@ -785,11 +1336,42 @@ async function deleteFile(row) {
   }
 }
 
+async function deleteWorkbenchFile(row) {
+  if (!editingProject.value?.id) return
+
+  if (!unitCanWriteProjects.value) {
+    ElMessage.error('单位已停用，无法删除附件')
+    return
+  }
+
+  try {
+    await ElMessageBox.confirm('确认删除该附件？', '删除附件', { type: 'warning' })
+    await api(`/files/${row.id}`, { method: 'DELETE' })
+    editingProject.value = await api(`/projects/${editingProject.value.id}`)
+    ElMessage.success('附件已删除')
+    if (detail.value?.id === editingProject.value.id) detail.value = editingProject.value
+  } catch (err) {
+    showActionError(err, '附件删除失败')
+  }
+}
+
 function formatCurrency(value) {
   if (value === null || value === undefined || value === '') return '-'
   const amount = Number(value)
   if (Number.isNaN(amount)) return `${value} 元`
   return `${amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 元`
+}
+
+function formatNumber(value) {
+  if (value === null || value === undefined || value === '') return '-'
+  const number = Number(value)
+  if (Number.isNaN(number)) return value
+  return number.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function detailDateRange(metadata) {
+  if (metadata.start_date && metadata.end_date) return `${metadata.start_date} 至 ${metadata.end_date}`
+  return metadata.start_date || metadata.end_date || '-'
 }
 
 function formatBytes(value) {
@@ -832,6 +1414,120 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
+.project-workbench {
+  display: grid;
+  gap: 16px;
+  min-height: calc(100vh - 190px);
+}
+
+.workbench-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+  gap: 20px;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.workbench-header strong {
+  display: block;
+  color: #0f172a;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.workbench-header span {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.workbench-progress {
+  display: grid;
+  gap: 6px;
+}
+
+.workbench-progress span {
+  margin: 0;
+  text-align: right;
+}
+
+.batch-hint {
+  border-radius: 8px;
+}
+
+.project-form-tabs {
+  min-height: 560px;
+}
+
+.project-form-tabs :deep(.el-tabs__content) {
+  min-width: 0;
+  padding-left: 16px;
+}
+
+.project-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(260px, 1fr));
+  gap: 14px 18px;
+}
+
+.project-form-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.project-form-grid :deep(.el-form-item) {
+  margin-bottom: 0;
+}
+
+.project-form-grid :deep(.el-input-number),
+.project-form-grid :deep(.el-select),
+.project-form-grid :deep(.el-date-editor) {
+  width: 100%;
+}
+
+.span-2 {
+  grid-column: 1 / -1;
+}
+
+.form-section-title,
+.table-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #0f172a;
+}
+
+.form-section-title {
+  padding: 4px 0 2px;
+  font-weight: 600;
+}
+
+.table-section-title {
+  margin: 8px 0 12px;
+}
+
+.table-section-title span {
+  margin-left: 10px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.workbench-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.compact-upload {
+  margin: 12px 0;
+}
+
 .budget-input-row {
   display: flex;
   align-items: center;
@@ -841,5 +1537,24 @@ onUnmounted(() => {
 .input-unit {
   color: #334155;
   font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .workbench-header,
+  .project-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .project-form-tabs {
+    min-height: auto;
+  }
+
+  .project-form-tabs :deep(.el-tabs__header) {
+    width: 112px;
+  }
+
+  .project-form-tabs :deep(.el-tabs__content) {
+    padding-left: 10px;
+  }
 }
 </style>
