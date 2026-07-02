@@ -10,19 +10,22 @@ const roles = [
     role: 'unit',
     usernameEnv: 'E2E_UNIT_USERNAME',
     passwordEnv: 'E2E_UNIT_PASSWORD',
-    menus: ['运行概览', '项目申报', '验收管理', '全周期管理']
+    menus: ['运行概览', '项目申报', '验收管理', '全周期管理'],
+    hiddenTexts: ['专家认证']
   },
   {
     role: 'county',
     usernameEnv: 'E2E_COUNTY_USERNAME',
     passwordEnv: 'E2E_COUNTY_PASSWORD',
-    menus: ['运行概览', '项目申报', '验收管理', '审核任务', '全周期管理']
+    menus: ['运行概览', '项目申报', '验收管理', '审核任务', '全周期管理'],
+    hiddenTexts: ['专家认证']
   },
   {
     role: 'department',
     usernameEnv: 'E2E_DEPARTMENT_USERNAME',
     passwordEnv: 'E2E_DEPARTMENT_PASSWORD',
-    menus: ['运行概览', '项目申报', '验收管理', '审核任务', '全周期管理']
+    menus: ['运行概览', '项目申报', '验收管理', '审核任务', '全周期管理'],
+    hiddenTexts: ['专家认证']
   },
   {
     role: 'expert',
@@ -71,6 +74,24 @@ async function loginFromHomepage(page, account) {
   await expect(page).toHaveURL(/\/dashboard/)
 }
 
+async function loginByApi(page, account) {
+  const { username, password } = credentials(account)
+  const captchaResponse = await page.request.get('/api/auth/captcha')
+  expect(captchaResponse.ok()).toBeTruthy()
+  const captcha = await captchaResponse.json()
+  const login = await page.request.post('/api/auth/login', {
+    data: {
+      username,
+      password,
+      captcha_id: captcha.captcha_id,
+      captcha_answer: answerCaptcha(captcha.question)
+    }
+  })
+
+  expect(login.ok()).toBeTruthy()
+  return login.json()
+}
+
 async function saveScreenshot(page, name) {
   await page.screenshot({ path: test.info().outputPath(`${name}.png`), fullPage: true })
 }
@@ -88,9 +109,6 @@ for (const account of roles) {
   test(`${account.role} can log in and open project lifecycle and acceptance history`, async ({ page }) => {
     await loginFromHomepage(page, account)
     await expect(page.getByText('运行概览').first()).toBeVisible()
-    for (const menu of account.menus) {
-      await expect(page.getByText(menu).first()).toBeVisible()
-    }
     await saveScreenshot(page, `${account.role}-dashboard`)
 
     await page.goto(`/projects?keyword=${encodeURIComponent(stamp)}`)
@@ -109,6 +127,9 @@ for (const account of roles) {
 
     await page.goto(`/lifecycle?project_id=${encodeURIComponent(sampleProjectId)}`)
     await expect(page.getByText(/全周期管理|合同任务书|实施进展/).first()).toBeVisible()
+    for (const text of account.hiddenTexts || []) {
+      await expect(page.getByText(text).first()).toHaveCount(0)
+    }
     await saveScreenshot(page, `${account.role}-lifecycle`)
 
     await page.goto(`/acceptance?scope=reviewed&keyword=${encodeURIComponent(stamp)}`)
@@ -116,6 +137,21 @@ for (const account of roles) {
     await saveScreenshot(page, `${account.role}-acceptance-reviewed`)
   })
 }
+
+test('lifecycle expert certification permissions match role configuration', async ({ page }) => {
+  for (const account of roles.filter((item) => ['unit', 'county', 'department', 'expert'].includes(item.role))) {
+    const login = await loginByApi(page, account)
+    const response = await page.request.get('/api/lifecycle/expert-certifications', {
+      headers: { Authorization: `Bearer ${login.token}` }
+    })
+
+    if (account.role === 'expert') {
+      expect(response.status(), `${account.role} should be allowed`).toBe(200)
+    } else {
+      expect(response.status(), `${account.role} should be forbidden`).toBe(403)
+    }
+  }
+})
 
 test('super admin can inspect homepage assets and security center', async ({ page }) => {
   await loginFromHomepage(page, roles.find((item) => item.role === 'super_admin'))

@@ -3,7 +3,7 @@
     <div class="toolbar">
       <div>
         <h2>{{ texts.t('page.lifecycle.title', '全周期管理') }}</h2>
-        <span class="muted">{{ texts.t('lifecycle.page.subtitle', '合同任务书、项目实施进展、整改闭环和专家认证') }}</span>
+        <span class="muted">{{ lifecycleSubtitle }}</span>
       </div>
       <div class="toolbar-actions">
         <el-input v-model="keyword" clearable :placeholder="texts.t('lifecycle.filter.keyword', '项目/单位/标题')" @keyup.enter="loadActiveTab" />
@@ -359,6 +359,17 @@ const tabPermissions = {
   expert_certifications: 'view_expert_certifications'
 }
 const availableTabs = computed(() => Object.keys(tabPermissions).filter(canViewTab))
+const lifecycleSubtitle = computed(() => {
+  const labels = {
+    task_books: texts.t('lifecycle.task_books.tab', '合同任务书'),
+    progress: texts.t('lifecycle.progress.tab', '实施进展'),
+    rectifications: texts.t('lifecycle.rectifications.tab', '整改闭环'),
+    expert_certifications: texts.t('lifecycle.certifications.tab', '专家认证')
+  }
+  const visibleLabels = availableTabs.value.map((tab) => labels[tab]).filter(Boolean)
+
+  return visibleLabels.length ? `${visibleLabels.join('、')}管理` : texts.t('lifecycle.page.subtitle', '全周期业务管理')
+})
 
 function statusMeta(value) {
   return statusLabels[value] || { label: value || '-', type: 'info' }
