@@ -150,7 +150,6 @@ final class Role
             'review_rectifications',
             'view_expert_certifications',
             'review_expert_certifications',
-            'view_migration',
             'view_operation_logs',
             'manage_home_content',
             'manage_dictionaries',
@@ -169,6 +168,7 @@ final class Role
                 'security.manage_whitelist',
                 'manage_system_texts',
                 'system_text.manage',
+                'view_migration',
             ],
             self::ADMIN => $adminBusiness,
             self::COUNTY, self::DEPARTMENT, self::EXPERT => [

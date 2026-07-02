@@ -273,7 +273,7 @@ class AuthProfileTest extends TestCase
         ]);
     }
 
-    public function test_admin_profile_contains_migration_and_logs_but_not_sensitive_settings(): void
+    public function test_admin_profile_contains_logs_but_not_migration_or_sensitive_settings(): void
     {
         User::factory()->create([
             'username' => 'admin-user',
@@ -292,10 +292,10 @@ class AuthProfileTest extends TestCase
         $permissions = collect($response->json('user.permissions'));
         $menus = collect($response->json('user.menus'))->pluck('path');
 
-        $this->assertTrue($permissions->contains('view_migration'));
+        $this->assertFalse($permissions->contains('view_migration'));
         $this->assertFalse($permissions->contains('manage_settings'));
         $this->assertTrue($permissions->contains('view_operation_logs'));
-        $this->assertTrue($menus->contains('/migration'));
+        $this->assertFalse($menus->contains('/migration'));
         $this->assertFalse($menus->contains('/settings'));
         $this->assertTrue($menus->contains('/operation-logs'));
     }
