@@ -19,18 +19,30 @@
       </div>
     </div>
 
-    <el-table :data="users" border v-loading="loading">
-      <el-table-column prop="username" label="账号" width="150" />
-      <el-table-column prop="name" label="姓名" width="140" />
-      <el-table-column label="角色" width="120">
+    <el-table
+      :data="users"
+      border
+      v-loading="loading"
+      :default-sort="{ prop: sortBy, order: sortOrder }"
+      @sort-change="handleSortChange"
+    >
+      <el-table-column type="index" label="序号" width="72" align="center" :index="tableIndex" fixed="left" />
+      <el-table-column prop="username" label="账号" width="150" sortable="custom" />
+      <el-table-column prop="name" label="姓名" width="140" sortable="custom" />
+      <el-table-column prop="role" label="角色" width="120" sortable="custom">
         <template #default="{ row }">{{ roleLabel(row.role) }}</template>
       </el-table-column>
       <el-table-column prop="unit.name" label="所属单位" min-width="200" />
       <el-table-column prop="mobile" label="手机" width="140" />
       <el-table-column prop="email" label="邮箱" min-width="190" />
-      <el-table-column prop="last_login_at" label="最后登录" width="180" />
+      <el-table-column prop="created_at" label="创建时间" width="170" sortable="custom">
+        <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
+      </el-table-column>
+      <el-table-column prop="last_login_at" label="最后登录" width="170" sortable="custom">
+        <template #default="{ row }">{{ formatDateTime(row.last_login_at) }}</template>
+      </el-table-column>
       <el-table-column prop="last_login_ip" label="登录IP" width="140" />
-      <el-table-column label="状态" width="100">
+      <el-table-column prop="is_active" label="状态" width="100" sortable="custom">
         <template #default="{ row }"><el-tag :type="row.is_active ? 'success' : 'info'">{{ row.is_active ? '启用' : '停用' }}</el-tag></template>
       </el-table-column>
       <el-table-column label="注册来源" width="120">
@@ -139,6 +151,8 @@ const keyword = ref('')
 const role = ref('')
 const isActive = ref('')
 const pendingRegistration = ref(false)
+const sortBy = ref('created_at')
+const sortDirection = ref('desc')
 const users = ref([])
 const units = ref([])
 const dialogVisible = ref(false)
@@ -149,6 +163,7 @@ const form = reactive(emptyForm())
 const passwordForm = reactive({ password: '', password_confirmation: '' })
 const pagination = reactive({ current_page: 1, per_page: 20, total: 0 })
 const canResetPassword = computed(() => session.role === 'super_admin')
+const sortOrder = computed(() => (sortDirection.value === 'asc' ? 'ascending' : 'descending'))
 
 function emptyForm() {
   return { username: '', name: '', role: 'unit', unit_id: null, mobile: '', email: '', password: '', is_active: true }
@@ -156,6 +171,26 @@ function emptyForm() {
 
 function roleLabel(value) {
   return roleOptions.find((item) => item.value === value)?.label || value || '-'
+}
+
+function tableIndex(index) {
+  return (pagination.current_page - 1) * pagination.per_page + index + 1
+}
+
+function formatDateTime(value) {
+  if (!value) return '-'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  const parts = [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0')
+  ]
+  const time = [
+    String(date.getHours()).padStart(2, '0'),
+    String(date.getMinutes()).padStart(2, '0')
+  ]
+  return `${parts.join('-')} ${time.join(':')}`
 }
 
 async function loadUsers() {
@@ -178,6 +213,8 @@ function buildUserQuery() {
   if (role.value) params.set('role', role.value)
   if (isActive.value) params.set('is_active', isActive.value)
   if (pendingRegistration.value) params.set('pending_registration', '1')
+  params.set('sort_by', sortBy.value)
+  params.set('sort_direction', sortDirection.value)
   if (pagination.current_page > 1) params.set('page', pagination.current_page)
   return params.toString() ? `?${params.toString()}` : ''
 }
@@ -190,6 +227,12 @@ function reloadUsers() {
 function changePage(page) {
   pagination.current_page = page
   loadUsers()
+}
+
+function handleSortChange({ prop, order }) {
+  sortBy.value = prop || 'created_at'
+  sortDirection.value = order === 'ascending' ? 'asc' : 'desc'
+  reloadUsers()
 }
 
 function togglePendingRegistration() {
@@ -281,6 +324,8 @@ async function exportUsers() {
   if (role.value) params.set('role', role.value)
   if (isActive.value) params.set('is_active', isActive.value)
   if (pendingRegistration.value) params.set('pending_registration', '1')
+  params.set('sort_by', sortBy.value)
+  params.set('sort_direction', sortDirection.value)
   const query = params.toString() ? `?${params.toString()}` : ''
   try {
     await downloadApi(`/users/export.csv${query}`, `users-${new Date().toISOString().slice(0, 10)}.csv`)

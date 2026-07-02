@@ -18,7 +18,7 @@ class UserController extends Controller
     {
         $this->authorizeUserManagement($request);
 
-        $query = User::query()->with(['unit', 'additionalRoles'])->latest();
+        $query = User::query()->with(['unit', 'additionalRoles']);
 
         if ($role = $request->query('role')) {
             $query->where('role', $role);
@@ -48,6 +48,17 @@ class UserController extends Controller
                         });
                 });
         }
+
+        $sortBy = $request->query('sort_by', 'created_at');
+        $sortDirection = strtolower((string) $request->query('sort_direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $sortableColumns = ['created_at', 'last_login_at', 'username', 'name', 'role', 'is_active'];
+
+        if (! in_array($sortBy, $sortableColumns, true)) {
+            $sortBy = 'created_at';
+        }
+
+        $query->orderBy($sortBy, $sortDirection)
+            ->orderBy('id', $sortDirection);
 
         return $query->paginate(20);
     }

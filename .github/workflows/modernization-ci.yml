@@ -59,6 +59,11 @@ jobs:
           extensions: mbstring, pdo_sqlite, sqlite3, zip, fileinfo
           coverage: none
 
+      - name: Prepare Laravel environment
+        run: |
+          cp .env.example .env
+          mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 

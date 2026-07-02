@@ -13,13 +13,22 @@
       </div>
     </div>
 
-    <el-table :data="messages" border v-loading="loading">
-      <el-table-column prop="title" label="标题" min-width="220" />
-      <el-table-column label="类型" width="120">
+    <el-table
+      :data="messages"
+      border
+      v-loading="loading"
+      :default-sort="{ prop: sortBy, order: sortOrder }"
+      @sort-change="handleSortChange"
+    >
+      <el-table-column type="index" label="序号" width="72" align="center" :index="tableIndex" fixed="left" />
+      <el-table-column prop="title" label="标题" min-width="220" sortable="custom" />
+      <el-table-column prop="type" label="类型" width="120" sortable="custom">
         <template #default="{ row }">{{ typeLabel(row.type) }}</template>
       </el-table-column>
       <el-table-column prop="body" label="内容" min-width="280" />
-      <el-table-column prop="created_at" label="时间" width="180" />
+      <el-table-column prop="created_at" label="时间" width="170" sortable="custom">
+        <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
+      </el-table-column>
       <el-table-column label="状态" width="120">
         <template #default="{ row }">
           <el-tag :type="row.read_at ? 'info' : 'success'">{{ row.read_at ? '已读' : '未读' }}</el-tag>
@@ -63,6 +72,8 @@ const loading = ref(false)
 const messages = ref([])
 const status = ref('')
 const type = ref('')
+const sortBy = ref('created_at')
+const sortDirection = ref('desc')
 const pagination = reactive({ current_page: 1, per_page: 20, total: 0 })
 
 const statusOptions = [
@@ -77,17 +88,40 @@ const typeOptions = [
 ]
 const typeLabels = Object.fromEntries(typeOptions.map((item) => [item.value, item.label]))
 const unreadCount = computed(() => messages.value.filter((item) => !item.read_at).length)
+const sortOrder = computed(() => (sortDirection.value === 'asc' ? 'ascending' : 'descending'))
 
 function buildQuery() {
   const params = new URLSearchParams()
   if (status.value) params.set('status', status.value)
   if (type.value) params.set('type', type.value)
+  params.set('sort_by', sortBy.value)
+  params.set('sort_direction', sortDirection.value)
   if (pagination.current_page > 1) params.set('page', pagination.current_page)
   return params.toString() ? `?${params.toString()}` : ''
 }
 
 function typeLabel(value) {
   return typeLabels[value] || value || '-'
+}
+
+function tableIndex(index) {
+  return (pagination.current_page - 1) * pagination.per_page + index + 1
+}
+
+function formatDateTime(value) {
+  if (!value) return '-'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  const parts = [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0')
+  ]
+  const time = [
+    String(date.getHours()).padStart(2, '0'),
+    String(date.getMinutes()).padStart(2, '0')
+  ]
+  return `${parts.join('-')} ${time.join(':')}`
 }
 
 function shouldOpenReview(row) {
@@ -119,6 +153,12 @@ function reloadMessages() {
 function changePage(page) {
   pagination.current_page = page
   loadMessages()
+}
+
+function handleSortChange({ prop, order }) {
+  sortBy.value = prop || 'created_at'
+  sortDirection.value = order === 'ascending' ? 'asc' : 'desc'
+  reloadMessages()
 }
 
 async function markRead(row) {

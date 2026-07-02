@@ -21,7 +21,7 @@ class UserExportController extends Controller
             abort(403, '无权导出账号');
         }
 
-        $query = User::query()->with(['unit', 'additionalRoles'])->latest();
+        $query = User::query()->with(['unit', 'additionalRoles']);
 
         if ($role = $request->query('role')) {
             $query->where('role', $role);
@@ -52,6 +52,17 @@ class UserExportController extends Controller
                 });
         }
 
+        $sortBy = $request->query('sort_by', 'created_at');
+        $sortDirection = strtolower((string) $request->query('sort_direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $sortableColumns = ['created_at', 'last_login_at', 'username', 'name', 'role', 'is_active'];
+
+        if (! in_array($sortBy, $sortableColumns, true)) {
+            $sortBy = 'created_at';
+        }
+
+        $query->orderBy($sortBy, $sortDirection)
+            ->orderBy('id', $sortDirection);
+
         $users = $query->get();
 
         $this->auditLogger->record($request, 'user.exported', null, [
@@ -60,6 +71,8 @@ class UserExportController extends Controller
             'is_active' => $request->query('is_active'),
             'keyword' => $request->query('keyword'),
             'pending_registration' => $request->boolean('pending_registration'),
+            'sort_by' => $sortBy,
+            'sort_direction' => $sortDirection,
             'count' => $users->count(),
         ]);
 

@@ -15,6 +15,13 @@ class MessageController extends Controller
     public function index(Request $request)
     {
         $status = $request->query('status');
+        $sortBy = $request->query('sort_by', 'created_at');
+        $sortDirection = strtolower((string) $request->query('sort_direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $sortableColumns = ['created_at', 'read_at', 'type', 'title'];
+
+        if (! in_array($sortBy, $sortableColumns, true)) {
+            $sortBy = 'created_at';
+        }
 
         return Message::query()
             ->where('recipient_id', $request->user()->id)
@@ -27,7 +34,8 @@ class MessageController extends Controller
             ->when($status === 'read', function ($query) {
                 $query->whereNotNull('read_at');
             })
-            ->latest()
+            ->orderBy($sortBy, $sortDirection)
+            ->orderBy('id', $sortDirection)
             ->paginate(20);
     }
 

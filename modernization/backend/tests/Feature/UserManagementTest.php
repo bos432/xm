@@ -144,6 +144,31 @@ class UserManagementTest extends TestCase
         $this->assertCount(1, $ids);
     }
 
+    public function test_admin_can_sort_users_for_management_table(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        User::factory()->create([
+            'username' => 'sort-user-old',
+            'name' => '排序账号旧',
+            'created_at' => now()->subDays(2),
+        ]);
+        User::factory()->create([
+            'username' => 'sort-user-new',
+            'name' => '排序账号新',
+            'created_at' => now()->subDay(),
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        $usernames = collect($this->getJson('/api/users?keyword=sort-user&sort_by=created_at&sort_direction=asc')
+            ->assertOk()
+            ->json('data'))
+            ->pluck('username')
+            ->all();
+
+        $this->assertSame(['sort-user-old', 'sort-user-new'], $usernames);
+    }
+
     public function test_deactivating_user_revokes_existing_tokens(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

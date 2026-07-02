@@ -70,6 +70,33 @@ class MessageAndSettingWorkflowTest extends TestCase
         $this->assertCount(1, $ids);
     }
 
+    public function test_user_can_sort_own_messages_for_management_table(): void
+    {
+        $user = User::factory()->create(['role' => 'unit']);
+        $oldMessage = Message::create([
+            'recipient_id' => $user->id,
+            'type' => 'project',
+            'title' => '较早消息',
+            'created_at' => now()->subDays(2),
+        ]);
+        $newMessage = Message::create([
+            'recipient_id' => $user->id,
+            'type' => 'project',
+            'title' => '较新消息',
+            'created_at' => now()->subDay(),
+        ]);
+
+        Sanctum::actingAs($user);
+
+        $ids = collect($this->getJson('/api/messages?sort_by=created_at&sort_direction=asc')
+            ->assertOk()
+            ->json('data'))
+            ->pluck('id')
+            ->all();
+
+        $this->assertSame([$oldMessage->id, $newMessage->id], $ids);
+    }
+
     public function test_user_can_mark_all_own_unread_messages_read(): void
     {
         $user = User::factory()->create(['role' => 'unit']);
