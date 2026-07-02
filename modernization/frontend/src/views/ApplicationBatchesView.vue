@@ -6,14 +6,14 @@
         <span class="muted">维护项目申报开放时间、类别范围、指南和附件要求</span>
       </div>
       <div class="toolbar-actions">
-        <el-input v-model="keyword" clearable placeholder="批次名称/编号" @keyup.enter="loadBatches" />
-        <el-select v-model="status" clearable placeholder="状态" @change="loadBatches">
+        <el-input v-model="keyword" clearable placeholder="批次名称/编号" @keyup.enter="searchBatches" />
+        <el-select v-model="status" clearable placeholder="状态" @change="searchBatches">
           <el-option label="草稿" value="draft" />
           <el-option label="开放" value="open" />
           <el-option label="关闭" value="closed" />
           <el-option label="归档" value="archived" />
         </el-select>
-        <el-select v-model="e2eFilter" clearable placeholder="测试数据" @change="loadBatches">
+        <el-select v-model="e2eFilter" clearable placeholder="测试数据" @change="searchBatches">
           <el-option label="只看测试数据" value="1" />
           <el-option label="排除测试数据" value="0" />
         </el-select>
@@ -117,13 +117,16 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Edit, Plus, Refresh } from '@element-plus/icons-vue'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api.js'
 import { useSessionStore } from '../store.js'
 import RichTextEditor from '../components/RichTextEditor.vue'
 
+const route = useRoute()
+const router = useRouter()
 const session = useSessionStore()
 const loading = ref(false)
 const saving = ref(false)
@@ -234,6 +237,24 @@ async function loadBatches() {
   }
 }
 
+function applyRouteFilters() {
+  keyword.value = typeof route.query.keyword === 'string' ? route.query.keyword : ''
+  status.value = typeof route.query.status === 'string' ? route.query.status : ''
+  e2eFilter.value = typeof route.query.e2e === 'string' ? route.query.e2e : ''
+}
+
+function searchBatches() {
+  const query = { ...route.query }
+  if (keyword.value) query.keyword = keyword.value
+  else delete query.keyword
+  if (status.value) query.status = status.value
+  else delete query.status
+  if (e2eFilter.value !== '') query.e2e = e2eFilter.value
+  else delete query.e2e
+  router.replace({ path: route.path, query })
+  loadBatches()
+}
+
 async function loadDictionaries() {
   const [categories, types] = await Promise.all([
     api('/dictionaries?group=project_category'),
@@ -325,7 +346,13 @@ async function archiveE2eBatches() {
 }
 
 onMounted(() => {
+  applyRouteFilters()
   loadBatches()
   loadDictionaries()
+})
+
+watch(() => route.query, () => {
+  applyRouteFilters()
+  loadBatches()
 })
 </script>

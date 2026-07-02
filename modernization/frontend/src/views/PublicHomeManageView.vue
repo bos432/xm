@@ -10,7 +10,7 @@
 
     <el-card shadow="never">
       <template #header><strong>基础区域</strong></template>
-      <el-tabs v-model="activeSection">
+      <el-tabs v-model="activeSection" @tab-change="handleSectionTabChange">
         <el-tab-pane label="品牌素材" name="brand">
           <el-alert
             v-if="!canManageHomeAssets"
@@ -141,7 +141,7 @@
           <el-button type="primary" :icon="Plus" @click="openCreate(activeItemSection)">新增</el-button>
         </div>
       </template>
-      <el-tabs v-model="activeItemSection">
+      <el-tabs v-model="activeItemSection" @tab-change="handleItemTabChange">
         <el-tab-pane v-for="tab in itemTabs" :key="tab.name" :label="tab.label" :name="tab.name">
           <el-table :data="itemsFor(tab.name)" border v-loading="loading">
             <el-table-column prop="sort_order" label="排序" width="80" />
@@ -248,13 +248,16 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Edit, Plus, Refresh, Upload } from '@element-plus/icons-vue'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api.js'
 import RichTextEditor from '../components/RichTextEditor.vue'
 import { useSessionStore } from '../store.js'
 
+const route = useRoute()
+const router = useRouter()
 const session = useSessionStore()
 const loading = ref(false)
 const savingSection = ref(false)
@@ -295,6 +298,8 @@ const itemTabs = [
   { name: 'hero_status', label: '横幅状态' },
   { name: 'highlight', label: '亮点数据' }
 ]
+const sectionKeys = ['brand', 'nav', 'hero', 'footer']
+const itemKeys = itemTabs.map((tab) => tab.name)
 
 const sectionForms = reactive({
   nav: { title: '', is_active: true },
@@ -334,6 +339,22 @@ function emptyItem(section) {
 
 function itemsFor(section) {
   return items.value.filter((item) => item.section === section)
+}
+
+function applyRouteTabs() {
+  const section = typeof route.query.section === 'string' ? route.query.section : ''
+  const items = typeof route.query.items === 'string' ? route.query.items : ''
+
+  if (sectionKeys.includes(section)) activeSection.value = section
+  if (itemKeys.includes(items)) activeItemSection.value = items
+}
+
+function handleSectionTabChange(name) {
+  router.replace({ path: route.path, query: { ...route.query, section: name } })
+}
+
+function handleItemTabChange(name) {
+  router.replace({ path: route.path, query: { ...route.query, items: name } })
 }
 
 async function loadContent() {
@@ -545,5 +566,10 @@ async function deleteAsset(sectionKey, type) {
   await loadContent()
 }
 
-onMounted(loadContent)
+onMounted(() => {
+  applyRouteTabs()
+  loadContent()
+})
+
+watch(() => [route.query.section, route.query.items], applyRouteTabs)
 </script>

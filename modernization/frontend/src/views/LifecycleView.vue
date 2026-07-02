@@ -36,7 +36,7 @@
       </div>
     </div>
 
-    <el-tabs v-model="activeTab" @tab-change="loadActiveTab">
+    <el-tabs v-model="activeTab" @tab-change="handleTabChange">
       <el-tab-pane v-if="canViewTab('task_books')" :label="texts.t('lifecycle.task_books.tab', '合同任务书')" name="task_books">
         <div class="toolbar">
           <span class="muted">{{ texts.t('lifecycle.task_books.tip', '单位填报任务书，管理员审核通过后作为立项后管理依据。') }}</span>
@@ -282,13 +282,14 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Refresh, View } from '@element-plus/icons-vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api.js'
 import { useSessionStore } from '../store.js'
 import { useTextStore } from '../texts.js'
 import RichTextEditor from '../components/RichTextEditor.vue'
 
 const route = useRoute()
+const router = useRouter()
 const session = useSessionStore()
 const texts = useTextStore()
 const activeTab = ref('task_books')
@@ -431,9 +432,16 @@ async function searchUnits(keyword = '') {
 }
 
 async function applyRouteQuery() {
+  const routeTab = Array.isArray(route.query.tab) ? route.query.tab[0] : route.query.tab
+  if (routeTab && canViewTab(routeTab)) activeTab.value = routeTab
   const routeProjectId = Array.isArray(route.query.project_id) ? route.query.project_id[0] : route.query.project_id
   projectId.value = routeProjectId ? Number(routeProjectId) : ''
   if (projectId.value) await ensureProjectOption(projectId.value)
+}
+
+function handleTabChange(name) {
+  router.replace({ path: route.path, query: { ...route.query, tab: name } })
+  loadActiveTab()
 }
 
 async function loadActiveTab() {
@@ -706,7 +714,7 @@ onMounted(async () => {
   loadActiveTab()
 })
 
-watch(() => route.query.project_id, async () => {
+watch(() => [route.query.project_id, route.query.tab], async () => {
   await applyRouteQuery()
   loadActiveTab()
 })

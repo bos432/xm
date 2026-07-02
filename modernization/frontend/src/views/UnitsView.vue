@@ -2,7 +2,7 @@
   <section class="page-stack">
     <template v-if="isAdmin">
       <div class="toolbar">
-        <el-input v-model="keyword" clearable placeholder="按单位名称、统一信用代码、联系人搜索" @keyup.enter="reloadUnits" />
+        <el-input v-model="keyword" clearable placeholder="按单位名称、统一信用代码、联系人搜索" @keyup.enter="searchUnits" />
         <div class="toolbar-actions">
           <el-button :type="pendingRegistration ? 'primary' : 'default'" @click="togglePendingRegistration">待审核注册</el-button>
           <el-select v-model="status" clearable placeholder="状态" @change="handleStatusChange">
@@ -10,7 +10,7 @@
             <el-option label="暂停" value="suspended" />
             <el-option label="归档" value="archived" />
           </el-select>
-          <el-button :icon="Search" @click="reloadUnits">查询</el-button>
+          <el-button :icon="Search" @click="searchUnits">查询</el-button>
           <el-tooltip content="导出当前筛选单位" placement="top">
             <el-button :icon="Download" @click="exportUnits">导出</el-button>
           </el-tooltip>
@@ -96,7 +96,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Download, Edit, Files, Plus, Search } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -164,20 +164,47 @@ function reloadUnits() {
   loadUnits()
 }
 
+function applyRouteFilters() {
+  keyword.value = typeof route.query.keyword === 'string' ? route.query.keyword : ''
+  status.value = typeof route.query.status === 'string' ? route.query.status : ''
+  pendingRegistration.value = route.query.pending_registration === '1'
+  pagination.current_page = route.query.page ? Number(route.query.page) || 1 : 1
+}
+
+function searchUnits() {
+  pagination.current_page = 1
+  replaceRouteFilters()
+  loadUnits()
+}
+
+function replaceRouteFilters() {
+  const query = { ...route.query }
+  if (keyword.value) query.keyword = keyword.value
+  else delete query.keyword
+  if (status.value) query.status = status.value
+  else delete query.status
+  if (pendingRegistration.value) query.pending_registration = '1'
+  else delete query.pending_registration
+  if (pagination.current_page > 1) query.page = String(pagination.current_page)
+  else delete query.page
+  router.replace({ path: route.path, query })
+}
+
 function changePage(page) {
   pagination.current_page = page
+  replaceRouteFilters()
   loadUnits()
 }
 
 function togglePendingRegistration() {
   pendingRegistration.value = !pendingRegistration.value
   if (pendingRegistration.value) status.value = ''
-  reloadUnits()
+  searchUnits()
 }
 
 function handleStatusChange() {
   if (status.value) pendingRegistration.value = false
-  reloadUnits()
+  searchUnits()
 }
 
 function openCreate() {
@@ -233,7 +260,12 @@ async function exportUnits() {
 }
 
 onMounted(() => {
-  pendingRegistration.value = route.query.pending_registration === '1'
+  applyRouteFilters()
+  loadUnits()
+})
+
+watch(() => route.query, () => {
+  applyRouteFilters()
   loadUnits()
 })
 </script>

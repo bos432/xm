@@ -1,7 +1,7 @@
 <template>
   <section class="page-stack">
     <div class="toolbar">
-      <el-input v-model="keyword" clearable placeholder="按姓名、账号、手机、邮箱搜索" @keyup.enter="reloadUsers" />
+      <el-input v-model="keyword" clearable placeholder="按姓名、账号、手机、邮箱搜索" @keyup.enter="searchUsers" />
       <div class="toolbar-actions">
         <el-button :type="pendingRegistration ? 'primary' : 'default'" @click="togglePendingRegistration">待审核注册</el-button>
         <el-select v-model="role" clearable placeholder="角色" @change="handleStandardFilterChange">
@@ -11,7 +11,7 @@
           <el-option label="启用" value="1" />
           <el-option label="停用" value="0" />
         </el-select>
-        <el-button :icon="Search" @click="reloadUsers">查询</el-button>
+        <el-button :icon="Search" @click="searchUsers">查询</el-button>
         <el-tooltip content="导出当前筛选账号" placement="top">
           <el-button :icon="Download" @click="exportUsers">导出</el-button>
         </el-tooltip>
@@ -126,7 +126,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Download, Edit, Files, Lock, Plus, Search } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -224,15 +224,49 @@ function reloadUsers() {
   loadUsers()
 }
 
+function applyRouteFilters() {
+  keyword.value = typeof route.query.keyword === 'string' ? route.query.keyword : ''
+  role.value = typeof route.query.role === 'string' ? route.query.role : ''
+  isActive.value = typeof route.query.is_active === 'string' ? route.query.is_active : ''
+  pendingRegistration.value = route.query.pending_registration === '1'
+  sortBy.value = typeof route.query.sort_by === 'string' ? route.query.sort_by : 'created_at'
+  sortDirection.value = route.query.sort_direction === 'desc' ? 'desc' : 'asc'
+  pagination.current_page = route.query.page ? Number(route.query.page) || 1 : 1
+}
+
+function searchUsers() {
+  pagination.current_page = 1
+  replaceRouteFilters()
+  loadUsers()
+}
+
+function replaceRouteFilters() {
+  const query = { ...route.query }
+  if (keyword.value) query.keyword = keyword.value
+  else delete query.keyword
+  if (role.value) query.role = role.value
+  else delete query.role
+  if (isActive.value) query.is_active = isActive.value
+  else delete query.is_active
+  if (pendingRegistration.value) query.pending_registration = '1'
+  else delete query.pending_registration
+  query.sort_by = sortBy.value
+  query.sort_direction = sortDirection.value
+  if (pagination.current_page > 1) query.page = String(pagination.current_page)
+  else delete query.page
+  router.replace({ path: route.path, query })
+}
+
 function changePage(page) {
   pagination.current_page = page
+  replaceRouteFilters()
   loadUsers()
 }
 
 function handleSortChange({ prop, order }) {
   sortBy.value = prop || 'created_at'
   sortDirection.value = order === 'ascending' ? 'asc' : 'desc'
-  reloadUsers()
+  searchUsers()
 }
 
 function togglePendingRegistration() {
@@ -241,12 +275,12 @@ function togglePendingRegistration() {
     role.value = ''
     isActive.value = ''
   }
-  reloadUsers()
+  searchUsers()
 }
 
 function handleStandardFilterChange() {
   if (role.value || isActive.value) pendingRegistration.value = false
-  reloadUsers()
+  searchUsers()
 }
 
 async function loadUnits() {
@@ -335,7 +369,12 @@ async function exportUsers() {
 }
 
 onMounted(async () => {
-  pendingRegistration.value = route.query.pending_registration === '1'
+  applyRouteFilters()
   await Promise.all([loadUsers(), loadUnits()])
+})
+
+watch(() => route.query, () => {
+  applyRouteFilters()
+  loadUsers()
 })
 </script>

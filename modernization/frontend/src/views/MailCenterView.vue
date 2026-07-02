@@ -8,7 +8,7 @@
       <el-button :icon="Refresh" :loading="loading" @click="loadAll">刷新</el-button>
     </div>
 
-    <el-tabs v-model="activeTab">
+    <el-tabs v-model="activeTab" @tab-change="handleTabChange">
       <el-tab-pane label="邮件模板" name="templates">
         <el-card shadow="never">
           <template #header><el-button type="primary" :icon="Plus" @click="openTemplate()">新增模板</el-button></template>
@@ -27,13 +27,13 @@
       </el-tab-pane>
       <el-tab-pane label="发送日志" name="logs">
         <div class="toolbar">
-          <el-input v-model="logKeyword" clearable placeholder="收件人/主题/模板" @keyup.enter="loadLogs" />
-          <el-select v-model="logStatus" clearable placeholder="状态" @change="loadLogs">
+          <el-input v-model="logKeyword" clearable placeholder="收件人/主题/模板" @keyup.enter="searchLogs" />
+          <el-select v-model="logStatus" clearable placeholder="状态" @change="searchLogs">
             <el-option label="排队" value="queued" />
             <el-option label="已发送" value="sent" />
             <el-option label="失败" value="failed" />
           </el-select>
-          <el-button :icon="Refresh" @click="loadLogs">查询</el-button>
+          <el-button :icon="Refresh" @click="searchLogs">查询</el-button>
         </div>
         <el-table :data="logs" border v-loading="loading">
           <el-table-column prop="template_key" label="模板" width="170" />
@@ -69,11 +69,14 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Edit, Plus, Refresh } from '@element-plus/icons-vue'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api.js'
 
+const route = useRoute()
+const router = useRouter()
 const activeTab = ref('templates')
 const loading = ref(false)
 const saving = ref(false)
@@ -107,6 +110,30 @@ async function loadLogs() {
   if (logStatus.value) params.set('status', logStatus.value)
   const result = await api(`/mail/logs${params.toString() ? `?${params.toString()}` : ''}`)
   logs.value = result.data || result
+}
+
+function applyRouteState() {
+  activeTab.value = route.query.tab === 'logs' ? 'logs' : 'templates'
+  logKeyword.value = typeof route.query.keyword === 'string' ? route.query.keyword : ''
+  logStatus.value = typeof route.query.status === 'string' ? route.query.status : ''
+}
+
+function replaceRouteQuery(extra = {}) {
+  router.replace({ path: route.path, query: { ...route.query, ...extra } })
+}
+
+function handleTabChange(name) {
+  replaceRouteQuery({ tab: name })
+}
+
+function searchLogs() {
+  const query = { ...route.query, tab: 'logs' }
+  if (logKeyword.value) query.keyword = logKeyword.value
+  else delete query.keyword
+  if (logStatus.value) query.status = logStatus.value
+  else delete query.status
+  router.replace({ path: route.path, query })
+  loadLogs()
 }
 
 async function loadAll() {
@@ -151,5 +178,13 @@ async function retry(row) {
   await loadLogs()
 }
 
-onMounted(loadAll)
+onMounted(() => {
+  applyRouteState()
+  loadAll()
+})
+
+watch(() => route.query, () => {
+  applyRouteState()
+  if (activeTab.value === 'logs') loadLogs()
+})
 </script>

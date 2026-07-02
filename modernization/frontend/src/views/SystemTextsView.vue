@@ -6,8 +6,8 @@
         <span class="muted">维护后台菜单、按钮、流程说明和业务提示文案；内置文案可隐藏或回滚默认值。</span>
       </div>
       <div class="toolbar-actions">
-        <el-input v-model="keyword" clearable placeholder="键名/名称/内容" @keyup.enter="loadTexts" />
-        <el-select v-model="group" clearable placeholder="分组" @change="loadTexts">
+        <el-input v-model="keyword" clearable placeholder="键名/名称/内容" @keyup.enter="searchTexts" />
+        <el-select v-model="group" clearable placeholder="分组" @change="searchTexts">
           <el-option v-for="item in groups" :key="item" :label="item" :value="item" />
         </el-select>
         <el-button :icon="Refresh" :loading="loading" @click="loadTexts">刷新</el-button>
@@ -86,12 +86,15 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Download, Edit, Plus, Refresh, RefreshLeft } from '@element-plus/icons-vue'
+import { useRoute, useRouter } from 'vue-router'
 import { api, downloadApi } from '../api.js'
 import { useTextStore } from '../texts.js'
 
+const route = useRoute()
+const router = useRouter()
 const textStore = useTextStore()
 const loading = ref(false)
 const saving = ref(false)
@@ -136,6 +139,24 @@ async function loadTexts() {
   } finally {
     loading.value = false
   }
+}
+
+function applyRouteFilters() {
+  keyword.value = typeof route.query.keyword === 'string' ? route.query.keyword : ''
+  group.value = typeof route.query.group === 'string' ? route.query.group : ''
+  pagination.current_page = route.query.page ? Number(route.query.page) || 1 : 1
+}
+
+function searchTexts() {
+  pagination.current_page = 1
+  const query = { ...route.query }
+  if (keyword.value) query.keyword = keyword.value
+  else delete query.keyword
+  if (group.value) query.group = group.value
+  else delete query.group
+  delete query.page
+  router.replace({ path: route.path, query })
+  loadTexts()
 }
 
 function openText(row = null) {
@@ -192,5 +213,13 @@ async function exportTexts() {
   await downloadApi(`/system-texts/export.csv${query}`, `system-texts-${new Date().toISOString().slice(0, 10)}.csv`)
 }
 
-onMounted(loadTexts)
+onMounted(() => {
+  applyRouteFilters()
+  loadTexts()
+})
+
+watch(() => route.query, () => {
+  applyRouteFilters()
+  loadTexts()
+})
 </script>

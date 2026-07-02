@@ -46,7 +46,7 @@
       <el-button type="primary" :loading="savingPolicy" @click="savePolicies">保存策略</el-button>
     </el-card>
 
-    <el-tabs v-model="activeTab">
+    <el-tabs v-model="activeTab" @tab-change="handleTabChange">
       <el-tab-pane label="安全事件" name="events">
         <div class="toolbar">
           <el-input v-model="eventKeyword" clearable placeholder="账号/IP/事件" @keyup.enter="loadEvents" />
@@ -128,10 +128,11 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Refresh } from '@element-plus/icons-vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api.js'
 
 const route = useRoute()
+const router = useRouter()
 const activeTab = ref('events')
 const loading = ref(false)
 const savingPolicy = ref(false)
@@ -199,6 +200,15 @@ async function loadAll() {
   }
 }
 
+function applyRouteState() {
+  activeTab.value = route.query.tab === 'locks' ? 'locks' : 'events'
+  eventKeyword.value = typeof route.query.keyword === 'string' ? route.query.keyword : ''
+}
+
+function handleTabChange(name) {
+  router.replace({ path: route.path, query: { ...route.query, tab: name } })
+}
+
 async function savePolicies() {
   savingPolicy.value = true
   try {
@@ -239,12 +249,12 @@ async function deleteRule(row) {
 }
 
 onMounted(() => {
-  eventKeyword.value = route.query.keyword || ''
+  applyRouteState()
   loadAll()
 })
 
-watch(() => route.query.keyword, () => {
-  eventKeyword.value = route.query.keyword || ''
+watch(() => route.query, () => {
+  applyRouteState()
   loadEvents()
 })
 </script>

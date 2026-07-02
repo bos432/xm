@@ -6,16 +6,16 @@
         <span class="muted">按项目字段推荐或自动指定部门审核人、专家评审人</span>
       </div>
       <div class="toolbar-actions">
-        <el-input v-model="keyword" clearable placeholder="规则名称/备注" @keyup.enter="loadRules" />
-        <el-select v-model="targetStage" clearable placeholder="目标阶段" @change="loadRules">
+        <el-input v-model="keyword" clearable placeholder="规则名称/备注" @keyup.enter="searchRules" />
+        <el-select v-model="targetStage" clearable placeholder="目标阶段" @change="searchRules">
           <el-option label="部门审核" value="department" />
           <el-option label="专家评审" value="expert" />
         </el-select>
-        <el-select v-model="activeFilter" clearable placeholder="状态" @change="loadRules">
+        <el-select v-model="activeFilter" clearable placeholder="状态" @change="searchRules">
           <el-option label="启用" value="1" />
           <el-option label="停用" value="0" />
         </el-select>
-        <el-button :icon="Search" @click="loadRules">查询</el-button>
+        <el-button :icon="Search" @click="searchRules">查询</el-button>
         <el-button type="primary" :icon="Plus" @click="openEditor()">新增规则</el-button>
       </div>
     </div>
@@ -129,11 +129,14 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Delete, Edit, Plus, Search } from '@element-plus/icons-vue'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api.js'
 
+const route = useRoute()
+const router = useRouter()
 const loading = ref(false)
 const saving = ref(false)
 const rules = ref([])
@@ -185,6 +188,27 @@ async function loadRules() {
   } finally {
     loading.value = false
   }
+}
+
+function applyRouteFilters() {
+  keyword.value = typeof route.query.keyword === 'string' ? route.query.keyword : ''
+  targetStage.value = typeof route.query.target_stage === 'string' ? route.query.target_stage : ''
+  activeFilter.value = typeof route.query.is_active === 'string' ? route.query.is_active : ''
+  pagination.current_page = route.query.page ? Number(route.query.page) || 1 : 1
+}
+
+function searchRules() {
+  pagination.current_page = 1
+  const query = { ...route.query }
+  if (keyword.value) query.keyword = keyword.value
+  else delete query.keyword
+  if (targetStage.value) query.target_stage = targetStage.value
+  else delete query.target_stage
+  if (activeFilter.value !== '') query.is_active = activeFilter.value
+  else delete query.is_active
+  delete query.page
+  router.replace({ path: route.path, query })
+  loadRules()
 }
 
 async function loadDictionaries() {
@@ -284,7 +308,13 @@ function userNames(users = []) {
 }
 
 onMounted(async () => {
+  applyRouteFilters()
   await Promise.all([loadDictionaries(), loadRules()])
+})
+
+watch(() => route.query, () => {
+  applyRouteFilters()
+  loadRules()
 })
 </script>
 
