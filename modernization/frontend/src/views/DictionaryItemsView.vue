@@ -1,12 +1,28 @@
 <template>
   <section class="page-stack">
     <div class="toolbar">
-      <el-input v-model="keyword" clearable placeholder="按编码或名称搜索" @keyup.enter="loadItems" />
+      <div>
+        <h2>{{ currentGroupTitle }}</h2>
+        <span class="muted">按分类维护系统字典项，专家评分项总分必须等于 100。</span>
+      </div>
       <div class="toolbar-actions">
-        <el-input v-model="group" clearable placeholder="分组，例如 project_type" @keyup.enter="loadItems" />
-        <el-button :icon="Search" @click="loadItems">查询</el-button>
+        <el-input v-model="keyword" clearable placeholder="按编码或名称搜索" @keyup.enter="searchItems" @clear="searchItems" />
+        <el-input v-model="group" clearable placeholder="分组，例如 project_type" @keyup.enter="searchItems" @clear="searchItems" />
+        <el-button :icon="Search" @click="searchItems">查询</el-button>
         <el-button type="primary" :icon="Plus" @click="openCreate">新增字典</el-button>
       </div>
+    </div>
+
+    <div class="dictionary-group-shortcuts">
+      <el-button
+        v-for="item in dictionaryGroups"
+        :key="item.value"
+        :type="group === item.value ? 'primary' : 'default'"
+        plain
+        @click="setGroup(item.value)"
+      >
+        {{ item.label }}
+      </el-button>
     </div>
     <el-alert
       v-if="group === reviewCriterionGroup || expertReviewItems.length"
@@ -85,14 +101,15 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Edit, Files, Plus, Search } from '@element-plus/icons-vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api.js'
 import { useSessionStore } from '../store.js'
 
 const router = useRouter()
+const route = useRoute()
 const session = useSessionStore()
 const loading = ref(false)
 const saving = ref(false)
@@ -114,6 +131,17 @@ const groupLabels = {
   research_direction: '研究方向',
   expert_review_criterion: '专家评分项'
 }
+const dictionaryGroups = [
+  { label: '全部字典', value: '' },
+  { label: '专家评分项', value: 'expert_review_criterion' },
+  { label: '项目类别', value: 'project_category' },
+  { label: '项目类型', value: 'project_type' },
+  { label: '归口管理单位', value: 'management_unit' },
+  { label: '所属领域', value: 'project_field' },
+  { label: '研究方向', value: 'research_direction' },
+  { label: '项目状态', value: 'project_status' }
+]
+const currentGroupTitle = computed(() => group.value ? `${groupLabel(group.value)}数据字典` : '数据字典')
 
 function emptyForm() {
   return { group: '', code: '', label: '', sort_order: 0, is_active: true, metadata: emptyMetadata() }
@@ -135,6 +163,26 @@ async function loadItems() {
   } finally {
     loading.value = false
   }
+}
+
+function applyRouteFilters() {
+  group.value = typeof route.query.group === 'string' ? route.query.group : ''
+  keyword.value = typeof route.query.keyword === 'string' ? route.query.keyword : ''
+}
+
+async function searchItems() {
+  const query = { ...route.query }
+  if (group.value) query.group = group.value
+  else delete query.group
+  if (keyword.value) query.keyword = keyword.value
+  else delete query.keyword
+  await router.replace({ path: route.path, query })
+  await loadItems()
+}
+
+async function setGroup(value) {
+  group.value = value
+  await searchItems()
 }
 
 function openCreate() {
@@ -204,10 +252,24 @@ function formatMaxScore(row) {
   return Number.isFinite(score) && score > 0 ? score : '-'
 }
 
-onMounted(loadItems)
+watch(() => [route.query.group, route.query.keyword], async () => {
+  applyRouteFilters()
+  await loadItems()
+})
+
+onMounted(async () => {
+  applyRouteFilters()
+  await loadItems()
+})
 </script>
 
 <style scoped>
+.dictionary-group-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .dictionary-group-cell,
 .dictionary-item-cell {
   display: grid;

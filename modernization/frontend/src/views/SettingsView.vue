@@ -9,6 +9,15 @@
       <el-button :icon="Refresh" :loading="loading" @click="loadGroups">刷新</el-button>
     </div>
 
+    <el-alert
+      v-if="reviewGroupMissing"
+      type="warning"
+      show-icon
+      :closable="false"
+      title="未加载到“审核与评分”配置分组"
+      description="请确认后端 /api/settings/groups 已返回 review 分组，并检查当前账号是否为超级管理员。"
+    />
+
     <div class="settings-overview-grid">
       <el-card shadow="never" class="settings-card">
         <template #header>队列状态</template>
@@ -30,7 +39,19 @@
       </el-card>
     </div>
 
-    <el-tabs v-model="activeGroup">
+    <div class="settings-group-shortcuts">
+      <el-button
+        v-for="group in groups"
+        :key="group.key"
+        :type="activeGroup === group.key ? 'primary' : 'default'"
+        plain
+        @click="switchGroup(group.key)"
+      >
+        {{ group.title }}
+      </el-button>
+    </div>
+
+    <el-tabs v-model="activeGroup" @tab-change="switchGroup">
       <el-tab-pane v-for="group in groups" :key="group.key" :label="group.title" :name="group.key">
         <el-card shadow="never">
           <template #header>
@@ -59,14 +80,15 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api.js'
 import { useTextStore } from '../texts.js'
 
 const router = useRouter()
+const route = useRoute()
 const texts = useTextStore()
 const loading = ref(false)
 const testingMail = ref(false)
@@ -76,6 +98,7 @@ const runtime = ref({})
 const forms = reactive({})
 const savingGroup = ref('')
 const testMailTo = ref('')
+const reviewGroupMissing = computed(() => !loading.value && groups.value.length > 0 && !groups.value.some((group) => group.key === 'review'))
 
 function fieldInitialValue(field) {
   if (field.type === 'boolean') return ['1', 'true', true].includes(field.value)
@@ -96,10 +119,22 @@ async function loadGroups() {
         forms[group.key][field.key] = fieldInitialValue(field)
       })
     })
-    activeGroup.value = activeGroup.value || groups.value[0]?.key || ''
+    applyRouteGroup()
   } finally {
     loading.value = false
   }
+}
+
+function applyRouteGroup() {
+  const queryGroup = typeof route.query.group === 'string' ? route.query.group : ''
+  const exists = groups.value.some((group) => group.key === queryGroup)
+  activeGroup.value = exists ? queryGroup : (activeGroup.value || groups.value[0]?.key || '')
+}
+
+function switchGroup(groupKey) {
+  if (!groupKey) return
+  activeGroup.value = groupKey
+  router.replace({ path: route.path, query: { ...route.query, group: groupKey } })
 }
 
 async function saveGroup(group) {
@@ -126,5 +161,15 @@ async function sendTestMail() {
   }
 }
 
+watch(() => route.query.group, applyRouteGroup)
+
 onMounted(loadGroups)
 </script>
+
+<style scoped>
+.settings-group-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+</style>

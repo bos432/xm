@@ -1,29 +1,49 @@
 <template>
   <RouterView v-if="$route.meta.public || $route.meta.guest" />
   <el-container v-else class="shell gov-shell">
-    <el-aside width="248px" class="sidebar">
-      <div class="brand">
-        <strong>{{ texts.t('app.brand.title', '科技项目管理') }}</strong>
-        <span>{{ texts.t('app.brand.subtitle', '公共服务后台') }}</span>
+    <el-aside width="292px" class="sidebar dual-sidebar">
+      <div class="module-rail">
+        <button
+          v-for="group in visibleMenuGroups"
+          :key="group.key"
+          type="button"
+          class="module-button"
+          :class="{ active: group.key === activeGroupKey }"
+          @click="openMenuGroup(group)"
+        >
+          <el-icon><component :is="groupIcon(group.key)" /></el-icon>
+          <span>{{ group.label }}</span>
+        </button>
       </div>
-      <el-menu :default-active="$route.path" :default-openeds="defaultOpeneds" router>
-        <template v-for="group in visibleMenuGroups" :key="group.key">
-          <el-menu-item v-if="group.items.length === 1 && group.key === 'default'" :index="group.items[0].path">
-            <el-icon><component :is="menuIcon(group.items[0].key)" /></el-icon>
-            <span>{{ menuLabel(group.items[0]) }}</span>
-          </el-menu-item>
-          <el-sub-menu v-else :index="`group-${group.key}`">
-            <template #title>
-              <el-icon><component :is="groupIcon(group.key)" /></el-icon>
-              <span>{{ group.label }}</span>
-            </template>
-            <el-menu-item v-for="item in group.items" :key="item.path" :index="item.path">
+      <div class="section-sidebar">
+        <div class="brand">
+          <strong>{{ texts.t('app.brand.title', '科技项目管理') }}</strong>
+          <span>{{ texts.t('app.brand.subtitle', '公共服务后台') }}</span>
+        </div>
+        <div v-if="currentMenuGroup" class="section-title-block">
+          <strong>{{ currentMenuGroup.label }}</strong>
+        </div>
+        <el-menu :default-active="activeMenuPath" :default-openeds="defaultOpeneds" router>
+          <template v-for="item in currentMenuItems" :key="item.key">
+            <el-sub-menu v-if="item.children?.length" :index="`menu-${item.key}`">
+              <template #title>
+                <el-icon><component :is="menuIcon(item.key)" /></el-icon>
+                <span>{{ menuLabel(item) }}</span>
+              </template>
+              <el-menu-item :index="item.path">
+                <span>{{ menuLabel(item) === '数据字典' ? '全部字典' : '全部配置' }}</span>
+              </el-menu-item>
+              <el-menu-item v-for="child in item.children" :key="child.path" :index="child.path">
+                <span>{{ child.label }}</span>
+              </el-menu-item>
+            </el-sub-menu>
+            <el-menu-item v-else :index="item.path">
               <el-icon><component :is="menuIcon(item.key)" /></el-icon>
               <span>{{ menuLabel(item) }}</span>
             </el-menu-item>
-          </el-sub-menu>
-        </template>
-      </el-menu>
+          </template>
+        </el-menu>
+      </div>
     </el-aside>
     <el-container>
       <el-header class="topbar">
@@ -172,6 +192,30 @@ const menuGroupLabels = {
   system: '系统管理'
 }
 const menuGroupOrder = ['default', 'business', 'review', 'organization', 'portal', 'system']
+const menuItemOrder = {
+  default: ['dashboard', 'messages'],
+  business: ['projects', 'application_batches', 'lifecycle'],
+  review: ['reviews', 'dispatch_rules', 'acceptance', 'acceptance_admin', 'acceptance_review'],
+  organization: ['units', 'users', 'unit_profile'],
+  portal: ['public_home', 'mail_center'],
+  system: ['dictionary_items', 'settings', 'system_texts', 'roles', 'security', 'migration', 'operation_logs']
+}
+const dictionaryMenuChildren = [
+  { label: '专家评分项', path: '/dictionary-items?group=expert_review_criterion', group: 'expert_review_criterion' },
+  { label: '项目类别', path: '/dictionary-items?group=project_category', group: 'project_category' },
+  { label: '项目类型', path: '/dictionary-items?group=project_type', group: 'project_type' },
+  { label: '归口管理单位', path: '/dictionary-items?group=management_unit', group: 'management_unit' },
+  { label: '所属领域', path: '/dictionary-items?group=project_field', group: 'project_field' },
+  { label: '研究方向', path: '/dictionary-items?group=research_direction', group: 'research_direction' },
+  { label: '项目状态', path: '/dictionary-items?group=project_status', group: 'project_status' }
+]
+const settingsMenuChildren = [
+  { label: '站点信息', path: '/settings?group=site', group: 'site' },
+  { label: '邮件 SMTP', path: '/settings?group=mail', group: 'mail' },
+  { label: '上传策略', path: '/settings?group=upload', group: 'upload' },
+  { label: '安全策略', path: '/settings?group=security', group: 'security' },
+  { label: '审核与评分', path: '/settings?group=review', group: 'review' }
+]
 const titleKeys = {
   '/dashboard': ['page.dashboard.title', '运行概览'],
   '/projects': ['page.projects.title', '项目申报'],
@@ -208,7 +252,7 @@ const visibleMenuGroups = computed(() => {
   const groups = []
   const groupMap = new Map()
 
-  visibleMenus.value.forEach((item) => {
+  visibleMenus.value.map(expandMenuItem).forEach((item) => {
     const key = menuGroups[item.key] || 'default'
     if (!groupMap.has(key)) {
       const group = { key, label: menuGroupLabels[key] || key, items: [] }
@@ -218,13 +262,62 @@ const visibleMenuGroups = computed(() => {
     groupMap.get(key).items.push(item)
   })
 
+  groups.forEach((group) => {
+    const order = menuItemOrder[group.key] || []
+    group.items.sort((a, b) => menuOrderIndex(order, a.key) - menuOrderIndex(order, b.key))
+  })
+
   return groups.sort((a, b) => menuGroupOrder.indexOf(a.key) - menuGroupOrder.indexOf(b.key))
 })
-const defaultOpeneds = computed(() => visibleMenuGroups.value.map((group) => `group-${group.key}`))
+const activeGroupKey = computed(() => routeMenuMatch.value?.groupKey || visibleMenuGroups.value[0]?.key || '')
+const currentMenuGroup = computed(() => visibleMenuGroups.value.find((group) => group.key === activeGroupKey.value) || visibleMenuGroups.value[0] || null)
+const currentMenuItems = computed(() => currentMenuGroup.value?.items || [])
+const activeMenuPath = computed(() => route.fullPath)
+const defaultOpeneds = computed(() => currentMenuItems.value.filter((item) => item.children?.length).map((item) => `menu-${item.key}`))
+const routeMenuMatch = computed(() => {
+  for (const group of visibleMenuGroups.value) {
+    for (const item of group.items) {
+      if (routeMatches(item)) return { groupKey: group.key, item, label: menuLabel(item) }
+      for (const child of item.children || []) {
+        if (route.fullPath === child.path || (route.path === item.path && route.query.group === child.group)) {
+          return { groupKey: group.key, item, child, label: `${menuLabel(item)} / ${child.label}` }
+        }
+      }
+    }
+  }
+
+  return null
+})
 const title = computed(() => {
+  if (routeMenuMatch.value?.label) {
+    const group = visibleMenuGroups.value.find((item) => item.key === routeMenuMatch.value.groupKey)
+    return [group?.label, routeMenuMatch.value.label].filter(Boolean).join(' / ')
+  }
+
   const titleConfig = titleKeys[route.path]
   return titleConfig ? texts.t(titleConfig[0], titleConfig[1]) : '项目申报系统'
 })
+
+function expandMenuItem(item) {
+  if (item.key === 'dictionary_items') {
+    return { ...item, children: dictionaryMenuChildren }
+  }
+
+  if (item.key === 'settings') {
+    return { ...item, children: settingsMenuChildren }
+  }
+
+  return item
+}
+
+function menuOrderIndex(order, key) {
+  const index = order.indexOf(key)
+  return index >= 0 ? index : 999
+}
+
+function routeMatches(item) {
+  return route.path === item.path && !route.query.group
+}
 
 function menuIcon(key) {
   return iconMap[key] || DataLine
@@ -236,6 +329,15 @@ function groupIcon(key) {
 
 function menuLabel(item) {
   return texts.t(`menu.${item.key}`, item.label)
+}
+
+function firstMenuPath(group) {
+  const firstItem = group.items[0]
+  return firstItem?.children?.[0]?.path || firstItem?.path || '/dashboard'
+}
+
+function openMenuGroup(group) {
+  router.push(firstMenuPath(group))
 }
 
 function roleLabel(role) {
