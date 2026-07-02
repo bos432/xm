@@ -1,3 +1,5 @@
+import { api } from './api.js'
+
 export function setFavicon(href) {
   if (!href || typeof document === 'undefined') return
 
@@ -13,10 +15,7 @@ export function setFavicon(href) {
 
 export async function loadConfiguredFavicon() {
   try {
-    const response = await fetch('/api/public/homepage', { headers: { Accept: 'application/json' } })
-    if (!response.ok) return
-
-    const payload = await response.json()
+    const payload = await api('/public/homepage')
     setFavicon(payload?.brand?.favicon_url)
   } catch {
     // Favicon is cosmetic; the app should still load if the public config request fails.

@@ -46,7 +46,8 @@ class ReviewController extends Controller
                 });
             })
             ->with(['unit', 'owner'])
-            ->latest('submitted_at')
+            ->orderBy('submitted_at')
+            ->orderBy('id')
             ->paginate(20);
     }
 
@@ -56,7 +57,8 @@ class ReviewController extends Controller
 
         $query = ProjectReview::query()
             ->with(['project.unit', 'project.owner', 'reviewer'])
-            ->latest('reviewed_at');
+            ->orderBy('reviewed_at')
+            ->orderBy('id');
 
         if (! in_array($request->user()->role, Role::adminRoles(), true)) {
             $query->where('stage', Role::reviewerStageFor($request->user()->role));
@@ -125,10 +127,21 @@ class ReviewController extends Controller
             'score' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'comment' => ['nullable', 'string', 'max:3000'],
             'metadata' => ['nullable', 'array'],
+            'metadata.score_criteria' => ['nullable', 'array'],
+            'metadata.final_support' => ['nullable', 'array'],
+            'metadata.final_support.is_recommended' => ['nullable', 'boolean'],
+            'metadata.final_support.is_supported' => ['nullable', 'boolean'],
+            'metadata.final_support.support_type' => ['nullable', 'in:subsidy,interest,other,none'],
+            'metadata.final_support.support_amount_wan' => ['nullable', 'numeric', 'min:0'],
+            'metadata.final_support.recommended_experts' => ['nullable', 'string', 'max:500'],
         ]);
 
         if ($stage === Role::EXPERT) {
             $data = ReviewScoreCriteria::applyExpertScores($data);
+        }
+
+        if ($stage === Role::ADMIN) {
+            $data = $this->applyFinalSupportMetadata($data, $project, $request);
         }
 
         $review = ProjectReview::create($data + [
@@ -138,7 +151,14 @@ class ReviewController extends Controller
             'reviewed_at' => now(),
         ]);
 
-        $project->update($this->nextProjectState($project, $data['decision']));
+        $nextState = $this->nextProjectState($project, $data['decision']);
+        if ($stage === Role::ADMIN && $data['decision'] === 'accept') {
+            $projectMetadata = is_array($project->metadata) ? $project->metadata : [];
+            $projectMetadata['final_support'] = $data['metadata']['final_support'] ?? [];
+            $nextState['metadata'] = $projectMetadata;
+        }
+
+        $project->update($nextState);
 
         $this->auditLogger->record($request, 'project.reviewed', $review, [
             'project_id' => $project->id,
@@ -191,6 +211,53 @@ class ReviewController extends Controller
                     'body' => $body,
                 ]);
             });
+    }
+
+    private function applyFinalSupportMetadata(array $data, Project $project, Request $request): array
+    {
+        if (($data['decision'] ?? null) !== 'accept') {
+            return $data;
+        }
+
+        $metadata = is_array($data['metadata'] ?? null) ? $data['metadata'] : [];
+        $input = is_array($metadata['final_support'] ?? null) ? $metadata['final_support'] : [];
+        $isSupported = filter_var($input['is_supported'] ?? true, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        $isRecommended = filter_var($input['is_recommended'] ?? true, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        $supportType = (string) ($input['support_type'] ?? ($isSupported === false ? 'none' : 'subsidy'));
+
+        if ($isSupported === false) {
+            $supportType = 'none';
+        } elseif (! in_array($supportType, ['subsidy', 'interest', 'other'], true)) {
+            $supportType = 'subsidy';
+        }
+
+        $metadata['final_support'] = [
+            'is_recommended' => $isRecommended ?? true,
+            'is_supported' => $isSupported ?? true,
+            'support_type' => $supportType,
+            'support_amount_wan' => round((float) ($input['support_amount_wan'] ?? 0), 2),
+            'recommended_experts' => trim((string) ($input['recommended_experts'] ?? $this->recommendedExpertNames($project))),
+            'reviewed_by' => $request->user()->id,
+            'reviewed_by_name' => $request->user()->name ?: $request->user()->username,
+            'reviewed_at' => now()->toDateTimeString(),
+        ];
+
+        $data['metadata'] = $metadata;
+
+        return $data;
+    }
+
+    private function recommendedExpertNames(Project $project): string
+    {
+        $project->loadMissing(['reviews.reviewer']);
+
+        return $project->reviews
+            ->where('stage', Role::EXPERT)
+            ->where('decision', 'recommend')
+            ->map(fn (ProjectReview $review): string => $review->reviewer?->name ?: $review->reviewer?->username ?: '')
+            ->filter()
+            ->unique()
+            ->implode('、');
     }
 
     private function nextProjectState(Project $project, string $decision): array

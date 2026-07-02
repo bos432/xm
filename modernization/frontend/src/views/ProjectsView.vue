@@ -29,6 +29,7 @@
     </div>
 
     <el-table :data="projects" border v-loading="loading">
+      <el-table-column type="index" label="序号" width="72" align="center" :index="tableIndex" fixed="left" />
       <el-table-column prop="title" label="项目名称" min-width="220" />
       <el-table-column prop="unit.name" label="申报单位" min-width="180" />
       <el-table-column prop="application_batch.name" label="申报批次" min-width="160" />
@@ -44,6 +45,7 @@
           <span v-else>-</span>
         </template>
       </el-table-column>
+      <el-table-column prop="created_at" label="创建时间" width="180" />
       <el-table-column prop="submitted_at" label="提交时间" width="180" />
       <el-table-column label="操作" width="260" fixed="right">
         <template #default="{ row }">
@@ -133,13 +135,13 @@
               <el-form-item label="所属领域"><el-input v-model="form.metadata.field" placeholder="例如 资源综合利用" /></el-form-item>
               <el-form-item label="研究方向"><el-input v-model="form.metadata.research_direction" placeholder="例如 矿产资源开发利用" /></el-form-item>
               <el-form-item label="合作单位" class="span-2"><el-input v-model="form.metadata.cooperation_units" placeholder="多个单位用顿号或逗号分隔" /></el-form-item>
-              <el-form-item label="预算金额（元）">
+              <el-form-item label="预算金额（万元）">
                 <div class="budget-input-row">
-                  <el-input-number v-model="form.budget_amount" :min="0" :precision="2" />
-                  <span class="input-unit">元</span>
+                  <el-input-number v-model="budgetAmountWanModel" :min="0" :precision="2" />
+                  <span class="input-unit">万元</span>
                 </div>
               </el-form-item>
-              <el-form-item label="预算换算"><el-input :model-value="formatWanYuan(form.budget_amount)" disabled /></el-form-item>
+              <el-form-item label="系统保存金额"><el-input :model-value="formatCurrency(form.budget_amount)" disabled /></el-form-item>
             </el-form>
           </el-tab-pane>
 
@@ -318,6 +320,9 @@
           <el-descriptions-item label="研究方向">{{ detailMetadata.research_direction || '-' }}</el-descriptions-item>
           <el-descriptions-item label="合作单位">{{ detailMetadata.cooperation_units || '-' }}</el-descriptions-item>
           <el-descriptions-item label="预算金额">{{ formatCurrency(detail.budget_amount) }}</el-descriptions-item>
+          <el-descriptions-item label="终审支持">{{ finalSupportText(detail).isSupported }}</el-descriptions-item>
+          <el-descriptions-item label="支持资金">{{ finalSupportText(detail).supportAmount }}</el-descriptions-item>
+          <el-descriptions-item label="推荐专家">{{ finalSupportText(detail).recommendedExperts }}</el-descriptions-item>
           <el-descriptions-item label="摘要" :span="2">{{ detail.summary || '-' }}</el-descriptions-item>
         </el-descriptions>
 
@@ -587,6 +592,12 @@ const formProjectTypeOptions = computed(() => {
 })
 const workbenchFiles = computed(() => editingProject.value?.files || [])
 const detailMetadata = computed(() => normalizeProjectMetadata(detail.value?.metadata || {}))
+const budgetAmountWanModel = computed({
+  get: () => Number((Number(form.budget_amount || 0) / 10000).toFixed(2)),
+  set: (value) => {
+    form.budget_amount = Number((Number(value || 0) * 10000).toFixed(2))
+  }
+})
 const budgetTotalWan = computed(() => {
   const total = (form.metadata.budget_items || []).reduce((sum, item) => sum + Number(item.total || 0), 0)
   return total.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -719,6 +730,10 @@ function normalizeEquipmentItem(item = {}) {
 
 function statusMeta(value) {
   return statusLabels[value] || { label: value || '-', type: 'info' }
+}
+
+function tableIndex(index) {
+  return (pagination.current_page - 1) * pagination.per_page + index + 1
 }
 
 function roleLabel(role) {
@@ -1374,6 +1389,31 @@ function detailDateRange(metadata) {
   return metadata.start_date || metadata.end_date || '-'
 }
 
+function finalSupportText(project) {
+  const support = project?.metadata?.final_support || {}
+  const isSupported = support.is_supported === undefined || support.is_supported === null
+    ? '-'
+    : (support.is_supported ? supportTypeLabel(support.support_type) : '不支持')
+  const supportAmount = support.support_amount_wan === undefined || support.support_amount_wan === null || support.support_amount_wan === ''
+    ? '-'
+    : `${Number(support.support_amount_wan || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 万元`
+  return {
+    isSupported,
+    supportAmount,
+    recommendedExperts: support.recommended_experts || '-'
+  }
+}
+
+function supportTypeLabel(value) {
+  const labels = {
+    subsidy: '补助支持',
+    interest: '贴息支持',
+    other: '其他支持',
+    none: '不支持'
+  }
+  return labels[value] || '支持'
+}
+
 function formatBytes(value) {
   const size = Number(value || 0)
   if (size < 1024) return `${size} B`
@@ -1526,6 +1566,16 @@ onUnmounted(() => {
 
 .compact-upload {
   margin: 12px 0;
+}
+
+.table-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.table-action-row :deep(.el-button + .el-button) {
+  margin-left: 0;
 }
 
 .budget-input-row {

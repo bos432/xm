@@ -112,6 +112,31 @@ class ProjectApplicationWorkflowTest extends TestCase
         $this->assertCount(1, $ids);
     }
 
+    public function test_project_list_is_ordered_by_created_time_ascending(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $admin = User::factory()->create(['role' => 'admin']);
+        $olderProject = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'title' => '较早创建项目',
+            'created_at' => now()->subDays(2),
+        ]);
+        $newerProject = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'title' => '较晚创建项目',
+            'created_at' => now(),
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        $ids = collect($this->getJson('/api/projects')->assertOk()->json('data'))->pluck('id')->all();
+
+        $this->assertSame([$olderProject->id, $newerProject->id], array_slice($ids, 0, 2));
+    }
+
     public function test_project_detail_includes_review_reviewer_profile(): void
     {
         $unit = Unit::factory()->create();
@@ -153,6 +178,10 @@ class ProjectApplicationWorkflowTest extends TestCase
 
     public function test_expert_review_uses_configured_score_criteria(): void
     {
+        DictionaryItem::query()
+            ->where('group', 'expert_review_criterion')
+            ->update(['is_active' => false]);
+
         $unit = Unit::factory()->create();
         $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
         $expert = User::factory()->create(['role' => 'expert']);

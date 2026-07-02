@@ -95,7 +95,17 @@ for (const account of roles) {
 
     await page.goto(`/projects?keyword=${encodeURIComponent(stamp)}`)
     await expect(page.getByText(stamp).first()).toBeVisible()
+    await expect(page.getByRole('columnheader', { name: '序号' }).first()).toBeVisible()
     await saveScreenshot(page, `${account.role}-projects-filter`)
+
+    if (account.role === 'unit') {
+      await page.getByRole('button', { name: '新建项目' }).click()
+      await expect(page.getByText('创建项目申报草稿')).toBeVisible()
+      await expect(page.getByText('预算金额（万元）')).toBeVisible()
+      await expect(page.getByText('系统保存金额')).toBeVisible()
+      await saveScreenshot(page, 'unit-project-workbench')
+      await page.getByRole('button', { name: '关闭' }).click()
+    }
 
     await page.goto(`/lifecycle?project_id=${encodeURIComponent(sampleProjectId)}`)
     await expect(page.getByText(/全周期管理|合同任务书|实施进展/).first()).toBeVisible()

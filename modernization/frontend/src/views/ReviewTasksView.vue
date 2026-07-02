@@ -26,6 +26,7 @@
           </div>
 
           <el-table :data="tasks" border v-loading="loading">
+            <el-table-column type="index" label="序号" width="72" align="center" :index="tableIndex" fixed="left" />
             <el-table-column prop="title" label="项目名称" min-width="220" />
             <el-table-column prop="unit.name" label="申报单位" min-width="180" />
             <el-table-column label="当前阶段" width="130">
@@ -37,14 +38,12 @@
               </template>
             </el-table-column>
             <el-table-column prop="submitted_at" label="提交时间" width="180" />
-            <el-table-column label="操作" width="210" fixed="right">
+            <el-table-column label="操作" width="190" fixed="right">
               <template #default="{ row }">
-                <el-tooltip content="查看详情" placement="top">
-                  <el-button size="small" :icon="View" circle @click="openDetail(row)" />
-                </el-tooltip>
-                <el-tooltip content="审核处理" placement="top">
-                  <el-button size="small" type="primary" :icon="Checked" circle @click="openReview(row)" />
-                </el-tooltip>
+                <div class="table-action-row">
+                  <el-button size="small" :icon="View" @click="openDetail(row)">详情</el-button>
+                  <el-button size="small" type="primary" :icon="Checked" @click="openReview(row)">审核处理</el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -94,6 +93,7 @@
           </div>
 
           <el-table :data="results" border v-loading="resultsLoading">
+            <el-table-column type="index" label="序号" width="72" align="center" :index="resultTableIndex" fixed="left" />
             <el-table-column prop="project.title" label="项目名称" min-width="220" />
             <el-table-column prop="project.unit.name" label="申报单位" min-width="180" />
             <el-table-column label="阶段" width="120">
@@ -109,11 +109,9 @@
             </el-table-column>
             <el-table-column prop="comment" label="意见" min-width="220" />
             <el-table-column prop="reviewed_at" label="审核时间" width="180" />
-            <el-table-column label="操作" width="90" fixed="right">
+            <el-table-column label="操作" width="100" fixed="right">
               <template #default="{ row }">
-                <el-tooltip content="查看项目" placement="top">
-                  <el-button size="small" :icon="View" circle @click="openDetail(row.project)" />
-                </el-tooltip>
+                <el-button size="small" :icon="View" @click="openDetail(row.project)">详情</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -175,6 +173,26 @@
         <el-form-item v-else label="评分">
           <el-input-number v-model="reviewForm.score" :min="0" :max="100" :precision="1" />
         </el-form-item>
+        <div v-if="useFinalSupportForm" class="final-support-panel">
+          <div class="section-title">终审支持信息</div>
+          <el-form-item label="是否推荐">
+            <el-switch v-model="reviewForm.final_support.is_recommended" active-text="推荐" inactive-text="不推荐" />
+          </el-form-item>
+          <el-form-item label="是否支持">
+            <el-switch v-model="reviewForm.final_support.is_supported" active-text="支持" inactive-text="不支持" @change="syncFinalSupportState" />
+          </el-form-item>
+          <el-form-item v-if="reviewForm.final_support.is_supported" label="支持方式">
+            <el-radio-group v-model="reviewForm.final_support.support_type">
+              <el-radio-button v-for="item in supportTypeOptions" :key="item.value" :label="item.value">{{ item.label }}</el-radio-button>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item v-if="reviewForm.final_support.is_supported" label="支持资金（万元）">
+            <el-input-number v-model="reviewForm.final_support.support_amount_wan" :min="0" :precision="2" controls-position="right" />
+          </el-form-item>
+          <el-form-item label="推荐专家">
+            <el-input v-model="reviewForm.final_support.recommended_experts" placeholder="可留空，系统会用专家评审记录自动汇总" />
+          </el-form-item>
+        </div>
         <el-form-item label="审核意见">
           <el-input v-model="reviewForm.comment" type="textarea" :rows="5" />
         </el-form-item>
@@ -193,6 +211,9 @@
           <el-descriptions-item label="当前阶段">{{ roleLabel(detail.current_reviewer_role) }}</el-descriptions-item>
           <el-descriptions-item label="项目类型">{{ detail.project_type || '-' }}</el-descriptions-item>
           <el-descriptions-item label="预算金额">{{ formatCurrency(detail.budget_amount) }}</el-descriptions-item>
+          <el-descriptions-item label="是否支持">{{ finalSupportText(detail).isSupported }}</el-descriptions-item>
+          <el-descriptions-item label="支持资金">{{ finalSupportText(detail).supportAmount }}</el-descriptions-item>
+          <el-descriptions-item label="推荐专家" :span="2">{{ finalSupportText(detail).recommendedExperts }}</el-descriptions-item>
           <el-descriptions-item label="摘要" :span="2">{{ detail.summary || '-' }}</el-descriptions-item>
         </el-descriptions>
 
@@ -274,7 +295,13 @@ const detailVisible = ref(false)
 const reviewVisible = ref(false)
 const detail = ref(null)
 const currentProject = ref(null)
-const reviewForm = reactive({ decision: 'approve', score: null, comment: '', criteria_scores: {} })
+const reviewForm = reactive({
+  decision: 'approve',
+  score: null,
+  comment: '',
+  criteria_scores: {},
+  final_support: emptyFinalSupport()
+})
 const pagination = reactive({ current_page: 1, per_page: 20, total: 0 })
 const resultPagination = reactive({ current_page: 1, per_page: 20, total: 0 })
 let skipNextRouteProjectReload = false
@@ -312,6 +339,11 @@ const allDecisionOptions = [
   { label: '退回', value: 'return' },
   { label: '驳回', value: 'reject' }
 ]
+const supportTypeOptions = [
+  { label: '补助支持', value: 'subsidy' },
+  { label: '贴息支持', value: 'interest' },
+  { label: '其他支持', value: 'other' }
+]
 const decisionOptions = computed(() => {
   if (session.role === 'expert') {
     return [
@@ -336,6 +368,7 @@ const decisionOptions = computed(() => {
   ]
 })
 const useCriteriaScoring = computed(() => currentProject.value?.current_reviewer_role === 'expert' && reviewCriteriaOptions.value.length > 0)
+const useFinalSupportForm = computed(() => currentProject.value?.current_reviewer_role === 'admin' && reviewForm.decision === 'accept')
 const groupedReviewCriteria = computed(() => {
   const groups = new Map()
   for (const item of reviewCriteriaOptions.value) {
@@ -375,6 +408,24 @@ function statusMeta(value) {
 
 function decisionLabel(value) {
   return decisionLabels[value] || value || '-'
+}
+
+function tableIndex(index) {
+  return (pagination.current_page - 1) * pagination.per_page + index + 1
+}
+
+function resultTableIndex(index) {
+  return (resultPagination.current_page - 1) * resultPagination.per_page + index + 1
+}
+
+function emptyFinalSupport() {
+  return {
+    is_recommended: true,
+    is_supported: true,
+    support_type: 'subsidy',
+    support_amount_wan: 0,
+    recommended_experts: ''
+  }
 }
 
 async function loadDictionaries() {
@@ -496,7 +547,8 @@ function openReview(row) {
     decision: decisionOptions.value[0]?.value || 'approve',
     score: null,
     comment: '',
-    criteria_scores: defaultCriteriaScores()
+    criteria_scores: defaultCriteriaScores(),
+    final_support: emptyFinalSupport()
   })
   syncCriteriaScore()
   reviewVisible.value = true
@@ -529,6 +581,12 @@ async function submitReview() {
     if (shouldSubmitCriteria) {
       payload.metadata = { score_criteria: { ...reviewForm.criteria_scores } }
     }
+    if (useFinalSupportForm.value) {
+      payload.metadata = {
+        ...(payload.metadata || {}),
+        final_support: normalizedFinalSupport()
+      }
+    }
 
     await api(`/projects/${currentProject.value.id}/reviews`, {
       method: 'POST',
@@ -552,6 +610,27 @@ function defaultCriteriaScores() {
 function syncCriteriaScore() {
   if (!useCriteriaScoring.value) return
   reviewForm.score = reviewCriteriaScoreTotal.value
+}
+
+function syncFinalSupportState() {
+  if (reviewForm.final_support.is_supported) {
+    if (reviewForm.final_support.support_type === 'none') reviewForm.final_support.support_type = 'subsidy'
+    return
+  }
+
+  reviewForm.final_support.support_type = 'none'
+  reviewForm.final_support.support_amount_wan = 0
+}
+
+function normalizedFinalSupport() {
+  const isSupported = Boolean(reviewForm.final_support.is_supported)
+  return {
+    is_recommended: Boolean(reviewForm.final_support.is_recommended),
+    is_supported: isSupported,
+    support_type: isSupported ? reviewForm.final_support.support_type : 'none',
+    support_amount_wan: isSupported ? Number(reviewForm.final_support.support_amount_wan || 0) : 0,
+    recommended_experts: reviewForm.final_support.recommended_experts || ''
+  }
 }
 
 function shouldSubmitCriteriaScores() {
@@ -609,6 +688,25 @@ function formatCurrency(value) {
   return `${amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 元`
 }
 
+function finalSupportText(project) {
+  const support = project?.metadata?.final_support || {}
+  const isSupported = support.is_supported === undefined || support.is_supported === null
+    ? '-'
+    : (support.is_supported ? supportTypeLabel(support.support_type) : '不支持')
+  const supportAmount = support.support_amount_wan === undefined || support.support_amount_wan === null || support.support_amount_wan === ''
+    ? '-'
+    : `${Number(support.support_amount_wan || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 万元`
+  return {
+    isSupported,
+    supportAmount,
+    recommendedExperts: support.recommended_experts || '-'
+  }
+}
+
+function supportTypeLabel(value) {
+  return supportTypeOptions.find((item) => item.value === value)?.label || (value === 'none' ? '不支持' : '支持')
+}
+
 onMounted(async () => {
   applyRouteTab()
   applyRouteFilters()
@@ -653,6 +751,16 @@ onUnmounted(() => {
 <style scoped>
 .score-filter {
   width: 116px;
+}
+
+.table-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.table-action-row :deep(.el-button + .el-button) {
+  margin-left: 0;
 }
 
 .criteria-panel {

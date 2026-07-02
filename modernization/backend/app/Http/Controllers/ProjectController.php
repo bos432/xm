@@ -84,7 +84,8 @@ class ProjectController extends Controller
             });
         }
 
-        return $query->latest()
+        return $query->orderBy('created_at')
+            ->orderBy('id')
             ->paginate(20)
             ->through(function (Project $project) {
                 $project->pending_extension_requests_count = $project->pendingExtensionRequestsCount();

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Project;
+use App\Models\ProjectReview;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -135,5 +136,53 @@ class ReviewWorkflowTest extends TestCase
         ])->assertCreated()
             ->assertJsonPath('project.status', Project::STATUS_REJECTED)
             ->assertJsonPath('project.current_reviewer_role', null);
+    }
+
+    public function test_admin_final_review_persists_support_information_on_project(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $expert = User::factory()->create(['role' => 'expert', 'name' => '专家甲']);
+        $admin = User::factory()->create(['role' => 'admin', 'name' => '终审管理员']);
+        $project = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'status' => Project::STATUS_REVIEWING,
+            'current_reviewer_role' => 'admin',
+            'metadata' => ['management_unit' => '盟科技局'],
+        ]);
+        ProjectReview::create([
+            'project_id' => $project->id,
+            'reviewer_id' => $expert->id,
+            'stage' => 'expert',
+            'decision' => 'recommend',
+            'score' => 92,
+            'comment' => '专家推荐',
+            'reviewed_at' => now()->subDay(),
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        $this->postJson("/api/projects/{$project->id}/reviews", [
+            'decision' => 'accept',
+            'score' => 95,
+            'comment' => '终审支持',
+            'metadata' => [
+                'final_support' => [
+                    'is_recommended' => true,
+                    'is_supported' => true,
+                    'support_type' => 'subsidy',
+                    'support_amount_wan' => 38.5,
+                ],
+            ],
+        ])->assertCreated()
+            ->assertJsonPath('project.status', Project::STATUS_APPROVED)
+            ->assertJsonPath('project.metadata.final_support.support_amount_wan', 38.5)
+            ->assertJsonPath('project.metadata.final_support.recommended_experts', '专家甲');
+
+        $project->refresh();
+        $this->assertSame('盟科技局', $project->metadata['management_unit']);
+        $this->assertSame('subsidy', $project->metadata['final_support']['support_type']);
+        $this->assertSame('终审管理员', $project->metadata['final_support']['reviewed_by_name']);
     }
 }

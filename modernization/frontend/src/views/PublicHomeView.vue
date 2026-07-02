@@ -294,9 +294,7 @@ async function loadHomeContent() {
   loading.value = true
   loadError.value = false
   try {
-    const response = await fetch('/api/public/homepage', { headers: { Accept: 'application/json' } })
-    if (!response.ok) throw new Error('load_failed')
-    home.value = normalizeHomeContent(await response.json())
+    home.value = normalizeHomeContent(await api('/public/homepage'))
     setFavicon(home.value.brand.favicon_url)
     selectedNotice.value = home.value.notices[0] || null
     selectedDownload.value = home.value.downloads[0] || null

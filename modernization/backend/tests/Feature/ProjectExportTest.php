@@ -180,4 +180,46 @@ class ProjectExportTest extends TestCase
             'action' => 'project.exported',
         ]);
     }
+
+    public function test_project_export_includes_legacy_statistics_columns(): void
+    {
+        $unit = Unit::factory()->create([
+            'name' => '统计导出单位',
+            'region_code' => 'ALSM',
+        ]);
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $admin = User::factory()->create(['role' => 'admin']);
+        $project = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'title' => '统计导出支持项目',
+            'metadata' => [
+                'management_unit' => '盟科技局',
+                'final_support' => [
+                    'is_recommended' => true,
+                    'is_supported' => true,
+                    'support_type' => 'interest',
+                    'support_amount_wan' => 45.25,
+                    'recommended_experts' => '专家甲、专家乙',
+                ],
+            ],
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        $csv = $this->get('/api/projects/export.csv?keyword=' . urlencode($project->title))
+            ->assertOk()
+            ->streamedContent();
+
+        $this->assertStringContainsString('归口管理单位', $csv);
+        $this->assertStringContainsString('是否推荐', $csv);
+        $this->assertStringContainsString('是否支持', $csv);
+        $this->assertStringContainsString('支持资金（万元）', $csv);
+        $this->assertStringContainsString('推荐专家', $csv);
+        $this->assertStringContainsString('盟科技局', $csv);
+        $this->assertStringContainsString('ALSM', $csv);
+        $this->assertStringContainsString('贴息支持', $csv);
+        $this->assertStringContainsString('45.25', $csv);
+        $this->assertStringContainsString('专家甲、专家乙', $csv);
+    }
 }
