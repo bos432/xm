@@ -1,0 +1,115 @@
+name: Modernization CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'modernization/**'
+      - '.github/workflows/modernization-ci.yml'
+  pull_request:
+    paths:
+      - 'modernization/**'
+      - '.github/workflows/modernization-ci.yml'
+  workflow_dispatch:
+
+jobs:
+  frontend:
+    name: Frontend lint and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: modernization/frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: modernization/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --include=dev --include=optional --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: List E2E coverage
+        run: npm run e2e -- --list
+
+  backend:
+    name: Backend feature tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: modernization/backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_sqlite, sqlite3, zip, fileinfo
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Public home feature tests
+        run: php artisan test --filter PublicHomeManagementTest
+
+      - name: Auth and security feature tests
+        run: php artisan test --filter AuthProfileTest
+
+      - name: Health check feature tests
+        run: php artisan test --filter HealthCheckTest
+
+  online-e2e:
+    name: Optional online E2E
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    defaults:
+      run:
+        working-directory: modernization/frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: modernization/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --include=dev --include=optional --no-audit --no-fund
+
+      - name: Install browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run online E2E
+        env:
+          E2E_BASE_URL: ${{ vars.E2E_BASE_URL || 'https://nxm.zlck888.com' }}
+          E2E_STAMP: ${{ vars.E2E_STAMP || 'E2E-20260630-103223' }}
+          E2E_PROJECT_ID: ${{ vars.E2E_PROJECT_ID || '5' }}
+          E2E_UNIT_USERNAME: ${{ secrets.E2E_UNIT_USERNAME }}
+          E2E_UNIT_PASSWORD: ${{ secrets.E2E_UNIT_PASSWORD }}
+          E2E_COUNTY_USERNAME: ${{ secrets.E2E_COUNTY_USERNAME }}
+          E2E_COUNTY_PASSWORD: ${{ secrets.E2E_COUNTY_PASSWORD }}
+          E2E_DEPARTMENT_USERNAME: ${{ secrets.E2E_DEPARTMENT_USERNAME }}
+          E2E_DEPARTMENT_PASSWORD: ${{ secrets.E2E_DEPARTMENT_PASSWORD }}
+          E2E_EXPERT_USERNAME: ${{ secrets.E2E_EXPERT_USERNAME }}
+          E2E_EXPERT_PASSWORD: ${{ secrets.E2E_EXPERT_PASSWORD }}
+          E2E_ADMIN_USERNAME: ${{ secrets.E2E_ADMIN_USERNAME }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+          E2E_SUPER_ADMIN_USERNAME: ${{ secrets.E2E_SUPER_ADMIN_USERNAME }}
+          E2E_SUPER_ADMIN_PASSWORD: ${{ secrets.E2E_SUPER_ADMIN_PASSWORD }}
+        run: npm run e2e

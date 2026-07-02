@@ -1,11 +1,110 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import ElementPlus from 'element-plus'
+import {
+  ElAlert,
+  ElAside,
+  ElBadge,
+  ElButton,
+  ElButtonGroup,
+  ElCard,
+  ElCheckbox,
+  ElCheckboxGroup,
+  ElCol,
+  ElContainer,
+  ElDatePicker,
+  ElDescriptions,
+  ElDescriptionsItem,
+  ElDialog,
+  ElDivider,
+  ElDrawer,
+  ElDropdown,
+  ElDropdownItem,
+  ElDropdownMenu,
+  ElForm,
+  ElFormItem,
+  ElHeader,
+  ElIcon,
+  ElInput,
+  ElInputNumber,
+  ElMain,
+  ElMenu,
+  ElMenuItem,
+  ElOption,
+  ElPagination,
+  ElProgress,
+  ElRadioButton,
+  ElRadioGroup,
+  ElRow,
+  ElSegmented,
+  ElSelect,
+  ElStep,
+  ElSteps,
+  ElSwitch,
+  ElTabPane,
+  ElTable,
+  ElTableColumn,
+  ElTabs,
+  ElTag,
+  ElTooltip,
+  ElUpload
+} from 'element-plus'
 import 'element-plus/dist/index.css'
 import './styles.css'
 import App from './App.vue'
 import router from './router.js'
 import { loadConfiguredFavicon } from './favicon.js'
 
-createApp(App).use(createPinia()).use(router).use(ElementPlus).mount('#app')
+const elementComponents = [
+  ElAlert,
+  ElAside,
+  ElBadge,
+  ElButton,
+  ElButtonGroup,
+  ElCard,
+  ElCheckbox,
+  ElCheckboxGroup,
+  ElCol,
+  ElContainer,
+  ElDatePicker,
+  ElDescriptions,
+  ElDescriptionsItem,
+  ElDialog,
+  ElDivider,
+  ElDrawer,
+  ElDropdown,
+  ElDropdownItem,
+  ElDropdownMenu,
+  ElForm,
+  ElFormItem,
+  ElHeader,
+  ElIcon,
+  ElInput,
+  ElInputNumber,
+  ElLoading,
+  ElMain,
+  ElMenu,
+  ElMenuItem,
+  ElOption,
+  ElPagination,
+  ElProgress,
+  ElRadioButton,
+  ElRadioGroup,
+  ElRow,
+  ElSegmented,
+  ElSelect,
+  ElStep,
+  ElSteps,
+  ElSwitch,
+  ElTabPane,
+  ElTable,
+  ElTableColumn,
+  ElTabs,
+  ElTag,
+  ElTooltip,
+  ElUpload
+]
+
+const app = createApp(App)
+elementComponents.forEach((component) => app.component(component.name, component))
+app.use(ElLoading).use(createPinia()).use(router).mount('#app')
 loadConfiguredFavicon()

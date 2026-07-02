@@ -5,25 +5,25 @@ import LoginView from './views/LoginView.vue'
 import RegisterUnitView from './views/RegisterUnitView.vue'
 import ForgotPasswordView from './views/ForgotPasswordView.vue'
 import ResetPasswordView from './views/ResetPasswordView.vue'
-import DashboardView from './views/DashboardView.vue'
-import ProjectsView from './views/ProjectsView.vue'
-import ReviewTasksView from './views/ReviewTasksView.vue'
-import ApplicationBatchesView from './views/ApplicationBatchesView.vue'
-import AcceptanceView from './views/AcceptanceView.vue'
-import LifecycleView from './views/LifecycleView.vue'
-import MessagesView from './views/MessagesView.vue'
-import OperationLogsView from './views/OperationLogsView.vue'
-import UnitsView from './views/UnitsView.vue'
-import UsersView from './views/UsersView.vue'
 
+const AcceptanceView = () => import('./views/AcceptanceView.vue')
+const ApplicationBatchesView = () => import('./views/ApplicationBatchesView.vue')
+const DashboardView = () => import('./views/DashboardView.vue')
 const DictionaryItemsView = () => import('./views/DictionaryItemsView.vue')
+const LifecycleView = () => import('./views/LifecycleView.vue')
 const MailCenterView = () => import('./views/MailCenterView.vue')
+const MessagesView = () => import('./views/MessagesView.vue')
 const MigrationView = () => import('./views/MigrationView.vue')
+const OperationLogsView = () => import('./views/OperationLogsView.vue')
+const ProjectsView = () => import('./views/ProjectsView.vue')
 const PublicHomeManageView = () => import('./views/PublicHomeManageView.vue')
+const ReviewTasksView = () => import('./views/ReviewTasksView.vue')
 const RolesView = () => import('./views/RolesView.vue')
 const SecurityCenterView = () => import('./views/SecurityCenterView.vue')
 const SettingsView = () => import('./views/SettingsView.vue')
 const SystemTextsView = () => import('./views/SystemTextsView.vue')
+const UnitsView = () => import('./views/UnitsView.vue')
+const UsersView = () => import('./views/UsersView.vue')
 
 const router = createRouter({
   history: createWebHistory(),
