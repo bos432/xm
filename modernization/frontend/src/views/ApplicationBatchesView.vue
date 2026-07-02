@@ -133,7 +133,6 @@ const status = ref('')
 const e2eFilter = ref('')
 const editorVisible = ref(false)
 const dateRange = ref([])
-const form = reactive(emptyForm())
 const projectCategoryOptions = ref([])
 const projectTypeOptions = ref([])
 const statusLabels = {
@@ -158,6 +157,7 @@ const defaultProjectMaterialRules = [
   { purpose: 'cooperation', label: '合作协议', required: false, allowed_extensions: ['pdf', 'doc', 'docx'] },
   { purpose: 'other', label: '其他材料', required: false, allowed_extensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx'] }
 ]
+const form = reactive(emptyForm())
 
 function emptyForm() {
   return {

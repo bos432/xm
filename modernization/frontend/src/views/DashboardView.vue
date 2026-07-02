@@ -137,7 +137,7 @@
       </div>
     </el-card>
 
-    <el-card v-if="summary?.migration" shadow="never">
+    <el-card v-if="isSuperAdmin && summary?.migration" shadow="never">
       <template #header>迁移与上线门禁</template>
       <div class="metric-grid compact-grid">
         <div>
@@ -207,7 +207,7 @@
       </el-table>
     </el-card>
 
-    <el-card shadow="never">
+    <el-card v-if="isSuperAdmin" shadow="never">
       <template #header>最近操作</template>
       <el-table :data="summary?.operation_logs?.recent || []" border v-loading="loading">
         <el-table-column label="动作" width="190">
@@ -227,7 +227,7 @@
       </el-table>
     </el-card>
 
-    <el-card shadow="never">
+    <el-card v-if="isSuperAdmin" shadow="never">
       <template #header>升级基线</template>
       <el-table :data="baseline" border>
         <el-table-column prop="area" label="领域" width="160" />
@@ -252,6 +252,7 @@ const texts = useTextStore()
 const loading = ref(false)
 const summary = ref(null)
 const workflowTab = ref('lifecycle')
+const isSuperAdmin = computed(() => session.role === 'super_admin')
 const metrics = computed(() => {
   const base = [
     {
