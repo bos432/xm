@@ -71,8 +71,37 @@
           </el-select>
           <span class="field-help">留空表示该批次不限制项目类型。</span>
         </el-form-item>
-        <el-form-item label="指南说明" class="wide-field"><el-input v-model="form.guide" type="textarea" :rows="4" /></el-form-item>
-        <el-form-item label="附件要求" class="wide-field"><el-input v-model="form.attachment_requirements" type="textarea" :rows="4" /></el-form-item>
+        <el-form-item label="指南说明" class="wide-field"><RichTextEditor v-model="form.guide" min-height="150px" placeholder="填写申报指南说明，可插入图片、列表和链接" /></el-form-item>
+        <el-form-item label="附件要求" class="wide-field"><RichTextEditor v-model="form.attachment_requirements" min-height="150px" placeholder="填写附件总体要求" /></el-form-item>
+        <el-form-item label="申报材料要求" class="wide-field">
+          <div class="material-rule-editor">
+            <div class="table-section-title">
+              <span>指定单位提交项及允许格式</span>
+              <el-button size="small" type="primary" :icon="Plus" @click="addProjectMaterialRule">新增材料</el-button>
+            </div>
+            <el-table :data="form.project_required_materials" border size="small">
+              <el-table-column label="材料名称" min-width="160">
+                <template #default="{ row }"><el-input v-model="row.label" placeholder="如 承诺书" /></template>
+              </el-table-column>
+              <el-table-column label="材料标识" min-width="150">
+                <template #default="{ row }"><el-input v-model="row.purpose" placeholder="如 commitment" /></template>
+              </el-table-column>
+              <el-table-column label="必传" width="90" align="center">
+                <template #default="{ row }"><el-switch v-model="row.required" /></template>
+              </el-table-column>
+              <el-table-column label="允许格式" min-width="220">
+                <template #default="{ row }">
+                  <el-select v-model="row.allowed_extensions" multiple filterable allow-create default-first-option placeholder="选择或填写扩展名">
+                    <el-option v-for="item in extensionOptions" :key="item" :label="item" :value="item" />
+                  </el-select>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" width="90" align="center">
+                <template #default="{ $index }"><el-button size="small" type="danger" @click="removeProjectMaterialRule($index)">删除</el-button></template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </el-form-item>
         <el-form-item label="验收必传材料" class="wide-field">
           <el-checkbox-group v-model="form.acceptance_required_materials">
             <el-checkbox v-for="item in materialCategories" :key="item.value" :label="item.value">{{ item.label }}</el-checkbox>
@@ -93,6 +122,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Edit, Plus, Refresh } from '@element-plus/icons-vue'
 import { api } from '../api.js'
 import { useSessionStore } from '../store.js'
+import RichTextEditor from '../components/RichTextEditor.vue'
 
 const session = useSessionStore()
 const loading = ref(false)
@@ -119,6 +149,15 @@ const materialCategories = [
   { label: '成果证明', value: 'achievement' },
   { label: '其他', value: 'other' }
 ]
+const extensionOptions = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx']
+const defaultProjectMaterialRules = [
+  { purpose: 'application', label: '项目申报书', required: true, allowed_extensions: ['pdf', 'doc', 'docx'] },
+  { purpose: 'commitment', label: '承诺书', required: true, allowed_extensions: ['pdf', 'jpg', 'jpeg', 'png'] },
+  { purpose: 'seal_scan', label: '盖章扫描件', required: true, allowed_extensions: ['pdf', 'jpg', 'jpeg', 'png'] },
+  { purpose: 'budget', label: '预算说明', required: false, allowed_extensions: ['pdf', 'xls', 'xlsx', 'doc', 'docx'] },
+  { purpose: 'cooperation', label: '合作协议', required: false, allowed_extensions: ['pdf', 'doc', 'docx'] },
+  { purpose: 'other', label: '其他材料', required: false, allowed_extensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx'] }
+]
 
 function emptyForm() {
   return {
@@ -131,6 +170,7 @@ function emptyForm() {
     guide: '',
     attachment_requirements: '',
     acceptance_required_materials: [],
+    project_required_materials: defaultProjectMaterialRules.map((item) => ({ ...item, allowed_extensions: [...item.allowed_extensions] })),
     metadata: {}
   }
 }
@@ -208,8 +248,34 @@ function openEditor(row = null) {
   form.allowed_categories = normalizeAllowedValues('project_category', row?.allowed_categories || [])
   form.allowed_project_types = normalizeAllowedValues('project_type', row?.allowed_project_types || [])
   form.acceptance_required_materials = [...(row?.metadata?.acceptance_required_materials || [])]
+  form.project_required_materials = normalizeProjectMaterialRules(row?.metadata?.project_required_materials, true)
   dateRange.value = row ? [row.starts_at, row.ends_at].filter(Boolean) : []
   editorVisible.value = true
+}
+
+function normalizeProjectMaterialRules(value, useDefaultWhenEmpty = false) {
+  const source = Array.isArray(value) && value.length
+    ? value
+    : (useDefaultWhenEmpty ? defaultProjectMaterialRules : [])
+  return source.map((item) => ({
+    purpose: item.purpose || '',
+    label: item.label || '',
+    required: item.required !== false,
+    allowed_extensions: Array.isArray(item.allowed_extensions) ? [...item.allowed_extensions] : []
+  }))
+}
+
+function addProjectMaterialRule() {
+  form.project_required_materials.push({
+    purpose: `material_${form.project_required_materials.length + 1}`,
+    label: '新增材料',
+    required: false,
+    allowed_extensions: ['pdf']
+  })
+}
+
+function removeProjectMaterialRule(index) {
+  form.project_required_materials.splice(index, 1)
 }
 
 async function saveBatch() {
@@ -227,7 +293,8 @@ async function saveBatch() {
       attachment_requirements: form.attachment_requirements || null,
       metadata: {
         ...(form.metadata || {}),
-        acceptance_required_materials: form.acceptance_required_materials || []
+        acceptance_required_materials: form.acceptance_required_materials || [],
+        project_required_materials: normalizeProjectMaterialRules(form.project_required_materials)
       }
     }
     await api(form.id ? `/application-batches/${form.id}` : '/application-batches', {

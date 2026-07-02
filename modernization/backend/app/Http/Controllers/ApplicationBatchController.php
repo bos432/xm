@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ApplicationBatch;
 use App\Support\AuditLogger;
+use App\Support\RichTextSanitizer;
 use App\Support\Role;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -137,7 +138,7 @@ class ApplicationBatchController extends Controller
     {
         $id = $batch?->id ?? 'NULL';
 
-        return $request->validate([
+        $data = $request->validate([
             'name' => ['required', 'string', 'max:200'],
             'code' => ['required', 'string', 'max:80', 'unique:application_batches,code,'.$id],
             'starts_at' => ['nullable', 'date'],
@@ -161,7 +162,34 @@ class ApplicationBatchController extends Controller
                 'achievement',
                 'other',
             ])],
+            'metadata.project_required_materials' => ['nullable', 'array'],
+            'metadata.project_required_materials.*.purpose' => ['required_with:metadata.project_required_materials', 'string', 'max:80'],
+            'metadata.project_required_materials.*.label' => ['required_with:metadata.project_required_materials', 'string', 'max:120'],
+            'metadata.project_required_materials.*.required' => ['nullable', 'boolean'],
+            'metadata.project_required_materials.*.allowed_extensions' => ['nullable', 'array'],
+            'metadata.project_required_materials.*.allowed_extensions.*' => ['string', 'max:20'],
         ]);
+
+        $data['guide'] = RichTextSanitizer::clean($data['guide'] ?? null);
+        $data['attachment_requirements'] = RichTextSanitizer::clean($data['attachment_requirements'] ?? null);
+
+        if (isset($data['metadata']['project_required_materials'])) {
+            $data['metadata']['project_required_materials'] = collect($data['metadata']['project_required_materials'])
+                ->filter(fn ($item): bool => is_array($item) && trim((string) ($item['purpose'] ?? '')) !== '' && trim((string) ($item['label'] ?? '')) !== '')
+                ->map(fn ($item): array => [
+                    'purpose' => trim((string) $item['purpose']),
+                    'label' => trim((string) $item['label']),
+                    'required' => (bool) ($item['required'] ?? true),
+                    'allowed_extensions' => array_values(array_unique(array_filter(array_map(
+                        fn ($extension) => strtolower(trim((string) $extension, " \t\n\r\0\x0B.")),
+                        is_array($item['allowed_extensions'] ?? null) ? $item['allowed_extensions'] : []
+                    )))),
+                ])
+                ->values()
+                ->all();
+        }
+
+        return $data;
     }
 
     private function authorizeManage(Request $request): void

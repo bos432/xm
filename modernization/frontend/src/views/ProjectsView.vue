@@ -167,10 +167,10 @@
 
           <el-tab-pane label="项目概述" name="overview">
             <el-form :model="form" label-position="top" class="project-form-stack">
-              <el-form-item label="项目摘要"><el-input v-model="form.summary" type="textarea" :rows="4" maxlength="5000" show-word-limit /></el-form-item>
-              <el-form-item label="国内外研究进展与产业发展现状"><el-input v-model="form.metadata.overview" type="textarea" :rows="8" /></el-form-item>
-              <el-form-item label="研究目标与主要内容"><el-input v-model="form.metadata.objectives" type="textarea" :rows="6" /></el-form-item>
-              <el-form-item label="创新点与预期成果"><el-input v-model="form.metadata.innovation" type="textarea" :rows="5" /></el-form-item>
+              <el-form-item label="项目摘要"><RichTextEditor v-model="form.summary" min-height="150px" placeholder="填写项目摘要，可插入图片、列表和链接" /></el-form-item>
+              <el-form-item label="国内外研究进展与产业发展现状"><RichTextEditor v-model="form.metadata.overview" min-height="220px" placeholder="填写研究进展、行业现状和痛点" /></el-form-item>
+              <el-form-item label="研究目标与主要内容"><RichTextEditor v-model="form.metadata.objectives" min-height="200px" placeholder="填写研究目标、技术路线和主要任务" /></el-form-item>
+              <el-form-item label="创新点与预期成果"><RichTextEditor v-model="form.metadata.innovation" min-height="180px" placeholder="填写创新点、成果形式和应用前景" /></el-form-item>
             </el-form>
           </el-tab-pane>
 
@@ -255,33 +255,37 @@
               <el-form-item label="法定代表人"><el-input v-model="form.metadata.seal.legal_representative" placeholder="用于申报承诺和盖章信息" /></el-form-item>
               <el-form-item label="盖章日期"><el-date-picker v-model="form.metadata.seal.seal_date" type="date" value-format="YYYY-MM-DD" /></el-form-item>
               <el-form-item label="申报承诺" class="span-2">
-                <el-input
-                  v-model="form.metadata.seal.commitment"
-                  type="textarea"
-                  :rows="5"
-                  placeholder="可填写单位承诺、真实性声明、知识产权和伦理合规说明"
-                />
+                <RichTextEditor v-model="form.metadata.seal.commitment" min-height="180px" placeholder="可填写单位承诺、真实性声明、知识产权和伦理合规说明" />
               </el-form-item>
-              <el-form-item label="备注" class="span-2"><el-input v-model="form.metadata.seal.remark" type="textarea" :rows="3" /></el-form-item>
+              <el-form-item label="备注" class="span-2"><RichTextEditor v-model="form.metadata.seal.remark" min-height="120px" placeholder="补充说明，可留空" /></el-form-item>
             </el-form>
             <el-alert
               type="info"
               show-icon
               :closable="false"
-              title="盖章扫描件、承诺书、合作协议等文件请在“附件材料”中上传，便于审核人员集中查看。"
+              title="盖章扫描件、承诺书、合作协议等文件请在“附件材料”中按材料类型上传；如批次配置为必传，提交前会自动校验。"
             />
           </el-tab-pane>
 
           <el-tab-pane label="附件材料" name="files">
             <el-alert v-if="!editingProject" title="请先保存草稿，保存成功后即可在同一入口继续上传项目附件。" type="warning" show-icon :closable="false" />
             <template v-else>
-              <el-alert title="申报书、预算说明、合作协议、盖章扫描件等材料可在这里集中上传。脚本文件和危险扩展名会被拒绝。" type="info" show-icon :closable="false" />
-              <el-upload class="upload-box compact-upload" drag :http-request="uploadFileFromWorkbench" :show-file-list="false">
+              <el-alert :title="projectMaterialHint" type="info" show-icon :closable="false" />
+              <div class="material-upload-panel">
+                <el-select v-model="selectedUploadPurpose" placeholder="选择材料类型">
+                  <el-option v-for="item in projectMaterialOptions" :key="item.purpose" :label="materialOptionLabel(item)" :value="item.purpose" />
+                </el-select>
+                <span class="field-help">{{ selectedUploadRuleHint }}</span>
+              </div>
+              <el-upload class="upload-box compact-upload" drag :http-request="uploadFileFromWorkbench" :show-file-list="false" :accept="selectedUploadAccept">
                 <el-icon><UploadFilled /></el-icon>
                 <div>拖拽文件到这里或点击选择</div>
               </el-upload>
               <el-table :data="workbenchFiles" border size="small">
                 <el-table-column type="index" label="#" width="60" />
+                <el-table-column label="材料类型" width="160">
+                  <template #default="{ row }">{{ projectFilePurposeLabel(row.purpose) }}</template>
+                </el-table-column>
                 <el-table-column prop="original_name" label="文件名" min-width="240" />
                 <el-table-column prop="extension" label="类型" width="80" />
                 <el-table-column prop="size_bytes" label="大小" width="120"><template #default="{ row }">{{ formatBytes(row.size_bytes) }}</template></el-table-column>
@@ -305,7 +309,7 @@
 
     <el-dialog v-model="extensionVisible" title="申请延期" width="520px">
       <el-form :model="extensionForm" label-position="top">
-        <el-form-item label="延期原因"><el-input v-model="extensionForm.reason" type="textarea" :rows="4" /></el-form-item>
+        <el-form-item label="延期原因"><RichTextEditor v-model="extensionForm.reason" min-height="150px" placeholder="填写延期原因、已完成情况和后续计划" /></el-form-item>
         <el-form-item label="计划完成日期"><el-date-picker v-model="extensionForm.expected_date" value-format="YYYY-MM-DD" type="date" /></el-form-item>
       </el-form>
       <template #footer>
@@ -316,7 +320,7 @@
 
     <el-dialog v-model="closeVisible" title="关闭验收" width="520px">
       <el-form :model="closeForm" label-position="top">
-        <el-form-item label="验收意见"><el-input v-model="closeForm.comment" type="textarea" :rows="4" /></el-form-item>
+        <el-form-item label="验收意见"><RichTextEditor v-model="closeForm.comment" min-height="150px" placeholder="填写验收关闭意见，可插入图片或链接" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="closeVisible = false">取消</el-button>
@@ -343,15 +347,15 @@
           <el-descriptions-item label="终审支持">{{ finalSupportText(detail).isSupported }}</el-descriptions-item>
           <el-descriptions-item label="支持资金">{{ finalSupportText(detail).supportAmount }}</el-descriptions-item>
           <el-descriptions-item label="推荐专家">{{ finalSupportText(detail).recommendedExperts }}</el-descriptions-item>
-          <el-descriptions-item label="摘要" :span="2">{{ detail.summary || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="摘要" :span="2"><div class="rich-content detail-rich-content" v-html="detail.summary || '-'" /></el-descriptions-item>
         </el-descriptions>
 
         <section>
           <div class="section-title">项目概述</div>
           <el-descriptions :column="1" border>
-            <el-descriptions-item label="国内外研究进展与产业发展现状">{{ detailMetadata.overview || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="研究目标与主要内容">{{ detailMetadata.objectives || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="创新点与预期成果">{{ detailMetadata.innovation || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="国内外研究进展与产业发展现状"><div class="rich-content detail-rich-content" v-html="detailMetadata.overview || '-'" /></el-descriptions-item>
+            <el-descriptions-item label="研究目标与主要内容"><div class="rich-content detail-rich-content" v-html="detailMetadata.objectives || '-'" /></el-descriptions-item>
+            <el-descriptions-item label="创新点与预期成果"><div class="rich-content detail-rich-content" v-html="detailMetadata.innovation || '-'" /></el-descriptions-item>
           </el-descriptions>
         </section>
 
@@ -432,8 +436,8 @@
           <el-descriptions :column="2" border>
             <el-descriptions-item label="法定代表人">{{ detailMetadata.seal.legal_representative || '-' }}</el-descriptions-item>
             <el-descriptions-item label="盖章日期">{{ detailMetadata.seal.seal_date || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="申报承诺" :span="2">{{ detailMetadata.seal.commitment || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="备注" :span="2">{{ detailMetadata.seal.remark || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="申报承诺" :span="2"><div class="rich-content detail-rich-content" v-html="detailMetadata.seal.commitment || '-'" /></el-descriptions-item>
+            <el-descriptions-item label="备注" :span="2"><div class="rich-content detail-rich-content" v-html="detailMetadata.seal.remark || '-'" /></el-descriptions-item>
           </el-descriptions>
         </section>
 
@@ -468,6 +472,9 @@
         <section>
           <div class="section-title">附件</div>
           <el-table :data="detail.files || []" border size="small">
+            <el-table-column label="材料类型" width="150">
+              <template #default="{ row }">{{ projectFilePurposeLabel(row.purpose) }}</template>
+            </el-table-column>
             <el-table-column prop="original_name" label="文件名" min-width="220" />
             <el-table-column prop="extension" label="类型" width="80" />
             <el-table-column prop="size_bytes" label="大小" width="110"><template #default="{ row }">{{ formatBytes(row.size_bytes) }}</template></el-table-column>
@@ -500,7 +507,9 @@
             </el-table-column>
             <el-table-column prop="reviewer.username" label="审核人" width="130" />
             <el-table-column prop="score" label="评分" width="90" />
-            <el-table-column prop="comment" label="意见" min-width="220" />
+            <el-table-column label="意见" min-width="220">
+              <template #default="{ row }"><div class="rich-content detail-rich-content" v-html="row.comment || '-'" /></template>
+            </el-table-column>
             <el-table-column prop="reviewed_at" label="时间" width="170" />
           </el-table>
         </section>
@@ -517,6 +526,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { api, downloadApi } from '../api.js'
 import { useSessionStore } from '../store.js'
 import { useTextStore } from '../texts.js'
+import RichTextEditor from '../components/RichTextEditor.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -609,6 +619,14 @@ const selectedBatchCategories = computed(() => selectedBatchCategoryOptions.valu
 const selectedBatchProjectTypes = computed(() => selectedBatchProjectTypeOptions.value.map((item) => item.label))
 const selectedBatchCategoryValues = computed(() => selectedBatchCategoryOptions.value.map((item) => item.value))
 const selectedBatchProjectTypeValues = computed(() => selectedBatchProjectTypeOptions.value.map((item) => item.value))
+const defaultProjectMaterialOptions = [
+  { purpose: 'application', label: '项目申报书', required: true, allowed_extensions: ['pdf', 'doc', 'docx'] },
+  { purpose: 'commitment', label: '承诺书', required: true, allowed_extensions: ['pdf', 'jpg', 'jpeg', 'png'] },
+  { purpose: 'seal_scan', label: '盖章扫描件', required: true, allowed_extensions: ['pdf', 'jpg', 'jpeg', 'png'] },
+  { purpose: 'budget', label: '预算说明', required: false, allowed_extensions: ['pdf', 'xls', 'xlsx', 'doc', 'docx'] },
+  { purpose: 'cooperation', label: '合作协议', required: false, allowed_extensions: ['pdf', 'doc', 'docx'] },
+  { purpose: 'other', label: '其他材料', required: false, allowed_extensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx'] }
+]
 const formProjectCategoryOptions = computed(() => {
   if (selectedBatchCategoryOptions.value.length) return selectedBatchCategoryOptions.value.map(({ label, value }) => ({ label, value }))
   return projectCategoryOptions.value.map((item) => ({ label: dictionaryOptionLabel(item), value: dictionaryOptionValue(item) }))
@@ -618,6 +636,42 @@ const formProjectTypeOptions = computed(() => {
   return projectTypeOptions.value.map((item) => ({ label: dictionaryOptionLabel(item), value: dictionaryOptionValue(item) }))
 })
 const workbenchFiles = computed(() => editingProject.value?.files || [])
+const hasConfiguredProjectMaterialRules = computed(() => {
+  const configured = selectedBatch.value?.metadata?.project_required_materials
+  return Array.isArray(configured) && configured.length > 0
+})
+const projectMaterialOptions = computed(() => {
+  const configured = selectedBatch.value?.metadata?.project_required_materials
+  if (Array.isArray(configured) && configured.length) {
+    return configured
+      .filter((item) => item?.purpose && item?.label)
+      .map((item) => ({
+        purpose: item.purpose,
+        label: item.label,
+        required: item.required !== false,
+        allowed_extensions: Array.isArray(item.allowed_extensions) ? item.allowed_extensions : []
+      }))
+  }
+  return defaultProjectMaterialOptions.map((item) => ({ ...item, required: false }))
+})
+const selectedUploadPurpose = ref('application')
+const selectedUploadRule = computed(() => projectMaterialOptions.value.find((item) => item.purpose === selectedUploadPurpose.value) || projectMaterialOptions.value[0])
+const selectedUploadAccept = computed(() => {
+  const extensions = selectedUploadRule.value?.allowed_extensions || []
+  return extensions.length ? extensions.map((item) => `.${item}`).join(',') : ''
+})
+const selectedUploadRuleHint = computed(() => {
+  const rule = selectedUploadRule.value
+  if (!rule) return '请选择材料类型后上传'
+  const required = rule.required ? '必传' : '选传'
+  const extensions = rule.allowed_extensions?.length ? `允许：${rule.allowed_extensions.join('、')}` : '允许系统配置的安全文件类型'
+  return `${required}；${extensions}`
+})
+const projectMaterialHint = computed(() => {
+  const required = projectMaterialOptions.value.filter((item) => item.required)
+  if (!required.length) return '申报书、预算说明、合作协议、盖章扫描件等材料可在这里集中上传。脚本文件和危险扩展名会被拒绝。'
+  return `本批次必传材料：${required.map((item) => item.label).join('、')}。请先选择材料类型再上传。`
+})
 const detailMetadata = computed(() => normalizeProjectMetadata(detail.value?.metadata || {}))
 const budgetAmountWanModel = computed({
   get: () => Number((Number(form.budget_amount || 0) / 10000).toFixed(2)),
@@ -870,6 +924,24 @@ function displayResearchDirection(value) {
   return dictionaryDisplay('research_direction', value)
 }
 
+function materialOptionLabel(item) {
+  const required = item.required ? '必传' : '选传'
+  const extensions = item.allowed_extensions?.length ? `；${item.allowed_extensions.join('、')}` : ''
+  return `${item.label}（${required}${extensions}）`
+}
+
+function projectFilePurposeLabel(purpose) {
+  const item = projectMaterialOptions.value.find((option) => option.purpose === purpose)
+    || defaultProjectMaterialOptions.find((option) => option.purpose === purpose)
+  return item?.label || purpose || '未分类'
+}
+
+function missingRequiredProjectMaterials() {
+  if (!hasConfiguredProjectMaterialRules.value) return []
+  const uploaded = new Set(workbenchFiles.value.map((file) => file.purpose || 'application'))
+  return projectMaterialOptions.value.filter((item) => item.required && !uploaded.has(item.purpose))
+}
+
 function batchAllowsValue(group, allowedValues, value) {
   if (!allowedValues.length) return true
   const text = String(value || '').trim()
@@ -909,6 +981,10 @@ function syncFormOptionsWithBatch() {
 
   if (selectedBatchProjectTypeValues.value.length && !batchAllowsValue('project_type', selectedBatchProjectTypeValues.value, form.project_type)) {
     form.project_type = selectedBatchProjectTypeValues.value[0] || ''
+  }
+
+  if (!projectMaterialOptions.value.some((item) => item.purpose === selectedUploadPurpose.value)) {
+    selectedUploadPurpose.value = projectMaterialOptions.value[0]?.purpose || 'application'
   }
 }
 
@@ -1253,9 +1329,23 @@ async function submitProject(row) {
   }
 
   try {
+    if (editingProject.value?.id === row.id) {
+      const missing = missingRequiredProjectMaterials()
+      if (missing.length) {
+        projectFormTab.value = 'files'
+        ElMessage.warning(`请先补齐必传材料：${missing.map((item) => item.label).join('、')}`)
+        return
+      }
+    }
     await ElMessageBox.confirm('提交后将进入区县审核，确认提交？', '提交项目', { type: 'warning' })
-    await api(`/projects/${row.id}/submit`, { method: 'POST' })
+    const submitted = await api(`/projects/${row.id}/submit`, { method: 'POST' })
     ElMessage.success('项目已提交审核')
+    if (submitted?.next_step) {
+      await ElMessageBox.alert(submitted.next_step.body, submitted.next_step.title, {
+        confirmButtonText: '我知道了',
+        type: 'success'
+      })
+    }
     if (editingProject.value?.id === row.id) {
       editingProject.value = await api(`/projects/${row.id}`)
       dialogVisible.value = false
@@ -1414,8 +1504,14 @@ async function uploadFileFromWorkbench({ file }) {
   }
 
   try {
+    if (!selectedUploadRule.value?.purpose) {
+      ElMessage.warning('请先选择材料类型')
+      return
+    }
     const body = new FormData()
     body.append('file', file)
+    body.append('purpose', selectedUploadRule.value.purpose)
+    body.append('metadata[label]', selectedUploadRule.value.label)
     await api(`/projects/${editingProject.value.id}/files`, { method: 'POST', body })
     editingProject.value = await api(`/projects/${editingProject.value.id}`)
     ElMessage.success('附件已上传')

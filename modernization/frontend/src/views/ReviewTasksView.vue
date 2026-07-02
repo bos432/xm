@@ -205,7 +205,7 @@
           </el-form-item>
         </div>
         <el-form-item label="审核意见">
-          <el-input v-model="reviewForm.comment" type="textarea" :rows="5" />
+          <RichTextEditor v-model="reviewForm.comment" min-height="170px" placeholder="填写审核意见，可插入图片、列表和链接" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -225,7 +225,7 @@
           <el-descriptions-item label="是否支持">{{ finalSupportText(detail).isSupported }}</el-descriptions-item>
           <el-descriptions-item label="支持资金">{{ finalSupportText(detail).supportAmount }}</el-descriptions-item>
           <el-descriptions-item label="推荐专家" :span="2">{{ finalSupportText(detail).recommendedExperts }}</el-descriptions-item>
-          <el-descriptions-item label="摘要" :span="2">{{ detail.summary || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="摘要" :span="2"><div class="rich-content detail-rich-content" v-html="detail.summary || '-'" /></el-descriptions-item>
         </el-descriptions>
 
         <section>
@@ -262,7 +262,9 @@
             <el-table-column label="评分明细" min-width="240">
               <template #default="{ row }">{{ formatCriteriaScores(row) }}</template>
             </el-table-column>
-            <el-table-column prop="comment" label="意见" min-width="220" />
+            <el-table-column label="意见" min-width="220">
+              <template #default="{ row }"><div class="rich-content detail-rich-content" v-html="row.comment || '-'" /></template>
+            </el-table-column>
             <el-table-column prop="reviewed_at" label="时间" width="170" />
           </el-table>
         </section>
@@ -278,6 +280,7 @@ import { Checked, Close, Download, Files, Refresh, Search, View } from '@element
 import { useRoute, useRouter } from 'vue-router'
 import { api, downloadApi } from '../api.js'
 import { useSessionStore } from '../store.js'
+import RichTextEditor from '../components/RichTextEditor.vue'
 
 const route = useRoute()
 const router = useRouter()

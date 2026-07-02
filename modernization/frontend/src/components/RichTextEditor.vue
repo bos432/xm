@@ -51,6 +51,8 @@
       ref="editor"
       class="rich-editor-body rich-content"
       contenteditable="true"
+      :data-placeholder="placeholder"
+      :style="{ minHeight }"
       @focus="focused = true"
       @blur="handleBlur"
       @input="syncFromEditor"
@@ -67,6 +69,18 @@ const props = defineProps({
   modelValue: {
     type: String,
     default: ''
+  },
+  placeholder: {
+    type: String,
+    default: '请输入内容'
+  },
+  minHeight: {
+    type: String,
+    default: '180px'
+  },
+  uploadUrl: {
+    type: String,
+    default: '/rich-text-images'
   }
 })
 const emit = defineEmits(['update:modelValue'])
@@ -131,7 +145,7 @@ async function uploadImage(event) {
   form.append('file', file)
   uploading.value = true
   try {
-    const result = await api('/public-home/rich-text-image', { method: 'POST', body: form })
+    const result = await api(props.uploadUrl, { method: 'POST', body: form })
     const alt = escapeAttribute(result.original_name || file.name || '图片')
     const src = escapeAttribute(result.url)
     editor.value?.focus()

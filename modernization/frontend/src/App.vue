@@ -6,7 +6,7 @@
         <strong>{{ texts.t('app.brand.title', '科技项目管理') }}</strong>
         <span>{{ texts.t('app.brand.subtitle', '公共服务后台') }}</span>
       </div>
-      <el-menu :default-active="$route.path" router>
+      <el-menu :default-active="$route.path" :default-openeds="defaultOpeneds" router>
         <template v-for="group in visibleMenuGroups" :key="group.key">
           <el-menu-item v-if="group.items.length === 1 && group.key === 'default'" :index="group.items[0].path">
             <el-icon><component :is="menuIcon(group.items[0].key)" /></el-icon>
@@ -171,6 +171,7 @@ const menuGroupLabels = {
   portal: '门户运营',
   system: '系统管理'
 }
+const menuGroupOrder = ['default', 'business', 'review', 'organization', 'portal', 'system']
 const titleKeys = {
   '/dashboard': ['page.dashboard.title', '运行概览'],
   '/projects': ['page.projects.title', '项目申报'],
@@ -217,8 +218,9 @@ const visibleMenuGroups = computed(() => {
     groupMap.get(key).items.push(item)
   })
 
-  return groups
+  return groups.sort((a, b) => menuGroupOrder.indexOf(a.key) - menuGroupOrder.indexOf(b.key))
 })
+const defaultOpeneds = computed(() => visibleMenuGroups.value.map((group) => `group-${group.key}`))
 const title = computed(() => {
   const titleConfig = titleKeys[route.path]
   return titleConfig ? texts.t(titleConfig[0], titleConfig[1]) : '项目申报系统'

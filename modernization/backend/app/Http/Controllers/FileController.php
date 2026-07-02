@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProjectFileRequest;
+use App\Http\Requests\StorePublicHomeRichTextImageRequest;
 use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Support\AuditLogger;
@@ -11,6 +12,7 @@ use App\Support\Role;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class FileController extends Controller
 {
@@ -23,6 +25,8 @@ class FileController extends Controller
         $this->authorizeProjectWrite($request, $project);
 
         $uploaded = $request->file('file');
+        $purpose = $request->input('purpose', 'application');
+        $this->ensureBatchAllowsFile($project, $purpose, strtolower($uploaded->getClientOriginalExtension()));
         $path = $uploaded->store('project-files/'.$project->id);
 
         $file = ProjectFile::create([
@@ -35,7 +39,7 @@ class FileController extends Controller
             'extension' => strtolower($uploaded->getClientOriginalExtension()),
             'size_bytes' => $uploaded->getSize(),
             'sha256' => hash_file('sha256', $uploaded->getRealPath()),
-            'purpose' => $request->input('purpose', 'application'),
+            'purpose' => $purpose,
             'metadata' => $request->input('metadata', []),
         ]);
 
@@ -46,6 +50,29 @@ class FileController extends Controller
         ]);
 
         return response()->json($file, 201);
+    }
+
+    public function uploadRichTextImage(StorePublicHomeRichTextImageRequest $request)
+    {
+        $uploaded = $request->file('file');
+        $extension = strtolower($uploaded->getClientOriginalExtension());
+        $filename = (string) Str::uuid().'.'.$extension;
+        $path = $uploaded->storeAs('public-home/rich-text-images', $filename);
+
+        $this->auditLogger->record($request, 'rich_text_image.uploaded', null, [
+            'filename' => $filename,
+            'extension' => $extension,
+            'size_bytes' => $uploaded->getSize(),
+        ]);
+
+        return response()->json([
+            'url' => '/api/public/homepage/rich-text-images/'.$filename,
+            'original_name' => $this->safeOriginalName($uploaded),
+            'mime_type' => $uploaded->getMimeType(),
+            'size_bytes' => $uploaded->getSize(),
+            'sha256' => hash_file('sha256', $uploaded->getRealPath()),
+            'path' => $path,
+        ]);
     }
 
     private function safeOriginalName(UploadedFile $file): string
@@ -131,6 +158,31 @@ class FileController extends Controller
 
         if ($user->loadMissing('unit')->unit?->status !== 'active') {
             abort(403, '单位已停用，无法维护项目附件');
+        }
+    }
+
+    private function ensureBatchAllowsFile(Project $project, string $purpose, string $extension): void
+    {
+        $rules = $project->applicationBatch?->metadata['project_required_materials'] ?? [];
+        if (! is_array($rules) || $rules === []) {
+            return;
+        }
+
+        $rule = collect($rules)->first(function ($rule) use ($purpose): bool {
+            return is_array($rule) && ($rule['purpose'] ?? null) === $purpose;
+        });
+
+        if (! $rule) {
+            abort(422, '请选择当前批次允许的附件材料类型');
+        }
+
+        $allowedExtensions = array_values(array_filter(array_map(
+            fn ($item) => strtolower(trim((string) $item, " \t\n\r\0\x0B.")),
+            is_array($rule['allowed_extensions'] ?? null) ? $rule['allowed_extensions'] : []
+        )));
+
+        if ($allowedExtensions !== [] && ! in_array($extension, $allowedExtensions, true)) {
+            abort(422, '该材料类型仅允许上传：'.implode('、', $allowedExtensions));
         }
     }
 

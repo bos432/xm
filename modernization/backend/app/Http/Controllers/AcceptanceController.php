@@ -11,6 +11,7 @@ use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Models\User;
 use App\Support\AuditLogger;
+use App\Support\RichTextSanitizer;
 use App\Support\Role;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -113,6 +114,7 @@ class AcceptanceController extends Controller
             'summary' => ['nullable', 'string', 'max:5000'],
             'metadata' => ['nullable', 'array'],
         ]);
+        $data['summary'] = RichTextSanitizer::clean($data['summary'] ?? null);
 
         $acceptance = AcceptanceApplication::firstOrCreate(
             [
@@ -144,6 +146,7 @@ class AcceptanceController extends Controller
         $data = $request->validate([
             'summary' => ['nullable', 'string', 'max:5000'],
         ]);
+        $data['summary'] = RichTextSanitizer::clean($data['summary'] ?? null);
 
         $missingMaterials = $this->missingRequiredMaterials($acceptance);
         if ($missingMaterials !== []) {
@@ -177,6 +180,7 @@ class AcceptanceController extends Controller
             'comment' => ['nullable', 'string', 'max:3000'],
             'metadata' => ['nullable', 'array'],
         ]);
+        $data['comment'] = RichTextSanitizer::clean($data['comment'] ?? null);
 
         $stage = Role::reviewerStageFor($request->user()->role);
         $review = AcceptanceReview::create($data + [
@@ -241,6 +245,7 @@ class AcceptanceController extends Controller
                 'reason' => ['required', 'string', 'max:3000'],
                 'expected_date' => ['nullable', 'date'],
             ]);
+            $data['reason'] = RichTextSanitizer::clean($data['reason']) ?? '';
 
             $extension = AcceptanceExtension::create($data + [
                 'acceptance_application_id' => $acceptance->id,
@@ -264,6 +269,7 @@ class AcceptanceController extends Controller
             'decision' => ['required', 'in:approved,rejected'],
             'comment' => ['nullable', 'string', 'max:3000'],
         ]);
+        $data['comment'] = RichTextSanitizer::clean($data['comment'] ?? null);
 
         $extension = AcceptanceExtension::query()
             ->where('acceptance_application_id', $acceptance->id)

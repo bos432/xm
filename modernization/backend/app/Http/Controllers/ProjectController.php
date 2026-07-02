@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Support\AuditLogger;
 use App\Support\ProjectFileStorage;
+use App\Support\RichTextSanitizer;
 use App\Support\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -183,7 +184,7 @@ class ProjectController extends Controller
         $data = $request->validated();
         $batch = $this->resolveOpenBatch($data['application_batch_id'] ?? null);
         $this->ensureBatchAllowsProject($batch, $data);
-        $data = $this->normalizeProjectDictionaryFields($data);
+        $data = $this->normalizeProjectDictionaryFields($this->sanitizeProjectRichText($data));
         $data['application_batch_id'] = $batch->id;
 
         $project = Project::create($data + [
@@ -229,7 +230,7 @@ class ProjectController extends Controller
         } elseif (array_key_exists('application_batch_id', $data)) {
             unset($data['application_batch_id']);
         }
-        $data = $this->normalizeProjectDictionaryFields($data);
+        $data = $this->normalizeProjectDictionaryFields($this->sanitizeProjectRichText($data));
 
         $project->update($data);
 
@@ -292,11 +293,19 @@ class ProjectController extends Controller
             return response()->json(['message' => '当前状态不允许提交'], 422);
         }
 
+        $project->loadMissing(['applicationBatch', 'files']);
         $batch = $project->applicationBatch ?: $this->resolveOpenBatch($project->application_batch_id);
         if (! $batch->isOpenNow()) {
             return response()->json(['message' => '申报批次未开放，不能提交'], 422);
         }
         $this->ensureBatchAllowsProject($batch, $project->only(['category', 'project_type']));
+        $missingMaterials = $this->missingRequiredProjectMaterials($project);
+        if ($missingMaterials !== []) {
+            return response()->json([
+                'message' => '请先补齐必传申报材料：'.implode('、', array_column($missingMaterials, 'label')),
+                'missing_materials' => $missingMaterials,
+            ], 422);
+        }
 
         $project->update([
             'status' => Project::STATUS_SUBMITTED,
@@ -308,7 +317,11 @@ class ProjectController extends Controller
         $this->notifyOwner($project, '项目已提交', '项目已进入区县审核阶段。');
         $this->notifyRole($project, Role::COUNTY, '收到待审项目', '项目“'.$project->title.'”已提交，请及时审核。');
 
-        return $project->refresh();
+        return $project->refresh()->setAttribute('next_step', [
+            'title' => '项目已提交，等待区县审核',
+            'body' => '请关注站内消息和项目状态。如被退回，可在“项目申报 -> 退回修改”中补充材料后再次提交。',
+            'path' => '/projects?status=submitted',
+        ]);
     }
 
     public function withdraw(Request $request, Project $project)
@@ -358,6 +371,7 @@ class ProjectController extends Controller
         $data = $request->validate([
             'comment' => ['nullable', 'string', 'max:3000'],
         ]);
+        $data['comment'] = RichTextSanitizer::clean($data['comment'] ?? null);
 
         $metadata = $project->metadata ?? [];
         $metadata['acceptance_closed'] = [
@@ -385,6 +399,7 @@ class ProjectController extends Controller
             'reason' => ['required', 'string', 'max:3000'],
             'expected_date' => ['nullable', 'date'],
         ]);
+        $data['reason'] = RichTextSanitizer::clean($data['reason']) ?? '';
 
         $metadata = $project->metadata ?? [];
         $extensions = $metadata['extension_requests'] ?? [];
@@ -426,6 +441,7 @@ class ProjectController extends Controller
             'decision' => ['required', 'in:approved,rejected'],
             'comment' => ['nullable', 'string', 'max:3000'],
         ]);
+        $data['comment'] = RichTextSanitizer::clean($data['comment'] ?? null);
 
         $extensions[$index] = array_merge($extensions[$index], [
             'status' => $data['decision'],
@@ -447,6 +463,54 @@ class ProjectController extends Controller
         $this->notifyOwner($project, $title, $title.'。'.($data['comment'] ?? ''));
 
         return $project->refresh();
+    }
+
+    private function sanitizeProjectRichText(array $data): array
+    {
+        if (array_key_exists('summary', $data)) {
+            $data['summary'] = RichTextSanitizer::clean($data['summary'] ?? null);
+        }
+
+        if (! isset($data['metadata']) || ! is_array($data['metadata'])) {
+            return $data;
+        }
+
+        foreach (['overview', 'objectives', 'innovation'] as $key) {
+            if (array_key_exists($key, $data['metadata'])) {
+                $data['metadata'][$key] = RichTextSanitizer::clean($data['metadata'][$key] ?? null);
+            }
+        }
+
+        if (isset($data['metadata']['seal']) && is_array($data['metadata']['seal'])) {
+            foreach (['commitment', 'remark'] as $key) {
+                if (array_key_exists($key, $data['metadata']['seal'])) {
+                    $data['metadata']['seal'][$key] = RichTextSanitizer::clean($data['metadata']['seal'][$key] ?? null);
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    private function missingRequiredProjectMaterials(Project $project): array
+    {
+        $rules = $project->applicationBatch?->metadata['project_required_materials'] ?? [];
+        if (! is_array($rules) || $rules === []) {
+            return [];
+        }
+
+        $uploaded = $project->files->groupBy('purpose');
+
+        return collect($rules)
+            ->filter(fn ($rule): bool => is_array($rule) && ($rule['required'] ?? true))
+            ->filter(fn ($rule): bool => $uploaded->get($rule['purpose'] ?? '', collect())->isEmpty())
+            ->map(fn ($rule): array => [
+                'purpose' => (string) ($rule['purpose'] ?? ''),
+                'label' => (string) ($rule['label'] ?? $rule['purpose'] ?? '未命名材料'),
+                'allowed_extensions' => array_values($rule['allowed_extensions'] ?? []),
+            ])
+            ->values()
+            ->all();
     }
 
     private function notifyOwner(Project $project, string $title, string $body): void

@@ -75,7 +75,7 @@
             <el-option v-for="item in projectOptions" :key="item.id" :label="projectOptionLabel(item)" :value="item.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="验收说明"><el-input v-model="createForm.summary" type="textarea" :rows="4" /></el-form-item>
+        <el-form-item label="验收说明"><RichTextEditor v-model="createForm.summary" min-height="150px" placeholder="填写验收背景、完成情况和申请说明" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="createVisible = false">取消</el-button>
@@ -93,7 +93,7 @@
           :closable="false"
           :title="`提交前需上传：${submitRequiredMaterialLabels.join('、')}`"
         />
-        <el-form-item label="验收说明"><el-input v-model="submitForm.summary" type="textarea" :rows="5" /></el-form-item>
+        <el-form-item label="验收说明"><RichTextEditor v-model="submitForm.summary" min-height="170px" placeholder="补充验收说明，可插入图片、列表和链接" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="submitVisible = false">取消</el-button>
@@ -112,7 +112,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="评分"><el-input-number v-model="reviewForm.score" :min="0" :max="100" /></el-form-item>
-        <el-form-item label="审核意见"><el-input v-model="reviewForm.comment" type="textarea" :rows="4" /></el-form-item>
+        <el-form-item label="审核意见"><RichTextEditor v-model="reviewForm.comment" min-height="150px" placeholder="填写验收审核意见" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="reviewVisible = false">取消</el-button>
@@ -123,7 +123,7 @@
     <el-dialog v-model="extensionVisible" title="验收延期" width="560px">
       <el-form :model="extensionForm" label-position="top">
         <template v-if="session.role === 'unit'">
-          <el-form-item label="延期原因"><el-input v-model="extensionForm.reason" type="textarea" :rows="4" /></el-form-item>
+          <el-form-item label="延期原因"><RichTextEditor v-model="extensionForm.reason" min-height="150px" placeholder="填写延期原因和后续计划" /></el-form-item>
           <el-form-item label="计划完成日期"><el-date-picker v-model="extensionForm.expected_date" type="date" value-format="YYYY-MM-DD" /></el-form-item>
         </template>
         <template v-else>
@@ -138,7 +138,7 @@
               <el-option label="驳回" value="rejected" />
             </el-select>
           </el-form-item>
-          <el-form-item label="处理意见"><el-input v-model="extensionForm.comment" type="textarea" :rows="4" /></el-form-item>
+          <el-form-item label="处理意见"><RichTextEditor v-model="extensionForm.comment" min-height="150px" placeholder="填写延期处理意见" /></el-form-item>
         </template>
       </el-form>
       <template #footer>
@@ -167,7 +167,7 @@
           <el-descriptions-item label="项目" :span="2">{{ detail.project?.title }}</el-descriptions-item>
           <el-descriptions-item label="单位">{{ detail.unit?.name }}</el-descriptions-item>
           <el-descriptions-item label="状态">{{ statusMeta(detail.status).label }}</el-descriptions-item>
-          <el-descriptions-item label="说明" :span="2">{{ detail.summary || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="说明" :span="2"><div class="rich-content detail-rich-content" v-html="detail.summary || '-'" /></el-descriptions-item>
         </el-descriptions>
         <section v-if="detail.timeline?.length">
           <div class="section-title">验收阶段</div>
@@ -188,7 +188,7 @@
             <el-descriptions-item label="处理时间">{{ selectedTimelineItem.handled_at || '-' }}</el-descriptions-item>
             <el-descriptions-item label="处理结果">{{ decisionLabel(selectedTimelineItem.decision) }}</el-descriptions-item>
             <el-descriptions-item label="评分">{{ selectedTimelineItem.score ?? '-' }}</el-descriptions-item>
-            <el-descriptions-item label="意见" :span="2">{{ selectedTimelineItem.comment || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="意见" :span="2"><div class="rich-content detail-rich-content" v-html="selectedTimelineItem.comment || '-'" /></el-descriptions-item>
           </el-descriptions>
         </section>
         <section>
@@ -210,17 +210,23 @@
             <el-table-column label="阶段" width="110"><template #default="{ row }">{{ roleLabel(row.stage) }}</template></el-table-column>
             <el-table-column prop="decision" label="结果" width="100" />
             <el-table-column prop="score" label="评分" width="80" />
-            <el-table-column prop="comment" label="意见" min-width="220" />
+            <el-table-column label="意见" min-width="220">
+              <template #default="{ row }"><div class="rich-content detail-rich-content" v-html="row.comment || '-'" /></template>
+            </el-table-column>
             <el-table-column prop="reviewed_at" label="时间" width="170" />
           </el-table>
         </section>
         <section>
           <div class="section-title">延期记录</div>
           <el-table :data="detail.extensions || []" border size="small">
-            <el-table-column prop="reason" label="原因" min-width="220" />
+            <el-table-column label="原因" min-width="220">
+              <template #default="{ row }"><div class="rich-content detail-rich-content" v-html="row.reason || '-'" /></template>
+            </el-table-column>
             <el-table-column prop="expected_date" label="计划日期" width="120" />
             <el-table-column prop="status" label="状态" width="100" />
-            <el-table-column prop="review_comment" label="处理意见" min-width="160" />
+            <el-table-column label="处理意见" min-width="160">
+              <template #default="{ row }"><div class="rich-content detail-rich-content" v-html="row.review_comment || '-'" /></template>
+            </el-table-column>
           </el-table>
         </section>
       </div>
@@ -236,6 +242,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { api } from '../api.js'
 import { useSessionStore } from '../store.js'
 import { useTextStore } from '../texts.js'
+import RichTextEditor from '../components/RichTextEditor.vue'
 
 const route = useRoute()
 const router = useRouter()

@@ -97,6 +97,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/lifecycle/expert-certifications/{certification}/review', [ProjectLifecycleController::class, 'reviewExpertCertification']);
 
     Route::post('/projects/{project}/files', [FileController::class, 'store']);
+    Route::post('/rich-text-images', [FileController::class, 'uploadRichTextImage']);
     Route::get('/files/{file}/download', [FileController::class, 'download']);
     Route::delete('/files/{file}', [FileController::class, 'destroy']);
 

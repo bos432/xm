@@ -166,7 +166,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="任务书标题"><el-input v-model="taskBookForm.title" /></el-form-item>
-        <el-form-item label="任务书内容"><el-input v-model="taskBookForm.content" type="textarea" :rows="8" /></el-form-item>
+        <el-form-item label="任务书内容"><RichTextEditor v-model="taskBookForm.content" min-height="220px" placeholder="填写任务书内容，可插入图片、列表和链接" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="taskBookVisible = false">取消</el-button>
@@ -193,9 +193,9 @@
         </el-form-item>
         <el-form-item label="周期"><el-input v-model="progressForm.period" placeholder="例如 2026 年第二季度" /></el-form-item>
         <el-form-item label="进展日期"><el-date-picker v-model="progressForm.progress_date" type="date" value-format="YYYY-MM-DD" /></el-form-item>
-        <el-form-item label="进展摘要"><el-input v-model="progressForm.summary" type="textarea" :rows="5" /></el-form-item>
-        <el-form-item label="存在问题"><el-input v-model="progressForm.issues" type="textarea" :rows="3" /></el-form-item>
-        <el-form-item label="下一步计划"><el-input v-model="progressForm.next_plan" type="textarea" :rows="3" /></el-form-item>
+        <el-form-item label="进展摘要"><RichTextEditor v-model="progressForm.summary" min-height="170px" placeholder="填写阶段进展摘要" /></el-form-item>
+        <el-form-item label="存在问题"><RichTextEditor v-model="progressForm.issues" min-height="130px" placeholder="填写存在问题，可留空" /></el-form-item>
+        <el-form-item label="下一步计划"><RichTextEditor v-model="progressForm.next_plan" min-height="130px" placeholder="填写下一步计划，可留空" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="progressVisible = false">取消</el-button>
@@ -220,7 +220,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="整改事项"><el-input v-model="rectificationForm.title" /></el-form-item>
-        <el-form-item label="整改要求"><el-input v-model="rectificationForm.requirement" type="textarea" :rows="6" /></el-form-item>
+        <el-form-item label="整改要求"><RichTextEditor v-model="rectificationForm.requirement" min-height="190px" placeholder="填写整改要求、截止标准和附件要求" /></el-form-item>
         <el-form-item label="截止日期"><el-date-picker v-model="rectificationForm.due_date" type="date" value-format="YYYY-MM-DD" /></el-form-item>
       </el-form>
       <template #footer>
@@ -231,7 +231,7 @@
 
     <el-dialog v-model="rectificationResponseVisible" title="提交整改材料" width="620px">
       <el-form :model="rectificationResponseForm" label-position="top">
-        <el-form-item label="整改说明"><el-input v-model="rectificationResponseForm.response" type="textarea" :rows="8" /></el-form-item>
+        <el-form-item label="整改说明"><RichTextEditor v-model="rectificationResponseForm.response" min-height="220px" placeholder="填写整改完成情况和证明说明" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="rectificationResponseVisible = false">取消</el-button>
@@ -245,7 +245,7 @@
         <el-form-item label="专业方向"><el-input v-model="certificationForm.specialty" /></el-form-item>
         <el-form-item label="职称"><el-input v-model="certificationForm.professional_title" /></el-form-item>
         <el-form-item label="证书编号"><el-input v-model="certificationForm.certificate_no" /></el-form-item>
-        <el-form-item label="资质说明"><el-input v-model="certificationForm.summary" type="textarea" :rows="6" /></el-form-item>
+        <el-form-item label="资质说明"><RichTextEditor v-model="certificationForm.summary" min-height="190px" placeholder="填写专家资质说明和相关经历" /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="certificationVisible = false">取消</el-button>
@@ -254,7 +254,7 @@
     </el-dialog>
 
     <el-drawer v-model="detailVisible" :title="detailTitle" size="560px">
-      <pre class="json-cell">{{ detailText }}</pre>
+      <div class="rich-content detail-rich-content" v-html="detailText || '-'" />
     </el-drawer>
 
     <el-dialog v-model="reviewVisible" title="审核处理" width="520px">
@@ -267,7 +267,7 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="审核意见">
-          <el-input v-model="reviewForm.comment" type="textarea" :rows="5" placeholder="请填写审核意见，退回或驳回时建议写明原因" />
+          <RichTextEditor v-model="reviewForm.comment" min-height="160px" placeholder="请填写审核意见，退回或驳回时建议写明原因" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -286,6 +286,7 @@ import { useRoute } from 'vue-router'
 import { api } from '../api.js'
 import { useSessionStore } from '../store.js'
 import { useTextStore } from '../texts.js'
+import RichTextEditor from '../components/RichTextEditor.vue'
 
 const route = useRoute()
 const session = useSessionStore()
@@ -652,15 +653,50 @@ function showText(title, text) {
 }
 
 function progressText(row) {
-  return `周期：${row.period || '-'}\n进展日期：${row.progress_date || '-'}\n\n进展摘要：\n${row.summary || '-'}\n\n存在问题：\n${row.issues || '-'}\n\n下一步计划：\n${row.next_plan || '-'}\n\n审核意见：\n${row.review_comment || '-'}`
+  return [
+    plainLine('周期', row.period),
+    plainLine('进展日期', row.progress_date),
+    richSection('进展摘要', row.summary),
+    richSection('存在问题', row.issues),
+    richSection('下一步计划', row.next_plan),
+    richSection('审核意见', row.review_comment)
+  ].join('')
 }
 
 function rectificationText(row) {
-  return `整改要求：\n${row.requirement || '-'}\n\n整改说明：\n${row.response || '-'}\n\n审核意见：\n${row.review_comment || '-'}`
+  return [
+    richSection('整改要求', row.requirement),
+    richSection('整改说明', row.response),
+    richSection('审核意见', row.review_comment)
+  ].join('')
 }
 
 function certificationText(row) {
-  return `机构：${row.organization || '-'}\n专业方向：${row.specialty || '-'}\n职称：${row.professional_title || '-'}\n证书编号：${row.certificate_no || '-'}\n\n资质说明：\n${row.summary || '-'}\n\n审核意见：\n${row.review_comment || '-'}`
+  return [
+    plainLine('机构', row.organization),
+    plainLine('专业方向', row.specialty),
+    plainLine('职称', row.professional_title),
+    plainLine('证书编号', row.certificate_no),
+    richSection('资质说明', row.summary),
+    richSection('审核意见', row.review_comment)
+  ].join('')
+}
+
+function plainLine(label, value) {
+  return `<p><strong>${escapeHtml(label)}：</strong>${escapeHtml(value || '-')}</p>`
+}
+
+function richSection(label, value) {
+  return `<section class="detail-rich-section"><h4>${escapeHtml(label)}</h4>${value || '<p>-</p>'}</section>`
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;')
 }
 
 onMounted(async () => {

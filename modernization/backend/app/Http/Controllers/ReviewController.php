@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\ProjectReview;
 use App\Models\User;
 use App\Support\AuditLogger;
+use App\Support\RichTextSanitizer;
 use App\Support\Role;
 use App\Support\ReviewDispatchMatcher;
 use App\Support\ReviewScoreCriteria;
@@ -160,6 +161,7 @@ class ReviewController extends Controller
             'metadata.final_support.support_amount_wan' => ['nullable', 'numeric', 'min:0'],
             'metadata.final_support.recommended_experts' => ['nullable', 'string', 'max:500'],
         ]);
+        $data['comment'] = RichTextSanitizer::clean($data['comment'] ?? null);
 
         if ($stage === Role::EXPERT) {
             $data = ReviewScoreCriteria::applyExpertScores($data);

@@ -8,6 +8,7 @@ use App\Models\ProjectProgressRecord;
 use App\Models\ProjectRectification;
 use App\Models\ProjectTaskBook;
 use App\Support\AuditLogger;
+use App\Support\RichTextSanitizer;
 use App\Support\Role;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -36,6 +37,7 @@ class ProjectLifecycleController extends Controller
             'title' => ['required', 'string', 'max:200'],
             'content' => ['nullable', 'string', 'max:20000'],
         ]);
+        $data = $this->cleanRichTextFields($data, ['content']);
 
         $taskBook = ProjectTaskBook::create($data + [
             'project_id' => $project->id,
@@ -61,6 +63,7 @@ class ProjectLifecycleController extends Controller
             'title' => ['required', 'string', 'max:200'],
             'content' => ['nullable', 'string', 'max:20000'],
         ]);
+        $data = $this->cleanRichTextFields($data, ['content']);
 
         $taskBook->update($data);
         $this->auditLogger->record($request, 'task_book.updated', $taskBook, ['project_id' => $taskBook->project_id]);
@@ -122,6 +125,7 @@ class ProjectLifecycleController extends Controller
             'issues' => ['nullable', 'string', 'max:10000'],
             'next_plan' => ['nullable', 'string', 'max:10000'],
         ]);
+        $data = $this->cleanRichTextFields($data, ['summary', 'issues', 'next_plan']);
 
         $record = ProjectProgressRecord::create($data + [
             'project_id' => $project->id,
@@ -150,6 +154,7 @@ class ProjectLifecycleController extends Controller
             'issues' => ['nullable', 'string', 'max:10000'],
             'next_plan' => ['nullable', 'string', 'max:10000'],
         ]);
+        $data = $this->cleanRichTextFields($data, ['summary', 'issues', 'next_plan']);
 
         $progress->update($data);
         $this->auditLogger->record($request, 'project_progress.updated', $progress, ['project_id' => $progress->project_id]);
@@ -209,6 +214,7 @@ class ProjectLifecycleController extends Controller
             'requirement' => ['nullable', 'string', 'max:20000'],
             'due_date' => ['nullable', 'date'],
         ]);
+        $data = $this->cleanRichTextFields($data, ['requirement']);
 
         $rectification = ProjectRectification::create($data + [
             'project_id' => $project->id,
@@ -233,6 +239,7 @@ class ProjectLifecycleController extends Controller
         $data = $request->validate([
             'response' => ['required', 'string', 'max:20000'],
         ]);
+        $data = $this->cleanRichTextFields($data, ['response']);
 
         $rectification->update($data + [
             'status' => 'submitted',
@@ -303,6 +310,7 @@ class ProjectLifecycleController extends Controller
             'certificate_no' => ['nullable', 'string', 'max:160'],
             'summary' => ['nullable', 'string', 'max:20000'],
         ]);
+        $data = $this->cleanRichTextFields($data, ['summary']);
 
         $certification = ExpertCertification::create($data + [
             'user_id' => $request->user()->id,
@@ -395,6 +403,8 @@ class ProjectLifecycleController extends Controller
 
     private function reviewPayload(Request $request, array $data): array
     {
+        $comment = RichTextSanitizer::clean($data['comment'] ?? null);
+
         return [
             'status' => match ($data['decision']) {
                 'approve' => 'approved',
@@ -403,8 +413,19 @@ class ProjectLifecycleController extends Controller
             },
             'reviewed_by' => $request->user()->id,
             'reviewed_at' => now(),
-            'review_comment' => $data['comment'] ?? null,
+            'review_comment' => $comment,
         ];
+    }
+
+    private function cleanRichTextFields(array $data, array $fields): array
+    {
+        foreach ($fields as $field) {
+            if (array_key_exists($field, $data)) {
+                $data[$field] = RichTextSanitizer::clean($data[$field] ?? null);
+            }
+        }
+
+        return $data;
     }
 
     private function ensureSubmittedForReview(string $status): void
