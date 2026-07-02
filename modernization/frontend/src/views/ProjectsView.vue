@@ -136,9 +136,21 @@
               <el-form-item label="起止年限">
                 <el-date-picker v-model="projectDateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" @change="syncProjectDateRange" />
               </el-form-item>
-              <el-form-item label="归口管理单位"><el-input v-model="form.metadata.management_unit" placeholder="例如 盟级管理部门 / 旗区科技管理部门" /></el-form-item>
-              <el-form-item label="所属领域"><el-input v-model="form.metadata.field" placeholder="例如 资源综合利用" /></el-form-item>
-              <el-form-item label="研究方向"><el-input v-model="form.metadata.research_direction" placeholder="例如 矿产资源开发利用" /></el-form-item>
+              <el-form-item label="归口管理单位">
+                <el-select v-model="form.metadata.management_unit" filterable allow-create default-first-option clearable placeholder="选择或填写归口管理单位">
+                  <el-option v-for="item in managementUnitOptions" :key="item.code" :label="dictionaryOptionLabel(item)" :value="dictionaryOptionValue(item)" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="所属领域">
+                <el-select v-model="form.metadata.field" filterable allow-create default-first-option clearable placeholder="选择或填写所属领域">
+                  <el-option v-for="item in projectFieldOptions" :key="item.code" :label="dictionaryOptionLabel(item)" :value="dictionaryOptionValue(item)" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="研究方向">
+                <el-select v-model="form.metadata.research_direction" filterable allow-create default-first-option clearable placeholder="选择或填写研究方向">
+                  <el-option v-for="item in researchDirectionOptions" :key="item.code" :label="dictionaryOptionLabel(item)" :value="dictionaryOptionValue(item)" />
+                </el-select>
+              </el-form-item>
               <el-form-item label="合作单位" class="span-2"><el-input v-model="form.metadata.cooperation_units" placeholder="多个单位用顿号或逗号分隔" /></el-form-item>
               <el-form-item label="预算金额（万元）">
                 <div class="budget-input-row">
@@ -323,9 +335,9 @@
           <el-descriptions-item label="项目类型">{{ displayProjectType(detail.project_type) }}</el-descriptions-item>
           <el-descriptions-item label="指南代码">{{ detailMetadata.guide_code || '-' }}</el-descriptions-item>
           <el-descriptions-item label="起止年限">{{ detailDateRange(detailMetadata) }}</el-descriptions-item>
-          <el-descriptions-item label="归口管理单位">{{ detailMetadata.management_unit || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="所属领域">{{ detailMetadata.field || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="研究方向">{{ detailMetadata.research_direction || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="归口管理单位">{{ displayManagementUnit(detailMetadata.management_unit) }}</el-descriptions-item>
+          <el-descriptions-item label="所属领域">{{ displayProjectField(detailMetadata.field) }}</el-descriptions-item>
+          <el-descriptions-item label="研究方向">{{ displayResearchDirection(detailMetadata.research_direction) }}</el-descriptions-item>
           <el-descriptions-item label="合作单位">{{ detailMetadata.cooperation_units || '-' }}</el-descriptions-item>
           <el-descriptions-item label="预算金额">{{ formatWanYuan(detail.budget_amount) }}（{{ formatCurrency(detail.budget_amount) }}）</el-descriptions-item>
           <el-descriptions-item label="终审支持">{{ finalSupportText(detail).isSupported }}</el-descriptions-item>
@@ -556,6 +568,9 @@ const saving = ref(false)
 const projects = ref([])
 const projectTypeOptions = ref([])
 const projectCategoryOptions = ref([])
+const managementUnitOptions = ref([])
+const projectFieldOptions = ref([])
+const researchDirectionOptions = ref([])
 const openBatches = ref([])
 const category = ref('')
 const projectType = ref('')
@@ -802,7 +817,14 @@ function normalizeOptionList(value) {
 }
 
 function dictionaryOptions(group) {
-  return group === 'project_category' ? projectCategoryOptions.value : projectTypeOptions.value
+  const groups = {
+    project_category: projectCategoryOptions.value,
+    project_type: projectTypeOptions.value,
+    management_unit: managementUnitOptions.value,
+    project_field: projectFieldOptions.value,
+    research_direction: researchDirectionOptions.value
+  }
+  return groups[group] || []
 }
 
 function findDictionaryItem(group, value) {
@@ -834,6 +856,18 @@ function displayProjectCategory(value) {
 
 function displayProjectType(value) {
   return dictionaryDisplay('project_type', value)
+}
+
+function displayManagementUnit(value) {
+  return dictionaryDisplay('management_unit', value)
+}
+
+function displayProjectField(value) {
+  return dictionaryDisplay('project_field', value)
+}
+
+function displayResearchDirection(value) {
+  return dictionaryDisplay('research_direction', value)
 }
 
 function batchAllowsValue(group, allowedValues, value) {
@@ -1054,13 +1088,19 @@ function resetForm() {
 }
 
 async function loadDictionaries() {
-  const [types, categories, batches] = await Promise.all([
+  const [types, categories, managementUnits, fields, directions, batches] = await Promise.all([
     api('/dictionaries?group=project_type'),
     api('/dictionaries?group=project_category'),
+    api('/dictionaries?group=management_unit'),
+    api('/dictionaries?group=project_field'),
+    api('/dictionaries?group=research_direction'),
     api('/public/application-batches/open')
   ])
   projectTypeOptions.value = types
   projectCategoryOptions.value = categories
+  managementUnitOptions.value = managementUnits
+  projectFieldOptions.value = fields
+  researchDirectionOptions.value = directions
   openBatches.value = batches
 }
 

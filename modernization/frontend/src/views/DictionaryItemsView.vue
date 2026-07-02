@@ -96,9 +96,12 @@ const editingItem = ref(null)
 const form = reactive(emptyForm())
 const reviewCriterionGroup = 'expert_review_criterion'
 const groupLabels = {
+  management_unit: '归口管理单位',
   project_category: '项目类别',
+  project_field: '所属领域',
   project_type: '项目类型',
   project_status: '项目状态',
+  research_direction: '研究方向',
   expert_review_criterion: '专家评分项'
 }
 
