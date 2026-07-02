@@ -588,14 +588,18 @@ const unitCanWriteProjects = computed(() => session.role !== 'unit' || session.u
 const canCreate = computed(() => session.can('create_projects') && unitCanWriteProjects.value)
 const canFilterE2e = computed(() => ['admin', 'super_admin'].includes(session.role))
 const selectedBatch = computed(() => openBatches.value.find((batch) => batch.id === form.application_batch_id) || null)
-const selectedBatchCategories = computed(() => normalizeOptionList(selectedBatch.value?.allowed_categories))
-const selectedBatchProjectTypes = computed(() => normalizeOptionList(selectedBatch.value?.allowed_project_types))
+const selectedBatchCategoryOptions = computed(() => batchAllowedOptions('project_category', selectedBatch.value?.allowed_categories))
+const selectedBatchProjectTypeOptions = computed(() => batchAllowedOptions('project_type', selectedBatch.value?.allowed_project_types))
+const selectedBatchCategories = computed(() => selectedBatchCategoryOptions.value.map((item) => item.label))
+const selectedBatchProjectTypes = computed(() => selectedBatchProjectTypeOptions.value.map((item) => item.label))
+const selectedBatchCategoryValues = computed(() => selectedBatchCategoryOptions.value.map((item) => item.value))
+const selectedBatchProjectTypeValues = computed(() => selectedBatchProjectTypeOptions.value.map((item) => item.value))
 const formProjectCategoryOptions = computed(() => {
-  if (selectedBatchCategories.value.length) return selectedBatchCategories.value.map((value) => optionFromDictionaryValue('project_category', value))
+  if (selectedBatchCategoryOptions.value.length) return selectedBatchCategoryOptions.value.map(({ label, value }) => ({ label, value }))
   return projectCategoryOptions.value.map((item) => ({ label: dictionaryOptionLabel(item), value: dictionaryOptionValue(item) }))
 })
 const formProjectTypeOptions = computed(() => {
-  if (selectedBatchProjectTypes.value.length) return selectedBatchProjectTypes.value.map((value) => optionFromDictionaryValue('project_type', value))
+  if (selectedBatchProjectTypeOptions.value.length) return selectedBatchProjectTypeOptions.value.map(({ label, value }) => ({ label, value }))
   return projectTypeOptions.value.map((item) => ({ label: dictionaryOptionLabel(item), value: dictionaryOptionValue(item) }))
 })
 const workbenchFiles = computed(() => editingProject.value?.files || [])
@@ -817,14 +821,6 @@ function dictionaryOptionLabel(item) {
   return `${item.label}（${item.code}）`
 }
 
-function optionFromDictionaryValue(group, value) {
-  const item = findDictionaryItem(group, value)
-  return {
-    label: item ? dictionaryOptionLabel(item) : value,
-    value
-  }
-}
-
 function dictionaryDisplay(group, value) {
   const text = String(value || '').trim()
   if (!text) return '-'
@@ -853,13 +849,32 @@ function batchAllowsValue(group, allowedValues, value) {
   })
 }
 
+function batchAllowedOptions(group, values) {
+  const known = []
+  const custom = []
+  const seen = new Set()
+
+  normalizeOptionList(values).forEach((value) => {
+    const item = findDictionaryItem(group, value)
+    const option = item
+      ? { label: dictionaryOptionLabel(item), value: dictionaryOptionValue(item), canonical: item.code || item.label, custom: false }
+      : { label: value, value, canonical: `custom:${value}`, custom: true }
+
+    if (!option.canonical || seen.has(option.canonical)) return
+    seen.add(option.canonical)
+    ;(option.custom ? custom : known).push(option)
+  })
+
+  return [...known, ...custom]
+}
+
 function syncFormOptionsWithBatch() {
-  if (selectedBatchCategories.value.length && !batchAllowsValue('project_category', selectedBatchCategories.value, form.category)) {
-    form.category = selectedBatchCategories.value[0] || ''
+  if (selectedBatchCategoryValues.value.length && !batchAllowsValue('project_category', selectedBatchCategoryValues.value, form.category)) {
+    form.category = selectedBatchCategoryValues.value[0] || ''
   }
 
-  if (selectedBatchProjectTypes.value.length && !batchAllowsValue('project_type', selectedBatchProjectTypes.value, form.project_type)) {
-    form.project_type = selectedBatchProjectTypes.value[0] || ''
+  if (selectedBatchProjectTypeValues.value.length && !batchAllowsValue('project_type', selectedBatchProjectTypeValues.value, form.project_type)) {
+    form.project_type = selectedBatchProjectTypeValues.value[0] || ''
   }
 }
 
@@ -966,13 +981,13 @@ function validateProjectDraft() {
     return false
   }
 
-  if (selectedBatchCategories.value.length && !form.category) {
+  if (selectedBatchCategoryValues.value.length && !form.category) {
     projectFormTab.value = 'basic'
     ElMessage.warning('请选择项目类别')
     return false
   }
 
-  if (selectedBatchProjectTypes.value.length && !form.project_type) {
+  if (selectedBatchProjectTypeValues.value.length && !form.project_type) {
     projectFormTab.value = 'basic'
     ElMessage.warning('请选择项目类型')
     return false

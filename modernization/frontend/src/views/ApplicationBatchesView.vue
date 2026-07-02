@@ -149,6 +149,37 @@ function dictionaryOptionLabel(item) {
   return `${item.label}（${item.code}）`
 }
 
+function dictionaryOptions(group) {
+  return group === 'project_category' ? projectCategoryOptions.value : projectTypeOptions.value
+}
+
+function findDictionaryItem(group, value) {
+  const text = String(value || '').trim()
+  if (!text) return null
+  return dictionaryOptions(group).find((item) => item.code === text || item.label === text) || null
+}
+
+function normalizeAllowedValues(group, values) {
+  const known = []
+  const custom = []
+  const seen = new Set()
+
+  ;(Array.isArray(values) ? values : []).forEach((value) => {
+    const text = String(value || '').trim()
+    if (!text) return
+
+    const item = findDictionaryItem(group, text)
+    const normalized = item ? dictionaryOptionValue(item) : text
+    const canonical = item?.code || item?.label || `custom:${text}`
+    if (seen.has(canonical)) return
+
+    seen.add(canonical)
+    ;(item ? known : custom).push(normalized)
+  })
+
+  return [...known, ...custom]
+}
+
 async function loadBatches() {
   loading.value = true
   try {
@@ -174,8 +205,8 @@ async function loadDictionaries() {
 
 function openEditor(row = null) {
   Object.assign(form, emptyForm(), row || {})
-  form.allowed_categories = [...(row?.allowed_categories || [])]
-  form.allowed_project_types = [...(row?.allowed_project_types || [])]
+  form.allowed_categories = normalizeAllowedValues('project_category', row?.allowed_categories || [])
+  form.allowed_project_types = normalizeAllowedValues('project_type', row?.allowed_project_types || [])
   form.acceptance_required_materials = [...(row?.metadata?.acceptance_required_materials || [])]
   dateRange.value = row ? [row.starts_at, row.ends_at].filter(Boolean) : []
   editorVisible.value = true
