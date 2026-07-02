@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Project;
 use App\Models\ProjectReview;
+use App\Models\DictionaryItem;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -321,6 +322,56 @@ class ReviewExportTest extends TestCase
         $this->assertStringContainsString('导出位于评分区间', $csv);
         $this->assertStringNotContainsString('导出低于区间', $csv);
         $this->assertStringNotContainsString('导出高于区间', $csv);
+    }
+
+    public function test_review_result_export_includes_expert_score_criteria_columns(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $expert = User::factory()->create(['role' => 'expert']);
+        $project = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'title' => '专家评分导出项目',
+        ]);
+        DictionaryItem::create([
+            'group' => 'expert_review_criterion',
+            'code' => 'policy_importance',
+            'label' => '项目实施的重要性、必要性',
+            'sort_order' => 10,
+            'is_active' => true,
+            'metadata' => ['section' => '政策符合性评价', 'max_score' => 5],
+        ]);
+        ProjectReview::create([
+            'project_id' => $project->id,
+            'reviewer_id' => $expert->id,
+            'stage' => 'expert',
+            'decision' => 'recommend',
+            'score' => 4,
+            'comment' => '专家建议推荐',
+            'reviewed_at' => now(),
+            'metadata' => [
+                'score_criteria' => [
+                    [
+                        'code' => 'policy_importance',
+                        'label' => '项目实施的重要性、必要性',
+                        'section' => '政策符合性评价',
+                        'max_score' => 5,
+                        'score' => 4,
+                    ],
+                ],
+            ],
+        ]);
+
+        Sanctum::actingAs($expert);
+
+        $csv = $this->get('/api/reviews/results/export.csv')
+            ->assertOk()
+            ->streamedContent();
+
+        $this->assertStringContainsString('项目实施的重要性、必要性（5分）', $csv);
+        $this->assertStringContainsString('专家评分导出项目', $csv);
+        $this->assertStringContainsString(',4,专家建议推荐', $csv);
     }
 
     public function test_admin_can_list_review_results_by_stage_and_decision(): void

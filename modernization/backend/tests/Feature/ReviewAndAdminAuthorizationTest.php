@@ -347,6 +347,7 @@ class ReviewAndAdminAuthorizationTest extends TestCase
     {
         $unitUser = User::factory()->create(['role' => 'unit']);
         $admin = User::factory()->create(['role' => 'admin']);
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
         SystemSetting::create([
             'key' => 'mail.host',
             'value' => 'smtp.example.test',
@@ -360,6 +361,9 @@ class ReviewAndAdminAuthorizationTest extends TestCase
 
         Sanctum::actingAs($admin);
         $this->getJson('/api/migration/readiness')->assertOk();
+        $this->getJson('/api/settings')->assertForbidden();
+
+        Sanctum::actingAs($superAdmin);
         $this->getJson('/api/settings')->assertOk()
             ->assertJsonFragment(['key' => 'mail.host']);
     }

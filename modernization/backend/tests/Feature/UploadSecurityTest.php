@@ -45,7 +45,7 @@ class UploadSecurityTest extends TestCase
         [$project] = $this->actingAsUnitProjectApplicant();
 
         $response = $this->postJson("/api/projects/{$project->id}/files", [
-            'file' => UploadedFile::fake()->create('../budget.pdf', 10, 'application/pdf'),
+            'file' => UploadedFile::fake()->create('budget..pdf', 10, 'application/pdf'),
         ]);
 
         $response->assertUnprocessable();

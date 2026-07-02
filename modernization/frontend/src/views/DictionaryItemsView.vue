@@ -13,6 +13,12 @@
       <el-table-column prop="group" label="分组" width="150" />
       <el-table-column prop="code" label="编码" width="160" />
       <el-table-column prop="label" label="名称" min-width="200" />
+      <el-table-column label="评分大类" min-width="160">
+        <template #default="{ row }">{{ row.group === reviewCriterionGroup ? row.metadata?.section || '-' : '-' }}</template>
+      </el-table-column>
+      <el-table-column label="满分" width="90">
+        <template #default="{ row }">{{ row.group === reviewCriterionGroup ? formatMaxScore(row) : '-' }}</template>
+      </el-table-column>
       <el-table-column prop="sort_order" label="排序" width="90" />
       <el-table-column label="状态" width="100">
         <template #default="{ row }"><el-tag :type="row.is_active ? 'success' : 'info'">{{ row.is_active ? '启用' : '停用' }}</el-tag></template>
@@ -35,6 +41,12 @@
         <el-form-item label="编码"><el-input v-model="form.code" /></el-form-item>
         <el-form-item label="名称"><el-input v-model="form.label" /></el-form-item>
         <el-form-item label="排序"><el-input-number v-model="form.sort_order" :min="0" /></el-form-item>
+        <template v-if="form.group === reviewCriterionGroup">
+          <el-alert type="info" :closable="false" show-icon title="专家评分项会显示在专家审核弹窗中，满分用于校验并自动汇总总分。" />
+          <el-form-item label="评分大类"><el-input v-model="form.metadata.section" placeholder="例如：政策符合性评价" /></el-form-item>
+          <el-form-item label="满分"><el-input-number v-model="form.metadata.max_score" :min="0" :max="100" :precision="1" /></el-form-item>
+          <el-form-item label="说明"><el-input v-model="form.metadata.description" type="textarea" :rows="3" placeholder="可选，给专家看的评分说明" /></el-form-item>
+        </template>
         <el-form-item label="状态"><el-switch v-model="form.is_active" active-text="启用" inactive-text="停用" /></el-form-item>
       </el-form>
       <template #footer>
@@ -63,9 +75,14 @@ const items = ref([])
 const dialogVisible = ref(false)
 const editingItem = ref(null)
 const form = reactive(emptyForm())
+const reviewCriterionGroup = 'expert_review_criterion'
 
 function emptyForm() {
-  return { group: '', code: '', label: '', sort_order: 0, is_active: true }
+  return { group: '', code: '', label: '', sort_order: 0, is_active: true, metadata: emptyMetadata() }
+}
+
+function emptyMetadata() {
+  return { section: '', max_score: 5, description: '' }
 }
 
 async function loadItems() {
@@ -95,7 +112,8 @@ function openEdit(row) {
     code: row.code || '',
     label: row.label || '',
     sort_order: Number(row.sort_order || 0),
-    is_active: Boolean(row.is_active)
+    is_active: Boolean(row.is_active),
+    metadata: { ...emptyMetadata(), ...(row.metadata || {}) }
   })
   dialogVisible.value = true
 }
@@ -109,7 +127,7 @@ async function saveItem() {
   try {
     const path = editingItem.value ? `/dictionary-items/${editingItem.value.id}` : '/dictionary-items'
     const method = editingItem.value ? 'PUT' : 'POST'
-    await api(path, { method, body: JSON.stringify(form) })
+    await api(path, { method, body: JSON.stringify(buildPayload()) })
     ElMessage.success('字典已保存')
     dialogVisible.value = false
     window.dispatchEvent(new Event('dictionaries:changed'))
@@ -117,6 +135,25 @@ async function saveItem() {
   } finally {
     saving.value = false
   }
+}
+
+function buildPayload() {
+  return {
+    group: form.group,
+    code: form.code,
+    label: form.label,
+    sort_order: form.sort_order,
+    is_active: form.is_active,
+    metadata: {
+      ...(form.metadata || {}),
+      max_score: Number(form.metadata?.max_score || 0)
+    }
+  }
+}
+
+function formatMaxScore(row) {
+  const score = Number(row.metadata?.max_score || 0)
+  return Number.isFinite(score) && score > 0 ? score : '-'
 }
 
 onMounted(loadItems)

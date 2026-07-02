@@ -8,6 +8,7 @@ use App\Models\ProjectReview;
 use App\Models\User;
 use App\Support\AuditLogger;
 use App\Support\Role;
+use App\Support\ReviewScoreCriteria;
 use Illuminate\Http\Request;
 
 class ReviewController extends Controller
@@ -125,6 +126,10 @@ class ReviewController extends Controller
             'comment' => ['nullable', 'string', 'max:3000'],
             'metadata' => ['nullable', 'array'],
         ]);
+
+        if ($stage === Role::EXPERT) {
+            $data = ReviewScoreCriteria::applyExpertScores($data);
+        }
 
         $review = ProjectReview::create($data + [
             'project_id' => $project->id,

@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Models\Message;
 use App\Models\SystemSetting;
 use App\Models\User;
+use App\Support\RuntimeConfig;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Crypt;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -88,7 +90,7 @@ class MessageAndSettingWorkflowTest extends TestCase
 
         Sanctum::actingAs($user);
 
-        $ids = collect($this->getJson('/api/messages?sort_by=created_at&sort_direction=asc')
+        $ids = collect($this->getJson('/api/messages')
             ->assertOk()
             ->json('data'))
             ->pluck('id')
@@ -189,7 +191,7 @@ class MessageAndSettingWorkflowTest extends TestCase
 
     public function test_admin_can_update_setting_with_audit_log_and_secret_masking(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'super_admin']);
         $setting = SystemSetting::create([
             'key' => 'mail.password',
             'value' => 'old-secret',
@@ -205,12 +207,14 @@ class MessageAndSettingWorkflowTest extends TestCase
             'description' => '新的邮件密码',
         ])->assertOk()
             ->assertJsonPath('key', 'mail.password')
-            ->assertJsonPath('value', '********')
+            ->assertJsonPath('value', 'ne****et')
             ->assertJsonPath('description', '新的邮件密码');
 
+        $setting->refresh();
+        $this->assertNotSame('new-secret', $setting->value);
+        $this->assertSame('new-secret', RuntimeConfig::value('mail.password'));
         $this->assertDatabaseHas('system_settings', [
             'id' => $setting->id,
-            'value' => 'new-secret',
             'description' => '新的邮件密码',
         ]);
         $this->assertDatabaseHas('operation_logs', [
@@ -223,10 +227,10 @@ class MessageAndSettingWorkflowTest extends TestCase
 
     public function test_blank_secret_setting_update_keeps_existing_value(): void
     {
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'super_admin']);
         $setting = SystemSetting::create([
             'key' => 'sms.api_key',
-            'value' => 'existing-secret',
+            'value' => Crypt::encryptString('existing-secret'),
             'group' => 'sms',
             'is_secret' => true,
             'description' => '短信密钥',
@@ -239,12 +243,12 @@ class MessageAndSettingWorkflowTest extends TestCase
             'description' => '只更新说明',
         ])->assertOk()
             ->assertJsonPath('key', 'sms.api_key')
-            ->assertJsonPath('value', '********')
+            ->assertJsonPath('value', 'ex****et')
             ->assertJsonPath('description', '只更新说明');
 
+        $this->assertSame('existing-secret', RuntimeConfig::value('sms.api_key'));
         $this->assertDatabaseHas('system_settings', [
             'id' => $setting->id,
-            'value' => 'existing-secret',
             'description' => '只更新说明',
         ]);
     }

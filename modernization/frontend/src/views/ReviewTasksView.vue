@@ -104,6 +104,9 @@
             </el-table-column>
             <el-table-column prop="reviewer.username" label="审核人" width="130" />
             <el-table-column prop="score" label="评分" width="90" />
+            <el-table-column label="评分明细" min-width="240">
+              <template #default="{ row }">{{ formatCriteriaScores(row) }}</template>
+            </el-table-column>
             <el-table-column prop="comment" label="意见" min-width="220" />
             <el-table-column prop="reviewed_at" label="审核时间" width="180" />
             <el-table-column label="操作" width="90" fixed="right">
@@ -128,14 +131,48 @@
       </el-tab-pane>
     </el-tabs>
 
-    <el-dialog v-model="reviewVisible" title="审核处理" width="560px">
+    <el-dialog v-model="reviewVisible" title="审核处理" :width="useCriteriaScoring ? '860px' : '560px'">
       <el-form :model="reviewForm" label-position="top">
         <el-form-item label="审核结果">
           <el-radio-group v-model="reviewForm.decision">
             <el-radio-button v-for="item in decisionOptions" :key="item.value" :label="item.value">{{ item.label }}</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="评分">
+        <template v-if="useCriteriaScoring">
+          <el-form-item label="专家评分">
+            <div class="criteria-panel">
+              <div v-for="group in groupedReviewCriteria" :key="group.section" class="criteria-group">
+                <div class="criteria-group-title">
+                  <strong>{{ group.section }}</strong>
+                  <span>满分 {{ group.maxScore }} 分</span>
+                </div>
+                <el-table :data="group.items" border size="small">
+                  <el-table-column prop="label" label="评分项" min-width="260">
+                    <template #default="{ row }">
+                      <div>{{ row.label }}</div>
+                      <small v-if="row.description">{{ row.description }}</small>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="max_score" label="满分" width="80" />
+                  <el-table-column label="得分" width="150">
+                    <template #default="{ row }">
+                      <el-input-number
+                        v-model="reviewForm.criteria_scores[row.code]"
+                        :min="0"
+                        :max="Number(row.max_score || 0)"
+                        :precision="1"
+                        controls-position="right"
+                        @change="syncCriteriaScore"
+                      />
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </div>
+              <div class="criteria-total">合计：{{ reviewCriteriaScoreTotal }} / {{ reviewCriteriaMaxTotal }} 分</div>
+            </div>
+          </el-form-item>
+        </template>
+        <el-form-item v-else label="评分">
           <el-input-number v-model="reviewForm.score" :min="0" :max="100" :precision="1" />
         </el-form-item>
         <el-form-item label="审核意见">
@@ -155,7 +192,7 @@
           <el-descriptions-item label="申报单位">{{ detail.unit?.name || '-' }}</el-descriptions-item>
           <el-descriptions-item label="当前阶段">{{ roleLabel(detail.current_reviewer_role) }}</el-descriptions-item>
           <el-descriptions-item label="项目类型">{{ detail.project_type || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="预算金额">{{ detail.budget_amount || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="预算金额">{{ formatCurrency(detail.budget_amount) }}</el-descriptions-item>
           <el-descriptions-item label="摘要" :span="2">{{ detail.summary || '-' }}</el-descriptions-item>
         </el-descriptions>
 
@@ -190,6 +227,9 @@
               <template #default="{ row }">{{ decisionLabel(row.decision) }}</template>
             </el-table-column>
             <el-table-column prop="score" label="评分" width="90" />
+            <el-table-column label="评分明细" min-width="240">
+              <template #default="{ row }">{{ formatCriteriaScores(row) }}</template>
+            </el-table-column>
             <el-table-column prop="comment" label="意见" min-width="220" />
             <el-table-column prop="reviewed_at" label="时间" width="170" />
           </el-table>
@@ -218,6 +258,7 @@ const tasks = ref([])
 const results = ref([])
 const projectTypeOptions = ref([])
 const projectCategoryOptions = ref([])
+const reviewCriteriaOptions = ref([])
 const keyword = ref('')
 const category = ref('')
 const projectType = ref('')
@@ -233,7 +274,7 @@ const detailVisible = ref(false)
 const reviewVisible = ref(false)
 const detail = ref(null)
 const currentProject = ref(null)
-const reviewForm = reactive({ decision: 'approve', score: null, comment: '' })
+const reviewForm = reactive({ decision: 'approve', score: null, comment: '', criteria_scores: {} })
 const pagination = reactive({ current_page: 1, per_page: 20, total: 0 })
 const resultPagination = reactive({ current_page: 1, per_page: 20, total: 0 })
 let skipNextRouteProjectReload = false
@@ -294,6 +335,35 @@ const decisionOptions = computed(() => {
     { label: '驳回', value: 'reject' }
   ]
 })
+const useCriteriaScoring = computed(() => currentProject.value?.current_reviewer_role === 'expert' && reviewCriteriaOptions.value.length > 0)
+const groupedReviewCriteria = computed(() => {
+  const groups = new Map()
+  for (const item of reviewCriteriaOptions.value) {
+    const section = item.metadata?.section || '专家评分'
+    if (!groups.has(section)) groups.set(section, { section, maxScore: 0, items: [] })
+    const group = groups.get(section)
+    const normalized = {
+      code: item.code,
+      label: item.label,
+      sort_order: Number(item.sort_order || 0),
+      description: item.metadata?.description || '',
+      max_score: Number(item.metadata?.max_score || 0)
+    }
+    group.maxScore += normalized.max_score
+    group.items.push(normalized)
+  }
+
+  return Array.from(groups.values()).map((group) => ({
+    ...group,
+    maxScore: Number(group.maxScore.toFixed(1)),
+    items: group.items.sort((a, b) => a.sort_order - b.sort_order)
+  }))
+})
+const reviewCriteriaMaxTotal = computed(() => Number(reviewCriteriaOptions.value.reduce((sum, item) => sum + Number(item.metadata?.max_score || 0), 0).toFixed(1)))
+const reviewCriteriaScoreTotal = computed(() => {
+  const total = reviewCriteriaOptions.value.reduce((sum, item) => sum + Number(reviewForm.criteria_scores[item.code] || 0), 0)
+  return Number(total.toFixed(1))
+})
 
 function roleLabel(role) {
   return roleLabels[role] || role || '-'
@@ -308,12 +378,14 @@ function decisionLabel(value) {
 }
 
 async function loadDictionaries() {
-  const [types, categories] = await Promise.all([
+  const [types, categories, criteria] = await Promise.all([
     api('/dictionaries?group=project_type'),
-    api('/dictionaries?group=project_category')
+    api('/dictionaries?group=project_category'),
+    api('/dictionaries?group=expert_review_criterion')
   ])
   projectTypeOptions.value = types
   projectCategoryOptions.value = categories
+  reviewCriteriaOptions.value = criteria
 }
 
 function buildTaskQuery(includePage = true) {
@@ -423,8 +495,10 @@ function openReview(row) {
   Object.assign(reviewForm, {
     decision: decisionOptions.value[0]?.value || 'approve',
     score: null,
-    comment: ''
+    comment: '',
+    criteria_scores: defaultCriteriaScores()
   })
+  syncCriteriaScore()
   reviewVisible.value = true
 }
 
@@ -445,13 +519,20 @@ async function clearRouteProjectFilter({ reload = true } = {}) {
 async function submitReview() {
   submitting.value = true
   try {
+    syncCriteriaScore()
+    const shouldSubmitCriteria = useCriteriaScoring.value && shouldSubmitCriteriaScores()
+    const payload = {
+      decision: reviewForm.decision,
+      score: useCriteriaScoring.value && !shouldSubmitCriteria ? null : reviewForm.score,
+      comment: reviewForm.comment
+    }
+    if (shouldSubmitCriteria) {
+      payload.metadata = { score_criteria: { ...reviewForm.criteria_scores } }
+    }
+
     await api(`/projects/${currentProject.value.id}/reviews`, {
       method: 'POST',
-      body: JSON.stringify({
-        decision: reviewForm.decision,
-        score: reviewForm.score,
-        comment: reviewForm.comment
-      })
+      body: JSON.stringify(payload)
     })
     ElMessage.success('审核已提交')
     reviewVisible.value = false
@@ -462,6 +543,28 @@ async function submitReview() {
   } finally {
     submitting.value = false
   }
+}
+
+function defaultCriteriaScores() {
+  return Object.fromEntries(reviewCriteriaOptions.value.map((item) => [item.code, null]))
+}
+
+function syncCriteriaScore() {
+  if (!useCriteriaScoring.value) return
+  reviewForm.score = reviewCriteriaScoreTotal.value
+}
+
+function shouldSubmitCriteriaScores() {
+  if (!['return', 'reject'].includes(reviewForm.decision)) return true
+  return Object.values(reviewForm.criteria_scores || {}).some((value) => value !== null && value !== '')
+}
+
+function formatCriteriaScores(row) {
+  const items = row?.metadata?.score_criteria
+  if (!Array.isArray(items) || items.length === 0) return '-'
+  return items
+    .map((item) => `${item.label || item.code}：${item.score ?? '-'} / ${item.max_score ?? '-'}`)
+    .join('；')
 }
 
 async function exportTasks() {
@@ -497,6 +600,13 @@ function formatBytes(value) {
   if (size < 1024) return `${size} B`
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
   return `${(size / 1024 / 1024).toFixed(1)} MB`
+}
+
+function formatCurrency(value) {
+  if (value === null || value === undefined || value === '') return '-'
+  const amount = Number(value)
+  if (Number.isNaN(amount)) return `${value} 元`
+  return `${amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 元`
 }
 
 onMounted(async () => {
@@ -543,5 +653,33 @@ onUnmounted(() => {
 <style scoped>
 .score-filter {
   width: 116px;
+}
+
+.criteria-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.criteria-group {
+  display: grid;
+  gap: 6px;
+}
+
+.criteria-group-title,
+.criteria-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.criteria-group-title span,
+.criteria-total {
+  color: #606266;
+}
+
+.criteria-total {
+  justify-content: flex-end;
+  font-weight: 600;
 }
 </style>

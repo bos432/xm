@@ -16,7 +16,7 @@ class MessageController extends Controller
     {
         $status = $request->query('status');
         $sortBy = $request->query('sort_by', 'created_at');
-        $sortDirection = strtolower((string) $request->query('sort_direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $sortDirection = strtolower((string) $request->query('sort_direction', 'asc')) === 'desc' ? 'desc' : 'asc';
         $sortableColumns = ['created_at', 'read_at', 'type', 'title'];
 
         if (! in_array($sortBy, $sortableColumns, true)) {

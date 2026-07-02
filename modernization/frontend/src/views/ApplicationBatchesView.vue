@@ -59,8 +59,16 @@
         <el-form-item label="申报时间">
           <el-date-picker v-model="dateRange" type="datetimerange" value-format="YYYY-MM-DD HH:mm:ss" start-placeholder="开始" end-placeholder="结束" />
         </el-form-item>
-        <el-form-item label="允许项目类别"><el-input v-model="form.allowed_categories_text" placeholder="多个用逗号分隔；留空表示不限" /></el-form-item>
-        <el-form-item label="允许项目类型"><el-input v-model="form.allowed_project_types_text" placeholder="多个用逗号分隔；留空表示不限" /></el-form-item>
+        <el-form-item label="允许项目类别">
+          <el-select v-model="form.allowed_categories" multiple filterable allow-create default-first-option placeholder="从项目类别字典选择；留空表示不限">
+            <el-option v-for="item in projectCategoryOptions" :key="item.code" :label="item.label" :value="item.label" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="允许项目类型">
+          <el-select v-model="form.allowed_project_types" multiple filterable allow-create default-first-option placeholder="从项目类型字典选择；留空表示不限">
+            <el-option v-for="item in projectTypeOptions" :key="item.code" :label="item.label" :value="item.label" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="指南说明" class="wide-field"><el-input v-model="form.guide" type="textarea" :rows="4" /></el-form-item>
         <el-form-item label="附件要求" class="wide-field"><el-input v-model="form.attachment_requirements" type="textarea" :rows="4" /></el-form-item>
         <el-form-item label="验收必传材料" class="wide-field">
@@ -94,6 +102,8 @@ const e2eFilter = ref('')
 const editorVisible = ref(false)
 const dateRange = ref([])
 const form = reactive(emptyForm())
+const projectCategoryOptions = ref([])
+const projectTypeOptions = ref([])
 const statusLabels = {
   draft: { label: '草稿', type: 'info' },
   open: { label: '开放', type: 'success' },
@@ -114,8 +124,8 @@ function emptyForm() {
     name: '',
     code: '',
     status: 'draft',
-    allowed_categories_text: '',
-    allowed_project_types_text: '',
+    allowed_categories: [],
+    allowed_project_types: [],
     guide: '',
     attachment_requirements: '',
     acceptance_required_materials: [],
@@ -125,10 +135,6 @@ function emptyForm() {
 
 function statusMeta(value) {
   return statusLabels[value] || { label: value || '-', type: 'info' }
-}
-
-function splitList(value) {
-  return String(value || '').split(/[,，]/).map((item) => item.trim()).filter(Boolean)
 }
 
 async function loadBatches() {
@@ -145,10 +151,19 @@ async function loadBatches() {
   }
 }
 
+async function loadDictionaries() {
+  const [categories, types] = await Promise.all([
+    api('/dictionaries?group=project_category'),
+    api('/dictionaries?group=project_type')
+  ])
+  projectCategoryOptions.value = categories
+  projectTypeOptions.value = types
+}
+
 function openEditor(row = null) {
   Object.assign(form, emptyForm(), row || {})
-  form.allowed_categories_text = (row?.allowed_categories || []).join('，')
-  form.allowed_project_types_text = (row?.allowed_project_types || []).join('，')
+  form.allowed_categories = [...(row?.allowed_categories || [])]
+  form.allowed_project_types = [...(row?.allowed_project_types || [])]
   form.acceptance_required_materials = [...(row?.metadata?.acceptance_required_materials || [])]
   dateRange.value = row ? [row.starts_at, row.ends_at].filter(Boolean) : []
   editorVisible.value = true
@@ -163,8 +178,8 @@ async function saveBatch() {
       status: form.status,
       starts_at: dateRange.value?.[0] || null,
       ends_at: dateRange.value?.[1] || null,
-      allowed_categories: splitList(form.allowed_categories_text),
-      allowed_project_types: splitList(form.allowed_project_types_text),
+      allowed_categories: form.allowed_categories || [],
+      allowed_project_types: form.allowed_project_types || [],
       guide: form.guide || null,
       attachment_requirements: form.attachment_requirements || null,
       metadata: {
@@ -179,6 +194,8 @@ async function saveBatch() {
     ElMessage.success('批次已保存')
     editorVisible.value = false
     await loadBatches()
+  } catch (err) {
+    ElMessage.error(err?.message || '批次保存失败')
   } finally {
     saving.value = false
   }
@@ -197,5 +214,8 @@ async function archiveE2eBatches() {
   await loadBatches()
 }
 
-onMounted(loadBatches)
+onMounted(() => {
+  loadBatches()
+  loadDictionaries()
+})
 </script>

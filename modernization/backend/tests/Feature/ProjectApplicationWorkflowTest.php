@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Models\ProjectReview;
+use App\Models\DictionaryItem;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -97,8 +98,9 @@ class ProjectApplicationWorkflowTest extends TestCase
         $ownUnit = Unit::factory()->create();
         $otherUnit = Unit::factory()->create();
         $user = User::factory()->create(['unit_id' => $ownUnit->id, 'role' => 'unit']);
+        $otherOwner = User::factory()->create(['unit_id' => $otherUnit->id, 'role' => 'unit']);
         $ownProject = Project::factory()->create(['unit_id' => $ownUnit->id, 'owner_id' => $user->id]);
-        Project::factory()->create(['unit_id' => $otherUnit->id]);
+        Project::factory()->create(['unit_id' => $otherUnit->id, 'owner_id' => $otherOwner->id]);
 
         Sanctum::actingAs($user);
 
@@ -147,6 +149,90 @@ class ProjectApplicationWorkflowTest extends TestCase
             ->assertJsonPath('reviews.0.reviewer.username', 'county-reviewer')
             ->assertJsonPath('reviews.1.id', $oldReview->id)
             ->assertJsonPath('reviews.0.reviewer.name', '区县审核员');
+    }
+
+    public function test_expert_review_uses_configured_score_criteria(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $expert = User::factory()->create(['role' => 'expert']);
+        $project = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'status' => Project::STATUS_REVIEWING,
+            'current_reviewer_role' => 'expert',
+        ]);
+        DictionaryItem::create([
+            'group' => 'expert_review_criterion',
+            'code' => 'policy_importance',
+            'label' => '项目实施的重要性、必要性',
+            'sort_order' => 10,
+            'is_active' => true,
+            'metadata' => ['section' => '政策符合性评价', 'max_score' => 5],
+        ]);
+        DictionaryItem::create([
+            'group' => 'expert_review_criterion',
+            'code' => 'technical_goals_clear',
+            'label' => '研究目标是否明确清晰、重点突出',
+            'sort_order' => 20,
+            'is_active' => true,
+            'metadata' => ['section' => '项目成果及技术水平评价', 'max_score' => 10],
+        ]);
+
+        Sanctum::actingAs($expert);
+
+        $response = $this->postJson("/api/projects/{$project->id}/reviews", [
+            'decision' => 'recommend',
+            'score' => 1,
+            'comment' => '建议推荐',
+            'metadata' => [
+                'score_criteria' => [
+                    'policy_importance' => 4,
+                    'technical_goals_clear' => 8.5,
+                ],
+            ],
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('review.score', '12.50')
+            ->assertJsonPath('project.current_reviewer_role', 'admin');
+
+        $review = ProjectReview::query()->firstOrFail();
+        $this->assertSame('12.50', $review->score);
+        $this->assertSame(12.5, $review->metadata['score_total']);
+        $this->assertEquals(15.0, $review->metadata['score_max']);
+        $this->assertCount(2, $review->metadata['score_criteria']);
+    }
+
+    public function test_expert_review_requires_configured_score_criteria_for_recommendation(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $expert = User::factory()->create(['role' => 'expert']);
+        $project = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'status' => Project::STATUS_REVIEWING,
+            'current_reviewer_role' => 'expert',
+        ]);
+        DictionaryItem::create([
+            'group' => 'expert_review_criterion',
+            'code' => 'budget_reasonable',
+            'label' => '项目预算的合理性',
+            'sort_order' => 10,
+            'is_active' => true,
+            'metadata' => ['section' => '经费预算', 'max_score' => 5],
+        ]);
+
+        Sanctum::actingAs($expert);
+
+        $this->postJson("/api/projects/{$project->id}/reviews", [
+            'decision' => 'recommend',
+            'comment' => '缺少评分',
+            'metadata' => ['score_criteria' => []],
+        ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('metadata.score_criteria');
     }
 
     public function test_project_cannot_be_updated_after_submission(): void
@@ -425,8 +511,6 @@ class ProjectApplicationWorkflowTest extends TestCase
             'extension' => 'pdf',
             'size_bytes' => 100,
             'sha256' => hash('sha256', 'old'),
-            'created_at' => now()->subDay(),
-            'updated_at' => now()->subDay(),
         ]);
         $newFile = ProjectFile::create([
             'project_id' => $project->id,
@@ -438,9 +522,9 @@ class ProjectApplicationWorkflowTest extends TestCase
             'extension' => 'pdf',
             'size_bytes' => 200,
             'sha256' => hash('sha256', 'new'),
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
+        $oldFile->forceFill(['created_at' => now()->subDay(), 'updated_at' => now()->subDay()])->save();
+        $newFile->forceFill(['created_at' => now(), 'updated_at' => now()])->save();
 
         Sanctum::actingAs($owner);
 

@@ -88,7 +88,7 @@ class ProjectExportController extends Controller
         return response()->streamDownload(function () use ($projects): void {
             $output = fopen('php://output', 'w');
             fwrite($output, "\xEF\xBB\xBF");
-            CsvExport::writeRow($output, ['项目ID', '项目名称', '申报单位', '申报批次', '项目类别', '项目类型', '状态', '待处理延期', '预算金额', '提交时间', '负责人账号']);
+            CsvExport::writeRow($output, ['项目ID', '项目名称', '申报单位', '申报批次', '项目类别', '项目类型', '状态', '待处理延期', '预算金额（元）', '提交时间', '负责人账号']);
 
             foreach ($projects as $project) {
                 CsvExport::writeRow($output, [

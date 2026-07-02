@@ -50,7 +50,7 @@ class UserController extends Controller
         }
 
         $sortBy = $request->query('sort_by', 'created_at');
-        $sortDirection = strtolower((string) $request->query('sort_direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $sortDirection = strtolower((string) $request->query('sort_direction', 'asc')) === 'desc' ? 'desc' : 'asc';
         $sortableColumns = ['created_at', 'last_login_at', 'username', 'name', 'role', 'is_active'];
 
         if (! in_array($sortBy, $sortableColumns, true)) {

@@ -7,6 +7,7 @@ use App\Models\ProjectReview;
 use App\Support\AuditLogger;
 use App\Support\CsvExport;
 use App\Support\Role;
+use App\Support\ReviewScoreCriteria;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -65,7 +66,7 @@ class ReviewExportController extends Controller
         return response()->streamDownload(function () use ($projects): void {
             $output = fopen('php://output', 'w');
             fwrite($output, "\xEF\xBB\xBF");
-            CsvExport::writeRow($output, ['项目ID', '项目名称', '申报单位', '项目类别', '项目类型', '状态', '当前审核阶段', '预算金额', '提交时间', '负责人账号']);
+            CsvExport::writeRow($output, ['项目ID', '项目名称', '申报单位', '项目类别', '项目类型', '状态', '当前审核阶段', '预算金额（元）', '提交时间', '负责人账号']);
 
             foreach ($projects as $project) {
                 CsvExport::writeRow($output, [
@@ -162,13 +163,34 @@ class ReviewExportController extends Controller
         ]);
 
         $filename = 'review-results-'.now()->format('Ymd-His').'.csv';
+        $criteria = ReviewScoreCriteria::active();
 
-        return response()->streamDownload(function () use ($reviews): void {
+        return response()->streamDownload(function () use ($reviews, $criteria): void {
             $output = fopen('php://output', 'w');
             fwrite($output, "\xEF\xBB\xBF");
-            CsvExport::writeRow($output, ['审核ID', '项目ID', '项目名称', '申报单位', '项目类别', '项目类型', '审核阶段', '审核结果', '评分', '审核意见', '审核人账号', '审核时间', '项目状态']);
+            $criterionHeaders = array_map(
+                fn (array $item): string => $item['label'].'（'.$item['max_score'].'分）',
+                $criteria
+            );
+            CsvExport::writeRow($output, [
+                '审核ID',
+                '项目ID',
+                '项目名称',
+                '申报单位',
+                '项目类别',
+                '项目类型',
+                '审核阶段',
+                '审核结果',
+                '评分',
+                ...$criterionHeaders,
+                '审核意见',
+                '审核人账号',
+                '审核时间',
+                '项目状态',
+            ]);
 
             foreach ($reviews as $review) {
+                $scoreMap = ReviewScoreCriteria::scoreMapFromReviewMetadata($review->metadata);
                 CsvExport::writeRow($output, [
                     $review->id,
                     $review->project_id,
@@ -179,6 +201,7 @@ class ReviewExportController extends Controller
                     $review->stage,
                     $review->decision,
                     $review->score,
+                    ...array_map(fn (array $item): mixed => $scoreMap[$item['code']] ?? '', $criteria),
                     $review->comment,
                     $review->reviewer?->username,
                     optional($review->reviewed_at)->format('Y-m-d H:i:s'),

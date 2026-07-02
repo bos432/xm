@@ -6,6 +6,7 @@ use App\Models\Message;
 use App\Models\MigrationBatch;
 use App\Models\OperationLog;
 use App\Models\Project;
+use App\Models\SecurityEvent;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,7 +35,8 @@ class DashboardSummaryTest extends TestCase
                 ]],
             ],
         ]);
-        Project::factory()->create(['unit_id' => $otherUnit->id, 'status' => Project::STATUS_REVIEWING]);
+        $otherOwner = User::factory()->create(['unit_id' => $otherUnit->id, 'role' => 'unit']);
+        Project::factory()->create(['unit_id' => $otherUnit->id, 'owner_id' => $otherOwner->id, 'status' => Project::STATUS_REVIEWING]);
         Message::create(['recipient_id' => $user->id, 'title' => '未读消息']);
         OperationLog::create(['user_id' => $user->id, 'action' => 'project.created']);
 
@@ -87,46 +89,51 @@ class DashboardSummaryTest extends TestCase
             'source_path' => 'scripts/mock.sql',
             'status' => 'blocked',
         ]);
-        OperationLog::create([
+        SecurityEvent::create([
             'user_id' => $target->id,
-            'action' => 'auth.login_failed',
+            'type' => 'auth.login_failed',
+            'severity' => 'warning',
             'ip_address' => '10.0.0.8',
+            'username' => 'failed-user',
             'payload' => ['username' => 'failed-user', 'reason' => 'invalid_password'],
             'created_at' => now()->subHours(2),
             'updated_at' => now()->subHours(2),
         ]);
-        OperationLog::create([
-            'action' => 'auth.captcha_failed',
+        SecurityEvent::create([
+            'type' => 'auth.captcha_failed',
+            'severity' => 'warning',
             'ip_address' => '10.0.0.7',
+            'username' => 'captcha-user',
             'payload' => ['username' => 'captcha-user', 'reason' => 'invalid_captcha'],
             'created_at' => now()->subHour(),
             'updated_at' => now()->subHour(),
         ]);
-        OperationLog::create([
-            'action' => 'unit.tokens_revoked',
+        SecurityEvent::create([
+            'type' => 'unit.tokens_revoked',
+            'severity' => 'info',
             'payload' => ['reason' => 'unit_deactivated', 'revoked_tokens' => 3],
             'created_at' => now(),
             'updated_at' => now(),
         ]);
-        OperationLog::create([
-            'action' => 'project_file.invalid_path',
-            'target_type' => 'App\\Models\\ProjectFile',
-            'target_id' => 101,
+        SecurityEvent::create([
+            'type' => 'project_file.invalid_path',
+            'severity' => 'warning',
             'payload' => ['disk' => 'local', 'path' => '../outside.pdf'],
             'created_at' => now()->addMinute(),
             'updated_at' => now()->addMinute(),
         ]);
-        OperationLog::create([
-            'action' => 'project_file.invalid_disk',
-            'target_type' => 'App\\Models\\ProjectFile',
-            'target_id' => 102,
+        SecurityEvent::create([
+            'type' => 'project_file.invalid_disk',
+            'severity' => 'warning',
             'payload' => ['disk' => 'public', 'path' => 'project-files/1/public.pdf'],
             'created_at' => now()->addMinutes(2),
             'updated_at' => now()->addMinutes(2),
         ]);
-        OperationLog::create([
-            'action' => 'auth.login_failed',
+        SecurityEvent::create([
+            'type' => 'auth.login_failed',
+            'severity' => 'warning',
             'ip_address' => '10.0.0.9',
+            'username' => 'old-user',
             'payload' => ['username' => 'old-user', 'reason' => 'unknown_account'],
             'created_at' => now()->subDays(2),
             'updated_at' => now()->subDays(2),
@@ -153,8 +160,8 @@ class DashboardSummaryTest extends TestCase
             ->assertJsonPath('migration.latest_batch.name', '核心数据预演')
             ->assertJsonPath('migration.latest_batch.status', 'blocked')
             ->assertJsonPath('security.security_events_24h', 5)
-            ->assertJsonPath('security.recent_security_events.0.action', 'project_file.invalid_disk')
+            ->assertJsonPath('security.recent_security_events.0.type', 'project_file.invalid_disk')
             ->assertJsonPath('security.recent_security_events.0.payload.disk', 'public')
-            ->assertJsonPath('security.recent_security_events.1.action', 'project_file.invalid_path');
+            ->assertJsonPath('security.recent_security_events.1.type', 'project_file.invalid_path');
     }
 }

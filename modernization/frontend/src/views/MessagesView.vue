@@ -73,7 +73,7 @@ const messages = ref([])
 const status = ref('')
 const type = ref('')
 const sortBy = ref('created_at')
-const sortDirection = ref('desc')
+const sortDirection = ref('asc')
 const pagination = reactive({ current_page: 1, per_page: 20, total: 0 })
 
 const statusOptions = [

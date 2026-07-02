@@ -8,6 +8,7 @@ use App\Support\MailCenter;
 use App\Support\Role;
 use App\Support\RuntimeConfig;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 
 class SystemSettingController extends Controller
@@ -175,7 +176,7 @@ class SystemSettingController extends Controller
             if (blank($data['value'] ?? null)) {
                 unset($data['value']);
             } else {
-                $data['value'] = encrypt($data['value']);
+                $data['value'] = Crypt::encryptString($data['value']);
             }
         }
 

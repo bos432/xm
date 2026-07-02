@@ -171,6 +171,23 @@ class DatabaseSeeder extends Seeder
             ['group' => 'review_role', 'code' => 'department', 'label' => '部门审核', 'sort_order' => 20],
             ['group' => 'review_role', 'code' => 'expert', 'label' => '专家评审', 'sort_order' => 30],
             ['group' => 'review_role', 'code' => 'admin', 'label' => '管理员终审', 'sort_order' => 40],
+            ['group' => 'expert_review_criterion', 'code' => 'policy_importance', 'label' => '项目实施的重要性、必要性', 'sort_order' => 20, 'metadata' => ['section' => '政策符合性评价', 'max_score' => 5]],
+            ['group' => 'expert_review_criterion', 'code' => 'policy_trend_analysis', 'label' => '对国内外现状及趋势分析是否准确、全面', 'sort_order' => 30, 'metadata' => ['section' => '政策符合性评价', 'max_score' => 5]],
+            ['group' => 'expert_review_criterion', 'code' => 'technical_advanced_practical', 'label' => '对研究内容先进性和实用性评价', 'sort_order' => 50, 'metadata' => ['section' => '项目成果及技术水平评价', 'max_score' => 5]],
+            ['group' => 'expert_review_criterion', 'code' => 'technical_goals_clear', 'label' => '研究目标是否明确清晰、重点突出', 'sort_order' => 60, 'metadata' => ['section' => '项目成果及技术水平评价', 'max_score' => 10]],
+            ['group' => 'expert_review_criterion', 'code' => 'technical_route_feasible', 'label' => '采用的技术路线是否可行、工艺和研究方法是否先进', 'sort_order' => 70, 'metadata' => ['section' => '项目成果及技术水平评价', 'max_score' => 5]],
+            ['group' => 'expert_review_criterion', 'code' => 'technical_innovation', 'label' => '采用的技术是否具有创新性', 'sort_order' => 80, 'metadata' => ['section' => '项目成果及技术水平评价', 'max_score' => 5]],
+            ['group' => 'expert_review_criterion', 'code' => 'industry_university_research', 'label' => '企业、高校、科研院所等是否开展实质性合作，进行联合科技攻关', 'sort_order' => 100, 'metadata' => ['section' => '产学研合作评价', 'max_score' => 10]],
+            ['group' => 'expert_review_criterion', 'code' => 'team_level_division', 'label' => '研发团队整体科研水平及人员分工合理性', 'sort_order' => 120, 'metadata' => ['section' => '项目实施条件评价', 'max_score' => 5]],
+            ['group' => 'expert_review_criterion', 'code' => 'leader_research_ability', 'label' => '项目负责人的科研水平及创新能力', 'sort_order' => 130, 'metadata' => ['section' => '项目实施条件评价', 'max_score' => 5]],
+            ['group' => 'expert_review_criterion', 'code' => 'unit_management_ability', 'label' => '项目申报单位的组织管理能力和项目组织实施机制', 'sort_order' => 140, 'metadata' => ['section' => '项目实施条件评价', 'max_score' => 5]],
+            ['group' => 'expert_review_criterion', 'code' => 'existing_research_foundation', 'label' => '现有研究工作基础及条件', 'sort_order' => 150, 'metadata' => ['section' => '项目实施条件评价', 'max_score' => 5]],
+            ['group' => 'expert_review_criterion', 'code' => 'benefit_technical_indicators', 'label' => '项目的技术指标是否明确', 'sort_order' => 170, 'metadata' => ['section' => '项目预期效益评价', 'max_score' => 5]],
+            ['group' => 'expert_review_criterion', 'code' => 'benefit_economic', 'label' => '项目的经济效益是否明显，带动当地产业发展情况', 'sort_order' => 180, 'metadata' => ['section' => '项目预期效益评价', 'max_score' => 10]],
+            ['group' => 'expert_review_criterion', 'code' => 'benefit_outputs', 'label' => '项目的成果指标是否明显，形成的专利、技术标准和人才培养等情况', 'sort_order' => 190, 'metadata' => ['section' => '项目预期效益评价', 'max_score' => 5]],
+            ['group' => 'expert_review_criterion', 'code' => 'benefit_social', 'label' => '项目的社会效益是否明显，科技惠民、节能减排、改善环境等情况', 'sort_order' => 200, 'metadata' => ['section' => '项目预期效益评价', 'max_score' => 5]],
+            ['group' => 'expert_review_criterion', 'code' => 'budget_relevance', 'label' => '项目预算是否符合项目实际、项目预算的目标相关性', 'sort_order' => 220, 'metadata' => ['section' => '经费预算', 'max_score' => 5]],
+            ['group' => 'expert_review_criterion', 'code' => 'budget_reasonable', 'label' => '项目预算的合理性', 'sort_order' => 230, 'metadata' => ['section' => '经费预算', 'max_score' => 5]],
         ];
 
         foreach ($dictionaryItems as $item) {

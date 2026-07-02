@@ -79,22 +79,27 @@
       <el-form :model="form" label-position="top">
         <el-form-item label="项目名称"><el-input v-model="form.title" /></el-form-item>
         <el-form-item label="申报批次">
-          <el-select v-model="form.application_batch_id" placeholder="请选择开放批次">
+          <el-select v-model="form.application_batch_id" placeholder="请选择开放批次" @change="syncFormOptionsWithBatch">
             <el-option v-for="batch in openBatches" :key="batch.id" :label="batch.name" :value="batch.id" />
           </el-select>
         </el-form-item>
         <el-form-item label="项目类型">
-          <el-select v-model="form.project_type" filterable allow-create clearable>
-            <el-option v-for="item in projectTypeOptions" :key="item.code" :label="item.label" :value="item.label" />
+          <el-select v-model="form.project_type" filterable :allow-create="!selectedBatchProjectTypes.length" clearable placeholder="请选择当前批次允许的项目类型">
+            <el-option v-for="item in formProjectTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="项目类别">
-          <el-select v-model="form.category" filterable allow-create clearable>
-            <el-option v-for="item in projectCategoryOptions" :key="item.code" :label="item.label" :value="item.label" />
+          <el-select v-model="form.category" filterable :allow-create="!selectedBatchCategories.length" clearable placeholder="请选择当前批次允许的项目类别">
+            <el-option v-for="item in formProjectCategoryOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="项目摘要"><el-input v-model="form.summary" type="textarea" :rows="4" /></el-form-item>
-        <el-form-item label="预算金额"><el-input-number v-model="form.budget_amount" :min="0" :precision="2" /></el-form-item>
+        <el-form-item label="预算金额（元）">
+          <div class="budget-input-row">
+            <el-input-number v-model="form.budget_amount" :min="0" :precision="2" />
+            <span class="input-unit">元</span>
+          </div>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -138,7 +143,7 @@
           <el-descriptions-item label="申报单位">{{ detail.unit?.name || '-' }}</el-descriptions-item>
           <el-descriptions-item label="状态">{{ statusMeta(detail.status).label }}</el-descriptions-item>
           <el-descriptions-item label="项目类型">{{ detail.project_type || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="预算金额">{{ detail.budget_amount || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="预算金额">{{ formatCurrency(detail.budget_amount) }}</el-descriptions-item>
           <el-descriptions-item label="摘要" :span="2">{{ detail.summary || '-' }}</el-descriptions-item>
         </el-descriptions>
 
@@ -295,6 +300,17 @@ const pagination = reactive({ current_page: 1, per_page: 20, total: 0 })
 const unitCanWriteProjects = computed(() => session.role !== 'unit' || session.user?.unit?.status === 'active')
 const canCreate = computed(() => session.can('create_projects') && unitCanWriteProjects.value)
 const canFilterE2e = computed(() => ['admin', 'super_admin'].includes(session.role))
+const selectedBatch = computed(() => openBatches.value.find((batch) => batch.id === form.application_batch_id) || null)
+const selectedBatchCategories = computed(() => normalizeOptionList(selectedBatch.value?.allowed_categories))
+const selectedBatchProjectTypes = computed(() => normalizeOptionList(selectedBatch.value?.allowed_project_types))
+const formProjectCategoryOptions = computed(() => {
+  if (selectedBatchCategories.value.length) return selectedBatchCategories.value.map((value) => optionFromValue(value))
+  return projectCategoryOptions.value.map((item) => ({ label: item.label, value: item.label }))
+})
+const formProjectTypeOptions = computed(() => {
+  if (selectedBatchProjectTypes.value.length) return selectedBatchProjectTypes.value.map((value) => optionFromValue(value))
+  return projectTypeOptions.value.map((item) => ({ label: item.label, value: item.label }))
+})
 
 function statusMeta(value) {
   return statusLabels[value] || { label: value || '-', type: 'info' }
@@ -349,6 +365,33 @@ function pendingExtensionCount(row) {
   return (row.metadata?.extension_requests || []).filter((item) => (item.status || 'pending') === 'pending').length
 }
 
+function normalizeOptionList(value) {
+  return Array.isArray(value) ? value.map((item) => String(item || '').trim()).filter(Boolean) : []
+}
+
+function optionFromValue(value) {
+  return { label: value, value }
+}
+
+function syncFormOptionsWithBatch() {
+  if (selectedBatchCategories.value.length && !selectedBatchCategories.value.includes(form.category)) {
+    form.category = selectedBatchCategories.value[0] || ''
+  }
+
+  if (selectedBatchProjectTypes.value.length && !selectedBatchProjectTypes.value.includes(form.project_type)) {
+    form.project_type = selectedBatchProjectTypes.value[0] || ''
+  }
+}
+
+function isUserCancel(err) {
+  return err === 'cancel' || err === 'close' || err?.message === 'cancel' || err?.message === 'close'
+}
+
+function showActionError(err, fallback) {
+  if (isUserCancel(err)) return
+  ElMessage.error(err?.message || fallback)
+}
+
 function moreActions(row) {
   const actions = []
   if (canEdit(row)) {
@@ -384,6 +427,7 @@ function runMoreAction(command, row) {
 
 function resetForm() {
   Object.assign(form, { title: '', application_batch_id: openBatches.value[0]?.id || null, category: '', project_type: '', summary: '', budget_amount: 0 })
+  syncFormOptionsWithBatch()
 }
 
 async function loadDictionaries() {
@@ -519,6 +563,8 @@ async function saveProject() {
     dialogVisible.value = false
     resetForm()
     await loadProjects()
+  } catch (err) {
+    showActionError(err, '项目保存失败')
   } finally {
     saving.value = false
   }
@@ -530,10 +576,14 @@ async function submitProject(row) {
     return
   }
 
-  await ElMessageBox.confirm('提交后将进入区县审核，确认提交？', '提交项目', { type: 'warning' })
-  await api(`/projects/${row.id}/submit`, { method: 'POST' })
-  ElMessage.success('项目已提交审核')
-  await loadProjects()
+  try {
+    await ElMessageBox.confirm('提交后将进入区县审核，确认提交？', '提交项目', { type: 'warning' })
+    await api(`/projects/${row.id}/submit`, { method: 'POST' })
+    ElMessage.success('项目已提交审核')
+    await loadProjects()
+  } catch (err) {
+    showActionError(err, '项目提交失败')
+  }
 }
 
 async function withdrawProject(row) {
@@ -542,10 +592,14 @@ async function withdrawProject(row) {
     return
   }
 
-  await ElMessageBox.confirm('确认撤回该项目？', '撤回项目', { type: 'warning' })
-  await api(`/projects/${row.id}/withdraw`, { method: 'POST' })
-  ElMessage.success('项目已撤回')
-  await loadProjects()
+  try {
+    await ElMessageBox.confirm('确认撤回该项目？', '撤回项目', { type: 'warning' })
+    await api(`/projects/${row.id}/withdraw`, { method: 'POST' })
+    ElMessage.success('项目已撤回')
+    await loadProjects()
+  } catch (err) {
+    showActionError(err, '项目撤回失败')
+  }
 }
 
 async function deleteProject(row) {
@@ -554,17 +608,25 @@ async function deleteProject(row) {
     return
   }
 
-  await ElMessageBox.confirm('草稿删除后不可恢复，确认删除？', '删除项目', { type: 'warning' })
-  await api(`/projects/${row.id}`, { method: 'DELETE' })
-  ElMessage.success('项目已删除')
-  await loadProjects()
+  try {
+    await ElMessageBox.confirm('草稿删除后不可恢复，确认删除？', '删除项目', { type: 'warning' })
+    await api(`/projects/${row.id}`, { method: 'DELETE' })
+    ElMessage.success('项目已删除')
+    await loadProjects()
+  } catch (err) {
+    showActionError(err, '项目删除失败')
+  }
 }
 
 async function enterAcceptance(row) {
-  await ElMessageBox.confirm('确认将项目转入验收阶段？', '进入验收', { type: 'warning' })
-  await api(`/projects/${row.id}/enter-acceptance`, { method: 'POST' })
-  ElMessage.success('项目已进入验收')
-  await loadProjects()
+  try {
+    await ElMessageBox.confirm('确认将项目转入验收阶段？', '进入验收', { type: 'warning' })
+    await api(`/projects/${row.id}/enter-acceptance`, { method: 'POST' })
+    ElMessage.success('项目已进入验收')
+    await loadProjects()
+  } catch (err) {
+    showActionError(err, '进入验收失败')
+  }
 }
 
 function openExtension(row) {
@@ -585,6 +647,8 @@ async function requestExtension() {
     ElMessage.success('延期申请已提交')
     extensionVisible.value = false
     await loadProjects()
+  } catch (err) {
+    showActionError(err, '延期申请提交失败')
   } finally {
     saving.value = false
   }
@@ -592,20 +656,24 @@ async function requestExtension() {
 
 async function reviewExtension(index, decision) {
   const label = decision === 'approved' ? '通过' : '驳回'
-  const { value: comment } = await ElMessageBox.prompt('请输入处理意见', `${label}延期申请`, {
-    inputType: 'textarea',
-    inputPlaceholder: '处理意见',
-    confirmButtonText: label,
-    cancelButtonText: '取消'
-  })
+  try {
+    const { value: comment } = await ElMessageBox.prompt('请输入处理意见', `${label}延期申请`, {
+      inputType: 'textarea',
+      inputPlaceholder: '处理意见',
+      confirmButtonText: label,
+      cancelButtonText: '取消'
+    })
 
-  await api(`/projects/${detail.value.id}/extension/${index}/review`, {
-    method: 'POST',
-    body: JSON.stringify({ decision, comment })
-  })
-  ElMessage.success(`延期申请已${label}`)
-  await openDetail(detail.value)
-  await loadProjects()
+    await api(`/projects/${detail.value.id}/extension/${index}/review`, {
+      method: 'POST',
+      body: JSON.stringify({ decision, comment })
+    })
+    ElMessage.success(`延期申请已${label}`)
+    await openDetail(detail.value)
+    await loadProjects()
+  } catch (err) {
+    showActionError(err, '延期申请处理失败')
+  }
 }
 
 function openClose(row) {
@@ -621,14 +689,20 @@ async function closeProject() {
     ElMessage.success('项目验收已关闭')
     closeVisible.value = false
     await loadProjects()
+  } catch (err) {
+    showActionError(err, '关闭验收失败')
   } finally {
     saving.value = false
   }
 }
 
 async function openDetail(row) {
-  detail.value = await api(`/projects/${row.id}`)
-  detailVisible.value = true
+  try {
+    detail.value = await api(`/projects/${row.id}`)
+    detailVisible.value = true
+  } catch (err) {
+    showActionError(err, '项目详情加载失败')
+  }
 }
 
 function openReviewResults(row) {
@@ -658,12 +732,16 @@ async function uploadFile({ file }) {
     return
   }
 
-  const body = new FormData()
-  body.append('file', file)
-  await api(`/projects/${currentProject.value.id}/files`, { method: 'POST', body })
-  ElMessage.success('附件已上传')
-  uploadVisible.value = false
-  if (detail.value?.id === currentProject.value.id) await openDetail(currentProject.value)
+  try {
+    const body = new FormData()
+    body.append('file', file)
+    await api(`/projects/${currentProject.value.id}/files`, { method: 'POST', body })
+    ElMessage.success('附件已上传')
+    uploadVisible.value = false
+    if (detail.value?.id === currentProject.value.id) await openDetail(currentProject.value)
+  } catch (err) {
+    showActionError(err, '附件上传失败')
+  }
 }
 
 async function exportProjects() {
@@ -697,10 +775,21 @@ async function deleteFile(row) {
     return
   }
 
-  await ElMessageBox.confirm('确认删除该附件？', '删除附件', { type: 'warning' })
-  await api(`/files/${row.id}`, { method: 'DELETE' })
-  ElMessage.success('附件已删除')
-  if (detail.value) await openDetail(detail.value)
+  try {
+    await ElMessageBox.confirm('确认删除该附件？', '删除附件', { type: 'warning' })
+    await api(`/files/${row.id}`, { method: 'DELETE' })
+    ElMessage.success('附件已删除')
+    if (detail.value) await openDetail(detail.value)
+  } catch (err) {
+    showActionError(err, '附件删除失败')
+  }
+}
+
+function formatCurrency(value) {
+  if (value === null || value === undefined || value === '') return '-'
+  const amount = Number(value)
+  if (Number.isNaN(amount)) return `${value} 元`
+  return `${amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 元`
 }
 
 function formatBytes(value) {
@@ -741,3 +830,16 @@ onUnmounted(() => {
   window.removeEventListener('dictionaries:changed', loadDictionaries)
 })
 </script>
+
+<style scoped>
+.budget-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-unit {
+  color: #334155;
+  font-size: 14px;
+}
+</style>
