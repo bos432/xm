@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProjectRequest;
 use App\Models\ApplicationBatch;
+use App\Models\DictionaryItem;
 use App\Models\Message;
 use App\Models\Project;
 use App\Models\User;
@@ -36,11 +37,11 @@ class ProjectController extends Controller
         }
 
         if ($category = $request->query('category')) {
-            $query->where('category', $category);
+            $query->whereIn('category', $this->dictionaryEquivalentValues('project_category', $category));
         }
 
         if ($projectType = $request->query('project_type')) {
-            $query->where('project_type', $projectType);
+            $query->whereIn('project_type', $this->dictionaryEquivalentValues('project_type', $projectType));
         }
 
         if ($batchId = $request->query('application_batch_id', $request->query('batch_id'))) {
@@ -182,6 +183,7 @@ class ProjectController extends Controller
         $data = $request->validated();
         $batch = $this->resolveOpenBatch($data['application_batch_id'] ?? null);
         $this->ensureBatchAllowsProject($batch, $data);
+        $data = $this->normalizeProjectDictionaryFields($data);
         $data['application_batch_id'] = $batch->id;
 
         $project = Project::create($data + [
@@ -227,6 +229,7 @@ class ProjectController extends Controller
         } elseif (array_key_exists('application_batch_id', $data)) {
             unset($data['application_batch_id']);
         }
+        $data = $this->normalizeProjectDictionaryFields($data);
 
         $project->update($data);
 
@@ -628,13 +631,82 @@ class ProjectController extends Controller
         $categories = is_array($batch->allowed_categories) ? array_filter($batch->allowed_categories) : [];
         $types = is_array($batch->allowed_project_types) ? array_filter($batch->allowed_project_types) : [];
 
-        if ($categories && ! in_array($data['category'] ?? null, $categories, true)) {
+        if ($categories && ! $this->dictionaryValueAllowed('project_category', $data['category'] ?? null, $categories)) {
             abort(422, '项目类别不在当前批次允许范围内');
         }
 
-        if ($types && ! in_array($data['project_type'] ?? null, $types, true)) {
+        if ($types && ! $this->dictionaryValueAllowed('project_type', $data['project_type'] ?? null, $types)) {
             abort(422, '项目类型不在当前批次允许范围内');
         }
+    }
+
+    private function normalizeProjectDictionaryFields(array $data): array
+    {
+        if (array_key_exists('category', $data)) {
+            $data['category'] = $this->dictionaryDisplayValue('project_category', $data['category']);
+        }
+
+        if (array_key_exists('project_type', $data)) {
+            $data['project_type'] = $this->dictionaryDisplayValue('project_type', $data['project_type']);
+        }
+
+        return $data;
+    }
+
+    private function dictionaryDisplayValue(string $group, mixed $value): mixed
+    {
+        if ($value === null || $value === '') {
+            return $value;
+        }
+
+        $text = (string) $value;
+        $item = DictionaryItem::query()
+            ->where('group', $group)
+            ->where(function ($query) use ($text): void {
+                $query->where('code', $text)->orWhere('label', $text);
+            })
+            ->first();
+
+        return $item?->label ?: $text;
+    }
+
+    private function dictionaryValueAllowed(string $group, mixed $value, array $allowedValues): bool
+    {
+        if ($value === null || $value === '') {
+            return false;
+        }
+
+        $valueEquivalents = $this->dictionaryEquivalentValues($group, $value);
+        foreach ($allowedValues as $allowedValue) {
+            if (array_intersect($valueEquivalents, $this->dictionaryEquivalentValues($group, $allowedValue))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function dictionaryEquivalentValues(string $group, mixed $value): array
+    {
+        if ($value === null || $value === '') {
+            return [''];
+        }
+
+        $text = (string) $value;
+        $values = [$text];
+        $item = DictionaryItem::query()
+            ->where('group', $group)
+            ->where(function ($query) use ($text): void {
+                $query->where('code', $text)->orWhere('label', $text);
+            })
+            ->first();
+
+        if ($item) {
+            $values[] = $item->code;
+            $values[] = $item->label;
+        }
+
+        return array_values(array_unique(array_filter($values, fn ($item) => $item !== null && $item !== '')));
     }
 
     private function e2eProjectQuery($query): void

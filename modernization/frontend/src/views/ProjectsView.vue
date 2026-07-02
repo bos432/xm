@@ -5,10 +5,10 @@
       <div class="toolbar-actions">
         <el-input v-model="keyword" clearable placeholder="按项目、单位、账号搜索" @keyup.enter="reloadProjects" @clear="reloadProjects" />
         <el-select v-model="category" clearable placeholder="类别" @change="reloadProjects" @clear="reloadProjects">
-          <el-option v-for="item in projectCategoryOptions" :key="item.code" :label="item.label" :value="item.label" />
+          <el-option v-for="item in projectCategoryOptions" :key="item.code" :label="dictionaryOptionLabel(item)" :value="dictionaryOptionValue(item)" />
         </el-select>
         <el-select v-model="projectType" clearable placeholder="类型" @change="reloadProjects" @clear="reloadProjects">
-          <el-option v-for="item in projectTypeOptions" :key="item.code" :label="item.label" :value="item.label" />
+          <el-option v-for="item in projectTypeOptions" :key="item.code" :label="dictionaryOptionLabel(item)" :value="dictionaryOptionValue(item)" />
         </el-select>
         <el-select v-model="applicationBatchId" clearable placeholder="申报批次" @change="reloadProjects" @clear="reloadProjects">
           <el-option v-for="batch in openBatches" :key="batch.id" :label="batch.name" :value="batch.id" />
@@ -33,7 +33,12 @@
       <el-table-column prop="title" label="项目名称" min-width="220" />
       <el-table-column prop="unit.name" label="申报单位" min-width="180" />
       <el-table-column prop="application_batch.name" label="申报批次" min-width="160" />
-      <el-table-column prop="project_type" label="项目类型" width="140" />
+      <el-table-column label="项目类别" width="130">
+        <template #default="{ row }">{{ displayProjectCategory(row.category) }}</template>
+      </el-table-column>
+      <el-table-column label="项目类型" width="130">
+        <template #default="{ row }">{{ displayProjectType(row.project_type) }}</template>
+      </el-table-column>
       <el-table-column label="状态" width="120">
         <template #default="{ row }">
           <el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag>
@@ -141,7 +146,10 @@
                   <span class="input-unit">万元</span>
                 </div>
               </el-form-item>
-              <el-form-item label="系统保存金额"><el-input :model-value="formatCurrency(form.budget_amount)" disabled /></el-form-item>
+              <el-form-item label="系统保存金额（元）">
+                <el-input :model-value="formatCurrency(form.budget_amount)" disabled />
+                <span class="field-help">业务填报按万元录入，系统自动折算为元保存。</span>
+              </el-form-item>
             </el-form>
           </el-tab-pane>
 
@@ -311,15 +319,15 @@
           <el-descriptions-item label="申报单位">{{ detail.unit?.name || '-' }}</el-descriptions-item>
           <el-descriptions-item label="状态">{{ statusMeta(detail.status).label }}</el-descriptions-item>
           <el-descriptions-item label="申报批次">{{ detail.application_batch?.name || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="项目类别">{{ detail.category || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="项目类型">{{ detail.project_type || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="项目类别">{{ displayProjectCategory(detail.category) }}</el-descriptions-item>
+          <el-descriptions-item label="项目类型">{{ displayProjectType(detail.project_type) }}</el-descriptions-item>
           <el-descriptions-item label="指南代码">{{ detailMetadata.guide_code || '-' }}</el-descriptions-item>
           <el-descriptions-item label="起止年限">{{ detailDateRange(detailMetadata) }}</el-descriptions-item>
           <el-descriptions-item label="归口管理单位">{{ detailMetadata.management_unit || '-' }}</el-descriptions-item>
           <el-descriptions-item label="所属领域">{{ detailMetadata.field || '-' }}</el-descriptions-item>
           <el-descriptions-item label="研究方向">{{ detailMetadata.research_direction || '-' }}</el-descriptions-item>
           <el-descriptions-item label="合作单位">{{ detailMetadata.cooperation_units || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="预算金额">{{ formatCurrency(detail.budget_amount) }}</el-descriptions-item>
+          <el-descriptions-item label="预算金额">{{ formatWanYuan(detail.budget_amount) }}（{{ formatCurrency(detail.budget_amount) }}）</el-descriptions-item>
           <el-descriptions-item label="终审支持">{{ finalSupportText(detail).isSupported }}</el-descriptions-item>
           <el-descriptions-item label="支持资金">{{ finalSupportText(detail).supportAmount }}</el-descriptions-item>
           <el-descriptions-item label="推荐专家">{{ finalSupportText(detail).recommendedExperts }}</el-descriptions-item>
@@ -583,12 +591,12 @@ const selectedBatch = computed(() => openBatches.value.find((batch) => batch.id 
 const selectedBatchCategories = computed(() => normalizeOptionList(selectedBatch.value?.allowed_categories))
 const selectedBatchProjectTypes = computed(() => normalizeOptionList(selectedBatch.value?.allowed_project_types))
 const formProjectCategoryOptions = computed(() => {
-  if (selectedBatchCategories.value.length) return selectedBatchCategories.value.map((value) => optionFromValue(value))
-  return projectCategoryOptions.value.map((item) => ({ label: item.label, value: item.label }))
+  if (selectedBatchCategories.value.length) return selectedBatchCategories.value.map((value) => optionFromDictionaryValue('project_category', value))
+  return projectCategoryOptions.value.map((item) => ({ label: dictionaryOptionLabel(item), value: dictionaryOptionValue(item) }))
 })
 const formProjectTypeOptions = computed(() => {
-  if (selectedBatchProjectTypes.value.length) return selectedBatchProjectTypes.value.map((value) => optionFromValue(value))
-  return projectTypeOptions.value.map((item) => ({ label: item.label, value: item.label }))
+  if (selectedBatchProjectTypes.value.length) return selectedBatchProjectTypes.value.map((value) => optionFromDictionaryValue('project_type', value))
+  return projectTypeOptions.value.map((item) => ({ label: dictionaryOptionLabel(item), value: dictionaryOptionValue(item) }))
 })
 const workbenchFiles = computed(() => editingProject.value?.files || [])
 const detailMetadata = computed(() => normalizeProjectMetadata(detail.value?.metadata || {}))
@@ -789,16 +797,68 @@ function normalizeOptionList(value) {
   return Array.isArray(value) ? value.map((item) => String(item || '').trim()).filter(Boolean) : []
 }
 
-function optionFromValue(value) {
-  return { label: value, value }
+function dictionaryOptions(group) {
+  return group === 'project_category' ? projectCategoryOptions.value : projectTypeOptions.value
+}
+
+function findDictionaryItem(group, value) {
+  const text = String(value || '').trim()
+  if (!text) return null
+  return dictionaryOptions(group).find((item) => item.code === text || item.label === text) || null
+}
+
+function dictionaryOptionValue(item) {
+  return item?.code || item?.label || ''
+}
+
+function dictionaryOptionLabel(item) {
+  if (!item) return '-'
+  if (!item.code || item.code === item.label) return item.label || item.code || '-'
+  return `${item.label}（${item.code}）`
+}
+
+function optionFromDictionaryValue(group, value) {
+  const item = findDictionaryItem(group, value)
+  return {
+    label: item ? dictionaryOptionLabel(item) : value,
+    value
+  }
+}
+
+function dictionaryDisplay(group, value) {
+  const text = String(value || '').trim()
+  if (!text) return '-'
+  const item = findDictionaryItem(group, text)
+  return item?.label || text
+}
+
+function displayProjectCategory(value) {
+  return dictionaryDisplay('project_category', value)
+}
+
+function displayProjectType(value) {
+  return dictionaryDisplay('project_type', value)
+}
+
+function batchAllowsValue(group, allowedValues, value) {
+  if (!allowedValues.length) return true
+  const text = String(value || '').trim()
+  if (!text) return false
+  const valueItem = findDictionaryItem(group, text)
+  const equivalents = new Set([text, valueItem?.code, valueItem?.label].filter(Boolean))
+  return allowedValues.some((allowedValue) => {
+    const allowedText = String(allowedValue || '').trim()
+    const allowedItem = findDictionaryItem(group, allowedText)
+    return [allowedText, allowedItem?.code, allowedItem?.label].filter(Boolean).some((item) => equivalents.has(item))
+  })
 }
 
 function syncFormOptionsWithBatch() {
-  if (selectedBatchCategories.value.length && !selectedBatchCategories.value.includes(form.category)) {
+  if (selectedBatchCategories.value.length && !batchAllowsValue('project_category', selectedBatchCategories.value, form.category)) {
     form.category = selectedBatchCategories.value[0] || ''
   }
 
-  if (selectedBatchProjectTypes.value.length && !selectedBatchProjectTypes.value.includes(form.project_type)) {
+  if (selectedBatchProjectTypes.value.length && !batchAllowsValue('project_type', selectedBatchProjectTypes.value, form.project_type)) {
     form.project_type = selectedBatchProjectTypes.value[0] || ''
   }
 }

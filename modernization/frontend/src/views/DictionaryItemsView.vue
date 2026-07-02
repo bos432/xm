@@ -10,14 +10,33 @@
     </div>
 
     <el-table :data="items" border v-loading="loading">
-      <el-table-column prop="group" label="分组" width="150" />
-      <el-table-column prop="code" label="编码" width="160" />
-      <el-table-column prop="label" label="名称" min-width="200" />
-      <el-table-column label="评分大类" min-width="160">
-        <template #default="{ row }">{{ row.group === reviewCriterionGroup ? row.metadata?.section || '-' : '-' }}</template>
+      <el-table-column type="index" label="序号" width="72" align="center" :index="tableIndex" fixed="left" />
+      <el-table-column label="分组" width="180">
+        <template #default="{ row }">
+          <div class="dictionary-group-cell">
+            <strong>{{ groupLabel(row.group) }}</strong>
+            <span>{{ row.group }}</span>
+          </div>
+        </template>
       </el-table-column>
-      <el-table-column label="满分" width="90">
-        <template #default="{ row }">{{ row.group === reviewCriterionGroup ? formatMaxScore(row) : '-' }}</template>
+      <el-table-column label="字典项" min-width="260">
+        <template #default="{ row }">
+          <div class="dictionary-item-cell">
+            <strong>{{ row.label }}</strong>
+            <span>编码：{{ row.code }}</span>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column label="评分配置" min-width="220">
+        <template #default="{ row }">
+          <template v-if="row.group === reviewCriterionGroup">
+            <div class="dictionary-item-cell">
+              <strong>{{ row.metadata?.section || '未设置大类' }}</strong>
+              <span>满分：{{ formatMaxScore(row) }}</span>
+            </div>
+          </template>
+          <span v-else class="muted">-</span>
+        </template>
       </el-table-column>
       <el-table-column prop="sort_order" label="排序" width="90" />
       <el-table-column label="状态" width="100">
@@ -76,6 +95,12 @@ const dialogVisible = ref(false)
 const editingItem = ref(null)
 const form = reactive(emptyForm())
 const reviewCriterionGroup = 'expert_review_criterion'
+const groupLabels = {
+  project_category: '项目类别',
+  project_type: '项目类型',
+  project_status: '项目状态',
+  expert_review_criterion: '专家评分项'
+}
 
 function emptyForm() {
   return { group: '', code: '', label: '', sort_order: 0, is_active: true, metadata: emptyMetadata() }
@@ -122,6 +147,16 @@ function openItemLogs(row) {
   router.push(`/operation-logs?target_type=${encodeURIComponent('App\\Models\\DictionaryItem')}&target_id=${row.id}`)
 }
 
+function tableIndex(index) {
+  const currentPage = Number(items.value?.current_page || 1)
+  const perPage = Number(items.value?.per_page || 50)
+  return (currentPage - 1) * perPage + index + 1
+}
+
+function groupLabel(value) {
+  return groupLabels[value] || value || '-'
+}
+
 async function saveItem() {
   saving.value = true
   try {
@@ -158,3 +193,24 @@ function formatMaxScore(row) {
 
 onMounted(loadItems)
 </script>
+
+<style scoped>
+.dictionary-group-cell,
+.dictionary-item-cell {
+  display: grid;
+  gap: 4px;
+  line-height: 1.35;
+}
+
+.dictionary-group-cell strong,
+.dictionary-item-cell strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.dictionary-group-cell span,
+.dictionary-item-cell span {
+  color: #64748b;
+  font-size: 12px;
+}
+</style>

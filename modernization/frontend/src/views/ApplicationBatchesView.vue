@@ -61,13 +61,15 @@
         </el-form-item>
         <el-form-item label="允许项目类别">
           <el-select v-model="form.allowed_categories" multiple filterable allow-create default-first-option placeholder="从项目类别字典选择；留空表示不限">
-            <el-option v-for="item in projectCategoryOptions" :key="item.code" :label="item.label" :value="item.label" />
+            <el-option v-for="item in projectCategoryOptions" :key="item.code" :label="dictionaryOptionLabel(item)" :value="dictionaryOptionValue(item)" />
           </el-select>
+          <span class="field-help">建议从字典选择；系统保存稳定编码，申报端显示中文名称。</span>
         </el-form-item>
         <el-form-item label="允许项目类型">
           <el-select v-model="form.allowed_project_types" multiple filterable allow-create default-first-option placeholder="从项目类型字典选择；留空表示不限">
-            <el-option v-for="item in projectTypeOptions" :key="item.code" :label="item.label" :value="item.label" />
+            <el-option v-for="item in projectTypeOptions" :key="item.code" :label="dictionaryOptionLabel(item)" :value="dictionaryOptionValue(item)" />
           </el-select>
+          <span class="field-help">留空表示该批次不限制项目类型。</span>
         </el-form-item>
         <el-form-item label="指南说明" class="wide-field"><el-input v-model="form.guide" type="textarea" :rows="4" /></el-form-item>
         <el-form-item label="附件要求" class="wide-field"><el-input v-model="form.attachment_requirements" type="textarea" :rows="4" /></el-form-item>
@@ -135,6 +137,16 @@ function emptyForm() {
 
 function statusMeta(value) {
   return statusLabels[value] || { label: value || '-', type: 'info' }
+}
+
+function dictionaryOptionValue(item) {
+  return item?.code || item?.label || ''
+}
+
+function dictionaryOptionLabel(item) {
+  if (!item) return '-'
+  if (!item.code || item.code === item.label) return item.label || item.code || '-'
+  return `${item.label}（${item.code}）`
 }
 
 async function loadBatches() {
