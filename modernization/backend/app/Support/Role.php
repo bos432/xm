@@ -184,7 +184,6 @@ final class Role
                 'view_task_books',
                 'view_project_progress',
                 'view_rectifications',
-                'view_expert_certifications',
             ],
             self::UNIT => [
                 'view_projects',
@@ -208,7 +207,6 @@ final class Role
                 'submit_project_progress',
                 'view_rectifications',
                 'submit_rectifications',
-                'view_expert_certifications',
             ],
             default => [],
         };
@@ -223,9 +221,15 @@ final class Role
 
     public static function capabilities(string $role): array
     {
-        $databasePermissions = self::databaseCapabilities([$role]);
+        if (self::hasRbacTables()) {
+            $databaseRoleCodes = self::activeDatabaseRoleCodes([$role]);
 
-        return $databasePermissions ?: self::builtInCapabilities($role);
+            if ($databaseRoleCodes !== []) {
+                return self::databaseCapabilities($databaseRoleCodes);
+            }
+        }
+
+        return self::builtInCapabilities($role);
     }
 
     public static function capabilitiesForUser(User $user): array
@@ -250,12 +254,20 @@ final class Role
             ];
         }
 
-        $databasePermissions = self::databaseCapabilities($codes);
-        $fallback = collect($codes)
-            ->flatMap(fn (string $role) => self::builtInCapabilities($role))
-            ->all();
+        if (self::hasRbacTables()) {
+            $databaseRoleCodes = self::activeDatabaseRoleCodes($codes);
+            $databasePermissions = self::databaseCapabilities($databaseRoleCodes);
+            $fallbackCodes = array_values(array_diff(array_unique($codes), $databaseRoleCodes));
+            $fallback = collect($fallbackCodes)
+                ->flatMap(fn (string $role) => self::builtInCapabilities($role))
+                ->all();
 
-        return array_values(array_unique([...$fallback, ...$databasePermissions]));
+            return array_values(array_unique([...$fallback, ...$databasePermissions]));
+        }
+
+        return array_values(array_unique(collect($codes)
+            ->flatMap(fn (string $role) => self::builtInCapabilities($role))
+            ->all()));
     }
 
     public static function userCan(User $user, string $permission): bool
@@ -337,7 +349,7 @@ final class Role
 
     private static function databaseCapabilities(array $roleCodes): array
     {
-        if (! Schema::hasTable('roles') || ! Schema::hasTable('permissions')) {
+        if (! self::hasRbacTables()) {
             return [];
         }
 
@@ -350,5 +362,24 @@ final class Role
             ->unique()
             ->values()
             ->all();
+    }
+
+    private static function activeDatabaseRoleCodes(array $roleCodes): array
+    {
+        if (! self::hasRbacTables()) {
+            return [];
+        }
+
+        return RbacRole::query()
+            ->whereIn('code', array_values(array_unique($roleCodes)))
+            ->where('is_active', true)
+            ->pluck('code')
+            ->values()
+            ->all();
+    }
+
+    private static function hasRbacTables(): bool
+    {
+        return Schema::hasTable('roles') && Schema::hasTable('permissions');
     }
 }

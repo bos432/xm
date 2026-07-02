@@ -234,10 +234,10 @@ const applicationBatchMenuChildren = [
   { label: '测试批次', path: '/application-batches?e2e=1', query: { e2e: '1' } }
 ]
 const lifecycleMenuChildren = [
-  { label: '合同任务书', path: '/lifecycle?tab=task_books', query: { tab: 'task_books' } },
-  { label: '实施进展', path: '/lifecycle?tab=progress', query: { tab: 'progress' } },
-  { label: '整改闭环', path: '/lifecycle?tab=rectifications', query: { tab: 'rectifications' } },
-  { label: '专家认证', path: '/lifecycle?tab=expert_certifications', query: { tab: 'expert_certifications' } }
+  { label: '合同任务书', path: '/lifecycle?tab=task_books', query: { tab: 'task_books' }, permission: 'view_task_books' },
+  { label: '实施进展', path: '/lifecycle?tab=progress', query: { tab: 'progress' }, permission: 'view_project_progress' },
+  { label: '整改闭环', path: '/lifecycle?tab=rectifications', query: { tab: 'rectifications' }, permission: 'view_rectifications' },
+  { label: '专家认证', path: '/lifecycle?tab=expert_certifications', query: { tab: 'expert_certifications' }, permission: 'view_expert_certifications' }
 ]
 const reviewMenuChildren = [
   { label: '待审核任务', path: '/reviews?tab=tasks', query: { tab: 'tasks' } },
@@ -422,7 +422,7 @@ function expandMenuItem(item) {
 
   if (childConfig[item.key]) {
     const [allLabel, children] = childConfig[item.key]
-    return { ...item, allLabel, children }
+    return { ...item, allLabel, children: children.filter(canSeeMenuChild) }
   }
 
   return item
@@ -435,6 +435,10 @@ function menuOrderIndex(order, key) {
 
 function routeMatches(item) {
   return route.path === item.path
+}
+
+function canSeeMenuChild(child) {
+  return !child.permission || session.can(child.permission)
 }
 
 function routeMatchesChild(item, child) {

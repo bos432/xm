@@ -258,14 +258,14 @@ class DatabaseSeeder extends Seeder
         }
 
         foreach (Role::builtInRoles() as $code => $name) {
-            $role = RbacRole::updateOrCreate(
-                ['code' => $code],
-                [
-                    'name' => $name,
-                    'is_builtin' => true,
-                    'is_active' => true,
-                ]
-            );
+            $role = RbacRole::firstOrNew(['code' => $code]);
+            $isNewRole = ! $role->exists;
+            $role->fill([
+                'name' => $name,
+                'is_builtin' => true,
+                'is_active' => true,
+            ]);
+            $role->save();
 
             $ids = collect(Role::builtInCapabilities($code))
                 ->map(fn (string $permission) => $permissionIds[$permission] ?? null)
@@ -273,7 +273,9 @@ class DatabaseSeeder extends Seeder
                 ->values()
                 ->all();
 
-            $role->permissions()->sync($ids);
+            if ($code === Role::SUPER_ADMIN || $isNewRole || $role->permissions()->count() === 0) {
+                $role->permissions()->sync($ids);
+            }
         }
     }
 
