@@ -8,12 +8,17 @@ use App\Models\ProjectReview;
 use App\Models\User;
 use App\Support\AuditLogger;
 use App\Support\Role;
+use App\Support\ReviewDispatchMatcher;
 use App\Support\ReviewScoreCriteria;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ReviewController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly ReviewDispatchMatcher $dispatchMatcher,
+    )
     {
     }
 
@@ -21,7 +26,8 @@ class ReviewController extends Controller
     {
         $this->authorizeReviewer($request);
 
-        return Project::query()
+        $stage = Role::reviewerStageFor($request->user()->role);
+        $query = Project::query()
             ->where('current_reviewer_role', Role::reviewerStageFor($request->user()->role))
             ->whereIn('status', [Project::STATUS_SUBMITTED, Project::STATUS_REVIEWING])
             ->when($request->filled('project_id'), function ($query) use ($request) {
@@ -47,8 +53,23 @@ class ReviewController extends Controller
             })
             ->with(['unit', 'owner'])
             ->orderBy('submitted_at')
-            ->orderBy('id')
-            ->paginate(20);
+            ->orderBy('id');
+
+        $visible = $query->get()
+            ->filter(fn (Project $project): bool => $this->dispatchMatcher->userCanReview($project, $request->user(), $stage))
+            ->map(fn (Project $project): Project => $this->attachDispatchAssignment($project, $stage))
+            ->values();
+
+        $page = max((int) $request->query('page', 1), 1);
+        $perPage = 20;
+
+        return new LengthAwarePaginator(
+            $visible->forPage($page, $perPage)->values(),
+            $visible->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
     }
 
     public function results(Request $request)
@@ -122,6 +143,10 @@ class ReviewController extends Controller
             abort(403, '当前项目不属于你的审核阶段');
         }
 
+        if (! $this->dispatchMatcher->userCanReview($project, $request->user(), $stage)) {
+            abort(403, '该项目已自动派单给其他审核人员');
+        }
+
         $data = $request->validate([
             'decision' => ['required', 'in:approve,return,reject,recommend,accept'],
             'score' => ['nullable', 'numeric', 'min:0', 'max:100'],
@@ -159,6 +184,16 @@ class ReviewController extends Controller
         }
 
         $project->update($nextState);
+        $project->refresh();
+
+        $assignment = null;
+        if ($project->current_reviewer_role) {
+            $assignment = $this->dispatchMatcher->apply($project, $project->current_reviewer_role);
+            if ($assignment) {
+                $project->save();
+                $project->refresh();
+            }
+        }
 
         $this->auditLogger->record($request, 'project.reviewed', $review, [
             'project_id' => $project->id,
@@ -176,7 +211,7 @@ class ReviewController extends Controller
         ]);
 
         if ($project->current_reviewer_role) {
-            $this->notifyRole($project, $project->current_reviewer_role, '收到待审项目', '项目“'.$project->title.'”已流转到你的审核阶段。');
+            $this->notifyRole($project, $project->current_reviewer_role, '收到待审项目', $this->dispatchMessageBody($project, $assignment));
         }
 
         return response()->json([
@@ -211,6 +246,32 @@ class ReviewController extends Controller
                     'body' => $body,
                 ]);
             });
+    }
+
+    private function attachDispatchAssignment(Project $project, string $stage): Project
+    {
+        $project->setAttribute('dispatch_assignment', $this->dispatchMatcher->assignment($project, $stage));
+
+        return $project;
+    }
+
+    private function dispatchMessageBody(Project $project, ?array $assignment): string
+    {
+        $body = '项目“'.$project->title.'”已流转到你的审核阶段。';
+        if (! $assignment) {
+            return $body;
+        }
+
+        $names = collect($assignment['recommended_users'] ?? [])
+            ->map(fn (array $user): string => $user['name'] ?: $user['username'])
+            ->filter()
+            ->implode('、');
+
+        if ($names === '') {
+            return $body;
+        }
+
+        return $body.($assignment['auto_assign'] ? '已自动派单给：' : '系统推荐处理人：').$names.'。';
     }
 
     private function applyFinalSupportMetadata(array $data, Project $project, Request $request): array

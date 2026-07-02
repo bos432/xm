@@ -21,6 +21,7 @@ use App\Http\Controllers\ProjectLifecycleController;
 use App\Http\Controllers\RbacController;
 use App\Http\Controllers\ReviewExportController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ReviewDispatchRuleController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SystemSettingController;
 use App\Http\Controllers\SystemTextController;
@@ -104,6 +105,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reviews/tasks/export.csv', [ReviewExportController::class, 'tasksCsv']);
     Route::get('/reviews/results/export.csv', [ReviewExportController::class, 'resultsCsv']);
     Route::post('/projects/{project}/reviews', [ReviewController::class, 'store']);
+    Route::get('/review-dispatch-rules/users', [ReviewDispatchRuleController::class, 'users']);
+    Route::apiResource('review-dispatch-rules', ReviewDispatchRuleController::class)->except(['show']);
 
     Route::get('/settings', [SystemSettingController::class, 'index']);
     Route::get('/settings/runtime', [SystemSettingController::class, 'runtime']);

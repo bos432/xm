@@ -32,6 +32,17 @@
             <el-table-column label="当前阶段" width="130">
               <template #default="{ row }">{{ roleLabel(row.current_reviewer_role) }}</template>
             </el-table-column>
+            <el-table-column label="派单提示" min-width="220">
+              <template #default="{ row }">
+                <template v-if="row.dispatch_assignment">
+                  <el-tag :type="row.dispatch_assignment.auto_assign ? 'warning' : 'info'">
+                    {{ row.dispatch_assignment.auto_assign ? '自动派单' : '推荐派单' }}
+                  </el-tag>
+                  <span class="dispatch-users">{{ dispatchUserNames(row.dispatch_assignment) }}</span>
+                </template>
+                <span v-else>-</span>
+              </template>
+            </el-table-column>
             <el-table-column label="状态" width="120">
               <template #default="{ row }">
                 <el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag>
@@ -646,6 +657,13 @@ function formatCriteriaScores(row) {
     .join('；')
 }
 
+function dispatchUserNames(assignment) {
+  return (assignment?.recommended_users || [])
+    .map((user) => user.name || user.username)
+    .filter(Boolean)
+    .join('、') || '-'
+}
+
 async function exportTasks() {
   try {
     await downloadApi(`/reviews/tasks/export.csv${buildTaskQuery(false)}`, `review-tasks-${new Date().toISOString().slice(0, 10)}.csv`)
@@ -761,6 +779,11 @@ onUnmounted(() => {
 
 .table-action-row :deep(.el-button + .el-button) {
   margin-left: 0;
+}
+
+.dispatch-users {
+  margin-left: 8px;
+  color: #334155;
 }
 
 .criteria-panel {

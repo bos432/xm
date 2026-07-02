@@ -7,10 +7,22 @@
         <span>{{ texts.t('app.brand.subtitle', '公共服务后台') }}</span>
       </div>
       <el-menu :default-active="$route.path" router>
-        <el-menu-item v-for="item in visibleMenus" :key="item.path" :index="item.path">
-          <el-icon><component :is="menuIcon(item.key)" /></el-icon>
-          <span>{{ menuLabel(item) }}</span>
-        </el-menu-item>
+        <template v-for="group in visibleMenuGroups" :key="group.key">
+          <el-menu-item v-if="group.items.length === 1 && group.key === 'default'" :index="group.items[0].path">
+            <el-icon><component :is="menuIcon(group.items[0].key)" /></el-icon>
+            <span>{{ menuLabel(group.items[0]) }}</span>
+          </el-menu-item>
+          <el-sub-menu v-else :index="`group-${group.key}`">
+            <template #title>
+              <el-icon><component :is="groupIcon(group.key)" /></el-icon>
+              <span>{{ group.label }}</span>
+            </template>
+            <el-menu-item v-for="item in group.items" :key="item.path" :index="item.path">
+              <el-icon><component :is="menuIcon(item.key)" /></el-icon>
+              <span>{{ menuLabel(item) }}</span>
+            </el-menu-item>
+          </el-sub-menu>
+        </template>
       </el-menu>
     </el-aside>
     <el-container>
@@ -78,7 +90,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ArrowDown, Bell, Checked, Collection, Connection, DataLine, Document, FolderChecked, FolderOpened, House, Lock, Message, OfficeBuilding, Operation, Setting, SwitchButton, Tickets, User, Warning } from '@element-plus/icons-vue'
+import { ArrowDown, Bell, Checked, Collection, Connection, DataLine, Document, FolderChecked, FolderOpened, Guide, House, Lock, Message, OfficeBuilding, Operation, Setting, SwitchButton, Tickets, User, Warning } from '@element-plus/icons-vue'
 import { api } from './api.js'
 import { useSessionStore } from './store.js'
 import { useTextStore } from './texts.js'
@@ -107,6 +119,7 @@ const iconMap = {
   users: User,
   unit_profile: OfficeBuilding,
   reviews: Checked,
+  dispatch_rules: Guide,
   messages: Bell,
   migration: Connection,
   operation_logs: Tickets,
@@ -118,6 +131,46 @@ const iconMap = {
   system_texts: Document,
   settings: Setting
 }
+const groupIconMap = {
+  business: FolderOpened,
+  organization: OfficeBuilding,
+  review: Checked,
+  portal: House,
+  system: Setting,
+  default: DataLine
+}
+const menuGroups = {
+  dashboard: 'default',
+  projects: 'business',
+  application_batches: 'business',
+  lifecycle: 'business',
+  units: 'organization',
+  users: 'organization',
+  unit_profile: 'organization',
+  reviews: 'review',
+  dispatch_rules: 'review',
+  acceptance: 'review',
+  acceptance_admin: 'review',
+  acceptance_review: 'review',
+  messages: 'default',
+  public_home: 'portal',
+  mail_center: 'portal',
+  roles: 'system',
+  security: 'system',
+  dictionary_items: 'system',
+  system_texts: 'system',
+  settings: 'system',
+  migration: 'system',
+  operation_logs: 'system'
+}
+const menuGroupLabels = {
+  default: '常用入口',
+  business: '项目业务',
+  organization: '组织账号',
+  review: '审核验收',
+  portal: '门户运营',
+  system: '系统管理'
+}
 const titleKeys = {
   '/dashboard': ['page.dashboard.title', '运行概览'],
   '/projects': ['page.projects.title', '项目申报'],
@@ -128,6 +181,7 @@ const titleKeys = {
   '/users': ['page.users.title', '账号管理'],
   '/unit-profile': ['page.unit_profile.title', '单位资料'],
   '/reviews': ['page.reviews.title', '审核任务'],
+  '/review-dispatch-rules': ['page.dispatch_rules.title', '派单规则'],
   '/messages': ['page.messages.title', '站内消息'],
   '/migration': ['page.migration.title', '迁移准备'],
   '/operation-logs': ['page.operation_logs.title', '操作日志'],
@@ -149,6 +203,22 @@ const roleLabels = {
 }
 
 const visibleMenus = computed(() => session.menus.length ? session.menus : [])
+const visibleMenuGroups = computed(() => {
+  const groups = []
+  const groupMap = new Map()
+
+  visibleMenus.value.forEach((item) => {
+    const key = menuGroups[item.key] || 'default'
+    if (!groupMap.has(key)) {
+      const group = { key, label: menuGroupLabels[key] || key, items: [] }
+      groupMap.set(key, group)
+      groups.push(group)
+    }
+    groupMap.get(key).items.push(item)
+  })
+
+  return groups
+})
 const title = computed(() => {
   const titleConfig = titleKeys[route.path]
   return titleConfig ? texts.t(titleConfig[0], titleConfig[1]) : '项目申报系统'
@@ -156,6 +226,10 @@ const title = computed(() => {
 
 function menuIcon(key) {
   return iconMap[key] || DataLine
+}
+
+function groupIcon(key) {
+  return groupIconMap[key] || DataLine
 }
 
 function menuLabel(item) {

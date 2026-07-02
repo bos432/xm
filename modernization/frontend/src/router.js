@@ -18,6 +18,7 @@ const OperationLogsView = () => import('./views/OperationLogsView.vue')
 const ProjectsView = () => import('./views/ProjectsView.vue')
 const PublicHomeManageView = () => import('./views/PublicHomeManageView.vue')
 const ReviewTasksView = () => import('./views/ReviewTasksView.vue')
+const ReviewDispatchRulesView = () => import('./views/ReviewDispatchRulesView.vue')
 const RolesView = () => import('./views/RolesView.vue')
 const SecurityCenterView = () => import('./views/SecurityCenterView.vue')
 const SettingsView = () => import('./views/SettingsView.vue')
@@ -43,6 +44,7 @@ const router = createRouter({
     { path: '/users', component: UsersView, meta: { permission: 'manage_users' } },
     { path: '/unit-profile', component: UnitsView, meta: { permission: 'view_own_unit' } },
     { path: '/reviews', component: ReviewTasksView, meta: { permission: 'review_projects' } },
+    { path: '/review-dispatch-rules', component: ReviewDispatchRulesView, meta: { permission: 'manage_dispatch_rules' } },
     { path: '/messages', component: MessagesView, meta: { permission: 'view_messages' } },
     { path: '/migration', component: MigrationView, meta: { permission: 'view_migration' } },
     { path: '/operation-logs', component: OperationLogsView, meta: { permission: 'view_operation_logs' } },
