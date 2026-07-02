@@ -20,6 +20,9 @@ export default [
         setTimeout: 'readonly',
         window: 'readonly'
       }
+    },
+    rules: {
+      'no-undef': 'error'
     }
   }
 ]
