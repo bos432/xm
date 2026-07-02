@@ -24,6 +24,7 @@ const SettingsView = () => import('./views/SettingsView.vue')
 const SystemTextsView = () => import('./views/SystemTextsView.vue')
 const UnitsView = () => import('./views/UnitsView.vue')
 const UsersView = () => import('./views/UsersView.vue')
+const chunkReloadFlag = 'pas_chunk_reload_attempted'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -67,6 +68,19 @@ router.beforeEach(async (to) => {
   if (to.meta.guest && session.token) return '/dashboard'
   if (to.meta.permission && !session.can(to.meta.permission)) return '/'
   if (to.meta.permissionAny && !to.meta.permissionAny.some((permission) => session.can(permission))) return '/'
+})
+
+router.afterEach(() => {
+  window.sessionStorage.removeItem(chunkReloadFlag)
+})
+
+router.onError((error) => {
+  const message = String(error?.message || error || '')
+  const isChunkLoadFailure = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Loading chunk/i.test(message)
+
+  if (!isChunkLoadFailure || window.sessionStorage.getItem(chunkReloadFlag)) return
+  window.sessionStorage.setItem(chunkReloadFlag, '1')
+  window.location.reload()
 })
 
 export default router
