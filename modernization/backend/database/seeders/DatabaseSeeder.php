@@ -54,7 +54,18 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        User::query()->where('role', 'admin')->update(['role' => Role::SUPER_ADMIN]);
+        User::updateOrCreate(
+            ['username' => 'e2e_20260702_delivery_admin'],
+            [
+                'unit_id' => $adminUnit->id,
+                'name' => 'E2E-20260702 delivery admin',
+                'email' => 'e2e_20260702_delivery_admin@example.test',
+                'password' => Hash::make('Test@2026pass'),
+                'role' => Role::ADMIN,
+                'is_active' => true,
+                'metadata' => ['e2e' => true, 'delivery' => true],
+            ]
+        );
 
         $settings = [
             ['key' => 'sms.provider', 'value' => '', 'group' => 'sms', 'is_secret' => false, 'description' => '短信供应商标识'],
