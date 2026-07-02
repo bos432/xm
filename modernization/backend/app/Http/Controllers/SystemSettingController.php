@@ -277,6 +277,19 @@ class SystemSettingController extends Controller
                     ['key' => 'security.ip_blacklist_enabled', 'label' => '启用 IP 黑名单', 'type' => 'boolean', 'default' => '1'],
                 ],
             ],
+            [
+                'key' => 'review',
+                'title' => '审核与评分',
+                'description' => '配置各审核阶段评分开关和专家组随机分配策略。',
+                'fields' => [
+                    ['key' => 'review.score_enabled.county', 'label' => '区县审核评分', 'type' => 'boolean', 'default' => '0'],
+                    ['key' => 'review.score_enabled.department', 'label' => '部门审核评分', 'type' => 'boolean', 'default' => '0'],
+                    ['key' => 'review.score_enabled.expert', 'label' => '专家评审评分', 'type' => 'boolean', 'default' => '1'],
+                    ['key' => 'review.score_enabled.admin', 'label' => '管理员终审评分', 'type' => 'boolean', 'default' => '0'],
+                    ['key' => 'review.expert_assignment.random_enabled', 'label' => '专家组随机分配', 'type' => 'boolean', 'default' => '1'],
+                    ['key' => 'review.expert_assignment.count', 'label' => '默认专家人数', 'type' => 'number', 'default' => '3'],
+                ],
+            ],
         ];
     }
 }

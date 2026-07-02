@@ -33,7 +33,6 @@ class ReviewWorkflowTest extends TestCase
         Sanctum::actingAs($county);
         $this->postJson("/api/projects/{$project->id}/reviews", [
             'decision' => 'approve',
-            'score' => 82,
             'comment' => '区县通过',
         ])->assertCreated()
             ->assertJsonPath('project.status', Project::STATUS_REVIEWING)
@@ -48,7 +47,6 @@ class ReviewWorkflowTest extends TestCase
         Sanctum::actingAs($department);
         $this->postJson("/api/projects/{$project->id}/reviews", [
             'decision' => 'approve',
-            'score' => 86,
             'comment' => '部门通过',
         ])->assertCreated()
             ->assertJsonPath('project.status', Project::STATUS_REVIEWING)
@@ -78,7 +76,6 @@ class ReviewWorkflowTest extends TestCase
         Sanctum::actingAs($admin);
         $this->postJson("/api/projects/{$project->id}/reviews", [
             'decision' => 'accept',
-            'score' => 95,
             'comment' => '终审通过',
         ])->assertCreated()
             ->assertJsonPath('project.status', Project::STATUS_APPROVED)
@@ -165,7 +162,6 @@ class ReviewWorkflowTest extends TestCase
 
         $this->postJson("/api/projects/{$project->id}/reviews", [
             'decision' => 'accept',
-            'score' => 95,
             'comment' => '终审支持',
             'metadata' => [
                 'final_support' => [

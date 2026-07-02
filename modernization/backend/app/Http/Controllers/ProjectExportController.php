@@ -23,11 +23,13 @@ class ProjectExportController extends Controller
 
         $query = Project::query()
             ->with(['unit', 'owner', 'applicationBatch', 'reviews.reviewer'])
-            ->orderBy('created_at')
-            ->orderBy('id');
+            ->orderByRaw('COALESCE(submitted_at, updated_at, created_at) desc')
+            ->orderByDesc('id');
 
         if ($request->user()->role === Role::UNIT) {
             $query->where('unit_id', $request->user()->unit_id);
+        } elseif ($request->user()->role !== Role::SUPER_ADMIN) {
+            $query->where('status', '<>', Project::STATUS_DRAFT);
         }
 
         if ($status = $request->query('status')) {
@@ -112,8 +114,11 @@ class ProjectExportController extends Controller
                 '预算金额（元）',
                 '是否推荐',
                 '是否支持',
-                '支持方式',
-                '支持资金（万元）',
+                '补助支持（万元）',
+                '贴息支持（万元）',
+                '其他支持（万元）',
+                '支持合计（万元）',
+                '其他支持说明',
                 '推荐专家',
                 '提交时间',
                 '负责人账号',
@@ -137,8 +142,11 @@ class ProjectExportController extends Controller
                     $project->budget_amount,
                     $this->yesNo($finalSupport['is_recommended'] ?? null),
                     $this->yesNo($finalSupport['is_supported'] ?? null),
-                    $this->supportTypeLabel($finalSupport['support_type'] ?? null),
-                    $finalSupport['support_amount_wan'] ?? '',
+                    $this->supportAmount($finalSupport, 'subsidy_amount_wan', 'subsidy'),
+                    $this->supportAmount($finalSupport, 'interest_amount_wan', 'interest'),
+                    $this->supportAmount($finalSupport, 'other_amount_wan', 'other'),
+                    $this->supportTotal($finalSupport),
+                    $finalSupport['other_support_note'] ?? '',
                     $finalSupport['recommended_experts'] ?? $this->recommendedExpertNames($project),
                     optional($project->submitted_at)->format('Y-m-d H:i:s'),
                     $project->owner?->username,
@@ -187,15 +195,26 @@ class ProjectExportController extends Controller
         return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? '是' : '否';
     }
 
-    private function supportTypeLabel(?string $value): string
+    private function supportAmount(array $support, string $key, string $legacyType): float|string
     {
-        return match ($value) {
-            'subsidy' => '补助支持',
-            'interest' => '贴息支持',
-            'other' => '其他支持',
-            'none' => '不支持',
-            default => '',
-        };
+        if (array_key_exists($key, $support)) {
+            return round((float) $support[$key], 2);
+        }
+
+        return ($support['support_type'] ?? null) === $legacyType ? round((float) ($support['support_amount_wan'] ?? 0), 2) : '';
+    }
+
+    private function supportTotal(array $support): float|string
+    {
+        if (array_key_exists('total_support_amount_wan', $support)) {
+            return round((float) $support['total_support_amount_wan'], 2);
+        }
+
+        if (array_key_exists('support_amount_wan', $support)) {
+            return round((float) $support['support_amount_wan'], 2);
+        }
+
+        return '';
     }
 
     private function e2eProjectQuery($query): void

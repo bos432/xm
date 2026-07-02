@@ -32,6 +32,9 @@
       <el-table-column label="推荐/指定人员" min-width="220">
         <template #default="{ row }">{{ userNames(row.recommended_users) || '-' }}</template>
       </el-table-column>
+      <el-table-column label="专家人数" width="100">
+        <template #default="{ row }">{{ row.target_stage === 'expert' ? (row.expert_count || '系统默认') : '-' }}</template>
+      </el-table-column>
       <el-table-column label="派单方式" width="120">
         <template #default="{ row }">
           <el-tag :type="row.auto_assign ? 'warning' : 'info'">{{ row.auto_assign ? '自动派单' : '推荐派单' }}</el-tag>
@@ -105,6 +108,10 @@
             <el-option v-for="user in targetUsers" :key="user.id" :label="`${user.name || user.username}（${user.username}）`" :value="user.id" />
           </el-select>
         </el-form-item>
+        <el-form-item v-if="form.target_stage === 'expert'" label="随机专家人数">
+          <el-input-number v-model="form.expert_count" :min="1" :max="20" />
+          <span class="field-help">留空时使用“系统配置 -> 审核与评分”中的默认专家人数。</span>
+        </el-form-item>
         <el-form-item label="优先级"><el-input-number v-model="form.priority" :min="0" :max="9999" /></el-form-item>
         <el-form-item label="状态"><el-switch v-model="form.is_active" active-text="启用" inactive-text="停用" /></el-form-item>
         <el-form-item label="自动派单">
@@ -154,6 +161,7 @@ function emptyForm() {
     project_category: '',
     project_type: '',
     recommended_user_ids: [],
+    expert_count: null,
     auto_assign: false,
     is_active: true,
     priority: 100,

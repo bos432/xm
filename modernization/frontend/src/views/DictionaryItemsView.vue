@@ -8,6 +8,14 @@
         <el-button type="primary" :icon="Plus" @click="openCreate">新增字典</el-button>
       </div>
     </div>
+    <el-alert
+      v-if="group === reviewCriterionGroup || expertReviewItems.length"
+      :type="expertScoreTotal === 100 ? 'success' : 'error'"
+      :closable="false"
+      show-icon
+      :title="`专家评分项当前总分：${expertScoreTotal} / 100`"
+      :description="expertScoreTotal === 100 ? '专家评分模板正常，可以提交专家评分。' : '总分必须等于 100，否则专家提交评分时会被后端拦截。'"
+    />
 
     <el-table :data="items" border v-loading="loading">
       <el-table-column type="index" label="序号" width="72" align="center" :index="tableIndex" fixed="left" />
@@ -77,7 +85,7 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Edit, Files, Plus, Search } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
@@ -95,6 +103,8 @@ const dialogVisible = ref(false)
 const editingItem = ref(null)
 const form = reactive(emptyForm())
 const reviewCriterionGroup = 'expert_review_criterion'
+const expertReviewItems = computed(() => items.value.filter((item) => item.group === reviewCriterionGroup && item.is_active))
+const expertScoreTotal = computed(() => Number(expertReviewItems.value.reduce((sum, item) => sum + Number(item.metadata?.max_score || 0), 0).toFixed(1)))
 const groupLabels = {
   management_unit: '归口管理单位',
   project_category: '项目类别',

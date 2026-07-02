@@ -11,8 +11,11 @@ use App\Support\RichTextSanitizer;
 use App\Support\Role;
 use App\Support\ReviewDispatchMatcher;
 use App\Support\ReviewScoreCriteria;
+use App\Support\RuntimeConfig;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ReviewController extends Controller
 {
@@ -53,10 +56,21 @@ class ReviewController extends Controller
                 });
             })
             ->with(['unit', 'owner'])
-            ->orderBy('submitted_at')
-            ->orderBy('id');
+            ->orderByRaw('COALESCE(submitted_at, updated_at, created_at) desc')
+            ->orderByDesc('id');
 
         $visible = $query->get()
+            ->map(function (Project $project) use ($stage): Project {
+                if ($stage === Role::EXPERT && ! $this->dispatchMatcher->assignment($project, Role::EXPERT)) {
+                    $assignment = $this->dispatchMatcher->apply($project, Role::EXPERT);
+                    if ($assignment) {
+                        $project->save();
+                        $project->refresh();
+                    }
+                }
+
+                return $project;
+            })
             ->filter(fn (Project $project): bool => $this->dispatchMatcher->userCanReview($project, $request->user(), $stage))
             ->map(fn (Project $project): Project => $this->attachDispatchAssignment($project, $stage))
             ->values();
@@ -79,8 +93,8 @@ class ReviewController extends Controller
 
         $query = ProjectReview::query()
             ->with(['project.unit', 'project.owner', 'reviewer'])
-            ->orderBy('reviewed_at')
-            ->orderBy('id');
+            ->orderByDesc('reviewed_at')
+            ->orderByDesc('id');
 
         if (! in_array($request->user()->role, Role::adminRoles(), true)) {
             $query->where('stage', Role::reviewerStageFor($request->user()->role));
@@ -144,6 +158,14 @@ class ReviewController extends Controller
             abort(403, '当前项目不属于你的审核阶段');
         }
 
+        if ($stage === Role::EXPERT && ! $this->dispatchMatcher->assignment($project, Role::EXPERT)) {
+            $assignment = $this->dispatchMatcher->apply($project, Role::EXPERT);
+            if ($assignment) {
+                $project->save();
+                $project->refresh();
+            }
+        }
+
         if (! $this->dispatchMatcher->userCanReview($project, $request->user(), $stage)) {
             abort(403, '该项目已自动派单给其他审核人员');
         }
@@ -160,8 +182,18 @@ class ReviewController extends Controller
             'metadata.final_support.support_type' => ['nullable', 'in:subsidy,interest,other,none'],
             'metadata.final_support.support_amount_wan' => ['nullable', 'numeric', 'min:0'],
             'metadata.final_support.recommended_experts' => ['nullable', 'string', 'max:500'],
+            'metadata.final_support.subsidy_amount_wan' => ['nullable', 'numeric', 'min:0'],
+            'metadata.final_support.interest_amount_wan' => ['nullable', 'numeric', 'min:0'],
+            'metadata.final_support.other_amount_wan' => ['nullable', 'numeric', 'min:0'],
+            'metadata.final_support.other_support_note' => ['nullable', 'string', 'max:500'],
         ]);
         $data['comment'] = RichTextSanitizer::clean($data['comment'] ?? null);
+
+        $this->ensureStageScoreAllowed($stage, $data, $request);
+
+        if ($stage === Role::EXPERT && $this->hasExistingExpertReview($project, $request->user()->id)) {
+            return response()->json(['message' => '你已提交过该项目专家评分，不能重复提交'], 422);
+        }
 
         if ($stage === Role::EXPERT) {
             $data = ReviewScoreCriteria::applyExpertScores($data);
@@ -171,31 +203,35 @@ class ReviewController extends Controller
             $data = $this->applyFinalSupportMetadata($data, $project, $request);
         }
 
-        $review = ProjectReview::create($data + [
-            'project_id' => $project->id,
-            'reviewer_id' => $request->user()->id,
-            'stage' => $stage,
-            'reviewed_at' => now(),
-        ]);
+        [$review, $assignment] = DB::transaction(function () use ($request, $project, $stage, $data): array {
+            $review = ProjectReview::create($data + [
+                'project_id' => $project->id,
+                'reviewer_id' => $request->user()->id,
+                'stage' => $stage,
+                'reviewed_at' => now(),
+            ]);
 
-        $nextState = $this->nextProjectState($project, $data['decision']);
-        if ($stage === Role::ADMIN && $data['decision'] === 'accept') {
-            $projectMetadata = is_array($project->metadata) ? $project->metadata : [];
-            $projectMetadata['final_support'] = $data['metadata']['final_support'] ?? [];
-            $nextState['metadata'] = $projectMetadata;
-        }
-
-        $project->update($nextState);
-        $project->refresh();
-
-        $assignment = null;
-        if ($project->current_reviewer_role) {
-            $assignment = $this->dispatchMatcher->apply($project, $project->current_reviewer_role);
-            if ($assignment) {
-                $project->save();
-                $project->refresh();
+            $nextState = $this->nextProjectState($project, $data['decision']);
+            if ($stage === Role::ADMIN && $data['decision'] === 'accept') {
+                $projectMetadata = is_array($project->metadata) ? $project->metadata : [];
+                $projectMetadata['final_support'] = $data['metadata']['final_support'] ?? [];
+                $nextState['metadata'] = $projectMetadata;
             }
-        }
+
+            $project->update($nextState);
+            $project->refresh();
+
+            $assignment = null;
+            if ($project->current_reviewer_role) {
+                $assignment = $this->dispatchMatcher->apply($project, $project->current_reviewer_role);
+                if ($assignment) {
+                    $project->save();
+                    $project->refresh();
+                }
+            }
+
+            return [$review, $assignment];
+        });
 
         $this->auditLogger->record($request, 'project.reviewed', $review, [
             'project_id' => $project->id,
@@ -213,7 +249,7 @@ class ReviewController extends Controller
         ]);
 
         if ($project->current_reviewer_role) {
-            $this->notifyRole($project, $project->current_reviewer_role, '收到待审项目', $this->dispatchMessageBody($project, $assignment));
+            $this->notifyReviewRecipients($project, $project->current_reviewer_role, $assignment, '收到待审项目', $this->dispatchMessageBody($project, $assignment));
         }
 
         return response()->json([
@@ -248,6 +284,43 @@ class ReviewController extends Controller
                     'body' => $body,
                 ]);
             });
+    }
+
+    private function notifyUsers(Project $project, array $userIds, string $title, string $body): void
+    {
+        if ($userIds === []) {
+            return;
+        }
+
+        User::query()
+            ->whereIn('id', array_values(array_unique(array_map('intval', $userIds))))
+            ->where('is_active', true)
+            ->each(function (User $user) use ($project, $title, $body): void {
+                Message::create([
+                    'recipient_id' => $user->id,
+                    'project_id' => $project->id,
+                    'type' => 'review',
+                    'title' => $title,
+                    'body' => $body,
+                ]);
+            });
+    }
+
+    private function notifyReviewRecipients(Project $project, string $role, ?array $assignment, string $title, string $body): void
+    {
+        $assignedUserIds = array_map('intval', $assignment['assigned_user_ids'] ?? []);
+        if ($role === Role::EXPERT && $assignedUserIds !== []) {
+            $reviewedUserIds = $project->reviews()
+                ->where('stage', Role::EXPERT)
+                ->pluck('reviewer_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+            $this->notifyUsers($project, array_values(array_diff($assignedUserIds, $reviewedUserIds)), $title, $body);
+
+            return;
+        }
+
+        $this->notifyRole($project, $role, $title, $body);
     }
 
     private function attachDispatchAssignment(Project $project, string $stage): Project
@@ -299,15 +372,35 @@ class ReviewController extends Controller
             'is_supported' => $isSupported ?? true,
             'support_type' => $supportType,
             'support_amount_wan' => round((float) ($input['support_amount_wan'] ?? 0), 2),
-            'recommended_experts' => trim((string) ($input['recommended_experts'] ?? $this->recommendedExpertNames($project))),
+            'subsidy_amount_wan' => $this->supportAmount($input, 'subsidy_amount_wan', $supportType === 'subsidy' ? ($input['support_amount_wan'] ?? 0) : 0, $isSupported),
+            'interest_amount_wan' => $this->supportAmount($input, 'interest_amount_wan', $supportType === 'interest' ? ($input['support_amount_wan'] ?? 0) : 0, $isSupported),
+            'other_amount_wan' => $this->supportAmount($input, 'other_amount_wan', $supportType === 'other' ? ($input['support_amount_wan'] ?? 0) : 0, $isSupported),
+            'other_support_note' => trim((string) ($input['other_support_note'] ?? '')),
+            'recommended_experts' => $this->recommendedExpertNames($project),
             'reviewed_by' => $request->user()->id,
             'reviewed_by_name' => $request->user()->name ?: $request->user()->username,
             'reviewed_at' => now()->toDateTimeString(),
         ];
+        $metadata['final_support']['total_support_amount_wan'] = round(
+            $metadata['final_support']['subsidy_amount_wan']
+            + $metadata['final_support']['interest_amount_wan']
+            + $metadata['final_support']['other_amount_wan'],
+            2
+        );
+        $metadata['final_support']['support_amount_wan'] = $metadata['final_support']['total_support_amount_wan'];
 
         $data['metadata'] = $metadata;
 
         return $data;
+    }
+
+    private function supportAmount(array $input, string $key, mixed $legacyValue, bool|null $isSupported): float
+    {
+        if ($isSupported === false) {
+            return 0.0;
+        }
+
+        return round((float) ($input[$key] ?? $legacyValue ?? 0), 2);
     }
 
     private function recommendedExpertNames(Project $project): string
@@ -333,11 +426,77 @@ class ReviewController extends Controller
             return ['status' => Project::STATUS_REJECTED, 'current_reviewer_role' => null];
         }
 
+        if ($project->current_reviewer_role === Role::EXPERT && ! $this->expertStageComplete($project)) {
+            return ['status' => Project::STATUS_REVIEWING, 'current_reviewer_role' => Role::EXPERT];
+        }
+
         $flow = [Role::COUNTY => Role::DEPARTMENT, Role::DEPARTMENT => Role::EXPERT, Role::EXPERT => Role::ADMIN];
         $nextRole = $flow[$project->current_reviewer_role] ?? null;
 
         return $nextRole
             ? ['status' => Project::STATUS_REVIEWING, 'current_reviewer_role' => $nextRole]
             : ['status' => Project::STATUS_APPROVED, 'current_reviewer_role' => null];
+    }
+
+    private function expertStageComplete(Project $project): bool
+    {
+        $assignment = $this->dispatchMatcher->assignment($project, Role::EXPERT);
+        $assignedUserIds = array_values(array_unique(array_map('intval', $assignment['assigned_user_ids'] ?? [])));
+        if ($assignedUserIds === []) {
+            return false;
+        }
+
+        $reviewedUserIds = $project->reviews()
+            ->where('stage', Role::EXPERT)
+            ->whereIn('reviewer_id', $assignedUserIds)
+            ->whereIn('decision', ['approve', 'recommend', 'accept'])
+            ->pluck('reviewer_id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        return count($reviewedUserIds) >= count($assignedUserIds);
+    }
+
+    private function hasExistingExpertReview(Project $project, int $userId): bool
+    {
+        return $project->reviews()
+            ->where('stage', Role::EXPERT)
+            ->where('reviewer_id', $userId)
+            ->exists();
+    }
+
+    private function ensureStageScoreAllowed(string $stage, array $data, Request $request): void
+    {
+        if ($stage === Role::EXPERT) {
+            return;
+        }
+
+        if ($this->scoreEnabledForStage($stage)) {
+            return;
+        }
+
+        $hasScore = $request->filled('score') || data_get($data, 'metadata.score_criteria');
+        if ($hasScore) {
+            throw ValidationException::withMessages([
+                'score' => $this->stageLabel($stage).'未开启评分，不能提交评分。',
+            ]);
+        }
+    }
+
+    private function scoreEnabledForStage(string $stage): bool
+    {
+        return RuntimeConfig::boolValue('review.score_enabled.'.$stage, $stage === Role::EXPERT);
+    }
+
+    private function stageLabel(string $stage): string
+    {
+        return [
+            Role::COUNTY => '区县审核',
+            Role::DEPARTMENT => '部门审核',
+            Role::EXPERT => '专家评审',
+            Role::ADMIN => '管理员终审',
+        ][$stage] ?? '当前阶段';
     }
 }

@@ -330,6 +330,14 @@
 
     <el-drawer v-model="detailVisible" title="项目详情" size="820px">
       <div v-if="detail" class="detail-stack">
+        <el-alert
+          v-if="detail.next_step"
+          type="info"
+          :closable="false"
+          show-icon
+          :title="detail.next_step.title"
+          :description="detail.next_step.body"
+        />
         <el-descriptions :column="2" border>
           <el-descriptions-item label="项目名称" :span="2">{{ detail.title }}</el-descriptions-item>
           <el-descriptions-item label="申报单位">{{ detail.unit?.name || '-' }}</el-descriptions-item>
@@ -349,6 +357,16 @@
           <el-descriptions-item label="推荐专家">{{ finalSupportText(detail).recommendedExperts }}</el-descriptions-item>
           <el-descriptions-item label="摘要" :span="2"><div class="rich-content detail-rich-content" v-html="detail.summary || '-'" /></el-descriptions-item>
         </el-descriptions>
+
+        <section v-if="detail.expert_review_summary">
+          <div class="section-title">专家评分汇总</div>
+          <el-descriptions :column="4" border>
+            <el-descriptions-item label="分配专家">{{ detail.expert_review_summary.assigned_count || 0 }}</el-descriptions-item>
+            <el-descriptions-item label="已评分">{{ detail.expert_review_summary.reviewed_count || 0 }}</el-descriptions-item>
+            <el-descriptions-item label="平均分">{{ detail.expert_review_summary.average_score ?? '-' }}</el-descriptions-item>
+            <el-descriptions-item label="最高/最低">{{ detail.expert_review_summary.max_score ?? '-' }} / {{ detail.expert_review_summary.min_score ?? '-' }}</el-descriptions-item>
+          </el-descriptions>
+        </section>
 
         <section>
           <div class="section-title">项目概述</div>
@@ -1601,28 +1619,19 @@ function detailDateRange(metadata) {
 }
 
 function finalSupportText(project) {
-  const support = project?.metadata?.final_support || {}
+  const support = project?.final_support || project?.metadata?.final_support || {}
   const isSupported = support.is_supported === undefined || support.is_supported === null
     ? '-'
-    : (support.is_supported ? supportTypeLabel(support.support_type) : '不支持')
-  const supportAmount = support.support_amount_wan === undefined || support.support_amount_wan === null || support.support_amount_wan === ''
+    : (support.is_supported ? '支持' : '不支持')
+  const total = support.total_support_amount_wan ?? support.support_amount_wan
+  const supportAmount = total === undefined || total === null || total === ''
     ? '-'
-    : `${Number(support.support_amount_wan || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 万元`
+    : `合计 ${Number(total || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 万元（补助 ${Number(support.subsidy_amount_wan || 0)}，贴息 ${Number(support.interest_amount_wan || 0)}，其他 ${Number(support.other_amount_wan || 0)}）`
   return {
     isSupported,
     supportAmount,
     recommendedExperts: support.recommended_experts || '-'
   }
-}
-
-function supportTypeLabel(value) {
-  const labels = {
-    subsidy: '补助支持',
-    interest: '贴息支持',
-    other: '其他支持',
-    none: '不支持'
-  }
-  return labels[value] || '支持'
 }
 
 function formatBytes(value) {

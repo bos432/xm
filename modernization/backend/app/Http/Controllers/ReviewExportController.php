@@ -7,13 +7,17 @@ use App\Models\ProjectReview;
 use App\Support\AuditLogger;
 use App\Support\CsvExport;
 use App\Support\Role;
+use App\Support\ReviewDispatchMatcher;
 use App\Support\ReviewScoreCriteria;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReviewExportController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly ReviewDispatchMatcher $dispatchMatcher,
+    )
     {
     }
 
@@ -48,8 +52,15 @@ class ReviewExportController extends Controller
                 });
             })
             ->with(['unit', 'owner'])
-            ->latest('submitted_at')
-            ->get();
+            ->orderByRaw('COALESCE(submitted_at, updated_at, created_at) desc')
+            ->orderByDesc('id')
+            ->get()
+            ->filter(fn (Project $project): bool => $this->dispatchMatcher->userCanReview(
+                $project,
+                $request->user(),
+                Role::reviewerStageFor($request->user()->role)
+            ))
+            ->values();
 
         $this->auditLogger->record($request, 'review_tasks.exported', null, [
             'format' => 'csv',
@@ -95,7 +106,8 @@ class ReviewExportController extends Controller
 
         $query = ProjectReview::query()
             ->with(['project.unit', 'project.owner', 'reviewer'])
-            ->latest('reviewed_at');
+            ->orderByDesc('reviewed_at')
+            ->orderByDesc('id');
 
         if (! in_array($request->user()->role, Role::adminRoles(), true)) {
             $query->where('stage', Role::reviewerStageFor($request->user()->role));

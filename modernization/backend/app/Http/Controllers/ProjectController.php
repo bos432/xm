@@ -7,17 +7,23 @@ use App\Models\ApplicationBatch;
 use App\Models\DictionaryItem;
 use App\Models\Message;
 use App\Models\Project;
+use App\Models\ProjectReview;
 use App\Models\User;
 use App\Support\AuditLogger;
 use App\Support\ProjectFileStorage;
 use App\Support\RichTextSanitizer;
 use App\Support\Role;
+use App\Support\ReviewDispatchMatcher;
+use App\Support\RuntimeConfig;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly ReviewDispatchMatcher $dispatchMatcher,
+    )
     {
     }
 
@@ -27,11 +33,7 @@ class ProjectController extends Controller
             abort(403, '无权访问项目');
         }
 
-        $query = Project::query()->with(['unit', 'owner', 'applicationBatch']);
-
-        if ($request->user()->role === Role::UNIT) {
-            $query->where('unit_id', $request->user()->unit_id);
-        }
+        $query = $this->visibleProjectsQuery($request)->with(['unit', 'owner', 'applicationBatch']);
 
         if ($status = $request->query('status')) {
             $query->where('status', $status);
@@ -86,11 +88,11 @@ class ProjectController extends Controller
             });
         }
 
-        return $query->orderBy('created_at')
-            ->orderBy('id')
+        return $this->orderByBusinessTime($query)
             ->paginate(20)
             ->through(function (Project $project) {
                 $project->pending_extension_requests_count = $project->pendingExtensionRequestsCount();
+                $project->latest_extension_at = $this->latestExtensionAt($project);
 
                 return $project;
             });
@@ -155,8 +157,7 @@ class ProjectController extends Controller
 
         $limit = min(max((int) $request->query('limit', 20), 1), 50);
 
-        return $query
-            ->latest('updated_at')
+        return $this->orderByBusinessTime($query)
             ->limit($limit)
             ->get()
             ->map(fn (Project $project) => [
@@ -207,10 +208,24 @@ class ProjectController extends Controller
             'applicationBatch',
             'files' => fn ($q) => $q->latest(),
             'reviews' => fn ($q) => $q->with('reviewer')->latest('reviewed_at'),
-            'acceptanceApplications' => fn ($q) => $q->with(['submitter', 'reviews.reviewer'])->latest(),
+            'acceptanceApplications' => fn ($q) => $q
+                ->with(['submitter', 'reviews.reviewer', 'extensions.requester', 'extensions.reviewer'])
+                ->latest(),
         ]);
 
         $project->setAttribute('timeline', $this->projectTimeline($project));
+        $project->setAttribute('expert_review_summary', $this->expertReviewSummary($project));
+        $project->setAttribute('final_support', $this->presentFinalSupport($project));
+        $project->setAttribute('extension_records', $this->extensionRecords($project));
+        $project->setAttribute('latest_extension_at', $this->latestExtensionAt($project));
+        $project->setAttribute('next_step', $this->nextStep($project, $request));
+        $project->setAttribute('review_config', [
+            'stage' => $project->current_reviewer_role,
+            'score_enabled' => $project->current_reviewer_role
+                ? RuntimeConfig::boolValue('review.score_enabled.'.$project->current_reviewer_role, $project->current_reviewer_role === Role::EXPERT)
+                : false,
+            'expert_assignment' => $this->dispatchMatcher->assignment($project, Role::EXPERT),
+        ]);
 
         return $project;
     }
@@ -566,22 +581,33 @@ class ProjectController extends Controller
             return $query->where('unit_id', $user->unit_id);
         }
 
+        if ($user->role === Role::SUPER_ADMIN) {
+            return $query;
+        }
+
+        if ($user->role === Role::ADMIN) {
+            return $query->where('status', '<>', Project::STATUS_DRAFT);
+        }
+
         if (in_array($user->role, [Role::COUNTY, Role::DEPARTMENT, Role::EXPERT], true)) {
             $stage = Role::reviewerStageFor($user->role);
 
-            return $query->where(function ($query) use ($stage): void {
-                $query->where('current_reviewer_role', $stage)
-                    ->orWhereHas('reviews', fn ($query) => $query->where('stage', $stage));
+            return $query->where('status', '<>', Project::STATUS_DRAFT)
+                ->where(function ($query) use ($stage, $user): void {
+                    $query->where('current_reviewer_role', $stage)
+                        ->orWhereHas('reviews', fn ($query) => $query
+                            ->where('stage', $stage)
+                            ->where('reviewer_id', $user->id));
             });
         }
 
-        return $query;
+        return $query->where('status', '<>', Project::STATUS_DRAFT);
     }
 
     private function projectTimeline(Project $project): array
     {
         $project->loadMissing(['reviews.reviewer', 'acceptanceApplications.reviews.reviewer']);
-        $reviews = $project->reviews->keyBy('stage');
+        $reviews = $project->reviews->groupBy('stage');
         $acceptance = $project->acceptanceApplications->first();
 
         $stages = [
@@ -616,15 +642,23 @@ class ProjectController extends Controller
                 ];
             }
 
-            $review = $reviews->get($stage['key']);
+            $stageReviews = $reviews->get($stage['key'], collect());
+            $review = $stageReviews->first();
+            $handler = $stageReviews
+                ->map(fn (ProjectReview $item): string => $item->reviewer?->name ?: $item->reviewer?->username ?: '')
+                ->filter()
+                ->unique()
+                ->implode('、');
 
             return [
                 ...$stage,
-                'status' => $review ? 'done' : ($project->current_reviewer_role === $stage['key'] ? 'current' : 'pending'),
-                'handler' => $review?->reviewer?->name ?: $review?->reviewer?->username,
+                'status' => $stageReviews->isNotEmpty() ? 'done' : ($project->current_reviewer_role === $stage['key'] ? 'current' : 'pending'),
+                'handler' => $handler ?: null,
                 'handled_at' => $review?->reviewed_at?->toDateTimeString(),
                 'decision' => $review?->decision,
-                'score' => $review?->score,
+                'score' => $stageReviews->count() > 1
+                    ? round((float) $stageReviews->avg('score'), 2)
+                    : $review?->score,
                 'comment' => $review?->comment,
             ];
         })->all();
@@ -641,6 +675,206 @@ class ProjectController extends Controller
         if ($user->role === Role::UNIT && $project->unit_id !== $user->unit_id) {
             abort(403, '无权访问该项目');
         }
+
+        if ($user->role === Role::SUPER_ADMIN) {
+            return;
+        }
+
+        if ($user->role === Role::ADMIN) {
+            if ($project->status === Project::STATUS_DRAFT) {
+                abort(403, '业务管理员不能查看单位草稿');
+            }
+
+            return;
+        }
+
+        if (in_array($user->role, [Role::COUNTY, Role::DEPARTMENT, Role::EXPERT], true)) {
+            $stage = Role::reviewerStageFor($user->role);
+            $hasReviewed = $project->reviews()
+                ->where('stage', $stage)
+                ->where('reviewer_id', $user->id)
+                ->exists();
+
+            if ($project->status !== Project::STATUS_DRAFT
+                && (($project->current_reviewer_role === $stage && $this->dispatchMatcher->userCanReview($project, $user, $stage)) || $hasReviewed)) {
+                return;
+            }
+
+            abort(403, '无权访问该项目');
+        }
+    }
+
+    private function orderByBusinessTime($query)
+    {
+        return $query
+            ->orderByRaw('COALESCE(submitted_at, updated_at, created_at) desc')
+            ->orderByDesc('id');
+    }
+
+    private function expertReviewSummary(Project $project): array
+    {
+        $project->loadMissing(['reviews.reviewer']);
+        $reviews = $project->reviews
+            ->where('stage', Role::EXPERT)
+            ->values();
+        $scores = $reviews
+            ->pluck('score')
+            ->filter(fn ($score) => $score !== null)
+            ->map(fn ($score) => (float) $score)
+            ->values();
+        $assignment = $this->dispatchMatcher->assignment($project, Role::EXPERT);
+        $assignedUserIds = array_map('intval', $assignment['assigned_user_ids'] ?? []);
+        $reviewedUserIds = $reviews->pluck('reviewer_id')->map(fn ($id) => (int) $id)->unique()->all();
+
+        return [
+            'assigned_count' => count($assignedUserIds),
+            'reviewed_count' => count($reviewedUserIds),
+            'pending_count' => max(count($assignedUserIds) - count($reviewedUserIds), 0),
+            'average_score' => $scores->isEmpty() ? null : round((float) $scores->avg(), 2),
+            'max_score' => $scores->isEmpty() ? null : round((float) $scores->max(), 2),
+            'min_score' => $scores->isEmpty() ? null : round((float) $scores->min(), 2),
+            'experts' => $reviews->map(fn (ProjectReview $review): array => [
+                'id' => $review->reviewer_id,
+                'name' => $review->reviewer?->name ?: $review->reviewer?->username,
+                'decision' => $review->decision,
+                'score' => $review->score,
+                'comment' => $review->comment,
+                'reviewed_at' => $review->reviewed_at?->toDateTimeString(),
+            ])->all(),
+            'pending_user_ids' => array_values(array_diff($assignedUserIds, $reviewedUserIds)),
+        ];
+    }
+
+    private function presentFinalSupport(Project $project): array
+    {
+        $support = $project->metadata['final_support'] ?? [];
+        if (! is_array($support)) {
+            $support = [];
+        }
+
+        $legacyType = (string) ($support['support_type'] ?? 'none');
+        $legacyAmount = (float) ($support['support_amount_wan'] ?? 0);
+        $isSupported = (bool) ($support['is_supported'] ?? ($legacyType !== 'none'));
+
+        $normalized = [
+            'is_recommended' => (bool) ($support['is_recommended'] ?? true),
+            'is_supported' => $isSupported,
+            'support_type' => $legacyType,
+            'subsidy_amount_wan' => round((float) ($support['subsidy_amount_wan'] ?? ($legacyType === 'subsidy' ? $legacyAmount : 0)), 2),
+            'interest_amount_wan' => round((float) ($support['interest_amount_wan'] ?? ($legacyType === 'interest' ? $legacyAmount : 0)), 2),
+            'other_amount_wan' => round((float) ($support['other_amount_wan'] ?? ($legacyType === 'other' ? $legacyAmount : 0)), 2),
+            'other_support_note' => (string) ($support['other_support_note'] ?? ''),
+            'recommended_experts' => (string) ($support['recommended_experts'] ?? ''),
+            'reviewed_by' => $support['reviewed_by'] ?? null,
+            'reviewed_by_name' => $support['reviewed_by_name'] ?? null,
+            'reviewed_at' => $support['reviewed_at'] ?? null,
+        ];
+        $normalized['total_support_amount_wan'] = round(
+            $normalized['subsidy_amount_wan'] + $normalized['interest_amount_wan'] + $normalized['other_amount_wan'],
+            2
+        );
+        $normalized['support_amount_wan'] = $normalized['total_support_amount_wan'];
+
+        return $normalized;
+    }
+
+    private function extensionRecords(Project $project): array
+    {
+        $records = collect($project->metadata['extension_requests'] ?? [])
+            ->filter(fn ($item): bool => is_array($item))
+            ->map(fn (array $item, int $index): array => [
+                'source' => 'project',
+                'index' => $index,
+                'status' => $item['status'] ?? 'pending',
+                'reason' => $item['reason'] ?? '',
+                'expected_date' => $item['expected_date'] ?? null,
+                'requested_at' => $item['requested_at'] ?? null,
+                'requested_by' => $item['requested_by'] ?? null,
+                'review_comment' => $item['review_comment'] ?? null,
+                'reviewed_at' => $item['reviewed_at'] ?? null,
+                'reviewed_by' => $item['reviewed_by'] ?? null,
+            ]);
+
+        $acceptanceExtensions = $project->acceptanceApplications
+            ->flatMap(fn ($acceptance) => $acceptance->extensions ?? collect())
+            ->map(fn ($extension): array => [
+                'source' => 'acceptance',
+                'id' => $extension->id,
+                'status' => $extension->status,
+                'reason' => $extension->reason,
+                'expected_date' => $extension->expected_date?->toDateString(),
+                'requested_at' => $extension->created_at?->toDateTimeString(),
+                'requested_by' => $extension->requester?->name ?: $extension->requester?->username,
+                'review_comment' => $extension->review_comment,
+                'reviewed_at' => $extension->reviewed_at?->toDateTimeString(),
+                'reviewed_by' => $extension->reviewer?->name ?: $extension->reviewer?->username,
+            ]);
+
+        return $records
+            ->concat($acceptanceExtensions)
+            ->sortByDesc(fn (array $item): string => (string) ($item['requested_at'] ?? ''))
+            ->values()
+            ->all();
+    }
+
+    private function latestExtensionAt(Project $project): ?string
+    {
+        $latest = collect($project->metadata['extension_requests'] ?? [])
+            ->filter(fn ($item): bool => is_array($item))
+            ->pluck('requested_at')
+            ->filter()
+            ->max();
+
+        return $latest ?: null;
+    }
+
+    private function nextStep(Project $project, Request $request): array
+    {
+        $role = $request->user()->role;
+
+        if ($project->status === Project::STATUS_ACCEPTANCE && $role === Role::UNIT) {
+            return [
+                'title' => '当前：项目验收中',
+                'body' => '下一步：进入“验收管理”，发起验收、上传材料并提交验收审核。',
+                'path' => '/acceptance',
+            ];
+        }
+
+        if ($project->current_reviewer_role === Role::EXPERT) {
+            $summary = $this->expertReviewSummary($project);
+
+            return [
+                'title' => '当前：专家评审中',
+                'body' => '下一步：等待 '.$summary['assigned_count'].' 位专家全部评分后，系统自动流转到管理员终审。已完成 '.$summary['reviewed_count'].' 位。',
+                'path' => '/reviews?project_id='.$project->id,
+            ];
+        }
+
+        if ($project->current_reviewer_role) {
+            return [
+                'title' => '当前：'.$this->roleLabel($project->current_reviewer_role),
+                'body' => '下一步：由当前阶段审核人员处理，处理后系统自动流转下一环节。',
+                'path' => '/reviews?project_id='.$project->id,
+            ];
+        }
+
+        return match ($project->status) {
+            Project::STATUS_DRAFT => ['title' => '当前：草稿', 'body' => '下一步：补齐项目信息和必传附件后提交审核。', 'path' => '/projects'],
+            Project::STATUS_RETURNED => ['title' => '当前：退回修改', 'body' => '下一步：申报单位按审核意见修改后重新提交。', 'path' => '/projects?status=returned'],
+            Project::STATUS_APPROVED => ['title' => '当前：立项通过', 'body' => '下一步：管理员可在项目详情中将项目进入验收阶段。', 'path' => '/projects?status=approved'],
+            Project::STATUS_CLOSED => ['title' => '当前：项目已完成', 'body' => '项目验收已关闭，可在全周期中查看归档记录。', 'path' => '/lifecycle?project_id='.$project->id],
+            default => ['title' => '当前：'.($project->status ?: '-'), 'body' => '请根据页面可用操作继续处理。', 'path' => '/projects'],
+        };
+    }
+
+    private function roleLabel(string $role): string
+    {
+        return [
+            Role::COUNTY => '区县审核',
+            Role::DEPARTMENT => '部门审核',
+            Role::EXPERT => '专家评审',
+            Role::ADMIN => '管理员终审',
+        ][$role] ?? $role;
     }
 
     private function authorizeProjectWrite(Request $request, Project $project): void

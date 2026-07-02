@@ -112,7 +112,7 @@ class ProjectApplicationWorkflowTest extends TestCase
         $this->assertCount(1, $ids);
     }
 
-    public function test_project_list_is_ordered_by_created_time_ascending(): void
+    public function test_project_list_is_ordered_by_latest_business_time_descending(): void
     {
         $unit = Unit::factory()->create();
         $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
@@ -121,12 +121,16 @@ class ProjectApplicationWorkflowTest extends TestCase
             'unit_id' => $unit->id,
             'owner_id' => $owner->id,
             'title' => '较早创建项目',
+            'status' => Project::STATUS_SUBMITTED,
+            'submitted_at' => now()->subDays(2),
             'created_at' => now()->subDays(2),
         ]);
         $newerProject = Project::factory()->create([
             'unit_id' => $unit->id,
             'owner_id' => $owner->id,
             'title' => '较晚创建项目',
+            'status' => Project::STATUS_SUBMITTED,
+            'submitted_at' => now(),
             'created_at' => now(),
         ]);
 
@@ -134,7 +138,7 @@ class ProjectApplicationWorkflowTest extends TestCase
 
         $ids = collect($this->getJson('/api/projects')->assertOk()->json('data'))->pluck('id')->all();
 
-        $this->assertSame([$olderProject->id, $newerProject->id], array_slice($ids, 0, 2));
+        $this->assertSame([$newerProject->id, $olderProject->id], array_slice($ids, 0, 2));
     }
 
     public function test_project_detail_includes_review_reviewer_profile(): void
@@ -197,7 +201,7 @@ class ProjectApplicationWorkflowTest extends TestCase
             'label' => '项目实施的重要性、必要性',
             'sort_order' => 10,
             'is_active' => true,
-            'metadata' => ['section' => '政策符合性评价', 'max_score' => 5],
+            'metadata' => ['section' => '政策符合性评价', 'max_score' => 40],
         ]);
         DictionaryItem::create([
             'group' => 'expert_review_criterion',
@@ -205,7 +209,7 @@ class ProjectApplicationWorkflowTest extends TestCase
             'label' => '研究目标是否明确清晰、重点突出',
             'sort_order' => 20,
             'is_active' => true,
-            'metadata' => ['section' => '项目成果及技术水平评价', 'max_score' => 10],
+            'metadata' => ['section' => '项目成果及技术水平评价', 'max_score' => 60],
         ]);
 
         Sanctum::actingAs($expert);
@@ -216,20 +220,20 @@ class ProjectApplicationWorkflowTest extends TestCase
             'comment' => '建议推荐',
             'metadata' => [
                 'score_criteria' => [
-                    'policy_importance' => 4,
-                    'technical_goals_clear' => 8.5,
+                    'policy_importance' => 35,
+                    'technical_goals_clear' => 50,
                 ],
             ],
         ]);
 
         $response->assertCreated()
-            ->assertJsonPath('review.score', '12.50')
+            ->assertJsonPath('review.score', '85.00')
             ->assertJsonPath('project.current_reviewer_role', 'admin');
 
         $review = ProjectReview::query()->firstOrFail();
-        $this->assertSame('12.50', $review->score);
-        $this->assertSame(12.5, $review->metadata['score_total']);
-        $this->assertEquals(15.0, $review->metadata['score_max']);
+        $this->assertSame('85.00', $review->score);
+        $this->assertEquals(85.0, $review->metadata['score_total']);
+        $this->assertEquals(100.0, $review->metadata['score_max']);
         $this->assertCount(2, $review->metadata['score_criteria']);
     }
 
@@ -250,7 +254,7 @@ class ProjectApplicationWorkflowTest extends TestCase
             'label' => '项目预算的合理性',
             'sort_order' => 10,
             'is_active' => true,
-            'metadata' => ['section' => '经费预算', 'max_score' => 5],
+            'metadata' => ['section' => '经费预算', 'max_score' => 100],
         ]);
 
         Sanctum::actingAs($expert);

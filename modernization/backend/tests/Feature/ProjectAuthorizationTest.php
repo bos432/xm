@@ -94,13 +94,15 @@ class ProjectAuthorizationTest extends TestCase
         $unitUser = User::factory()->create(['unit_id' => $ownUnit->id, 'role' => 'unit']);
         $otherOwner = User::factory()->create(['unit_id' => $otherUnit->id, 'role' => 'unit']);
         $admin = User::factory()->create(['role' => 'admin']);
-        $ownProject = Project::factory()->create(['unit_id' => $ownUnit->id, 'owner_id' => $unitUser->id]);
-        $otherProject = Project::factory()->create(['unit_id' => $otherUnit->id, 'owner_id' => $otherOwner->id]);
+        $ownProject = Project::factory()->create(['unit_id' => $ownUnit->id, 'owner_id' => $unitUser->id, 'status' => Project::STATUS_SUBMITTED]);
+        $otherProject = Project::factory()->create(['unit_id' => $otherUnit->id, 'owner_id' => $otherOwner->id, 'status' => Project::STATUS_SUBMITTED]);
+        $draftProject = Project::factory()->create(['unit_id' => $ownUnit->id, 'owner_id' => $unitUser->id, 'status' => Project::STATUS_DRAFT]);
 
         Sanctum::actingAs($admin);
         $adminIds = collect($this->getJson('/api/projects')->assertOk()->json('data'))->pluck('id');
         $this->assertTrue($adminIds->contains($ownProject->id));
         $this->assertTrue($adminIds->contains($otherProject->id));
+        $this->assertFalse($adminIds->contains($draftProject->id));
 
         Sanctum::actingAs($unitUser);
         $unitIds = collect($this->getJson('/api/projects')->assertOk()->json('data'))->pluck('id');

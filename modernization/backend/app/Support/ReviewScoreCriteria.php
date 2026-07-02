@@ -30,6 +30,8 @@ final class ReviewScoreCriteria
             return $data;
         }
 
+        self::assertTotalIs100($criteria);
+
         $submittedScores = self::submittedScoreMap(data_get($data, 'metadata.score_criteria', []));
         $requiresScores = ! in_array($data['decision'] ?? null, ['return', 'reject'], true);
         if (! $requiresScores && ! self::hasAnySubmittedScore($submittedScores)) {
@@ -87,6 +89,23 @@ final class ReviewScoreCriteria
         $data['score'] = round($total, 2);
 
         return $data;
+    }
+
+    public static function maxTotal(?array $criteria = null): float
+    {
+        $items = $criteria ?? self::active();
+
+        return round(array_reduce($items, fn (float $sum, array $item): float => $sum + (float) ($item['max_score'] ?? 0), 0.0), 2);
+    }
+
+    public static function assertTotalIs100(?array $criteria = null): void
+    {
+        $total = self::maxTotal($criteria);
+        if (abs($total - 100.0) > 0.001) {
+            throw ValidationException::withMessages([
+                'metadata.score_criteria' => '专家评分模板总分必须为 100 分，当前为 '.$total.' 分，请联系超级管理员在数据字典中调整评分项。',
+            ]);
+        }
     }
 
     public static function scoreMapFromReviewMetadata(?array $metadata): array

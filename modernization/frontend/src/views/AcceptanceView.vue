@@ -44,6 +44,15 @@
       <el-table-column label="当前阶段" width="130">
         <template #default="{ row }">{{ roleLabel(row.current_reviewer_role) }}</template>
       </el-table-column>
+      <el-table-column label="延期状态" width="130">
+        <template #default="{ row }">
+          <el-tag v-if="row.pending_extension_count" type="warning">待处理 {{ row.pending_extension_count }}</el-tag>
+          <span v-else>{{ extensionStatusLabel(row.latest_extension?.status) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="最近延期" width="170">
+        <template #default="{ row }">{{ row.latest_extension?.created_at || '-' }}</template>
+      </el-table-column>
       <el-table-column prop="submitted_at" label="提交时间" width="170" />
       <el-table-column prop="summary" label="验收说明" min-width="220" show-overflow-tooltip />
       <el-table-column label="操作" width="310" fixed="right">
@@ -163,6 +172,14 @@
 
     <el-drawer v-model="detailVisible" title="验收详情" size="680px">
       <div v-if="detail" class="detail-stack">
+        <el-alert
+          v-if="detail.next_step"
+          type="info"
+          :closable="false"
+          show-icon
+          :title="detail.next_step.title"
+          :description="detail.next_step.body"
+        />
         <el-descriptions :column="2" border>
           <el-descriptions-item label="项目" :span="2">{{ detail.project?.title }}</el-descriptions-item>
           <el-descriptions-item label="单位">{{ detail.unit?.name }}</el-descriptions-item>
@@ -223,9 +240,23 @@
               <template #default="{ row }"><div class="rich-content detail-rich-content" v-html="row.reason || '-'" /></template>
             </el-table-column>
             <el-table-column prop="expected_date" label="计划日期" width="120" />
-            <el-table-column prop="status" label="状态" width="100" />
+            <el-table-column label="状态" width="100">
+              <template #default="{ row }">{{ extensionStatusLabel(row.status) }}</template>
+            </el-table-column>
+            <el-table-column label="申请人/时间" width="170">
+              <template #default="{ row }">
+                <div>{{ row.requester?.name || row.requester?.username || row.requested_by || '-' }}</div>
+                <small>{{ row.created_at || row.requested_at || '-' }}</small>
+              </template>
+            </el-table-column>
             <el-table-column label="处理意见" min-width="160">
               <template #default="{ row }"><div class="rich-content detail-rich-content" v-html="row.review_comment || '-'" /></template>
+            </el-table-column>
+            <el-table-column label="处理人/时间" width="170">
+              <template #default="{ row }">
+                <div>{{ row.reviewer?.name || row.reviewer?.username || row.reviewed_by || '-' }}</div>
+                <small>{{ row.reviewed_at || '-' }}</small>
+              </template>
             </el-table-column>
           </el-table>
         </section>
@@ -305,6 +336,14 @@ function defaultScope() {
 
 function statusMeta(value) {
   return statusLabels[value] || { label: value || '-', type: 'info' }
+}
+
+function extensionStatusLabel(value) {
+  return {
+    pending: '待处理',
+    approved: '已通过',
+    rejected: '已驳回'
+  }[value] || '-'
 }
 
 function roleLabel(value) {

@@ -15,6 +15,7 @@ class ReviewDispatchRule extends Model
         'project_category',
         'project_type',
         'recommended_user_ids',
+        'expert_count',
         'auto_assign',
         'is_active',
         'priority',
@@ -27,6 +28,7 @@ class ReviewDispatchRule extends Model
     {
         return [
             'recommended_user_ids' => 'array',
+            'expert_count' => 'integer',
             'auto_assign' => 'boolean',
             'is_active' => 'boolean',
             'priority' => 'integer',

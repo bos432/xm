@@ -119,11 +119,13 @@ class ProjectExportTest extends TestCase
             'unit_id' => $firstUnit->id,
             'owner_id' => $firstOwner->id,
             'title' => '第一单位项目',
+            'status' => Project::STATUS_SUBMITTED,
         ]);
         Project::factory()->create([
             'unit_id' => $secondUnit->id,
             'owner_id' => $secondOwner->id,
             'title' => '第二单位项目',
+            'status' => Project::STATUS_SUBMITTED,
         ]);
 
         Sanctum::actingAs($admin);
@@ -193,6 +195,7 @@ class ProjectExportTest extends TestCase
             'unit_id' => $unit->id,
             'owner_id' => $owner->id,
             'title' => '统计导出支持项目',
+            'status' => Project::STATUS_APPROVED,
             'metadata' => [
                 'management_unit' => '盟科技局',
                 'final_support' => [
@@ -214,11 +217,12 @@ class ProjectExportTest extends TestCase
         $this->assertStringContainsString('归口管理单位', $csv);
         $this->assertStringContainsString('是否推荐', $csv);
         $this->assertStringContainsString('是否支持', $csv);
-        $this->assertStringContainsString('支持资金（万元）', $csv);
+        $this->assertStringContainsString('补助支持（万元）', $csv);
+        $this->assertStringContainsString('贴息支持（万元）', $csv);
+        $this->assertStringContainsString('支持合计（万元）', $csv);
         $this->assertStringContainsString('推荐专家', $csv);
         $this->assertStringContainsString('盟科技局', $csv);
         $this->assertStringContainsString('ALSM', $csv);
-        $this->assertStringContainsString('贴息支持', $csv);
         $this->assertStringContainsString('45.25', $csv);
         $this->assertStringContainsString('专家甲、专家乙', $csv);
     }

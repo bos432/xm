@@ -97,6 +97,12 @@ class DatabaseSeeder extends Seeder
             ['key' => 'security.login_throttle_relaxed_by', 'value' => '', 'group' => 'security', 'is_secret' => false, 'description' => '登录限流临时放宽操作人'],
             ['key' => 'security.login_throttle_relaxed_reason', 'value' => '', 'group' => 'security', 'is_secret' => false, 'description' => '登录限流临时放宽原因'],
             ['key' => 'workflow.default_first_stage', 'value' => 'county', 'group' => 'workflow', 'is_secret' => false, 'description' => '项目提交后的第一审核角色'],
+            ['key' => 'review.score_enabled.county', 'value' => '0', 'group' => 'review', 'is_secret' => false, 'description' => '区县审核是否启用评分'],
+            ['key' => 'review.score_enabled.department', 'value' => '0', 'group' => 'review', 'is_secret' => false, 'description' => '部门审核是否启用评分'],
+            ['key' => 'review.score_enabled.expert', 'value' => '1', 'group' => 'review', 'is_secret' => false, 'description' => '专家评审是否启用评分'],
+            ['key' => 'review.score_enabled.admin', 'value' => '0', 'group' => 'review', 'is_secret' => false, 'description' => '管理员终审是否启用评分'],
+            ['key' => 'review.expert_assignment.count', 'value' => '3', 'group' => 'review', 'is_secret' => false, 'description' => '专家阶段默认随机抽取人数'],
+            ['key' => 'review.expert_assignment.random_enabled', 'value' => '1', 'group' => 'review', 'is_secret' => false, 'description' => '专家阶段是否启用随机专家组'],
         ];
 
         foreach ($settings as $setting) {
@@ -214,7 +220,11 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($dictionaryItems as $item) {
-            DictionaryItem::firstOrCreate(['group' => $item['group'], 'code' => $item['code']], $item);
+            if ($item['group'] === 'expert_review_criterion') {
+                DictionaryItem::updateOrCreate(['group' => $item['group'], 'code' => $item['code']], $item);
+            } else {
+                DictionaryItem::firstOrCreate(['group' => $item['group'], 'code' => $item['code']], $item);
+            }
         }
     }
 

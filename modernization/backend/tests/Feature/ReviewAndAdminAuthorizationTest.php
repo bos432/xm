@@ -57,7 +57,6 @@ class ReviewAndAdminAuthorizationTest extends TestCase
         Sanctum::actingAs($countyReviewer);
         $this->postJson("/api/projects/{$project->id}/reviews", [
             'decision' => 'approve',
-            'score' => 88,
             'comment' => '区县审核通过',
         ])->assertCreated()
             ->assertJsonPath('project.status', Project::STATUS_REVIEWING)
@@ -360,10 +359,11 @@ class ReviewAndAdminAuthorizationTest extends TestCase
         $this->getJson('/api/settings')->assertForbidden();
 
         Sanctum::actingAs($admin);
-        $this->getJson('/api/migration/readiness')->assertOk();
+        $this->getJson('/api/migration/readiness')->assertForbidden();
         $this->getJson('/api/settings')->assertForbidden();
 
         Sanctum::actingAs($superAdmin);
+        $this->getJson('/api/migration/readiness')->assertOk();
         $this->getJson('/api/settings')->assertOk()
             ->assertJsonFragment(['key' => 'mail.host']);
     }

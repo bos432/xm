@@ -30,7 +30,8 @@ class AcceptanceController extends Controller
 
         $query = AcceptanceApplication::query()
             ->with(['project.unit', 'project.applicationBatch', 'unit', 'submitter'])
-            ->latest();
+            ->orderByRaw('COALESCE(submitted_at, updated_at, created_at) desc')
+            ->orderByDesc('id');
 
         if ($request->user()->role === Role::UNIT) {
             $query->where('unit_id', $request->user()->unit_id);
@@ -79,7 +80,18 @@ class AcceptanceController extends Controller
                 : $query->where(fn ($query) => $this->nonE2eAcceptanceQuery($query));
         }
 
-        return $query->paginate(20);
+        return $query->paginate(20)->through(function (AcceptanceApplication $acceptance) {
+            $acceptance->latest_extension = AcceptanceExtension::query()
+                ->where('acceptance_application_id', $acceptance->id)
+                ->latest()
+                ->first();
+            $acceptance->pending_extension_count = AcceptanceExtension::query()
+                ->where('acceptance_application_id', $acceptance->id)
+                ->where('status', 'pending')
+                ->count();
+
+            return $acceptance;
+        });
     }
 
     public function show(Request $request, AcceptanceApplication $acceptance)
@@ -93,11 +105,13 @@ class AcceptanceController extends Controller
             'unit',
             'submitter',
             'reviews.reviewer',
-            'extensions',
+            'extensions.requester',
+            'extensions.reviewer',
             'project.files' => fn ($query) => $query->where('purpose', 'acceptance')->latest(),
         ]);
 
         $acceptance->setAttribute('timeline', $this->acceptanceTimeline($acceptance));
+        $acceptance->setAttribute('next_step', $this->nextStep($acceptance, $request));
 
         return $acceptance;
     }
@@ -332,6 +346,45 @@ class AcceptanceController extends Controller
                 'comment' => $review?->comment,
             ];
         })->all();
+    }
+
+    private function nextStep(AcceptanceApplication $acceptance, Request $request): array
+    {
+        if ($acceptance->current_reviewer_role) {
+            return [
+                'title' => '当前：'.$this->roleLabel($acceptance->current_reviewer_role),
+                'body' => '下一步：当前阶段审核通过后继续流转，管理员终审关闭后项目变为已完成。',
+            ];
+        }
+
+        return match ($acceptance->status) {
+            AcceptanceApplication::STATUS_DRAFT => [
+                'title' => '当前：验收草稿',
+                'body' => '下一步：申报单位上传验收材料并提交验收审核。',
+            ],
+            AcceptanceApplication::STATUS_RETURNED => [
+                'title' => '当前：验收退回修改',
+                'body' => '下一步：申报单位按意见补充材料后重新提交。',
+            ],
+            AcceptanceApplication::STATUS_CLOSED, AcceptanceApplication::STATUS_APPROVED => [
+                'title' => '当前：验收已完成',
+                'body' => '项目已完成线上验收流程，可在全周期中查看归档记录。',
+            ],
+            default => [
+                'title' => '当前：'.($acceptance->status ?: '-'),
+                'body' => '请根据页面可用操作继续处理。',
+            ],
+        };
+    }
+
+    private function roleLabel(string $role): string
+    {
+        return [
+            Role::COUNTY => '区县审核',
+            Role::DEPARTMENT => '部门审核',
+            Role::EXPERT => '专家评审',
+            Role::ADMIN => '管理员终审关闭',
+        ][$role] ?? $role;
     }
 
     private function authorizeAccess(Request $request, AcceptanceApplication $acceptance): void

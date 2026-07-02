@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\ReviewDispatchRule;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 
 class ReviewDispatchMatcher
 {
@@ -16,16 +17,28 @@ class ReviewDispatchMatcher
         }
 
         $rule = $this->match($project, $stage);
-        if (! $rule) {
+        if (! $rule && $stage !== Role::EXPERT) {
             return null;
         }
 
-        $users = $this->activeTargetUsers($rule);
+        $users = $rule ? $this->activeTargetUsers($rule) : $this->activeExperts();
+        if ($stage === Role::EXPERT && RuntimeConfig::boolValue('review.expert_assignment.random_enabled', true)) {
+            $count = max(1, (int) ($rule?->expert_count ?: RuntimeConfig::intValue('review.expert_assignment.count', 3)));
+            $users = $users->shuffle()->take($count)->values();
+        }
+
+        if ($stage === Role::EXPERT && $users->isEmpty()) {
+            throw ValidationException::withMessages([
+                'expert_assignment' => '没有可用专家账号，无法进入专家评审阶段，请先启用专家账号或调整派单规则。',
+            ]);
+        }
+
         $assignment = [
             'stage' => $stage,
-            'rule_id' => $rule->id,
-            'rule_name' => $rule->name,
-            'auto_assign' => $rule->auto_assign,
+            'rule_id' => $rule?->id,
+            'rule_name' => $rule?->name ?: '专家随机分配',
+            'auto_assign' => $stage === Role::EXPERT ? true : (bool) $rule?->auto_assign,
+            'expert_count' => $stage === Role::EXPERT ? $users->count() : null,
             'recommended_user_ids' => $users->pluck('id')->all(),
             'recommended_users' => $users->map(fn (User $user): array => [
                 'id' => $user->id,
@@ -33,7 +46,7 @@ class ReviewDispatchMatcher
                 'username' => $user->username,
                 'role' => $user->role,
             ])->values()->all(),
-            'assigned_user_ids' => $rule->auto_assign ? $users->pluck('id')->all() : [],
+            'assigned_user_ids' => ($stage === Role::EXPERT || (bool) $rule?->auto_assign) ? $users->pluck('id')->all() : [],
             'matched_at' => now()->toDateTimeString(),
         ];
 
@@ -47,11 +60,15 @@ class ReviewDispatchMatcher
     public function userCanReview(Project $project, User $user, string $stage): bool
     {
         $assignment = $this->assignment($project, $stage);
-        if (! ($assignment['auto_assign'] ?? false)) {
+        if ($stage !== Role::EXPERT && ! ($assignment['auto_assign'] ?? false)) {
             return true;
         }
 
         $assignedUserIds = array_map('intval', $assignment['assigned_user_ids'] ?? []);
+        if ($stage === Role::EXPERT) {
+            return $assignedUserIds !== [] && in_array((int) $user->id, $assignedUserIds, true);
+        }
+
         return ! $assignedUserIds || in_array((int) $user->id, $assignedUserIds, true);
     }
 
@@ -93,6 +110,15 @@ class ReviewDispatchMatcher
             ->where('role', $rule->target_stage)
             ->where('is_active', true)
             ->orderByRaw('FIELD(id, '.$ids->implode(',').')')
+            ->get();
+    }
+
+    private function activeExperts(): Collection
+    {
+        return User::query()
+            ->where('role', Role::EXPERT)
+            ->where('is_active', true)
+            ->orderBy('id')
             ->get();
     }
 

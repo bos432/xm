@@ -140,7 +140,44 @@
       </el-tab-pane>
     </el-tabs>
 
-    <el-dialog v-model="reviewVisible" title="审核处理" :width="useCriteriaScoring ? '860px' : '560px'">
+    <el-dialog v-model="reviewVisible" title="审核处理" :width="useCriteriaScoring ? '920px' : '720px'">
+      <el-alert
+        v-if="currentProject?.next_step"
+        type="info"
+        :closable="false"
+        show-icon
+        :title="currentProject.next_step.title"
+        :description="currentProject.next_step.body"
+        class="dialog-alert"
+      />
+      <el-collapse class="dialog-project-detail">
+        <el-collapse-item title="项目详情和申报材料" name="project">
+          <el-descriptions v-if="currentProject" :column="2" border size="small">
+            <el-descriptions-item label="项目名称" :span="2">{{ currentProject.title }}</el-descriptions-item>
+            <el-descriptions-item label="申报单位">{{ currentProject.unit?.name || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="申报批次">{{ currentProject.application_batch?.name || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="项目类别">{{ currentProject.category || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="项目类型">{{ currentProject.project_type || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="预算金额">{{ formatCurrency(currentProject.budget_amount) }}</el-descriptions-item>
+            <el-descriptions-item label="归口管理单位">{{ currentProject.metadata?.management_unit || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="所属领域">{{ currentProject.metadata?.field || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="研究方向">{{ currentProject.metadata?.research_direction || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="项目摘要" :span="2"><div class="rich-content detail-rich-content" v-html="currentProject.summary || '-'" /></el-descriptions-item>
+            <el-descriptions-item v-if="currentProject.metadata?.overview" label="项目概述" :span="2"><div class="rich-content detail-rich-content" v-html="currentProject.metadata.overview" /></el-descriptions-item>
+            <el-descriptions-item v-if="currentProject.metadata?.objectives" label="目标任务" :span="2"><div class="rich-content detail-rich-content" v-html="currentProject.metadata.objectives" /></el-descriptions-item>
+            <el-descriptions-item v-if="currentProject.metadata?.innovation" label="创新点" :span="2"><div class="rich-content detail-rich-content" v-html="currentProject.metadata.innovation" /></el-descriptions-item>
+          </el-descriptions>
+          <el-table :data="currentProject?.files || []" border size="small" class="dialog-files-table">
+            <el-table-column prop="original_name" label="附件" min-width="220" />
+            <el-table-column prop="extension" label="类型" width="80" />
+            <el-table-column label="操作" width="80" align="center">
+              <template #default="{ row }">
+                <el-button size="small" :icon="Download" circle @click="downloadFile(row)" />
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-collapse-item>
+      </el-collapse>
       <el-form :model="reviewForm" label-position="top">
         <el-form-item label="审核结果">
           <el-radio-group v-model="reviewForm.decision">
@@ -181,7 +218,7 @@
             </div>
           </el-form-item>
         </template>
-        <el-form-item v-else label="评分">
+        <el-form-item v-else-if="showNumericScore" label="评分">
           <el-input-number v-model="reviewForm.score" :min="0" :max="100" :precision="1" />
         </el-form-item>
         <div v-if="useFinalSupportForm" class="final-support-panel">
@@ -192,16 +229,22 @@
           <el-form-item label="是否支持">
             <el-switch v-model="reviewForm.final_support.is_supported" active-text="支持" inactive-text="不支持" @change="syncFinalSupportState" />
           </el-form-item>
-          <el-form-item v-if="reviewForm.final_support.is_supported" label="支持方式">
-            <el-radio-group v-model="reviewForm.final_support.support_type">
-              <el-radio-button v-for="item in supportTypeOptions" :key="item.value" :label="item.value">{{ item.label }}</el-radio-button>
-            </el-radio-group>
-          </el-form-item>
-          <el-form-item v-if="reviewForm.final_support.is_supported" label="支持资金（万元）">
-            <el-input-number v-model="reviewForm.final_support.support_amount_wan" :min="0" :precision="2" controls-position="right" />
-          </el-form-item>
-          <el-form-item label="推荐专家">
-            <el-input v-model="reviewForm.final_support.recommended_experts" placeholder="可留空，系统会用专家评审记录自动汇总" />
+          <div v-if="reviewForm.final_support.is_supported" class="support-amount-grid">
+            <el-form-item label="补助支持金额（万元）">
+              <el-input-number v-model="reviewForm.final_support.subsidy_amount_wan" :min="0" :precision="2" controls-position="right" />
+            </el-form-item>
+            <el-form-item label="贴息支持金额（万元）">
+              <el-input-number v-model="reviewForm.final_support.interest_amount_wan" :min="0" :precision="2" controls-position="right" />
+            </el-form-item>
+            <el-form-item label="其他支持金额（万元）">
+              <el-input-number v-model="reviewForm.final_support.other_amount_wan" :min="0" :precision="2" controls-position="right" />
+            </el-form-item>
+            <el-form-item label="其他支持说明">
+              <el-input v-model="reviewForm.final_support.other_support_note" />
+            </el-form-item>
+          </div>
+          <el-form-item label="专家评分汇总">
+            <el-input :model-value="expertSummaryText(currentProject)" readonly />
           </el-form-item>
         </div>
         <el-form-item label="审核意见">
@@ -214,19 +257,45 @@
       </template>
     </el-dialog>
 
-    <el-drawer v-model="detailVisible" title="审核项目详情" size="640px">
+    <el-drawer v-model="detailVisible" title="审核项目详情" size="860px">
       <div v-if="detail" class="detail-stack">
+        <el-alert
+          v-if="detail.next_step"
+          type="info"
+          :closable="false"
+          show-icon
+          :title="detail.next_step.title"
+          :description="detail.next_step.body"
+        />
         <el-descriptions :column="2" border>
           <el-descriptions-item label="项目名称" :span="2">{{ detail.title }}</el-descriptions-item>
           <el-descriptions-item label="申报单位">{{ detail.unit?.name || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="申报批次">{{ detail.application_batch?.name || '-' }}</el-descriptions-item>
           <el-descriptions-item label="当前阶段">{{ roleLabel(detail.current_reviewer_role) }}</el-descriptions-item>
+          <el-descriptions-item label="项目类别">{{ detail.category || '-' }}</el-descriptions-item>
           <el-descriptions-item label="项目类型">{{ detail.project_type || '-' }}</el-descriptions-item>
           <el-descriptions-item label="预算金额">{{ formatCurrency(detail.budget_amount) }}</el-descriptions-item>
+          <el-descriptions-item label="归口管理单位">{{ detail.metadata?.management_unit || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="所属领域">{{ detail.metadata?.field || '-' }}</el-descriptions-item>
+          <el-descriptions-item label="研究方向">{{ detail.metadata?.research_direction || '-' }}</el-descriptions-item>
           <el-descriptions-item label="是否支持">{{ finalSupportText(detail).isSupported }}</el-descriptions-item>
           <el-descriptions-item label="支持资金">{{ finalSupportText(detail).supportAmount }}</el-descriptions-item>
           <el-descriptions-item label="推荐专家" :span="2">{{ finalSupportText(detail).recommendedExperts }}</el-descriptions-item>
           <el-descriptions-item label="摘要" :span="2"><div class="rich-content detail-rich-content" v-html="detail.summary || '-'" /></el-descriptions-item>
+          <el-descriptions-item v-if="detail.metadata?.overview" label="项目概述" :span="2"><div class="rich-content detail-rich-content" v-html="detail.metadata.overview" /></el-descriptions-item>
+          <el-descriptions-item v-if="detail.metadata?.objectives" label="目标任务" :span="2"><div class="rich-content detail-rich-content" v-html="detail.metadata.objectives" /></el-descriptions-item>
+          <el-descriptions-item v-if="detail.metadata?.innovation" label="创新点" :span="2"><div class="rich-content detail-rich-content" v-html="detail.metadata.innovation" /></el-descriptions-item>
         </el-descriptions>
+
+        <section v-if="detail.expert_review_summary">
+          <div class="section-title">专家评分汇总</div>
+          <el-descriptions :column="4" border size="small">
+            <el-descriptions-item label="分配专家">{{ detail.expert_review_summary.assigned_count || 0 }}</el-descriptions-item>
+            <el-descriptions-item label="已评分">{{ detail.expert_review_summary.reviewed_count || 0 }}</el-descriptions-item>
+            <el-descriptions-item label="平均分">{{ detail.expert_review_summary.average_score ?? '-' }}</el-descriptions-item>
+            <el-descriptions-item label="最高/最低">{{ detail.expert_review_summary.max_score ?? '-' }} / {{ detail.expert_review_summary.min_score ?? '-' }}</el-descriptions-item>
+          </el-descriptions>
+        </section>
 
         <section>
           <div class="section-title">附件</div>
@@ -266,6 +335,24 @@
               <template #default="{ row }"><div class="rich-content detail-rich-content" v-html="row.comment || '-'" /></template>
             </el-table-column>
             <el-table-column prop="reviewed_at" label="时间" width="170" />
+          </el-table>
+        </section>
+
+        <section v-if="detail.extension_records?.length">
+          <div class="section-title">延期记录</div>
+          <el-table :data="detail.extension_records" border size="small">
+            <el-table-column label="来源" width="90">
+              <template #default="{ row }">{{ row.source === 'acceptance' ? '验收' : '项目' }}</template>
+            </el-table-column>
+            <el-table-column prop="status" label="状态" width="100" />
+            <el-table-column prop="reason" label="原因" min-width="220">
+              <template #default="{ row }"><div class="rich-content detail-rich-content" v-html="row.reason || '-'" /></template>
+            </el-table-column>
+            <el-table-column prop="expected_date" label="计划完成" width="120" />
+            <el-table-column prop="requested_at" label="申请时间" width="170" />
+            <el-table-column prop="review_comment" label="处理意见" min-width="180">
+              <template #default="{ row }"><div class="rich-content detail-rich-content" v-html="row.review_comment || '-'" /></template>
+            </el-table-column>
           </el-table>
         </section>
       </div>
@@ -353,11 +440,6 @@ const allDecisionOptions = [
   { label: '退回', value: 'return' },
   { label: '驳回', value: 'reject' }
 ]
-const supportTypeOptions = [
-  { label: '补助支持', value: 'subsidy' },
-  { label: '贴息支持', value: 'interest' },
-  { label: '其他支持', value: 'other' }
-]
 const decisionOptions = computed(() => {
   if (session.role === 'expert') {
     return [
@@ -383,6 +465,7 @@ const decisionOptions = computed(() => {
 })
 const useCriteriaScoring = computed(() => currentProject.value?.current_reviewer_role === 'expert' && reviewCriteriaOptions.value.length > 0)
 const useFinalSupportForm = computed(() => currentProject.value?.current_reviewer_role === 'admin' && reviewForm.decision === 'accept')
+const showNumericScore = computed(() => Boolean(currentProject.value?.review_config?.score_enabled) && !useCriteriaScoring.value)
 const groupedReviewCriteria = computed(() => {
   const groups = new Map()
   for (const item of reviewCriteriaOptions.value) {
@@ -436,9 +519,10 @@ function emptyFinalSupport() {
   return {
     is_recommended: true,
     is_supported: true,
-    support_type: 'subsidy',
-    support_amount_wan: 0,
-    recommended_experts: ''
+    subsidy_amount_wan: 0,
+    interest_amount_wan: 0,
+    other_amount_wan: 0,
+    other_support_note: ''
   }
 }
 
@@ -555,8 +639,8 @@ async function openDetail(row) {
   detailVisible.value = true
 }
 
-function openReview(row) {
-  currentProject.value = row
+async function openReview(row) {
+  currentProject.value = await api(`/projects/${row.id}`)
   Object.assign(reviewForm, {
     decision: decisionOptions.value[0]?.value || 'approve',
     score: null,
@@ -571,7 +655,7 @@ function openReview(row) {
 function openRouteReview() {
   if (!route.query.project_id || reviewVisible.value) return
   const project = tasks.value.find((item) => String(item.id) === String(route.query.project_id))
-  if (project) openReview(project)
+  if (project) void openReview(project)
 }
 
 async function clearRouteProjectFilter({ reload = true } = {}) {
@@ -627,13 +711,11 @@ function syncCriteriaScore() {
 }
 
 function syncFinalSupportState() {
-  if (reviewForm.final_support.is_supported) {
-    if (reviewForm.final_support.support_type === 'none') reviewForm.final_support.support_type = 'subsidy'
-    return
-  }
-
-  reviewForm.final_support.support_type = 'none'
-  reviewForm.final_support.support_amount_wan = 0
+  if (reviewForm.final_support.is_supported) return
+  reviewForm.final_support.subsidy_amount_wan = 0
+  reviewForm.final_support.interest_amount_wan = 0
+  reviewForm.final_support.other_amount_wan = 0
+  reviewForm.final_support.other_support_note = ''
 }
 
 function normalizedFinalSupport() {
@@ -641,9 +723,10 @@ function normalizedFinalSupport() {
   return {
     is_recommended: Boolean(reviewForm.final_support.is_recommended),
     is_supported: isSupported,
-    support_type: isSupported ? reviewForm.final_support.support_type : 'none',
-    support_amount_wan: isSupported ? Number(reviewForm.final_support.support_amount_wan || 0) : 0,
-    recommended_experts: reviewForm.final_support.recommended_experts || ''
+    subsidy_amount_wan: isSupported ? Number(reviewForm.final_support.subsidy_amount_wan || 0) : 0,
+    interest_amount_wan: isSupported ? Number(reviewForm.final_support.interest_amount_wan || 0) : 0,
+    other_amount_wan: isSupported ? Number(reviewForm.final_support.other_amount_wan || 0) : 0,
+    other_support_note: isSupported ? (reviewForm.final_support.other_support_note || '') : ''
   }
 }
 
@@ -710,13 +793,14 @@ function formatCurrency(value) {
 }
 
 function finalSupportText(project) {
-  const support = project?.metadata?.final_support || {}
+  const support = project?.final_support || project?.metadata?.final_support || {}
   const isSupported = support.is_supported === undefined || support.is_supported === null
     ? '-'
-    : (support.is_supported ? supportTypeLabel(support.support_type) : '不支持')
-  const supportAmount = support.support_amount_wan === undefined || support.support_amount_wan === null || support.support_amount_wan === ''
+    : (support.is_supported ? '支持' : '不支持')
+  const total = support.total_support_amount_wan ?? support.support_amount_wan
+  const supportAmount = total === undefined || total === null || total === ''
     ? '-'
-    : `${Number(support.support_amount_wan || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 万元`
+    : `合计 ${Number(total || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 万元（补助 ${Number(support.subsidy_amount_wan || 0)}，贴息 ${Number(support.interest_amount_wan || 0)}，其他 ${Number(support.other_amount_wan || 0)}）`
   return {
     isSupported,
     supportAmount,
@@ -724,8 +808,11 @@ function finalSupportText(project) {
   }
 }
 
-function supportTypeLabel(value) {
-  return supportTypeOptions.find((item) => item.value === value)?.label || (value === 'none' ? '不支持' : '支持')
+function expertSummaryText(project) {
+  const summary = project?.expert_review_summary
+  if (!summary) return '暂无专家评分'
+  const score = summary.average_score === null || summary.average_score === undefined ? '-' : summary.average_score
+  return `已评分 ${summary.reviewed_count || 0}/${summary.assigned_count || 0}，平均分 ${score}`
 }
 
 onMounted(async () => {
@@ -815,5 +902,27 @@ onUnmounted(() => {
 .criteria-total {
   justify-content: flex-end;
   font-weight: 600;
+}
+
+.dialog-alert,
+.dialog-project-detail,
+.dialog-files-table {
+  margin-bottom: 14px;
+}
+
+.support-amount-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 14px;
+}
+
+.detail-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.detail-rich-content {
+  max-height: 220px;
+  overflow: auto;
 }
 </style>

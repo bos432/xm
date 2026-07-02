@@ -115,6 +115,7 @@ class ReviewDispatchRuleController extends Controller
             'project_type' => ['nullable', 'string', 'max:120'],
             'recommended_user_ids' => ['nullable', 'array'],
             'recommended_user_ids.*' => ['integer', 'exists:users,id'],
+            'expert_count' => ['nullable', 'integer', 'min:1', 'max:20'],
             'auto_assign' => ['required', 'boolean'],
             'is_active' => ['required', 'boolean'],
             'priority' => ['required', 'integer', 'min:0', 'max:9999'],
@@ -131,6 +132,7 @@ class ReviewDispatchRuleController extends Controller
             ->all();
 
         $data['recommended_user_ids'] = $validUserIds;
+        $data['expert_count'] = $targetRole === Role::EXPERT ? ($data['expert_count'] ?? null) : null;
 
         return $data;
     }
