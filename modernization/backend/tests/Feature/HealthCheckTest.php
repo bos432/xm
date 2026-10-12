@@ -65,6 +65,37 @@ class HealthCheckTest extends TestCase
         $this->artisan('health:login-check')->assertFailed();
     }
 
+    public function test_login_health_check_accepts_explicit_credentials_for_deploy_script_compatibility(): void
+    {
+        config(['app.url' => 'https://nxm.zlck888.com']);
+        config([
+            'modernization.health_check_username' => 'configured-user',
+            'modernization.health_check_password' => 'configured-password',
+        ]);
+
+        User::factory()->create([
+            'username' => 'health_check_user',
+            'password' => Hash::make('HealthCheck-2026'),
+            'role' => 'unit',
+            'is_active' => true,
+            'metadata' => ['health_check' => true],
+        ]);
+
+        Http::fake([
+            'https://nxm.zlck888.com/api/auth/captcha' => Http::response([
+                'captcha_id' => 'health-captcha',
+                'question' => '6 + 7 = ?',
+            ]),
+            'https://nxm.zlck888.com/api/auth/login' => Http::response(['token' => 'health-token']),
+            'https://nxm.zlck888.com/api/auth/logout' => Http::response([], 204),
+        ]);
+
+        $this->artisan('health:login-check', [
+            '--username' => 'health_check_user',
+            '--password' => 'HealthCheck-2026',
+        ])->assertSuccessful();
+    }
+
     public function test_login_health_check_rejects_accounts_not_marked_for_health_checks(): void
     {
         config([

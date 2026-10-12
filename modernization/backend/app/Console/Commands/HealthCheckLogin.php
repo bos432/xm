@@ -10,14 +10,16 @@ use Illuminate\Support\Facades\Http;
 
 class HealthCheckLogin extends Command
 {
-    protected $signature = 'health:login-check';
+    protected $signature = 'health:login-check
+                            {--username= : Override the configured health-check username}
+                            {--password= : Override the configured health-check password}';
 
     protected $description = 'Validate that the configured health-check account can authenticate.';
 
     public function handle(): int
     {
-        $username = (string) config('modernization.health_check_username');
-        $password = (string) config('modernization.health_check_password');
+        $username = (string) ($this->option('username') ?: config('modernization.health_check_username'));
+        $password = (string) ($this->option('password') ?: config('modernization.health_check_password'));
 
         if ($username === '' || $password === '') {
             $this->error('Health login failed: credentials are not configured.');
