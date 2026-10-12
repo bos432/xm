@@ -77,6 +77,7 @@ modernization/backend/bootstrap/cache/
 # Local E2E credentials and generated run payloads
 /codex_e2e_*.json
 /codex_e2e_uploads_*/
+/modernization/e2e/reports/runs/
 
 # Generated migration archives and large generated exports
 modernization/scripts/*.zip
