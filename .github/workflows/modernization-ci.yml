@@ -43,7 +43,11 @@ jobs:
         run: npm run build
 
       - name: List E2E coverage
-        run: npm run e2e -- --list
+        shell: bash
+        run: |
+          npm run e2e -- --list | tee /tmp/e2e-test-list.txt
+          grep -q 'public homepage exposes portal login' /tmp/e2e-test-list.txt
+          grep -q 'Total: 9 tests in 1 file' /tmp/e2e-test-list.txt
 
   backend:
     name: Backend feature tests
