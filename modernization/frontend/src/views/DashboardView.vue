@@ -24,6 +24,21 @@
       </div>
     </el-card>
 
+    <el-alert
+      v-if="reviewShortcut"
+      :title="reviewShortcut.title"
+      :description="reviewShortcut.description"
+      type="warning"
+      show-icon
+      :closable="false"
+    >
+      <template #default>
+        <el-button type="primary" size="small" @click="router.push('/reviews?tab=tasks')">
+          {{ reviewShortcut.actionLabel }}
+        </el-button>
+      </template>
+    </el-alert>
+
     <el-card shadow="never" class="workflow-card">
       <template #header>
         <div class="workflow-head">
@@ -344,6 +359,25 @@ const roleFocusMetrics = computed(() => {
   }
 
   return []
+})
+
+const reviewShortcut = computed(() => {
+  const pending = Number(summary.value?.role_focus?.review_pending || 0)
+  if (!['county', 'department', 'expert'].includes(session.role) || pending <= 0) return null
+
+  if (session.role === 'expert') {
+    return {
+      title: `有 ${pending} 项专家评审待处理`,
+      description: '进入待审核任务，点击项目右侧“审核处理”；在评分表中查看完整项目材料，填写各维度分数和专家意见后提交。',
+      actionLabel: '进入专家评审'
+    }
+  }
+
+  return {
+    title: `有 ${pending} 项审核任务待处理`,
+    description: '进入待审核任务，打开项目详情后完成当前阶段的审核处理。',
+    actionLabel: '进入审核任务'
+  }
 })
 
 const baseline = [
