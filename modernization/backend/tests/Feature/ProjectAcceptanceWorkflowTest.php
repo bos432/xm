@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\Project;
 use App\Models\AcceptanceApplication;
 use App\Models\AcceptanceReview;
 use App\Models\ApplicationBatch;
+use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Models\Unit;
 use App\Models\User;
@@ -490,6 +490,40 @@ class ProjectAcceptanceWorkflowTest extends TestCase
         ])->assertUnprocessable();
         $this->postJson("/api/projects/{$otherProject->id}/extension", [
             'reason' => '跨单位申请延期',
+        ])->assertForbidden();
+    }
+
+    public function test_county_reviewer_cannot_review_acceptance_assigned_to_another_county_user(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $reviewer = User::factory()->create(['role' => 'county']);
+        $otherReviewer = User::factory()->create(['role' => 'county']);
+        $project = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'metadata' => [
+                'review_dispatch' => [
+                    'assignments' => [
+                        'county' => ['auto_assign' => true, 'assigned_user_ids' => [$otherReviewer->id]],
+                    ],
+                ],
+            ],
+        ]);
+        $acceptance = AcceptanceApplication::create([
+            'project_id' => $project->id,
+            'unit_id' => $unit->id,
+            'submitted_by' => $owner->id,
+            'status' => AcceptanceApplication::STATUS_SUBMITTED,
+            'current_reviewer_role' => 'county',
+        ]);
+
+        Sanctum::actingAs($reviewer);
+
+        $this->getJson('/api/acceptance?scope=pending')->assertOk()->assertJsonCount(0, 'data');
+        $this->getJson("/api/acceptance/{$acceptance->id}")->assertForbidden();
+        $this->postJson("/api/acceptance/{$acceptance->id}/reviews", [
+            'decision' => 'approve',
         ])->assertForbidden();
     }
 }

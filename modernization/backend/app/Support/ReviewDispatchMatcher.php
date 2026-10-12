@@ -60,6 +60,10 @@ class ReviewDispatchMatcher
     public function userCanReview(Project $project, User $user, string $stage): bool
     {
         $assignment = $this->assignment($project, $stage);
+        if ($stage === Role::EXPERT && ! $assignment) {
+            return $this->previewAssignment($project, $stage)['assigned_user_ids'] !== []
+                && in_array((int) $user->id, $this->previewAssignment($project, $stage)['assigned_user_ids'], true);
+        }
         if ($stage !== Role::EXPERT && ! ($assignment['auto_assign'] ?? false)) {
             return true;
         }
@@ -78,6 +82,43 @@ class ReviewDispatchMatcher
         $assignment = $metadata['review_dispatch']['assignments'][$stage] ?? null;
 
         return is_array($assignment) ? $assignment : null;
+    }
+
+    public function previewAssignment(Project $project, string $stage): ?array
+    {
+        if ($this->assignment($project, $stage)) {
+            return $this->assignment($project, $stage);
+        }
+
+        if ($stage !== Role::EXPERT) {
+            return null;
+        }
+
+        $rule = $this->match($project, $stage);
+        $users = $rule ? $this->activeTargetUsers($rule) : $this->activeExperts();
+        $users = $users->sortBy(fn (User $user): string => hash('sha256', $project->id.':'.$stage.':'.$user->id))->values();
+        if (RuntimeConfig::boolValue('review.expert_assignment.random_enabled', true)) {
+            $count = max(1, (int) ($rule?->expert_count ?: RuntimeConfig::intValue('review.expert_assignment.count', 3)));
+            $users = $users->take($count)->values();
+        }
+
+        return [
+            'stage' => $stage,
+            'rule_id' => $rule?->id,
+            'rule_name' => $rule?->name ?: '专家随机分配',
+            'auto_assign' => true,
+            'expert_count' => $users->count(),
+            'recommended_user_ids' => $users->pluck('id')->all(),
+            'recommended_users' => $users->map(fn (User $user): array => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'username' => $user->username,
+                'role' => $user->role,
+            ])->values()->all(),
+            'assigned_user_ids' => $users->pluck('id')->all(),
+            'matched_at' => null,
+            'preview' => true,
+        ];
     }
 
     private function match(Project $project, string $stage): ?ReviewDispatchRule

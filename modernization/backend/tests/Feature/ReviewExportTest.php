@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\DictionaryItem;
 use App\Models\Project;
 use App\Models\ProjectReview;
-use App\Models\DictionaryItem;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -84,7 +84,7 @@ class ReviewExportTest extends TestCase
 
         Sanctum::actingAs($county);
 
-        $csv = $this->get('/api/reviews/tasks/export.csv?keyword=' . urlencode('智能制造'))
+        $csv = $this->get('/api/reviews/tasks/export.csv?keyword='.urlencode('智能制造'))
             ->assertOk()
             ->streamedContent();
 
@@ -180,12 +180,71 @@ class ReviewExportTest extends TestCase
 
         Sanctum::actingAs($county);
 
-        $ids = collect($this->getJson('/api/reviews/results?keyword=' . urlencode('智能制造'))
+        $ids = collect($this->getJson('/api/reviews/results?keyword='.urlencode('智能制造'))
             ->assertOk()
             ->json('data'))->pluck('id');
 
         $this->assertTrue($ids->contains($countyReview->id));
         $this->assertCount(1, $ids);
+    }
+
+    public function test_expert_only_sees_own_review_results_in_list_and_export(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $expert = User::factory()->create(['role' => 'expert']);
+        $otherExpert = User::factory()->create(['role' => 'expert']);
+        $project = Project::factory()->create(['unit_id' => $unit->id, 'owner_id' => $owner->id]);
+        $ownReview = ProjectReview::create([
+            'project_id' => $project->id,
+            'reviewer_id' => $expert->id,
+            'stage' => 'expert',
+            'decision' => 'recommend',
+            'score' => 91,
+            'comment' => '本人的专家意见',
+            'reviewed_at' => now(),
+        ]);
+        ProjectReview::create([
+            'project_id' => $project->id,
+            'reviewer_id' => $otherExpert->id,
+            'stage' => 'expert',
+            'decision' => 'return',
+            'score' => 62,
+            'comment' => '其他专家的保密意见',
+            'reviewed_at' => now(),
+        ]);
+
+        Sanctum::actingAs($expert);
+
+        $ids = collect($this->getJson('/api/reviews/results')->assertOk()->json('data'))->pluck('id');
+        $this->assertSame([$ownReview->id], $ids->all());
+
+        $csv = $this->get('/api/reviews/results/export.csv')->assertOk()->streamedContent();
+        $this->assertStringContainsString('本人的专家意见', $csv);
+        $this->assertStringNotContainsString('其他专家的保密意见', $csv);
+    }
+
+    public function test_reviewer_cannot_filter_review_results_to_another_reviewers_records(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $reviewer = User::factory()->create(['role' => 'county']);
+        $otherReviewer = User::factory()->create(['role' => 'county']);
+        $project = Project::factory()->create(['unit_id' => $unit->id, 'owner_id' => $owner->id]);
+        ProjectReview::create([
+            'project_id' => $project->id,
+            'reviewer_id' => $otherReviewer->id,
+            'stage' => 'county',
+            'decision' => 'approve',
+            'comment' => '其他审核员意见',
+            'reviewed_at' => now(),
+        ]);
+
+        Sanctum::actingAs($reviewer);
+
+        $this->getJson('/api/reviews/results')->assertOk()->assertJsonCount(0, 'data');
+        $csv = $this->get('/api/reviews/results/export.csv')->assertOk()->streamedContent();
+        $this->assertStringNotContainsString('其他审核员意见', $csv);
     }
 
     public function test_admin_can_filter_review_results_by_stage_and_decision(): void
@@ -265,7 +324,7 @@ class ReviewExportTest extends TestCase
 
         Sanctum::actingAs($county);
 
-        $csv = $this->get('/api/reviews/results/export.csv?category=' . urlencode('科技项目') . '&project_type=' . urlencode('重点扶持'))
+        $csv = $this->get('/api/reviews/results/export.csv?category='.urlencode('科技项目').'&project_type='.urlencode('重点扶持'))
             ->assertOk()
             ->streamedContent();
 

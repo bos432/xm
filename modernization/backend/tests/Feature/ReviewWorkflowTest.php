@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\ProjectReview;
 use App\Models\Unit;
 use App\Models\User;
+use App\Support\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -180,5 +181,38 @@ class ReviewWorkflowTest extends TestCase
         $this->assertSame('盟科技局', $project->metadata['management_unit']);
         $this->assertSame('subsidy', $project->metadata['final_support']['support_type']);
         $this->assertSame('终审管理员', $project->metadata['final_support']['reviewed_by_name']);
+    }
+
+    public function test_only_one_concurrent_expert_review_can_advance_the_project(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $expert = User::factory()->create(['role' => 'expert']);
+        $project = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'status' => Project::STATUS_REVIEWING,
+            'current_reviewer_role' => Role::EXPERT,
+            'metadata' => [
+                'review_dispatch' => [
+                    'assignments' => [
+                        Role::EXPERT => [
+                            'stage' => Role::EXPERT,
+                            'auto_assign' => true,
+                            'assigned_user_ids' => [$expert->id],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        Sanctum::actingAs($expert);
+
+        $payload = ['decision' => 'recommend', 'metadata' => ['score_criteria' => []]];
+        $this->postJson("/api/projects/{$project->id}/reviews", $payload)->assertCreated();
+        $this->postJson("/api/projects/{$project->id}/reviews", $payload)->assertForbidden();
+
+        $this->assertDatabaseCount('project_reviews', 1);
+        $this->assertSame(Role::ADMIN, $project->refresh()->current_reviewer_role);
     }
 }
