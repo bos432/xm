@@ -95,6 +95,50 @@ class ReviewAndAdminAuthorizationTest extends TestCase
         $this->assertFalse($ids->contains($departmentProject->id));
     }
 
+    public function test_expert_task_read_does_not_create_or_change_dispatch_assignment(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        User::factory()->count(5)->create(['role' => 'expert']);
+        $expert = User::factory()->create(['role' => 'expert']);
+        $project = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'status' => Project::STATUS_REVIEWING,
+            'current_reviewer_role' => 'expert',
+            'metadata' => ['sentinel' => 'unchanged'],
+        ]);
+
+        Sanctum::actingAs($expert);
+
+        $this->getJson('/api/reviews/tasks')->assertOk();
+        $this->assertSame(['sentinel' => 'unchanged'], $project->refresh()->metadata);
+    }
+
+    public function test_legacy_expert_tasks_are_stably_visible_without_read_side_writes(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $experts = User::factory()->count(4)->create(['role' => 'expert']);
+        $project = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'status' => Project::STATUS_REVIEWING,
+            'current_reviewer_role' => 'expert',
+            'metadata' => ['legacy' => true],
+        ]);
+
+        Sanctum::actingAs($experts->first());
+        $first = $this->getJson('/api/reviews/tasks')->assertOk();
+        $second = $this->getJson('/api/reviews/tasks')->assertOk();
+
+        $firstIds = collect($first->json('data'))->pluck('id')->all();
+        $secondIds = collect($second->json('data'))->pluck('id')->all();
+        $this->assertSame($firstIds, $secondIds);
+        $this->assertContains($project->id, $firstIds);
+        $this->assertSame(['legacy' => true], $project->refresh()->metadata);
+    }
+
     public function test_reviewer_tasks_can_be_filtered_by_keyword_within_current_role(): void
     {
         $matchedUnit = Unit::factory()->create(['name' => '东城创新单位']);
@@ -192,7 +236,7 @@ class ReviewAndAdminAuthorizationTest extends TestCase
 
         Sanctum::actingAs($county);
 
-        $ids = collect($this->getJson('/api/reviews/tasks?category=' . urlencode('科技项目') . '&project_type=' . urlencode('重点扶持'))->assertOk()->json('data'))->pluck('id');
+        $ids = collect($this->getJson('/api/reviews/tasks?category='.urlencode('科技项目').'&project_type='.urlencode('重点扶持'))->assertOk()->json('data'))->pluck('id');
         $this->assertTrue($ids->contains($matched->id));
         $this->assertCount(1, $ids);
     }
@@ -235,7 +279,7 @@ class ReviewAndAdminAuthorizationTest extends TestCase
 
         Sanctum::actingAs($county);
 
-        $ids = collect($this->getJson('/api/reviews/results?category=' . urlencode('科技项目') . '&project_type=' . urlencode('重点扶持'))
+        $ids = collect($this->getJson('/api/reviews/results?category='.urlencode('科技项目').'&project_type='.urlencode('重点扶持'))
             ->assertOk()
             ->json('data'))->pluck('id');
 

@@ -173,7 +173,8 @@ class PublicHomeManagementTest extends TestCase
             file_put_contents($path, "%PDF-1.4\n");
 
             try {
-                $file = new class ($path, $originalName) extends UploadedFile {
+                $file = new class($path, $originalName) extends UploadedFile
+                {
                     public function __construct(string $path, private readonly string $originalName)
                     {
                         parent::__construct($path, 'budget.pdf', 'application/pdf', null, true);
@@ -245,7 +246,7 @@ class PublicHomeManagementTest extends TestCase
             'section' => 'notice',
             'title' => '图文公告',
             'summary' => '摘要',
-            'body' => '<h2>正文</h2><script>alert(1)</script><p onclick="alert(1)">内容</p><img src="'.$upload['url'].'" onerror="alert(1)"><a href="javascript:alert(1)">危险链接</a>',
+            'body' => '<h2>正文</h2><script>alert(1)</script><p onclick="alert(1)">内容</p><img src="'.$upload['url'].'" onerror="alert(1)"><img src="https://tracker.example/api/public/homepage/rich-text-images/pixel.png"><a href="javascript:alert(1)">危险链接</a>',
             'sort_order' => 10,
             'is_active' => true,
         ])->assertCreated()
@@ -257,6 +258,7 @@ class PublicHomeManagementTest extends TestCase
         $this->assertStringNotContainsString('onclick', $item['body']);
         $this->assertStringNotContainsString('onerror', $item['body']);
         $this->assertStringNotContainsString('javascript:', $item['body']);
+        $this->assertStringNotContainsString('tracker.example', $item['body']);
 
         $homepage = $this->getJson('/api/public/homepage')->assertOk();
         $body = $homepage->json('notices.0.body');
@@ -293,7 +295,7 @@ class PublicHomeManagementTest extends TestCase
         File::ensureDirectoryExists($workingDir.'/upload');
         File::put($workingDir.'/upload/template.docx', 'docx body');
         $dump = $workingDir.'/legacy.sql';
-        File::put($dump, <<<SQL
+        File::put($dump, <<<'SQL'
 CREATE TABLE `pro_cms` (`id` int, `kind` int, `time` datetime, `title` varchar(255), `content` text, `ex_1` varchar(64));
 INSERT INTO `pro_cms` VALUES
 (1,1,'2025-01-01 00:00:00','通知标题','<p>通知内容</p>',''),

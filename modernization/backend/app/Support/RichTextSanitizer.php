@@ -152,10 +152,12 @@ final class RichTextSanitizer
 
     private static function safeImage(string $value): bool
     {
-        $path = parse_url($value, PHP_URL_PATH) ?: '';
+        $parts = parse_url($value);
 
-        return str_starts_with($value, '/api/public/homepage/rich-text-images/')
-            || str_starts_with($path, '/api/public/homepage/rich-text-images/');
+        return is_array($parts)
+            && ! isset($parts['scheme'])
+            && ! isset($parts['host'])
+            && str_starts_with($parts['path'] ?? '', '/api/public/homepage/rich-text-images/');
     }
 
     private static function externalLink(string $value): bool

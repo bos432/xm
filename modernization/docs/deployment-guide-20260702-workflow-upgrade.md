@@ -91,9 +91,7 @@ curl -s https://nxm.zlck888.com/api/auth/captcha; echo
 curl -s https://nxm.zlck888.com/api/public/homepage | head -c 500; echo
 
 cd /www/wwwroot/nxm.zlck888.com/current/backend
-/www/server/php/83/bin/php artisan health:login-check \
-  --username=health_check_user \
-  --password='HealthCheck-2026'
+/www/server/php/83/bin/php artisan health:login-check
 ```
 
 预期：

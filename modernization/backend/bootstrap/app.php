@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureActiveUser;
+use App\Http\Middleware\RestrictHealthCheckAccount;
 use App\Models\SecurityEvent;
 use App\Providers\AuthRateLimitServiceProvider;
 use Illuminate\Foundation\Application;
@@ -28,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'bindings' => SubstituteBindings::class,
             'active' => EnsureActiveUser::class,
+            'health-check-only' => RestrictHealthCheckAccount::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

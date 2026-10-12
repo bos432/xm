@@ -70,6 +70,13 @@ modernization/frontend/dist/
 modernization/backend/storage/*.key
 modernization/backend/storage/logs/
 modernization/backend/bootstrap/cache/
+/modernization/backend/.phpunit.result.cache
+/modernization/backend/storage/framework/testing/
+/modernization/backend/storage/framework/views/
+
+# Local E2E credentials and generated run payloads
+/codex_e2e_*.json
+/codex_e2e_uploads_*/
 
 # Generated migration archives and large generated exports
 modernization/scripts/*.zip

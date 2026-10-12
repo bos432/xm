@@ -33,6 +33,9 @@ jobs:
       - name: Install dependencies
         run: npm ci --include=dev --include=optional --no-audit --no-fund
 
+      - name: Dependency audit
+        run: npm audit --audit-level=low
+
       - name: Lint
         run: npm run lint
 
@@ -56,7 +59,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: mbstring, pdo_sqlite, sqlite3, zip, fileinfo
+          extensions: mbstring, pdo_sqlite, sqlite3, zip, fileinfo, gd
           coverage: none
 
       - name: Prepare Laravel environment
@@ -67,14 +70,24 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
-      - name: Public home feature tests
-        run: php artisan test --filter PublicHomeManagementTest
+      - name: Full backend feature suite
+        run: php artisan test
 
-      - name: Auth and security feature tests
-        run: php artisan test --filter AuthProfileTest
+  deployment-safety:
+    name: Deployment backup and rollback simulations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Health check feature tests
-        run: php artisan test --filter HealthCheckTest
+      - name: Validate deployment shell syntax
+        run: bash -n modernization/deploy/deploy.sh modernization/deploy/tests/deploy-release-safety-test.sh modernization/deploy/tests/deploy-rollback-test.sh modernization/deploy/tests/mock-command.sh
+
+      - name: Simulate release backup and rollback safety
+        run: bash modernization/deploy/tests/deploy-release-safety-test.sh
+
+      - name: Simulate site isolation and rollback
+        run: bash modernization/deploy/tests/deploy-rollback-test.sh
 
   online-e2e:
     name: Optional online E2E

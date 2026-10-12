@@ -19,15 +19,15 @@ https://nxm.zlck888.com/
 
 | 角色 | 账号 | 密码 | 用途 |
 | --- | --- | --- | --- |
-| 单位用户 | `e2e_20260630_103223_unit` | `Test@2026pass` | 项目申报、全周期、验收 |
-| 区县审核 | `e2e_20260630_103223_county` | `Test@2026pass` | 项目初审、验收初审 |
-| 部门审核 | `e2e_20260630_103223_department` | `Test@2026pass` | 部门复核、验收复核 |
-| 专家评审 | `e2e_20260630_103223_expert` | `Test@2026pass` | 专家评分、验收评审 |
-| 业务管理员 | `e2e_20260702_delivery_admin` | `Test@2026pass` | 项目、批次、单位、账号、验收管理 |
-| 超级管理员 | `admin` | `ChangeMe-2026` | 系统配置、安全中心、首页管理、权限管理 |
-| 健康检查 | `health_check_user` | `HealthCheck-2026` | 部署健康检查专用 |
+| 单位用户 | `e2e_20260630_103223_unit` | 由管理员通过受控渠道提供 | 项目申报、全周期、验收 |
+| 区县审核 | `e2e_20260630_103223_county` | 由管理员通过受控渠道提供 | 项目初审、验收初审 |
+| 部门审核 | `e2e_20260630_103223_department` | 由管理员通过受控渠道提供 | 部门复核、验收复核 |
+| 专家评审 | `e2e_20260630_103223_expert` | 由管理员通过受控渠道提供 | 专家评分、验收评审 |
+| 业务管理员 | `e2e_20260702_delivery_admin` | 由管理员通过受控渠道提供 | 项目、批次、单位、账号、验收管理 |
+| 超级管理员 | 由系统负责人确认 | 不在文档或 Git 记录 | 系统配置、安全中心、首页管理、权限管理 |
+| 健康检查 | `health_check_user` | 由运维在生产环境安全配置 | 部署健康检查专用，不用于人工登录 |
 
-交付后必须修改 `admin` 和 `health_check_user` 默认密码。
+历史资料中的固定测试密码已公开，应视为泄露并轮换。生产管理员凭据通过密码管理器等受控渠道单独交付，不写入本文件。
 
 ## 3. 测试前服务器健康检查
 
@@ -36,9 +36,7 @@ https://nxm.zlck888.com/
 ```bash
 cd /www/wwwroot/nxm.zlck888.com/current/backend
 
-/www/server/php/83/bin/php artisan health:login-check \
-  --username=health_check_user \
-  --password='HealthCheck-2026'
+/www/server/php/83/bin/php artisan health:login-check
 
 curl -I https://nxm.zlck888.com/
 curl -I https://nxm.zlck888.com/dashboard
@@ -86,7 +84,7 @@ curl -I https://nxm.zlck888.com/public-home
 账号：
 
 ```text
-e2e_20260630_103223_unit / Test@2026pass
+e2e_20260630_103223_unit / 密码由管理员通过受控渠道提供（旧密码已公开，应轮换）
 ```
 
 ### 5.1 登录与菜单
@@ -196,7 +194,7 @@ e2e_20260630_103223_unit / Test@2026pass
 账号：
 
 ```text
-e2e_20260630_103223_county / Test@2026pass
+e2e_20260630_103223_county / 密码由管理员通过受控渠道提供（旧密码已公开，应轮换）
 ```
 
 ### 6.1 登录与菜单
@@ -269,7 +267,7 @@ e2e_20260630_103223_county / Test@2026pass
 账号：
 
 ```text
-e2e_20260630_103223_department / Test@2026pass
+e2e_20260630_103223_department / 密码由管理员通过受控渠道提供（旧密码已公开，应轮换）
 ```
 
 ### 7.1 审核任务
@@ -313,7 +311,7 @@ e2e_20260630_103223_department / Test@2026pass
 账号：
 
 ```text
-e2e_20260630_103223_expert / Test@2026pass
+e2e_20260630_103223_expert / 密码由管理员通过受控渠道提供（旧密码已公开，应轮换）
 ```
 
 ### 8.1 专家待审任务
@@ -367,7 +365,7 @@ e2e_20260630_103223_expert / Test@2026pass
 账号：
 
 ```text
-e2e_20260702_delivery_admin / Test@2026pass
+e2e_20260702_delivery_admin / 密码由管理员通过受控渠道提供（旧密码已公开，应轮换）
 ```
 
 ### 9.1 菜单权限
@@ -454,7 +452,7 @@ e2e_20260702_delivery_admin / Test@2026pass
 账号：
 
 ```text
-admin / ChangeMe-2026
+生产超级管理员账号密码由系统负责人通过受控渠道单独提供；历史固定密码已公开，应确认已轮换。
 ```
 
 ### 10.1 菜单权限
