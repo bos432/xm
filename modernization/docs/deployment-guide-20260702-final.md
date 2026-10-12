@@ -1,5 +1,7 @@
 # 2026-07-02 部署与验收文档
 
+> 安全更新（2026-10）：历史固定密码和常规 `RUN_SEED=1` 示例已废止。常规部署不运行 Seeder、不 reload Nginx；请遵循 `modernization/deploy/README.md`。
+
 ## 1. 部署范围
 
 - 只部署 `modernization` 新 Laravel/Vue 系统。
