@@ -1,5 +1,7 @@
 # 2026-07-02 整改开发部署文档
 
+> 安全更新（2026-10）：历史 `RUN_SEED=1` 默认账号部署示例已废止。生产首次初始化凭据必须通过受保护的服务器环境变量配置；常规部署遵循 `modernization/deploy/README.md`。
+
 ## 1. 部署范围
 
 - 只部署 `modernization` 新 Laravel/Vue 系统。
@@ -15,7 +17,6 @@ APP_ROOT=/www/wwwroot/nxm.zlck888.com \
 REPO_URL=https://github.com/bos432/xm.git \
 BRANCH=main \
 PHP_BIN=/www/server/php/83/bin/php \
-RUN_SEED=1 \
 bash ./deploy.sh
 ```
 

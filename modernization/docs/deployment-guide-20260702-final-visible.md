@@ -18,7 +18,6 @@ REPO_URL=https://github.com/bos432/xm.git \
 BRANCH=main \
 PHP_BIN=/www/server/php/83/bin/php \
 FRONTEND_API_BASE=/api \
-RUN_SEED=1 \
 bash ./deploy.sh
 ```
 
@@ -29,7 +28,7 @@ cd /www/wwwroot/nxm.zlck888.com/current/backend
 
 /www/server/php/83/bin/php artisan health:login-check \
   --username=health_check_user \
-  --password='HealthCheck-2026'
+  --password="$HEALTH_CHECK_PASSWORD"
 
 curl -I https://nxm.zlck888.com/
 curl -I https://nxm.zlck888.com/dashboard
@@ -52,13 +51,13 @@ curl -I https://nxm.zlck888.com/application-batches
 ```env
 APP_URL=https://nxm.zlck888.com
 HEALTH_CHECK_USERNAME=health_check_user
-HEALTH_CHECK_PASSWORD=HealthCheck-2026
+HEALTH_CHECK_PASSWORD=<生产随机强密码，至少20位>
 ```
 
 如交付后修改健康检查密码，必须同步改：
 
 1. 数据库中的 `health_check_user` 密码。
-2. `shared/.env` 中的 `HEALTH_CHECK_PASSWORD`。
+2. `shared/.env` 中的 `HEALTH_CHECK_PASSWORD`（至少20位随机值）。
 3. 部署脚本或人工健康检查命令中的密码。
 
 ## 5. 常用巡检命令
@@ -68,7 +67,7 @@ cd /www/wwwroot/nxm.zlck888.com/current/backend
 
 /www/server/php/83/bin/php artisan migrate:status | tail -n 30
 /www/server/php/83/bin/php artisan route:list | grep auth
-/www/server/php/83/bin/php artisan health:login-check --username=health_check_user --password='HealthCheck-2026'
+/www/server/php/83/bin/php artisan health:login-check --username="$HEALTH_CHECK_USERNAME" --password="$HEALTH_CHECK_PASSWORD"
 tail -n 200 storage/logs/laravel*.log
 ```
 
@@ -85,8 +84,8 @@ tail -n 200 storage/logs/laravel*.log
 
 ## 7. 交付后必须做的安全动作
 
-- 修改 `admin / ChangeMe-2026` 默认密码。
-- 修改 `health_check_user / HealthCheck-2026` 默认密码。
+- 确认超级管理员凭据通过安全渠道单独交付，且不存在默认密码。
+- 健康检查账号凭据仅保存在服务器 `shared/.env`，至少20位随机密码。
 - 确认 `shared/.env` 不提交 Git。
 - 安全中心检查登录白名单、临时放宽是否关闭。
 - 定期清理 PHP 配置中的重复 `mbstring` 加载警告。

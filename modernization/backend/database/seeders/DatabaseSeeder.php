@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\DictionaryItem;
 use App\Models\ApplicationBatch;
+use App\Models\DictionaryItem;
 use App\Models\MailTemplate;
 use App\Models\PublicHomeItem;
 use App\Models\PublicHomeSection;
@@ -25,47 +25,64 @@ class DatabaseSeeder extends Seeder
         $this->seedRolesAndPermissions();
         $this->seedSystemTexts();
 
+        $adminUsername = trim((string) config('modernization.initial_admin_username'));
+        $adminPassword = (string) config('modernization.initial_admin_password');
+        $healthUsername = trim((string) config('modernization.health_check_username'));
+        $healthPassword = (string) config('modernization.health_check_password');
+
+        $existingAdmin = $adminUsername === '' ? null : User::query()->where('username', $adminUsername)->first();
+        $existingHealthUser = $healthUsername === '' ? null : User::query()->where('username', $healthUsername)->first();
+
+        if ($adminPassword !== '' && $existingAdmin && $existingAdmin->role !== Role::SUPER_ADMIN) {
+            throw new \RuntimeException('INITIAL_ADMIN_USERNAME belongs to an account that is not a super administrator.');
+        }
+
+        if ($healthPassword !== '' && $existingHealthUser && ($existingHealthUser->role !== Role::UNIT || ! ($existingHealthUser->metadata['health_check'] ?? false))) {
+            throw new \RuntimeException('HEALTH_CHECK_USERNAME must belong to a dedicated health-check unit account.');
+        }
+
+        if ($adminPassword !== '' && ! $existingAdmin && strlen($adminPassword) < 20) {
+            throw new \RuntimeException('INITIAL_ADMIN_PASSWORD must contain at least 20 characters.');
+        }
+
+        if ($healthPassword !== '' && strlen($healthPassword) < 20) {
+            throw new \RuntimeException('HEALTH_CHECK_PASSWORD must contain at least 20 characters.');
+        }
+
+        if (($adminPassword !== '' && $adminUsername === '') || ($healthPassword !== '' && $healthUsername === '')) {
+            throw new \RuntimeException('Configured bootstrap usernames cannot be empty.');
+        }
+
         $adminUnit = Unit::firstOrCreate(
             ['name' => '系统管理单位'],
             ['status' => 'active']
         );
 
-        User::firstOrCreate(
-            ['username' => 'admin'],
-            [
-                'unit_id' => $adminUnit->id,
-                'name' => '系统管理员',
-                'password' => Hash::make('ChangeMe-2026'),
-                'role' => Role::SUPER_ADMIN,
-                'is_active' => true,
-            ]
-        );
+        if ($adminPassword !== '') {
+            User::firstOrCreate(
+                ['username' => $adminUsername],
+                [
+                    'unit_id' => $adminUnit->id,
+                    'name' => '系统管理员',
+                    'password' => Hash::make($adminPassword),
+                    'role' => Role::SUPER_ADMIN,
+                    'is_active' => true,
+                ]
+            );
+        }
 
-        User::firstOrCreate(
-            ['username' => 'health_check_user'],
-            [
+        if ($healthPassword !== '' && ! $existingHealthUser) {
+            User::create([
+                'username' => $healthUsername,
                 'unit_id' => $adminUnit->id,
                 'name' => '部署健康检查账号',
                 'email' => 'health_check@example.test',
-                'password' => Hash::make('HealthCheck-2026'),
+                'password' => Hash::make($healthPassword),
                 'role' => Role::UNIT,
                 'is_active' => true,
                 'metadata' => ['health_check' => true],
-            ]
-        );
-
-        User::updateOrCreate(
-            ['username' => 'e2e_20260702_delivery_admin'],
-            [
-                'unit_id' => $adminUnit->id,
-                'name' => 'E2E-20260702 delivery admin',
-                'email' => 'e2e_20260702_delivery_admin@example.test',
-                'password' => Hash::make('Test@2026pass'),
-                'role' => Role::ADMIN,
-                'is_active' => true,
-                'metadata' => ['e2e' => true, 'delivery' => true],
-            ]
-        );
+            ]);
+        }
 
         $settings = [
             ['key' => 'sms.provider', 'value' => '', 'group' => 'sms', 'is_secret' => false, 'description' => '短信供应商标识'],
@@ -325,11 +342,11 @@ class DatabaseSeeder extends Seeder
             ['key' => 'password_reset', 'name' => '找回密码', 'subject' => '项目申报系统密码重置', 'body' => "您正在重置项目申报系统账号密码。\n\n请在 {{ expire_minutes }} 分钟内打开以下链接设置新密码：\n{{ reset_link }}\n\n如果不是本人操作，请忽略本邮件。"],
             ['key' => 'registration_pending', 'name' => '注册待审', 'subject' => '单位注册申请已提交', 'body' => "您的单位注册申请已提交。\n单位：{{ unit_name }}\n账号：{{ username }}\n请等待管理员审核启用。"],
             ['key' => 'registration_result', 'name' => '注册审核结果', 'subject' => '单位注册审核结果', 'body' => "您的单位注册审核结果：{{ result }}。\n{{ comment }}"],
-            ['key' => 'project_submitted', 'name' => '项目提交', 'subject' => '项目已提交', 'body' => "项目“{{ project_title }}”已提交，当前阶段：{{ stage }}。"],
-            ['key' => 'review_flow', 'name' => '审核流转', 'subject' => '项目审核流转提醒', 'body' => "项目“{{ project_title }}”已流转到 {{ stage }}，请及时处理。"],
+            ['key' => 'project_submitted', 'name' => '项目提交', 'subject' => '项目已提交', 'body' => '项目“{{ project_title }}”已提交，当前阶段：{{ stage }}。'],
+            ['key' => 'review_flow', 'name' => '审核流转', 'subject' => '项目审核流转提醒', 'body' => '项目“{{ project_title }}”已流转到 {{ stage }}，请及时处理。'],
             ['key' => 'review_result', 'name' => '审核结果', 'subject' => '项目审核结果', 'body' => "项目“{{ project_title }}”审核结果：{{ decision }}。\n{{ comment }}"],
-            ['key' => 'acceptance_submitted', 'name' => '验收提交', 'subject' => '验收申请已提交', 'body' => "项目“{{ project_title }}”已提交验收申请，当前阶段：{{ stage }}。"],
-            ['key' => 'acceptance_review', 'name' => '验收审核', 'subject' => '验收审核流转提醒', 'body' => "项目“{{ project_title }}”验收已流转到 {{ stage }}，请及时处理。"],
+            ['key' => 'acceptance_submitted', 'name' => '验收提交', 'subject' => '验收申请已提交', 'body' => '项目“{{ project_title }}”已提交验收申请，当前阶段：{{ stage }}。'],
+            ['key' => 'acceptance_review', 'name' => '验收审核', 'subject' => '验收审核流转提醒', 'body' => '项目“{{ project_title }}”验收已流转到 {{ stage }}，请及时处理。'],
             ['key' => 'extension_result', 'name' => '延期处理', 'subject' => '延期申请处理结果', 'body' => "项目“{{ project_title }}”延期申请结果：{{ decision }}。\n{{ comment }}"],
             ['key' => 'test_mail', 'name' => '测试邮件', 'subject' => '项目申报系统测试邮件', 'body' => "这是一封测试邮件。\n发送时间：{{ sent_at }}"],
         ];

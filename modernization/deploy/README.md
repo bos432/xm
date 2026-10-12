@@ -55,9 +55,16 @@ APP_ROOT=/www/wwwroot/nxm.zlck888.com \
 REPO_URL=https://github.com/bos432/xm.git \
 BRANCH=main \
 PHP_BIN=/www/server/php/83/bin/php \
-RUN_SEED=1 \
 bash ./deploy.sh
 ```
+
+Normal deployments do not run `db:seed` and do not reload the shared Nginx
+service. The script takes an app-local deployment lock, creates and verifies a
+restricted pre-migration database backup under `shared/backups/database`,
+switches only this site's `current` symlink, checks the release, and restores
+the previous symlink if post-switch health checks fail. It runs database
+migrations; code rollback does not reverse schema migrations. Keep the
+encrypted/off-host backup retention policy independent from release cleanup.
 
 SSH deploy keys are still supported as an optional alternative. If using SSH,
 verify `ssh -T git@github.com` before deployment and set
@@ -89,14 +96,23 @@ account in `/www/wwwroot/nxm.zlck888.com/shared/.env`:
 
 ```env
 HEALTH_CHECK_USERNAME=health_check_user
-HEALTH_CHECK_PASSWORD=replace-with-production-password
+HEALTH_CHECK_PASSWORD=<random-secret-at-least-20-characters>
 ```
 
-`health_check_user` is seeded with `metadata.health_check=true`. Change the
-production password after first seed and keep `.env` in sync. When these two
-variables are absent, deployment fails before switching releases. For a manual
-emergency deployment only, set `SKIP_LOGIN_HEALTH=1` to skip the local and HTTP
-login health checks with an explicit warning.
+The health-check account must already exist as an active, minimum-permission
+unit account with `metadata.health_check=true`; the deploy script will not
+create a known-password account. `HEALTH_CHECK_PASSWORD` must be at least 20
+characters. Missing credentials fail before release preparation unless the
+operator explicitly sets `SKIP_LOGIN_HEALTH=1`; skipping login health is not
+recommended for production. Set `RELOAD_NGINX=1` only when the site's Nginx
+configuration changed and a host-level reload has been reviewed for other
+virtual hosts.
+
+For a genuinely new installation only, bootstrap accounts can be created by
+setting random secrets in the protected `shared/.env` and explicitly running
+`RUN_SEED=1`. The seeder creates absent accounts only, validates secrets of at
+least 20 characters, and never resets existing account passwords. Never put
+bootstrap secrets in shell history or Git.
 
 ## Rollback
 
@@ -111,8 +127,12 @@ Switch back to a previous release:
 ```bash
 cd /www/wwwroot/nxm.zlck888.com
 ln -sfn releases/<previous-release-id> current
-nginx -t && /etc/init.d/nginx reload
+curl -fsSI https://nxm.zlck888.com/
 ```
+
+Changing this site's `current` symlink does not require reloading Nginx when the
+virtual-host configuration is unchanged. A host-wide Nginx reload is a separate
+operations action and must be reviewed for impact on every virtual host first.
 
 Rollback does not roll back database migrations. For database changes, restore from a verified backup when required.
 

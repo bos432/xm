@@ -19,15 +19,15 @@ https://nxm.zlck888.com/
 
 | 角色 | 账号 | 密码 | 用途 |
 | --- | --- | --- | --- |
-| 单位用户 | `e2e_20260630_103223_unit` | `Test@2026pass` | 项目申报、全周期、验收 |
-| 区县审核 | `e2e_20260630_103223_county` | `Test@2026pass` | 项目初审、验收初审 |
-| 部门审核 | `e2e_20260630_103223_department` | `Test@2026pass` | 部门复核、验收复核 |
-| 专家评审 | `e2e_20260630_103223_expert` | `Test@2026pass` | 专家评分、验收评审 |
-| 业务管理员 | `e2e_20260702_delivery_admin` | `Test@2026pass` | 项目、批次、单位、账号、验收管理 |
-| 超级管理员 | `admin` | `ChangeMe-2026` | 系统配置、安全中心、首页管理、权限管理 |
-| 健康检查 | `health_check_user` | `HealthCheck-2026` | 部署健康检查专用 |
+| 单位用户 | `e2e_20260630_103223_unit` | 由受控测试凭据库提供 | 项目申报、全周期、验收 |
+| 区县审核 | `e2e_20260630_103223_county` | 由受控测试凭据库提供 | 项目初审、验收初审 |
+| 部门审核 | `e2e_20260630_103223_department` | 由受控测试凭据库提供 | 部门复核、验收复核 |
+| 专家评审 | `e2e_20260630_103223_expert` | 由受控测试凭据库提供 | 专家评分、验收评审 |
+| 业务管理员 | `e2e_20260702_delivery_admin` | 由受控测试凭据库提供 | 项目、批次、单位、账号、验收管理 |
+| 超级管理员 | 以生产用户表为准 | 由安全渠道单独交付 | 系统配置、安全中心、首页管理、权限管理 |
+| 健康检查 | `health_check_user`（如已配置） | 仅服务器 `shared/.env` 保存 | 部署健康检查专用 |
 
-交付后必须修改 `admin` 和 `health_check_user` 默认密码。
+账号密码不得使用仓库默认值，不得写入 Git 或普通交付文档；测试和生产凭据分别保管。
 
 ## 3. 测试前服务器健康检查
 
@@ -37,8 +37,8 @@ https://nxm.zlck888.com/
 cd /www/wwwroot/nxm.zlck888.com/current/backend
 
 /www/server/php/83/bin/php artisan health:login-check \
-  --username=health_check_user \
-  --password='HealthCheck-2026'
+  --username="$HEALTH_CHECK_USERNAME" \
+  --password="$HEALTH_CHECK_PASSWORD"
 
 curl -I https://nxm.zlck888.com/
 curl -I https://nxm.zlck888.com/dashboard
@@ -86,7 +86,7 @@ curl -I https://nxm.zlck888.com/public-home
 账号：
 
 ```text
-e2e_20260630_103223_unit / Test@2026pass
+e2e_20260630_103223_unit / 使用受控测试凭据
 ```
 
 ### 5.1 登录与菜单
@@ -196,7 +196,7 @@ e2e_20260630_103223_unit / Test@2026pass
 账号：
 
 ```text
-e2e_20260630_103223_county / Test@2026pass
+e2e_20260630_103223_county / 使用受控测试凭据
 ```
 
 ### 6.1 登录与菜单
@@ -269,7 +269,7 @@ e2e_20260630_103223_county / Test@2026pass
 账号：
 
 ```text
-e2e_20260630_103223_department / Test@2026pass
+e2e_20260630_103223_department / 使用受控测试凭据
 ```
 
 ### 7.1 审核任务
@@ -313,7 +313,7 @@ e2e_20260630_103223_department / Test@2026pass
 账号：
 
 ```text
-e2e_20260630_103223_expert / Test@2026pass
+e2e_20260630_103223_expert / 使用受控测试凭据
 ```
 
 ### 8.1 专家待审任务
@@ -367,7 +367,7 @@ e2e_20260630_103223_expert / Test@2026pass
 账号：
 
 ```text
-e2e_20260702_delivery_admin / Test@2026pass
+e2e_20260702_delivery_admin / 使用受控测试凭据
 ```
 
 ### 9.1 菜单权限
@@ -454,7 +454,7 @@ e2e_20260702_delivery_admin / Test@2026pass
 账号：
 
 ```text
-admin / ChangeMe-2026
+超级管理员账号 / 使用安全渠道单独交付凭据
 ```
 
 ### 10.1 菜单权限

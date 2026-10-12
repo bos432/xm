@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Support\Role;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 
@@ -14,13 +15,13 @@ class HealthCheckLogin extends Command
 
     public function handle(): int
     {
-        $username = (string) ($this->option('username') ?: env('HEALTH_CHECK_USERNAME', 'health_check_user'));
-        $password = (string) ($this->option('password') ?: env('HEALTH_CHECK_PASSWORD', ''));
+        $username = (string) ($this->option('username') ?: config('modernization.health_check_username'));
+        $password = (string) ($this->option('password') ?: config('modernization.health_check_password'));
 
         if ($username === '' || $password === '') {
-            $this->warn('Health login credentials missing; local login check skipped.');
+            $this->error('Health login failed: credentials are not configured.');
 
-            return self::SUCCESS;
+            return self::FAILURE;
         }
 
         $user = User::query()
@@ -36,6 +37,12 @@ class HealthCheckLogin extends Command
 
         if (! $user->is_active) {
             $this->error("Health login failed: account [{$username}] is inactive.");
+
+            return self::FAILURE;
+        }
+
+        if ($user->role !== Role::UNIT || ! ($user->metadata['health_check'] ?? false)) {
+            $this->error("Health login failed: account [{$username}] is not a dedicated health-check account.");
 
             return self::FAILURE;
         }

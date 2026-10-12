@@ -1,5 +1,7 @@
 # 2026-07-02 工作流升级部署文档
 
+> 安全更新（2026-10）：本文件旧版固定密码与 `RUN_SEED=1` 部署命令已废止。常规部署不运行 Seeder、不 reload Nginx；使用 `modernization/deploy/README.md` 中的安全流程。
+
 ## 1. 部署范围
 
 - 只部署 `modernization` 新系统。
@@ -70,7 +72,6 @@ REPO_URL=https://github.com/bos432/xm.git \
 BRANCH=main \
 PHP_BIN=/www/server/php/83/bin/php \
 FRONTEND_API_BASE=/api \
-RUN_SEED=1 \
 bash ./deploy.sh
 ```
 
@@ -92,8 +93,8 @@ curl -s https://nxm.zlck888.com/api/public/homepage | head -c 500; echo
 
 cd /www/wwwroot/nxm.zlck888.com/current/backend
 /www/server/php/83/bin/php artisan health:login-check \
-  --username=health_check_user \
-  --password='HealthCheck-2026'
+  --username="$HEALTH_CHECK_USERNAME" \
+  --password="$HEALTH_CHECK_PASSWORD"
 ```
 
 预期：

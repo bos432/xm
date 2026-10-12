@@ -1,5 +1,7 @@
 # 2026-07-02 测试数据治理部署文档
 
+> 安全更新（2026-10）：本文件中的历史测试密码和 `RUN_SEED=1` 示例已撤销。E2E 密码使用受控凭据库的环境变量注入；生产部署遵循 `modernization/deploy/README.md`。
+
 ## 1. 部署范围
 
 - 只部署 `modernization` 新 Laravel/Vue 系统。
@@ -18,7 +20,6 @@ APP_ROOT=/www/wwwroot/nxm.zlck888.com \
 REPO_URL=https://github.com/bos432/xm.git \
 BRANCH=main \
 PHP_BIN=/www/server/php/83/bin/php \
-RUN_SEED=1 \
 bash ./deploy.sh
 ```
 
@@ -36,7 +37,7 @@ grep -E '^(APP_URL|HEALTH_CHECK_USERNAME|HEALTH_CHECK_PASSWORD)=' shared/.env
 ```env
 APP_URL=https://nxm.zlck888.com
 HEALTH_CHECK_USERNAME=health_check_user
-HEALTH_CHECK_PASSWORD=<生产实际密码>
+HEALTH_CHECK_PASSWORD=<至少20位随机强密码，仅服务器受控配置>
 ```
 
 正常生产部署不要设置 `SKIP_LOGIN_HEALTH=1`。只有紧急救援时才允许临时跳过登录健康检查。
@@ -86,17 +87,17 @@ E2E_BASE_URL=https://nxm.zlck888.com \
 E2E_STAMP=E2E-20260630-103223 \
 E2E_PROJECT_ID=5 \
 E2E_UNIT_USERNAME=e2e_20260630_103223_unit \
-E2E_UNIT_PASSWORD=Test@2026pass \
+E2E_UNIT_PASSWORD="$E2E_UNIT_PASSWORD" \
 E2E_COUNTY_USERNAME=e2e_20260630_103223_county \
-E2E_COUNTY_PASSWORD=Test@2026pass \
+E2E_COUNTY_PASSWORD="$E2E_COUNTY_PASSWORD" \
 E2E_DEPARTMENT_USERNAME=e2e_20260630_103223_department \
-E2E_DEPARTMENT_PASSWORD=Test@2026pass \
+E2E_DEPARTMENT_PASSWORD="$E2E_DEPARTMENT_PASSWORD" \
 E2E_EXPERT_USERNAME=e2e_20260630_103223_expert \
-E2E_EXPERT_PASSWORD=Test@2026pass \
+E2E_EXPERT_PASSWORD="$E2E_EXPERT_PASSWORD" \
 E2E_ADMIN_USERNAME=e2e_20260630_103223_admin \
-E2E_ADMIN_PASSWORD=Test@2026pass \
+E2E_ADMIN_PASSWORD="$E2E_ADMIN_PASSWORD" \
 E2E_SUPER_ADMIN_USERNAME=admin \
-E2E_SUPER_ADMIN_PASSWORD=ChangeMe-2026 \
+E2E_SUPER_ADMIN_PASSWORD="$E2E_SUPER_ADMIN_PASSWORD" \
 npm run e2e
 ```
 
