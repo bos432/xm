@@ -65,10 +65,15 @@ APP_ROOT=/www/wwwroot/nxm.zlck888.com \
 REPO_URL=https://github.com/bos432/xm.git \
 BRANCH=main \
 PHP_BIN=/www/server/php/83/bin/php \
-RUN_SEED=1 \
-RUN_MIGRATIONS=1 \
 bash ./deploy.sh
 ```
+
+Do not add `RUN_SEED=1` to routine deployments. Set `RUN_MIGRATIONS=1` only
+when a reviewed release contains pending migrations; the script first creates
+and verifies a restricted database backup. MySQL/MariaDB requires `mysqldump`;
+SQLite requires an absolute `DB_DATABASE` path. Unsupported drivers or backup
+failures stop before migration and release activation. Keep an encrypted
+off-server backup as a separate disaster-recovery control.
 
 SSH deploy keys are still supported as an optional alternative. If using SSH,
 verify `ssh -T git@github.com` before deployment and set
@@ -110,13 +115,17 @@ emergency deployment only, set `SKIP_LOGIN_HEALTH=1` to skip the local and HTTP
 login health checks with an explicit warning.
 
 The local check reads credentials from Laravel configuration; credentials are
-not passed as Artisan command-line arguments. The account must be an active,
+not passed as Artisan command-line arguments. It only sends the real login
+request to `https://nxm.zlck888.com` and strictly parses the current two-number
+addition captcha. Login must return a token and logout must succeed, otherwise
+deployment rolls back the release. The account must be an active,
 unit-role user with `metadata.health_check=true`; middleware limits it to the
 logout endpoint. On first account creation or password rotation, use a unique
 password of at least 20 characters. Previously documented fixed passwords are
-not accepted for seeded production deployments. Set the new password in
-`shared/.env` and deploy with `RUN_SEED=1`; the seeder updates only that health
-account and revokes its existing tokens.
+not accepted for seeded production deployments. Routine deployments do not run
+`db:seed`. With an explicit strong `HEALTH_CHECK_PASSWORD` and `RUN_SEED=1`,
+the seeder may rotate only the dedicated health-check account and revoke its
+old tokens; it does not change existing administrator passwords.
 
 ## Rollback
 

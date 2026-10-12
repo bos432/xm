@@ -13,6 +13,7 @@ WEB_USER="${WEB_USER:-www:www}"
 RUN_SEED="${RUN_SEED:-0}"
 RUN_MIGRATIONS="${RUN_MIGRATIONS:-0}"
 SKIP_LOGIN_HEALTH="${SKIP_LOGIN_HEALTH:-0}"
+DB_BACKUP_DIR="${DB_BACKUP_DIR:-}"
 
 RELEASE_ID="$(date +%Y%m%d%H%M%S)"
 RELEASE_DIR="$APP_ROOT/releases/$RELEASE_ID"
@@ -23,6 +24,7 @@ SHARED_DIR="$APP_ROOT/shared"
 CURRENT_LINK="$APP_ROOT/current"
 PREVIOUS_CURRENT=""
 DEPLOY_SWITCHED=0
+DB_BACKUP_TMP=""
 
 log() {
   printf '[%s] %s\n' "$(date '+%F %T')" "$*"
@@ -44,6 +46,10 @@ switch_current() {
 finish_deploy() {
   local status=$?
   trap - EXIT
+
+  if [ "$status" -ne 0 ] && [ -n "$DB_BACKUP_TMP" ]; then
+    rm -f "$DB_BACKUP_TMP"
+  fi
 
   if [ "$status" -ne 0 ] && [ "$DEPLOY_SWITCHED" = "1" ]; then
     if [ -n "$PREVIOUS_CURRENT" ]; then
@@ -101,6 +107,56 @@ elif [ "${#HEALTH_CHECK_PASSWORD}" -lt 20 ]; then
   fail "HEALTH_CHECK_PASSWORD must contain at least 20 characters; configure a new random password before deploying"
 fi
 
+if [ "$RUN_MIGRATIONS" = "1" ]; then
+  DB_CONNECTION="$(grep -E '^DB_CONNECTION=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
+  DB_CONNECTION="${DB_CONNECTION:-mysql}"
+  DB_BACKUP_DIR="${DB_BACKUP_DIR:-$SHARED_DIR/backups/database}"
+  mkdir -p "$DB_BACKUP_DIR"
+  chmod 700 "$DB_BACKUP_DIR"
+
+  if [ "$DB_CONNECTION" = "mysql" ]; then
+    MYSQLDUMP_BIN="${MYSQLDUMP_BIN:-$(command -v mysqldump || true)}"
+    [ -n "$MYSQLDUMP_BIN" ] && [ -x "$MYSQLDUMP_BIN" ] || fail "mysqldump is required before database migrations."
+    DB_NAME="$(grep -E '^DB_DATABASE=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
+    DB_USER="$(grep -E '^DB_USERNAME=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
+    DB_PASSWORD="$(grep -E '^DB_PASSWORD=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
+    DB_HOST="$(grep -E '^DB_HOST=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
+    DB_PORT="$(grep -E '^DB_PORT=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
+    DB_SOCKET="$(grep -E '^DB_SOCKET=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
+    [ -n "$DB_NAME" ] && [ -n "$DB_USER" ] || fail "DB_DATABASE and DB_USERNAME are required for the pre-migration backup."
+    DB_HOST="${DB_HOST:-127.0.0.1}"
+    DB_PORT="${DB_PORT:-3306}"
+    DB_BACKUP_FILE="$DB_BACKUP_DIR/${DB_NAME}-before-${RELEASE_ID}.sql.gz"
+    DB_BACKUP_TMP="$DB_BACKUP_FILE.tmp"
+    log "Backing up database before migration to $DB_BACKUP_FILE"
+    if [ -n "$DB_SOCKET" ]; then
+      MYSQL_PWD="$DB_PASSWORD" "$MYSQLDUMP_BIN" --user="$DB_USER" --socket="$DB_SOCKET" --single-transaction --routines --triggers "$DB_NAME" | gzip -c > "$DB_BACKUP_TMP" \
+        || fail "Database backup failed; migration was not started."
+    else
+      MYSQL_PWD="$DB_PASSWORD" "$MYSQLDUMP_BIN" --user="$DB_USER" --host="$DB_HOST" --port="$DB_PORT" --single-transaction --routines --triggers "$DB_NAME" | gzip -c > "$DB_BACKUP_TMP" \
+        || fail "Database backup failed; migration was not started."
+    fi
+    chmod 600 "$DB_BACKUP_TMP"
+    gzip -t "$DB_BACKUP_TMP" || fail "Database backup archive verification failed; migration was not started."
+    DB_BACKUP_SIZE="$(gzip -dc "$DB_BACKUP_TMP" | wc -c)"
+    [ "$DB_BACKUP_SIZE" -gt 0 ] || fail "Database backup is empty; migration was not started."
+    mv "$DB_BACKUP_TMP" "$DB_BACKUP_FILE"
+    DB_BACKUP_TMP=""
+  elif [ "$DB_CONNECTION" = "sqlite" ]; then
+    DB_PATH="$(grep -E '^DB_DATABASE=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
+    case "$DB_PATH" in
+      /*) ;;
+      *) fail "SQLite DB_DATABASE must be an absolute path so the correct persistent database can be backed up." ;;
+    esac
+    [ -f "$DB_PATH" ] || fail "SQLite database file not found; refusing migrations without a backup."
+    DB_BACKUP_FILE="$DB_BACKUP_DIR/sqlite-before-${RELEASE_ID}.sqlite"
+    cp -p "$DB_PATH" "$DB_BACKUP_FILE"
+    chmod 600 "$DB_BACKUP_FILE"
+  else
+    fail "Automatic pre-migration backup is unsupported for DB_CONNECTION=$DB_CONNECTION."
+  fi
+fi
+
 log "Cloning $REPO_URL#$BRANCH"
 git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$SOURCE_DIR"
 
@@ -141,7 +197,7 @@ mkdir -p "$COMPOSER_HOME"
 "$PHP_BIN" composer.phar install --no-dev --optimize-autoloader --no-interaction
 
 if [ "$RUN_MIGRATIONS" = "1" ]; then
-  log "Running database migrations; database schema changes are not automatically reversible"
+  log "Running database migrations; verified backup created and schema changes are not automatically reversible"
   "$PHP_BIN" artisan migrate --force
 else
   log "Database migrations skipped; set RUN_MIGRATIONS=1 only after reviewing pending migrations and backing up the app database"
@@ -184,7 +240,7 @@ if [ -z "$HEALTH_CHECK_USERNAME" ] || [ -z "$HEALTH_CHECK_PASSWORD" ]; then
 else
   "$PHP_BIN" "$BACKEND_DIR/artisan" health:login-check \
     || fail "Local login health check failed"
-  log "Local login health check passed; real credentials were not sent over HTTP"
+  log "Local credential validation and HTTPS captcha/login/logout health check passed"
 fi
 "$PHP_BIN" "$BACKEND_DIR/artisan" config:show queue.default >/dev/null 2>&1 || log "WARNING: queue config health check skipped"
 FAILED_JOBS_COUNT="$("$PHP_BIN" "$BACKEND_DIR/artisan" queue:failed-count 2>/dev/null || echo 0)"
