@@ -26,6 +26,7 @@ cp "$TEMP_ROOT/composer.phar" "$APP_ROOT/shared/composer.phar"
 for name in git node npm php curl chown nginx; do
   ln -s "$SCRIPT_DIR/mock-command.sh" "$MOCK_BIN/$name"
 done
+chmod +x "$SCRIPT_DIR/mock-command.sh"
 
 export PATH="$MOCK_BIN:$PATH"
 export APP_ROOT
