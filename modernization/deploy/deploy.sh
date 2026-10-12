@@ -11,6 +11,7 @@ NPM_BIN="${NPM_BIN:-npm}"
 FRONTEND_API_BASE="${FRONTEND_API_BASE:-/api}"
 WEB_USER="${WEB_USER:-www:www}"
 RUN_SEED="${RUN_SEED:-0}"
+RUN_MIGRATIONS="${RUN_MIGRATIONS:-0}"
 SKIP_LOGIN_HEALTH="${SKIP_LOGIN_HEALTH:-0}"
 
 RELEASE_ID="$(date +%Y%m%d%H%M%S)"
@@ -20,6 +21,8 @@ BACKEND_DIR="$RELEASE_DIR/backend"
 PUBLIC_DIR="$RELEASE_DIR/public"
 SHARED_DIR="$APP_ROOT/shared"
 CURRENT_LINK="$APP_ROOT/current"
+PREVIOUS_CURRENT=""
+DEPLOY_SWITCHED=0
 
 log() {
   printf '[%s] %s\n' "$(date '+%F %T')" "$*"
@@ -30,36 +33,72 @@ fail() {
   exit 1
 }
 
+switch_current() {
+  local target="$1"
+  local temporary_link="$APP_ROOT/.current-${RELEASE_ID}"
+
+  ln -s "$target" "$temporary_link"
+  mv -Tf "$temporary_link" "$CURRENT_LINK"
+}
+
+finish_deploy() {
+  local status=$?
+  trap - EXIT
+
+  if [ "$status" -ne 0 ] && [ "$DEPLOY_SWITCHED" = "1" ]; then
+    if [ -n "$PREVIOUS_CURRENT" ]; then
+      local rollback_link="$APP_ROOT/.current-rollback-${RELEASE_ID}"
+      if ln -s "$PREVIOUS_CURRENT" "$rollback_link" && mv -Tf "$rollback_link" "$CURRENT_LINK"; then
+        log "Deployment failed; restored previous release: $PREVIOUS_CURRENT"
+      else
+        log "ERROR: deployment failed and automatic rollback could not restore $PREVIOUS_CURRENT"
+        rm -f "$rollback_link"
+      fi
+    elif [ -L "$CURRENT_LINK" ]; then
+      rm -f "$CURRENT_LINK"
+      log "Deployment failed; removed the first-release current link"
+    fi
+  fi
+
+  exit "$status"
+}
+
+trap finish_deploy EXIT
+
+if [ -e "$CURRENT_LINK" ] && [ ! -L "$CURRENT_LINK" ]; then
+  fail "Current path exists but is not a symlink: $CURRENT_LINK"
+fi
+if [ -L "$CURRENT_LINK" ]; then
+  PREVIOUS_CURRENT="$(readlink "$CURRENT_LINK")"
+fi
+
 command -v git >/dev/null 2>&1 || fail "git is not installed"
 [ -x "$PHP_BIN" ] || fail "PHP binary not found: $PHP_BIN"
 command -v "$NODE_BIN" >/dev/null 2>&1 || fail "node is not installed or NODE_BIN is wrong"
 command -v "$NPM_BIN" >/dev/null 2>&1 || fail "npm is not installed or NPM_BIN is wrong"
 
-mkdir -p "$APP_ROOT/releases" "$SHARED_DIR/storage" "$SHARED_DIR/bootstrap-cache"
+mkdir -p "$APP_ROOT/releases"
+exec 9>"$APP_ROOT/.deploy.lock"
+flock -n 9 || fail "Another deployment is already running for this application"
+[ -f "$SHARED_DIR/.env" ] || fail "Missing $SHARED_DIR/.env. Prepare the production environment file before deploying."
+[ -d "$SHARED_DIR/storage" ] || fail "Missing $SHARED_DIR/storage. Prepare persistent application storage before deploying."
+[ -f "$COMPOSER_BIN" ] || fail "Composer not found at $COMPOSER_BIN. Install it in shared before deploying."
 
-if [ ! -f "$SHARED_DIR/.env" ]; then
-  if [ -f "$APP_ROOT/backend/.env" ]; then
-    log "Migrating existing backend .env to shared/.env"
-    cp "$APP_ROOT/backend/.env" "$SHARED_DIR/.env"
-  else
-    fail "Missing $SHARED_DIR/.env. Copy your production .env there before deploying."
-  fi
-fi
+grep -q '^APP_KEY=base64:' "$SHARED_DIR/.env" || fail "APP_KEY is missing from shared/.env; refusing to generate or change the production encryption key during deployment"
+APP_URL="$(grep -E '^APP_URL=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"')"
+APP_URL="${APP_URL:-https://nxm.zlck888.com}"
+case "$APP_URL" in
+  https://nxm.zlck888.com|https://nxm.zlck888.com/*) ;;
+  *) fail "APP_URL must target https://nxm.zlck888.com; refusing to send health checks to another host" ;;
+esac
 
-if [ ! -f "$COMPOSER_BIN" ]; then
-  if [ -f "$APP_ROOT/backend/composer.phar" ]; then
-    log "Migrating existing composer.phar to shared"
-    cp "$APP_ROOT/backend/composer.phar" "$COMPOSER_BIN"
-  else
-    log "Downloading Composer to shared/composer.phar"
-    "$PHP_BIN" -r "copy('https://getcomposer.org/composer-stable.phar', '$COMPOSER_BIN');" \
-      || fail "Unable to download Composer. Put composer.phar at $COMPOSER_BIN and retry."
-  fi
-fi
-
-if [ -d "$APP_ROOT/backend/storage" ] && [ ! -e "$SHARED_DIR/storage/app" ]; then
-  log "Migrating existing storage to shared/storage"
-  cp -a "$APP_ROOT/backend/storage/." "$SHARED_DIR/storage/"
+HEALTH_CHECK_USERNAME="$(grep -E '^HEALTH_CHECK_USERNAME=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
+HEALTH_CHECK_PASSWORD="$(grep -E '^HEALTH_CHECK_PASSWORD=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
+if [ -z "$HEALTH_CHECK_USERNAME" ] || [ -z "$HEALTH_CHECK_PASSWORD" ]; then
+  [ "$SKIP_LOGIN_HEALTH" = "1" ] || fail "login health credentials missing; configure them in shared/.env or explicitly set SKIP_LOGIN_HEALTH=1"
+  log "WARNING: login health credentials missing; SKIP_LOGIN_HEALTH=1"
+elif [ "${#HEALTH_CHECK_PASSWORD}" -lt 20 ]; then
+  fail "HEALTH_CHECK_PASSWORD must contain at least 20 characters; configure a new random password before deploying"
 fi
 
 log "Cloning $REPO_URL#$BRANCH"
@@ -93,24 +132,23 @@ cd "$BACKEND_DIR"
 rm -rf storage bootstrap/cache
 ln -s "$SHARED_DIR/.env" .env
 ln -s "$SHARED_DIR/storage" storage
-mkdir -p bootstrap
-ln -s "$SHARED_DIR/bootstrap-cache" bootstrap/cache
+mkdir -p bootstrap/cache
 cp "$COMPOSER_BIN" composer.phar
 
 log "Installing backend dependencies"
-"$PHP_BIN" composer.phar config -g policy.advisories.block false
+export COMPOSER_HOME="$BACKEND_DIR/.composer"
+mkdir -p "$COMPOSER_HOME"
 "$PHP_BIN" composer.phar install --no-dev --optimize-autoloader --no-interaction
 
-if ! grep -q '^APP_KEY=base64:' .env; then
-  log "Generating Laravel application key"
-  "$PHP_BIN" artisan key:generate --force
+if [ "$RUN_MIGRATIONS" = "1" ]; then
+  log "Running database migrations; database schema changes are not automatically reversible"
+  "$PHP_BIN" artisan migrate --force
+else
+  log "Database migrations skipped; set RUN_MIGRATIONS=1 only after reviewing pending migrations and backing up the app database"
 fi
 
-log "Running database migrations"
-"$PHP_BIN" artisan migrate --force
-
 if [ "$RUN_SEED" = "1" ]; then
-  log "Seeding initial production data"
+  log "Seeding configured bootstrap accounts and system defaults"
   "$PHP_BIN" artisan db:seed --force
 fi
 
@@ -124,24 +162,19 @@ log "Ensuring public storage link"
 rm -rf "$PUBLIC_DIR/storage"
 ln -s "$SHARED_DIR/storage/app/public" "$PUBLIC_DIR/storage"
 
+chown -R "$WEB_USER" "$RELEASE_DIR" || true
+
 log "Switching current release"
-ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
+switch_current "$RELEASE_DIR"
+DEPLOY_SWITCHED=1
 chown -h "$WEB_USER" "$CURRENT_LINK" || true
-chown -R "$WEB_USER" "$RELEASE_DIR" "$SHARED_DIR" || true
 
-log "Reloading nginx if available"
-if command -v nginx >/dev/null 2>&1; then
-  nginx -t && /etc/init.d/nginx reload || fail "nginx reload failed"
-fi
+log "Activated the release through the site current symlink; no shared services were reloaded"
 
-APP_URL="$(grep -E '^APP_URL=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"')"
-APP_URL="${APP_URL:-https://nxm.zlck888.com}"
 log "Running deployment health checks for $APP_URL"
 curl -fsSI "$APP_URL/" >/dev/null || fail "Homepage health check failed"
 curl -fsS "$APP_URL/api/auth/captcha" >/dev/null || fail "Captcha API health check failed"
 curl -fsS "$APP_URL/api/public/homepage" >/dev/null || fail "Public homepage API health check failed"
-HEALTH_CHECK_USERNAME="$(grep -E '^HEALTH_CHECK_USERNAME=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
-HEALTH_CHECK_PASSWORD="$(grep -E '^HEALTH_CHECK_PASSWORD=' "$SHARED_DIR/.env" | tail -n 1 | cut -d= -f2- | tr -d '\"' || true)"
 if [ -z "$HEALTH_CHECK_USERNAME" ] || [ -z "$HEALTH_CHECK_PASSWORD" ]; then
   if [ "$SKIP_LOGIN_HEALTH" = "1" ]; then
     log "WARNING: login health credentials missing; SKIP_LOGIN_HEALTH=1, login health checks skipped"
@@ -149,39 +182,9 @@ if [ -z "$HEALTH_CHECK_USERNAME" ] || [ -z "$HEALTH_CHECK_PASSWORD" ]; then
     fail "login health credentials missing: set HEALTH_CHECK_USERNAME and HEALTH_CHECK_PASSWORD in shared/.env, or set SKIP_LOGIN_HEALTH=1"
   fi
 else
-  "$PHP_BIN" "$BACKEND_DIR/artisan" health:login-check --username="$HEALTH_CHECK_USERNAME" --password="$HEALTH_CHECK_PASSWORD" \
+  "$PHP_BIN" "$BACKEND_DIR/artisan" health:login-check \
     || fail "Local login health check failed"
-  log "Running HTTP login health check"
-  LOGIN_PAYLOAD="$(
-    APP_URL="$APP_URL" HEALTH_CHECK_USERNAME="$HEALTH_CHECK_USERNAME" HEALTH_CHECK_PASSWORD="$HEALTH_CHECK_PASSWORD" \
-    "$PHP_BIN" -r '
-      $base = rtrim(getenv("APP_URL"), "/");
-      $captcha = json_decode(file_get_contents($base."/api/auth/captcha"), true);
-      if (!is_array($captcha) || empty($captcha["captcha_id"]) || empty($captcha["question"])) {
-          fwrite(STDERR, "Unable to fetch captcha\n");
-          exit(2);
-      }
-      preg_match_all("/\d+/", $captcha["question"], $matches);
-      $answer = array_sum(array_map("intval", $matches[0] ?? []));
-      echo json_encode([
-          "username" => getenv("HEALTH_CHECK_USERNAME"),
-          "password" => getenv("HEALTH_CHECK_PASSWORD"),
-          "captcha_id" => $captcha["captcha_id"],
-          "captcha_answer" => $answer,
-      ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    '
-  )" || fail "Unable to build login health check payload"
-  LOGIN_RESPONSE="$(curl -fsS -H 'Accept: application/json' -H 'Content-Type: application/json' -d "$LOGIN_PAYLOAD" "$APP_URL/api/auth/login")" \
-    || fail "HTTP login health check failed"
-  LOGIN_TOKEN="$(
-    LOGIN_RESPONSE="$LOGIN_RESPONSE" "$PHP_BIN" -r '
-      $payload = json_decode(getenv("LOGIN_RESPONSE"), true);
-      echo is_array($payload) ? ($payload["token"] ?? "") : "";
-    '
-  )"
-  [ -n "$LOGIN_TOKEN" ] || fail "HTTP login health check did not return token"
-  curl -fsS -X POST -H "Accept: application/json" -H "Authorization: Bearer $LOGIN_TOKEN" "$APP_URL/api/auth/logout" >/dev/null \
-    || log "WARNING: login health check logout failed; token will expire normally"
+  log "Local login health check passed; real credentials were not sent over HTTP"
 fi
 "$PHP_BIN" "$BACKEND_DIR/artisan" config:show queue.default >/dev/null 2>&1 || log "WARNING: queue config health check skipped"
 FAILED_JOBS_COUNT="$("$PHP_BIN" "$BACKEND_DIR/artisan" queue:failed-count 2>/dev/null || echo 0)"

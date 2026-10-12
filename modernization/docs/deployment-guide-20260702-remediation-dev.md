@@ -89,7 +89,7 @@ npm run e2e
 cd /www/wwwroot/nxm.zlck888.com
 ls -lt releases
 ln -sfn releases/<previous-release-id> current
-nginx -t && /etc/init.d/nginx reload
+不需要重载 Nginx；部署脚本只切换本网站的 `current` 软链接。
 ```
 
 数据库迁移不随代码回滚自动撤回，涉及数据问题时需要使用已验证备份。

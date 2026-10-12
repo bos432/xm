@@ -53,9 +53,10 @@ APP_ROOT=/www/wwwroot/nxm.zlck888.com \
 REPO_URL=https://github.com/bos432/xm.git \
 BRANCH=main \
 PHP_BIN=/www/server/php/83/bin/php \
-RUN_SEED=1 \
 bash ./deploy.sh
 ```
+
+常规发布跳过 Seeder 和数据库迁移。仅在已检查待执行迁移且完成应用数据库备份后，显式追加 `RUN_MIGRATIONS=1`；确需同步种子数据时再追加 `RUN_SEED=1`。
 
 ## 5. 部署脚本会执行的关键动作
 
@@ -69,12 +70,12 @@ npm ci --include=optional --no-audit --no-fund
 
 4. 构建前端。
 5. 链接共享 `.env`、`storage`、`bootstrap-cache`。
-6. 执行数据库迁移和种子。
+6. 默认跳过数据库迁移和 Seeder；只有完成审查与数据库备份后才显式启用。
 7. 执行健康检查：
    - `/`
    - `/api/auth/captcha`
    - `/api/public/homepage`
-   - `php artisan health:login-check --username=... --password=...`
+   - `php artisan health:login-check`（凭据从 Laravel 配置读取）
    - HTTP 真实登录和 logout
 8. 健康检查通过后切换 `current`。
 
@@ -165,8 +166,9 @@ ls -lt /www/wwwroot/nxm.zlck888.com/releases
 ```bash
 cd /www/wwwroot/nxm.zlck888.com
 ln -sfn releases/<previous-release-id> current
-nginx -t && /etc/init.d/nginx reload
 ```
+
+站点使用 `current` 软链接发布时无需重载 Nginx；新部署的健康检查失败会自动恢复旧版本链接。
 
 注意：回滚代码不会自动回滚数据库迁移。数据库问题必须使用已验证备份恢复。
 

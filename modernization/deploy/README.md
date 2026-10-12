@@ -23,6 +23,12 @@ The BT Panel website root should point to:
 /www/wwwroot/nxm.zlck888.com/current/public
 ```
 
+Each release uses its own Composer home. Activation atomically switches only
+this site's `current` symlink; the script does not reload or restart Nginx,
+PHP-FPM, or any other shared service. If a post-switch health check fails, it
+automatically restores the previous `current` link. Database migrations are not
+automatically rolled back.
+
 ## First Run
 
 Upload or copy `deploy.sh` to the server, then run:
@@ -32,7 +38,11 @@ cd /www/wwwroot/nxm.zlck888.com
 bash /path/to/deploy.sh
 ```
 
-The script will migrate the current `backend/.env`, `backend/composer.phar`, and `backend/storage` into `shared/` if they are not there yet.
+Before deployment, provision `shared/.env` (with the existing production `APP_KEY`),
+`shared/composer.phar`, `shared/storage/`, and `shared/bootstrap-cache/` (the last
+directory is retained for compatibility but not linked into new releases). The deployment script refuses to migrate or overwrite
+these persistent paths automatically; perform any one-time migration separately
+after taking and validating a backup.
 
 ## Normal Deployment
 
@@ -56,6 +66,7 @@ REPO_URL=https://github.com/bos432/xm.git \
 BRANCH=main \
 PHP_BIN=/www/server/php/83/bin/php \
 RUN_SEED=1 \
+RUN_MIGRATIONS=1 \
 bash ./deploy.sh
 ```
 
@@ -98,6 +109,15 @@ variables are absent, deployment fails before switching releases. For a manual
 emergency deployment only, set `SKIP_LOGIN_HEALTH=1` to skip the local and HTTP
 login health checks with an explicit warning.
 
+The local check reads credentials from Laravel configuration; credentials are
+not passed as Artisan command-line arguments. The account must be an active,
+unit-role user with `metadata.health_check=true`; middleware limits it to the
+logout endpoint. On first account creation or password rotation, use a unique
+password of at least 20 characters. Previously documented fixed passwords are
+not accepted for seeded production deployments. Set the new password in
+`shared/.env` and deploy with `RUN_SEED=1`; the seeder updates only that health
+account and revokes its existing tokens.
+
 ## Rollback
 
 List releases:
@@ -111,8 +131,10 @@ Switch back to a previous release:
 ```bash
 cd /www/wwwroot/nxm.zlck888.com
 ln -sfn releases/<previous-release-id> current
-nginx -t && /etc/init.d/nginx reload
 ```
+
+Switching this site's symlink takes effect without reloading Nginx. Manual
+rollback does not undo database migrations.
 
 Rollback does not roll back database migrations. For database changes, restore from a verified backup when required.
 

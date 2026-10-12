@@ -86,17 +86,17 @@ E2E_BASE_URL=https://nxm.zlck888.com \
 E2E_STAMP=E2E-20260630-103223 \
 E2E_PROJECT_ID=5 \
 E2E_UNIT_USERNAME=e2e_20260630_103223_unit \
-E2E_UNIT_PASSWORD=Test@2026pass \
+E2E_UNIT_PASSWORD=<从受控密码管理器读取> \
 E2E_COUNTY_USERNAME=e2e_20260630_103223_county \
-E2E_COUNTY_PASSWORD=Test@2026pass \
+E2E_COUNTY_PASSWORD=<从受控密码管理器读取> \
 E2E_DEPARTMENT_USERNAME=e2e_20260630_103223_department \
-E2E_DEPARTMENT_PASSWORD=Test@2026pass \
+E2E_DEPARTMENT_PASSWORD=<从受控密码管理器读取> \
 E2E_EXPERT_USERNAME=e2e_20260630_103223_expert \
-E2E_EXPERT_PASSWORD=Test@2026pass \
+E2E_EXPERT_PASSWORD=<从受控密码管理器读取> \
 E2E_ADMIN_USERNAME=e2e_20260630_103223_admin \
-E2E_ADMIN_PASSWORD=Test@2026pass \
-E2E_SUPER_ADMIN_USERNAME=admin \
-E2E_SUPER_ADMIN_PASSWORD=ChangeMe-2026 \
+E2E_ADMIN_PASSWORD=<从受控密码管理器读取> \
+E2E_SUPER_ADMIN_USERNAME=<生产超管账号> \
+E2E_SUPER_ADMIN_PASSWORD=<从受控密码管理器读取> \
 npm run e2e
 ```
 
@@ -122,7 +122,7 @@ modernization/e2e/reports/runs/<run-id>/artifacts
 cd /www/wwwroot/nxm.zlck888.com
 ls -lt releases
 ln -sfn releases/<previous-release-id> current
-nginx -t && /etc/init.d/nginx reload
+不需要重载 Nginx；部署脚本只切换本网站的 `current` 软链接。
 ```
 
 说明：
