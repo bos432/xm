@@ -69,7 +69,7 @@ bash ./deploy.sh
 ```
 
 The production-readiness release is available on `main` at commit
-`c2629af2e08b1053092cd83455cdddfdb42ab633`. CI passed the frontend lint/build
+`396434cb98a5143b3e01d53aefb130a40bfd495a`. CI passed the frontend lint/build
 and dependency audit, all Laravel feature tests, deployment backup/rollback
 simulations, and the manually dispatched six-role online E2E workflow. Before
 running this command, confirm the site-specific `shared/.env`, Composer binary,
