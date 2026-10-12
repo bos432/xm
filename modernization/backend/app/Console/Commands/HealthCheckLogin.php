@@ -5,8 +5,8 @@ namespace App\Console\Commands;
 use App\Models\User;
 use App\Support\Role;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 
 class HealthCheckLogin extends Command
 {
