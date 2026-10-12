@@ -11,6 +11,7 @@ use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Models\User;
 use App\Support\AuditLogger;
+use App\Support\ReviewDispatchMatcher;
 use App\Support\RichTextSanitizer;
 use App\Support\Role;
 use Illuminate\Http\Request;
@@ -18,9 +19,10 @@ use Illuminate\Http\UploadedFile;
 
 class AcceptanceController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
-    }
+    public function __construct(
+        private readonly AuditLogger $auditLogger,
+        private readonly ReviewDispatchMatcher $dispatchMatcher,
+    ) {}
 
     public function index(Request $request)
     {
@@ -40,14 +42,22 @@ class AcceptanceController extends Controller
             $scope = $request->query('scope', 'pending');
 
             if ($scope === 'reviewed') {
-                $query->whereHas('reviews', fn ($query) => $query->where('stage', $stage));
+                $query->whereHas('reviews', fn ($query) => $query
+                    ->where('stage', $stage)
+                    ->where('reviewer_id', $request->user()->id));
             } elseif ($scope === 'visible') {
-                $query->where(function ($query) use ($stage): void {
-                    $query->where('current_reviewer_role', $stage)
-                        ->orWhereHas('reviews', fn ($query) => $query->where('stage', $stage));
+                $query->where(function ($query) use ($stage, $request): void {
+                    $query->where(function ($current) use ($stage, $request): void {
+                        $current->where('current_reviewer_role', $stage);
+                        $this->scopeToCurrentAssignee($current, $stage, $request);
+                    })
+                        ->orWhereHas('reviews', fn ($query) => $query
+                            ->where('stage', $stage)
+                            ->where('reviewer_id', request()->user()->id));
                 });
             } else {
                 $query->where('current_reviewer_role', $stage);
+                $this->scopeToCurrentAssignee($query, $stage, $request);
             }
         } elseif (in_array($request->user()->role, Role::adminRoles(), true)) {
             $scope = $request->query('scope', $request->boolean('tasks_only') ? 'pending' : 'visible');
@@ -400,9 +410,13 @@ class AcceptanceController extends Controller
         if (in_array($request->user()->role, [Role::COUNTY, Role::DEPARTMENT, Role::EXPERT], true)) {
             $stage = Role::reviewerStageFor($request->user()->role);
             $isCurrentReviewer = $acceptance->current_reviewer_role === $stage;
-            $hasReviewed = $acceptance->reviews()->where('stage', $stage)->exists();
+            $hasReviewed = $acceptance->reviews()
+                ->where('stage', $stage)
+                ->where('reviewer_id', $request->user()->id)
+                ->exists();
 
-            if (! $isCurrentReviewer && ! $hasReviewed) {
+            if (($isCurrentReviewer && ! $this->dispatchMatcher->userCanReview($acceptance->project, $request->user(), $stage))
+                || (! $isCurrentReviewer && ! $hasReviewed)) {
                 abort(403, '无权查看该验收');
             }
         }
@@ -473,6 +487,22 @@ class AcceptanceController extends Controller
         if ($acceptance->current_reviewer_role !== $stage) {
             abort(403, '当前验收不属于你的审核阶段');
         }
+
+        if (! $this->dispatchMatcher->userCanReview($acceptance->project, $request->user(), $stage)) {
+            abort(403, '该验收已派单给其他审核人员');
+        }
+    }
+
+    private function scopeToCurrentAssignee($query, string $stage, Request $request): void
+    {
+        $path = "metadata->review_dispatch->assignments->{$stage}->assigned_user_ids";
+        $query->whereHas('project', function ($project) use ($path, $request): void {
+            $project->where(function ($assignment) use ($path, $request): void {
+                $assignment->whereNull($path)
+                    ->orWhereJsonLength($path, 0)
+                    ->orWhereJsonContains($path, (int) $request->user()->id);
+            });
+        });
     }
 
     private function nextAcceptanceState(AcceptanceApplication $acceptance, string $decision): array

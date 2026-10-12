@@ -9,16 +9,14 @@ use App\Models\ProjectFile;
 use App\Support\AuditLogger;
 use App\Support\ProjectFileStorage;
 use App\Support\Role;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class FileController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
-    }
+    public function __construct(private readonly AuditLogger $auditLogger) {}
 
     public function store(StoreProjectFileRequest $request, Project $project)
     {
@@ -54,6 +52,15 @@ class FileController extends Controller
 
     public function uploadRichTextImage(StorePublicHomeRichTextImageRequest $request)
     {
+        $user = $request->user();
+        $canUpload = Role::userCan($user, 'manage_home_content')
+            || Role::userCan($user, 'create_projects')
+            || Role::userCan($user, 'update_task_books')
+            || Role::userCan($user, 'create_project_progress')
+            || Role::userCan($user, 'submit_rectifications');
+
+        abort_unless($canUpload, 403, '当前账号无权上传富文本图片');
+
         $uploaded = $request->file('file');
         $extension = strtolower($uploaded->getClientOriginalExtension());
         $filename = (string) Str::uuid().'.'.$extension;

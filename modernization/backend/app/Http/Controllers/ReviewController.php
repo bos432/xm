@@ -7,10 +7,10 @@ use App\Models\Project;
 use App\Models\ProjectReview;
 use App\Models\User;
 use App\Support\AuditLogger;
-use App\Support\RichTextSanitizer;
-use App\Support\Role;
 use App\Support\ReviewDispatchMatcher;
 use App\Support\ReviewScoreCriteria;
+use App\Support\RichTextSanitizer;
+use App\Support\Role;
 use App\Support\RuntimeConfig;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -22,9 +22,7 @@ class ReviewController extends Controller
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly ReviewDispatchMatcher $dispatchMatcher,
-    )
-    {
-    }
+    ) {}
 
     public function tasks(Request $request)
     {
@@ -60,17 +58,6 @@ class ReviewController extends Controller
             ->orderByDesc('id');
 
         $visible = $query->get()
-            ->map(function (Project $project) use ($stage): Project {
-                if ($stage === Role::EXPERT && ! $this->dispatchMatcher->assignment($project, Role::EXPERT)) {
-                    $assignment = $this->dispatchMatcher->apply($project, Role::EXPERT);
-                    if ($assignment) {
-                        $project->save();
-                        $project->refresh();
-                    }
-                }
-
-                return $project;
-            })
             ->filter(fn (Project $project): bool => $this->dispatchMatcher->userCanReview($project, $request->user(), $stage))
             ->map(fn (Project $project): Project => $this->attachDispatchAssignment($project, $stage))
             ->values();
@@ -97,7 +84,8 @@ class ReviewController extends Controller
             ->orderByDesc('id');
 
         if (! in_array($request->user()->role, Role::adminRoles(), true)) {
-            $query->where('stage', Role::reviewerStageFor($request->user()->role));
+            $query->where('stage', Role::reviewerStageFor($request->user()->role))
+                ->where('reviewer_id', $request->user()->id);
         } elseif ($stage = $request->query('stage')) {
             $query->where('stage', $stage);
         }
@@ -158,15 +146,8 @@ class ReviewController extends Controller
             abort(403, '当前项目不属于你的审核阶段');
         }
 
-        if ($stage === Role::EXPERT && ! $this->dispatchMatcher->assignment($project, Role::EXPERT)) {
-            $assignment = $this->dispatchMatcher->apply($project, Role::EXPERT);
-            if ($assignment) {
-                $project->save();
-                $project->refresh();
-            }
-        }
-
-        if (! $this->dispatchMatcher->userCanReview($project, $request->user(), $stage)) {
+        if ($this->dispatchMatcher->assignment($project, $stage)
+            && ! $this->dispatchMatcher->userCanReview($project, $request->user(), $stage)) {
             abort(403, '该项目已自动派单给其他审核人员');
         }
 
@@ -203,7 +184,25 @@ class ReviewController extends Controller
             $data = $this->applyFinalSupportMetadata($data, $project, $request);
         }
 
-        [$review, $assignment] = DB::transaction(function () use ($request, $project, $stage, $data): array {
+        [$review, $assignment, $project] = DB::transaction(function () use ($request, $project, $stage, $data): array {
+            $project = Project::query()->lockForUpdate()->findOrFail($project->id);
+            if ($project->current_reviewer_role !== $stage) {
+                abort(409, '项目审核阶段已变化，请刷新后重试');
+            }
+
+            if ($stage === Role::EXPERT && ! $this->dispatchMatcher->assignment($project, Role::EXPERT)) {
+                $this->dispatchMatcher->apply($project, Role::EXPERT);
+                $project->save();
+            }
+
+            if ($stage === Role::EXPERT && $this->hasExistingExpertReview($project, $request->user()->id)) {
+                abort(409, '你的专家评分已提交，请勿重复提交');
+            }
+
+            if ($stage === Role::EXPERT && ! $this->dispatchMatcher->userCanReview($project, $request->user(), $stage)) {
+                abort(403, '该项目已自动派单给其他审核人员');
+            }
+
             $review = ProjectReview::create($data + [
                 'project_id' => $project->id,
                 'reviewer_id' => $request->user()->id,
@@ -212,6 +211,11 @@ class ReviewController extends Controller
             ]);
 
             $nextState = $this->nextProjectState($project, $data['decision']);
+            if (($nextState['current_reviewer_role'] ?? null) === Role::EXPERT
+                && ! $this->dispatchMatcher->assignment($project, Role::EXPERT)) {
+                $this->dispatchMatcher->apply($project, Role::EXPERT);
+                $project->save();
+            }
             if ($stage === Role::ADMIN && $data['decision'] === 'accept') {
                 $projectMetadata = is_array($project->metadata) ? $project->metadata : [];
                 $projectMetadata['final_support'] = $data['metadata']['final_support'] ?? [];
@@ -230,7 +234,7 @@ class ReviewController extends Controller
                 }
             }
 
-            return [$review, $assignment];
+            return [$review, $assignment, $project];
         });
 
         $this->auditLogger->record($request, 'project.reviewed', $review, [
@@ -325,7 +329,7 @@ class ReviewController extends Controller
 
     private function attachDispatchAssignment(Project $project, string $stage): Project
     {
-        $project->setAttribute('dispatch_assignment', $this->dispatchMatcher->assignment($project, $stage));
+        $project->setAttribute('dispatch_assignment', $this->dispatchMatcher->previewAssignment($project, $stage));
 
         return $project;
     }
@@ -394,7 +398,7 @@ class ReviewController extends Controller
         return $data;
     }
 
-    private function supportAmount(array $input, string $key, mixed $legacyValue, bool|null $isSupported): float
+    private function supportAmount(array $input, string $key, mixed $legacyValue, ?bool $isSupported): float
     {
         if ($isSupported === false) {
             return 0.0;

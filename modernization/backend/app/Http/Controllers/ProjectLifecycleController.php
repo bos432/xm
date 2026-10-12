@@ -15,9 +15,7 @@ use Illuminate\Http\Request;
 
 class ProjectLifecycleController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
-    }
+    public function __construct(private readonly AuditLogger $auditLogger) {}
 
     public function taskBooks(Request $request)
     {
@@ -53,6 +51,7 @@ class ProjectLifecycleController extends Controller
 
     public function updateTaskBook(Request $request, ProjectTaskBook $taskBook)
     {
+        $this->authorizeLifecycleRecord($request, $taskBook);
         $this->authorizeUnitProject($request, $taskBook->project, 'update_task_books');
 
         if (! in_array($taskBook->status, ['draft', 'returned'], true)) {
@@ -73,6 +72,7 @@ class ProjectLifecycleController extends Controller
 
     public function submitTaskBook(Request $request, ProjectTaskBook $taskBook)
     {
+        $this->authorizeLifecycleRecord($request, $taskBook);
         $this->authorizeUnitProject($request, $taskBook->project, 'submit_task_books');
 
         if (! in_array($taskBook->status, ['draft', 'returned'], true)) {
@@ -88,6 +88,7 @@ class ProjectLifecycleController extends Controller
     public function reviewTaskBook(Request $request, ProjectTaskBook $taskBook)
     {
         $this->authorizePermission($request, 'review_task_books');
+        $this->authorizeLifecycleRecord($request, $taskBook);
         $this->ensureSubmittedForReview($taskBook->status);
 
         $data = $request->validate([
@@ -141,6 +142,7 @@ class ProjectLifecycleController extends Controller
 
     public function updateProgress(Request $request, ProjectProgressRecord $progress)
     {
+        $this->authorizeLifecycleRecord($request, $progress);
         $this->authorizeUnitProject($request, $progress->project, 'update_project_progress');
 
         if (! in_array($progress->status, ['draft', 'returned'], true)) {
@@ -164,6 +166,7 @@ class ProjectLifecycleController extends Controller
 
     public function submitProgress(Request $request, ProjectProgressRecord $progress)
     {
+        $this->authorizeLifecycleRecord($request, $progress);
         $this->authorizeUnitProject($request, $progress->project, 'submit_project_progress');
 
         if (! in_array($progress->status, ['draft', 'returned'], true)) {
@@ -179,6 +182,7 @@ class ProjectLifecycleController extends Controller
     public function reviewProgress(Request $request, ProjectProgressRecord $progress)
     {
         $this->authorizePermission($request, 'review_project_progress');
+        $this->authorizeLifecycleRecord($request, $progress);
         $this->ensureSubmittedForReview($progress->status);
 
         $data = $request->validate([
@@ -230,6 +234,7 @@ class ProjectLifecycleController extends Controller
 
     public function submitRectification(Request $request, ProjectRectification $rectification)
     {
+        $this->authorizeLifecycleRecord($request, $rectification);
         $this->authorizeUnitProject($request, $rectification->project, 'submit_rectifications');
 
         if (! in_array($rectification->status, ['pending', 'returned'], true)) {
@@ -254,6 +259,7 @@ class ProjectLifecycleController extends Controller
     public function reviewRectification(Request $request, ProjectRectification $rectification)
     {
         $this->authorizePermission($request, 'review_rectifications');
+        $this->authorizeLifecycleRecord($request, $rectification);
         $this->ensureSubmittedForReview($rectification->status);
 
         $data = $request->validate([
@@ -277,6 +283,8 @@ class ProjectLifecycleController extends Controller
         $query = ExpertCertification::query()->with(['user', 'submitter', 'reviewer'])->latest();
         if ($request->user()->role === Role::EXPERT) {
             $query->where('user_id', $request->user()->id);
+        } elseif (! in_array($request->user()->role, Role::adminRoles(), true)) {
+            abort(403, '无权查看专家认证资料');
         }
 
         if ($request->filled('status')) {
@@ -327,6 +335,7 @@ class ProjectLifecycleController extends Controller
     public function reviewExpertCertification(Request $request, ExpertCertification $certification)
     {
         $this->authorizePermission($request, 'review_expert_certifications');
+        abort_unless(in_array($request->user()->role, Role::adminRoles(), true), 403, '只有管理员可以审核专家认证');
         $this->ensureSubmittedForReview($certification->status);
 
         $data = $request->validate([
@@ -344,8 +353,21 @@ class ProjectLifecycleController extends Controller
 
     private function projectScoped(Builder $query, Request $request, bool $hasTitle = true): Builder
     {
-        if ($request->user()->role === Role::UNIT) {
-            $query->where('unit_id', $request->user()->unit_id);
+        $user = $request->user();
+        if ($user->role === Role::UNIT) {
+            $query->where('unit_id', $user->unit_id);
+        } elseif (! in_array($user->role, Role::adminRoles(), true)) {
+            $reviewPermission = $this->lifecycleReviewPermission($query->getModel());
+            $canReviewSubmitted = $reviewPermission && Role::userCan($user, $reviewPermission);
+
+            $query->where(function (Builder $scope) use ($user, $canReviewSubmitted): void {
+                $scope->where('submitted_by', $user->id)
+                    ->orWhere('reviewed_by', $user->id);
+
+                if ($canReviewSubmitted) {
+                    $scope->orWhere('status', 'submitted');
+                }
+            });
         }
 
         if ($request->filled('project_id')) {
@@ -440,6 +462,43 @@ class ProjectLifecycleController extends Controller
         if (! Role::userCan($request->user(), $permission)) {
             abort(403, '无权访问该全周期功能');
         }
+    }
+
+    private function authorizeLifecycleRecord(Request $request, ProjectTaskBook|ProjectProgressRecord|ProjectRectification $record): void
+    {
+        $user = $request->user();
+        if (in_array($user->role, Role::adminRoles(), true)) {
+            return;
+        }
+
+        if ($user->role === Role::UNIT && $record->unit_id === $user->unit_id) {
+            return;
+        }
+
+        if ($record->submitted_by === $user->id || $record->reviewed_by === $user->id) {
+            return;
+        }
+
+        $reviewPermission = $this->lifecycleReviewPermission($record);
+        if ($record->status === 'submitted' && $reviewPermission && Role::userCan($user, $reviewPermission)) {
+            return;
+        }
+
+        if ($record instanceof ProjectRectification && $record->created_by === $user->id) {
+            return;
+        }
+
+        abort(403, '無權訪問該全周期记录');
+    }
+
+    private function lifecycleReviewPermission(ProjectTaskBook|ProjectProgressRecord|ProjectRectification $record): ?string
+    {
+        return match (true) {
+            $record instanceof ProjectTaskBook => 'review_task_books',
+            $record instanceof ProjectProgressRecord => 'review_project_progress',
+            $record instanceof ProjectRectification => 'review_rectifications',
+            default => null,
+        };
     }
 
     private function authorizeUnitProject(Request $request, Project $project, string $permission): void

@@ -6,9 +6,9 @@ use App\Models\Project;
 use App\Models\ProjectReview;
 use App\Support\AuditLogger;
 use App\Support\CsvExport;
-use App\Support\Role;
 use App\Support\ReviewDispatchMatcher;
 use App\Support\ReviewScoreCriteria;
+use App\Support\Role;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -17,9 +17,7 @@ class ReviewExportController extends Controller
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly ReviewDispatchMatcher $dispatchMatcher,
-    )
-    {
-    }
+    ) {}
 
     public function tasksCsv(Request $request): StreamedResponse
     {
@@ -110,7 +108,8 @@ class ReviewExportController extends Controller
             ->orderByDesc('id');
 
         if (! in_array($request->user()->role, Role::adminRoles(), true)) {
-            $query->where('stage', Role::reviewerStageFor($request->user()->role));
+            $query->where('stage', Role::reviewerStageFor($request->user()->role))
+                ->where('reviewer_id', $request->user()->id);
         } elseif ($stage = $request->query('stage')) {
             $query->where('stage', $stage);
         }
