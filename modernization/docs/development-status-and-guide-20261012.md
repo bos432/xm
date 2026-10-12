@@ -1,7 +1,8 @@
 # 科技项目管理系统开发现状与开发文档
 
-> 文档核对日期：2026-10-12  
-> 本次评估的实现代码基线：`45b865e`（2026-07-02，`Update final delivery documents`；文档提交不改变该实现基线）  
+> 文档核对日期：2026-10-12
+>
+> 本次评估的实现代码基线：`45b865e`（2026-07-02，`Update final delivery documents`；文档提交不改变该实现基线）
 > 范围：仅 `modernization` 下的 Laravel/Vue 新系统。旧 ThinkPHP 系统作为历史系统，不在本项目开发范围内。
 
 ## 1. 当前结论
