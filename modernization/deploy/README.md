@@ -68,6 +68,14 @@ PHP_BIN=/www/server/php/83/bin/php \
 bash ./deploy.sh
 ```
 
+The production-readiness release is available on `main` at commit
+`c2629af2e08b1053092cd83455cdddfdb42ab633`. CI passed the frontend lint/build
+and dependency audit, all Laravel feature tests, deployment backup/rollback
+simulations, and the manually dispatched six-role online E2E workflow. Before
+running this command, confirm the site-specific `shared/.env`, Composer binary,
+storage, current symlink, free disk space, and database backup prerequisites on
+the server. The script intentionally does not restart shared services.
+
 Do not add `RUN_SEED=1` to routine deployments. Set `RUN_MIGRATIONS=1` only
 when a reviewed release contains pending migrations; the script first creates
 and verifies a restricted database backup. MySQL/MariaDB requires `mysqldump`;
