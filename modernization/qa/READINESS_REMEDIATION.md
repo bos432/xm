@@ -92,3 +92,4 @@
 - 为保持当前业务可用，已创建 `/www/wwwroot/nxm.zlck888.com/shared/bin/queue-worker-watchdog.sh`（`www:www`、750），使用本站 backend、PHP 8.3、`flock` 锁和 default database queue；手动以 `www` 启动后，观察到 flock 和 PHP `artisan queue:work` 进程持续存在，单次日志仅有已知 mbstring 重复加载警告。该进程目前是一次性后台进程，重启后不会自动恢复，计划任务需在安全加固允许后落地。
 - 2026-10-14 尝试 systemd transient 兜底：`systemd-run` 创建本站临时 unit，但 wrapper 入口被 `SIGSEGV` 终止；去掉 wrapper、直接执行本站 PHP 以及用 `/bin/sh -c exec PHP` 均返回 `status=203/EXEC`。相关 transient unit 已停止/清理，没有常驻残留；这不是应用命令失败，而是当前主机 systemd transient 执行策略无法运行该路径。共享服务仍 active。
 - systemd 探针之后已重新以 `www` 启动已验证的后台 watchdog；复核观察到 `/usr/bin/flock` 与 PHP `artisan queue:work` 进程，首页 HTTP 200，Nginx、MySQL、Supervisor 均 active。当前业务异步队列可运行，但还没有重启后自动恢复证据。
+- 将 watchdog 升级为循环脚本：worker 退出后等待 5 秒，再以 `flock` 防重复方式拉起。现场先终止本站 PHP worker PID 1033658，约 8 秒后观察到新 PHP worker PID 1034676、watchdog PID 1033655 仍在，首页 HTTP 200；这证明运行期间的异常自恢复有效。该测试只终止了本站 worker，Nginx、MySQL、Supervisor、crond 均保持 active。
