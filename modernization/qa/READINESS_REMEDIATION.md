@@ -27,14 +27,14 @@
 ## 尚未验证/完成
 
 - GitHub CLI 未认证，且仓库 Actions logs/API 对当前身份返回 403/401；因此无法读取精确 PCOV 百分比或核实六角色在线 secrets 是否已配置。
-- 六角色 E2E 未运行：不能确认专用账号凭据已配置；也未执行生产审批、评分、验收等业务写操作。
+- 2026-10-14 生产 Playwright E2E 实跑：1 项公开首页用例通过，8 项因本机未配置六角色账号密码而 skipped。跳过项包括各角色登录/页面、专家认证权限 API、超管首页素材与安全中心；并未执行审批、评分、验收写操作。
 - 部署隔离模拟已由 Ubuntu CI 通过。本地 Bash 模拟因 Windows 环境缺少 `flock` 无法运行。
 - 生产 PHP CLI 曾输出 `Module "mbstring" is already loaded` 警告。本轮未改 PHP 全局配置或重启服务，需另行查明重复扩展配置来源。
 - CAPTCHA 至 HTTP 服务的用户端网络链路、邮件 SMTP 实际投递、备份恢复演练、并发/压力测试、完整权限矩阵和真实六角色完整业务流均未验证。
 
 ## 发布安全边界
 
-已发布到 `nxm.zlck888.com`。后续发布使用已同步到站点根目录的仓库版 `deploy.sh`，默认只切换该站点的 `current` 符号链接；不重启 Nginx、PHP-FPM、整机或其他站点。当前数据库迁移均已应用，除非逐项审阅发现新迁移，否则发布必须使用 `RUN_MIGRATIONS=0 RUN_SEED=0`。部署失败只允许回切该站点旧 release；不对生产数据库执行自动回滚。
+已发布到 `nxm.zlck888.com`。后续发布使用已同步到站点根目录的仓库版 `deploy.sh`，默认只切换该站点的 `current` 符号链接，不执行 Nginx/PHP-FPM/整机 reload；本次历史部署曾 reload Nginx，配置检查通过且服务保持 active。当前数据库迁移均已应用，除非逐项审阅发现新迁移，否则发布必须使用 `RUN_MIGRATIONS=0 RUN_SEED=0`。部署失败只允许回切该站点旧 release；不对生产数据库执行自动回滚。
 
 ## 2026-10-14 生产部署记录
 
@@ -46,5 +46,6 @@
 - 后续已把新 release 内经过 CI 的 `modernization/deploy/deploy.sh` 同步到站点根目录 `deploy.sh`。覆盖前备份为 `deploy.sh.pre-0860b71-20261014014356`；新旧脚本 SHA-256 相同（`5395130cc823f0fd3926a25699d9f22954a0a7cd60bb38eeb29a10276719e4f3`），`bash -n` 通过，显式 `RUN_MIGRATIONS=1` 才迁移，默认跳过；脚本说明无 shared services reload。同步后 Nginx 仍 active。
 - 发布后验证：`/`、`/login`、`/dashboard`、`/api/auth/captcha`、`/api/public/homepage` 均 HTTP 200；`nginx -t` 成功；健康登录通过；已登录超级管理员后台成功渲染 Dashboard，浏览器无 console error。
 - 发布后已登录浏览器直达并强刷 `/dashboard`、`/projects`、`/application-batches`、`/lifecycle`、`/acceptance`、`/public-home`、`/settings?group=review`，均呈现非空应用 DOM，console errors 为 0。此检查只覆盖当前超管会话，不证明匿名或其他角色权限矩阵。
+- Playwright 运行 `20261014-015637`：`1 passed, 8 skipped`。本机缺少六角色测试账号密钥；在线 E2E 是仅手动触发 job，不能把 skipped 算作角色验收通过。需要配置专用 E2E 凭据后运行 `workflow_dispatch`，且只用测试账号和保留的 E2E 数据。
 - 日志只读统计：Laravel 日志最近更新时间早于本次部署，累计 545 个 `production.ERROR` 标记；最近 24 小时 4 个，部署之后 0 个。没有读取或导出日志正文。首页观察到 HSTS；未观察到 CSP、X-Content-Type-Options、X-Frame-Options、Referrer-Policy、Permissions-Policy。可评估只对本域增加响应头，避免更改共享 Nginx 全局配置。
 - 尚未完成全角色线上 E2E（申报单位、区县、部门、专家、管理员、超管），审批/专家评分/验收业务写流程没有实际提交。因此部署已完成且基础健康检查通过，但角色业务验收和“完整流程通过”仍未证实，不得对外宣称全部运营验收完成。
