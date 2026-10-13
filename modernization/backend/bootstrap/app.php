@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\EnsureActiveUser;
 use App\Http\Middleware\RestrictHealthCheckAccount;
 use App\Models\SecurityEvent;
@@ -22,6 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(AddSecurityHeaders::class);
+
         $middleware->api(prepend: [
             HandleCors::class,
         ]);
