@@ -1,6 +1,6 @@
 # 运营就绪整改记录
 
-代码基线：`origin/main` `84da667`；最终上线提交：`0860b71bb0b1052ce432c308be8062216606ace3`。本次只部署 `nxm.zlck888.com` 站点，没有改动其他站点或整机服务。
+代码基线：`origin/main` `84da667`；运营安全头补丁上线提交：`5b320472fdeb9bf6254cfe54f62b6ea8626eb10b`。本次只部署 `nxm.zlck888.com` 站点，没有改动其他站点或整机服务。
 
 ## 已落实
 
@@ -49,3 +49,12 @@
 - Playwright 运行 `20261014-015637`：`1 passed, 8 skipped`。本机缺少六角色测试账号密钥；在线 E2E 是仅手动触发 job，不能把 skipped 算作角色验收通过。需要配置专用 E2E 凭据后运行 `workflow_dispatch`，且只用测试账号和保留的 E2E 数据。
 - 日志只读统计：Laravel 日志最近更新时间早于本次部署，累计 545 个 `production.ERROR` 标记；最近 24 小时 4 个，部署之后 0 个。没有读取或导出日志正文。首页观察到 HSTS；未观察到 CSP、X-Content-Type-Options、X-Frame-Options、Referrer-Policy、Permissions-Policy。可评估只对本域增加响应头，避免更改共享 Nginx 全局配置。
 - 尚未完成全角色线上 E2E（申报单位、区县、部门、专家、管理员、超管），审批/专家评分/验收业务写流程没有实际提交。因此部署已完成且基础健康检查通过，但角色业务验收和“完整流程通过”仍未证实，不得对外宣称全部运营验收完成。
+
+## 2026-10-14 安全响应头补丁发布
+
+- 候选提交：`5b320472fdeb9bf6254cfe54f62b6ea8626eb10b`；远端 `main` 与候选一致。GitHub Actions [38443368872](https://github.com/bos432/xm/actions/runs/38443368872) 显示成功：Frontend lint and build、Backend feature tests、Deployment backup and rollback simulations 均成功；Optional online E2E skipped。
+- 发布前归档：`/www/wwwroot/nxm.zlck888.com/predeploy-5b32047-20261014020739.tar.gz`，约 2.5 MB；`tar -tzf` 完整性检查通过。旧 release `20261014014012` 保留。
+- 使用站点根目录经过 CI 验证的 `deploy.sh` 发布，命令设置 `RUN_MIGRATIONS=0 RUN_SEED=0`。发布输出明确显示数据库迁移跳过、切换本站 `current` 成功、健康登录通过，以及“no shared services were reloaded”。未重载 Nginx/PHP-FPM/整机服务。
+- 新 `current`：`/www/wwwroot/nxm.zlck888.com/releases/20261014020739`；release 内 Git main SHA 为 `5b320472fdeb9bf6254cfe54f62b6ea8626eb10b`。
+- 发布后验证：`/`、`/login`、`/api/auth/captcha`、`/api/public/homepage` HTTP 均为 200；以上四接口返回 `X-Content-Type-Options: nosniff`、`X-Frame-Options: SAMEORIGIN`、`Referrer-Policy: strict-origin-when-cross-origin`、`Permissions-Policy: camera=(), microphone=(), geolocation=()`。Nginx active，`nginx -t` 成功；health:login-check 通过；`migrate:status` 当前列出的迁移全部 Ran。
+- 已知未消除项：PHP CLI 仍提示 `Module "mbstring" is already loaded`，未改全局 PHP 配置；CI 仍有 GitHub Actions Node.js 20 弃用提示。六角色 E2E 仍因专用账号密钥缺失而未运行，不能据此宣称各角色流程全部通过。
