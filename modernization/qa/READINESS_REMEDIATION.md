@@ -115,3 +115,4 @@
 - `main` 提交 `94ac2f8` 已通过站点根目录部署脚本发布到本站 `current`；部署命令使用 `RUN_MIGRATIONS=0 RUN_SEED=0`，数据库未改动。部署输出显示前端构建、Composer 安装、Laravel 配置/路由缓存、首页/API/验证码和真实登录健康检查均通过，并明确 `no shared services were reloaded`。
 - 发布后复核：watchdog `www:www 0750`，外层锁 `www:www 0660`；只有一个本站 watchdog 和一个 PHP queue worker；`queue:failed-count` 为 `0`；Nginx、MySQL、Supervisor、crond 均 `active`；首页返回 `HTTP/2 200`，静态响应头和 HSTS 均存在。
 - 本次发布只切换本站 `current`，没有重启整机、Nginx、PHP-FPM、MySQL 或 Supervisor，也没有改动同机其它站点。
+- 发布后线上 E2E run `20261014-041420`：公开首页用例 `1 passed`；六角色登录/页面、专家认证权限、超管首页素材与安全中心共 `8 skipped`，原因仍是本机未配置专用 E2E 账号密码。该结果证明公开入口，不证明角色业务全流程。
