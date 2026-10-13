@@ -90,3 +90,5 @@
 - 发现本站 Supervisor 日志文件原为 `root:root 0644`，`www` 直接追加会 `Permission denied`；已仅将 `nxm_queue_worker.out.log`、`nxm_queue_worker.err.log` 调整为 `www:www 0660`，目录未改。该修复单独不足以解决全局 Supervisor spawn error，但满足 worker 输出所需的最小写权限。
 - 由于系统加固拒绝写入 `/var/spool/cron/www`，直接安装 `www` crontab 失败；未关闭加固绕过。随后通过宝塔计划任务界面创建本站 `www` 用户每分钟 watchdog 时，面板提示“文件写入失败，请检查是否开启系统加固功能”，并要求临时关闭系统加固。尚未确认该安全设置变更，当前没有持久化 watchdog。
 - 为保持当前业务可用，已创建 `/www/wwwroot/nxm.zlck888.com/shared/bin/queue-worker-watchdog.sh`（`www:www`、750），使用本站 backend、PHP 8.3、`flock` 锁和 default database queue；手动以 `www` 启动后，观察到 flock 和 PHP `artisan queue:work` 进程持续存在，单次日志仅有已知 mbstring 重复加载警告。该进程目前是一次性后台进程，重启后不会自动恢复，计划任务需在安全加固允许后落地。
+- 2026-10-14 尝试 systemd transient 兜底：`systemd-run` 创建本站临时 unit，但 wrapper 入口被 `SIGSEGV` 终止；去掉 wrapper、直接执行本站 PHP 以及用 `/bin/sh -c exec PHP` 均返回 `status=203/EXEC`。相关 transient unit 已停止/清理，没有常驻残留；这不是应用命令失败，而是当前主机 systemd transient 执行策略无法运行该路径。共享服务仍 active。
+- systemd 探针之后已重新以 `www` 启动已验证的后台 watchdog；复核观察到 `/usr/bin/flock` 与 PHP `artisan queue:work` 进程，首页 HTTP 200，Nginx、MySQL、Supervisor 均 active。当前业务异步队列可运行，但还没有重启后自动恢复证据。
