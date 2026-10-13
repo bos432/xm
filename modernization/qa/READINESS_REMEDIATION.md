@@ -1,6 +1,6 @@
 # 运营就绪整改记录
 
-基线：`origin/main` `84da667`。本次只在隔离工作树实施；生产服务器、数据库、账号、配置与业务数据均未写入。
+代码基线：`origin/main` `84da667`；最终上线提交：`0860b71bb0b1052ce432c308be8062216606ace3`。本次只部署 `nxm.zlck888.com` 站点，没有改动其他站点或整机服务。
 
 ## 已落实
 
@@ -13,6 +13,7 @@
 
 - 整改分支触发器已包含 `codex/**`，避免只在 `main` 执行而无法验证候选分支。
 - 候选提交 `fb94ee7a4c5f1805e41fa1c1f890be9175e9b0e2` 的 GitHub Actions 运行 [38438733066](https://github.com/bos432/xm/actions/runs/38438733066) 结果为 `success`：Frontend lint and build、Backend feature tests、Deployment backup and rollback simulations 均成功；Optional online E2E 为 `skipped`。
+- 提交 `0860b71bb0b1052ce432c308be8062216606ace3` 在 `main` 的 Actions 运行 [38439291063](https://github.com/bos432/xm/actions/runs/38439291063) 结果为 `success`：前端、后端和部署安全模拟均通过；在线 E2E skipped。
 - 最初 coverage job 失败后，在 `phpunit.xml` 显式纳入 `app/**/*.php` 作为 coverage source，再跑 CI 成功。GitHub 公共 API 不提供该仓库 job 日志下载权限，因此此处不填未能读取的 coverage 百分比；CI 命令使用 `--coverage-text`，但覆盖率数值需有权限查看 Actions 日志后补录。
 - 同一提交本机复验：PHPUnit `186 tests, 825 assertions` 全通过；无本机 coverage driver，故本机不报告覆盖率。
 
@@ -27,10 +28,21 @@
 
 - GitHub CLI 未认证，且仓库 Actions logs/API 对当前身份返回 403/401；因此无法读取精确 PCOV 百分比或核实六角色在线 secrets 是否已配置。
 - 六角色 E2E 未运行：不能确认专用账号凭据已配置；也未执行生产审批、评分、验收等业务写操作。
-- 生产未部署本分支；部署隔离模拟已由 Ubuntu CI 通过。本地 Bash 模拟因 Windows 环境缺少 `flock` 无法运行。因此，不能称本次整改已经上线或系统已通过运营验收。
+- 部署隔离模拟已由 Ubuntu CI 通过。本地 Bash 模拟因 Windows 环境缺少 `flock` 无法运行。
 - 生产 PHP CLI 曾输出 `Module "mbstring" is already loaded` 警告。本轮未改 PHP 全局配置或重启服务，需另行查明重复扩展配置来源。
 - CAPTCHA 至 HTTP 服务的用户端网络链路、邮件 SMTP 实际投递、备份恢复演练、并发/压力测试、完整权限矩阵和真实六角色完整业务流均未验证。
 
 ## 发布安全边界
 
 只有候选提交通过远端 CI、生产备份/健康账号确认后，才发布到 `nxm.zlck888.com`。使用仓库 `modernization/deploy/deploy.sh`，默认只切换该站点的 `current` 符号链接；不重启 Nginx、PHP-FPM、整机或其他站点。当前数据库迁移均已应用，除非逐项审阅发现新迁移，否则发布必须使用 `RUN_MIGRATIONS=0 RUN_SEED=0`。部署失败只允许回切该站点旧 release；不对生产数据库执行自动回滚。
+
+## 2026-10-14 生产部署记录
+
+- 已在部署前创建 `/www/wwwroot/nxm.zlck888.com/predeploy-0860b71-20261014014012.tar.gz`，约 2.5 MB；`tar -tzf` 完整性检查通过。旧 release `20261013074937` 保留，可用于只回切本站点。
+- 生产 `current` 已切换到 `/www/wwwroot/nxm.zlck888.com/releases/20261014014012`，release source HEAD 与 `main` 一致，为 `0860b71bb0b1052ce432c308be8062216606ace3`。
+- 部署前的专用健康账号密码只有 17 位，不满足部署脚本的 20 位最低要求。已先备份 `shared/.env`，再为仅供部署探测的 `health_check_user` 生成 48 位随机密码并同步更新该专用账号哈希，撤销其旧 tokens；密码未在终端回显。清理 Laravel config cache 后，`health:login-check` 的验证码、登录、logout 链路通过。
+- 本次部署的环境变量明确 `RUN_MIGRATIONS=0 RUN_SEED=0`。部署日志显示 `Nothing to migrate`；前后迁移状态均为 10 项 Ran，没有 seed。
+- 重要偏差：服务器根目录 `/www/wwwroot/nxm.zlck888.com/deploy.sh` 与版本库脚本不一致。根目录脚本会无条件运行 `artisan migrate --force`，且切换 release 后会 `nginx -t` 并 reload Nginx；这次 reload 成功，Nginx 保持 active，配置测试成功。仓库版脚本才正确按 `RUN_MIGRATIONS` 分支并不 reload 共享服务。后续部署必须先修复/替换根目录脚本，避免其忽略迁移开关；不可直接假定仓库版部署安全逻辑已经同步到服务器。
+- 后续已把新 release 内经过 CI 的 `modernization/deploy/deploy.sh` 同步到站点根目录 `deploy.sh`。覆盖前备份为 `deploy.sh.pre-0860b71-20261014014356`；新旧脚本 SHA-256 相同（`5395130cc823f0fd3926a25699d9f22954a0a7cd60bb38eeb29a10276719e4f3`），`bash -n` 通过，显式 `RUN_MIGRATIONS=1` 才迁移，默认跳过；脚本说明无 shared services reload。同步后 Nginx 仍 active。
+- 发布后验证：`/`、`/login`、`/dashboard`、`/api/auth/captcha`、`/api/public/homepage` 均 HTTP 200；`nginx -t` 成功；健康登录通过；已登录超级管理员后台成功渲染 Dashboard，浏览器无 console error。
+- 尚未完成全角色线上 E2E（申报单位、区县、部门、专家、管理员、超管），审批/专家评分/验收业务写流程没有实际提交。因此部署已完成且基础健康检查通过，但角色业务验收和“完整流程通过”仍未证实，不得对外宣称全部运营验收完成。
