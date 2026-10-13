@@ -191,6 +191,11 @@ ln -s "$SHARED_DIR/storage" storage
 mkdir -p bootstrap/cache
 cp "$COMPOSER_BIN" composer.phar
 
+log "Installing site-local queue watchdog"
+mkdir -p "$SHARED_DIR/bin"
+install -m 750 "$SOURCE_DIR/modernization/deploy/queue-worker-watchdog.sh" "$SHARED_DIR/bin/queue-worker-watchdog.sh"
+chown "$WEB_USER" "$SHARED_DIR/bin/queue-worker-watchdog.sh" || fail "Could not assign the queue watchdog to $WEB_USER"
+
 log "Installing backend dependencies"
 export COMPOSER_HOME="$BACKEND_DIR/.composer"
 mkdir -p "$COMPOSER_HOME"

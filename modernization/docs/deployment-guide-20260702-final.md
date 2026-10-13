@@ -155,6 +155,22 @@ redirect_stderr=true
 stdout_logfile=/www/wwwroot/nxm.zlck888.com/shared/storage/logs/queue-worker.log
 ```
 
+若宝塔 Supervisor 仍无法启动本站 program，可用本站专属 watchdog 作为临时兜底。脚本带外层单实例锁，宝塔计划任务每分钟调用不会重复堆积：
+
+```bash
+/www/wwwroot/nxm.zlck888.com/shared/bin/queue-worker-watchdog.sh >> /www/wwwroot/nxm.zlck888.com/shared/storage/logs/queue-worker-watchdog.log 2>&1
+```
+
+计划任务执行用户必须为 `www`，并开启进程锁。上线核验命令：
+
+```bash
+pgrep -af 'queue-worker-watchdog|artisan queue:work'
+cd /www/wwwroot/nxm.zlck888.com/current/backend
+runuser -u www -- /www/server/php/83/bin/php artisan queue:failed-count
+```
+
+正常状态应为一个 watchdog、一个 queue worker，失败队列为 `0`。
+
 ## 10. 回滚
 
 列出 release：
@@ -175,6 +191,19 @@ ln -sfn releases/<previous-release-id> current
 注意：回滚代码不会自动回滚数据库迁移。数据库问题必须使用已验证备份恢复。
 
 ## 11. 常见问题
+
+### PHP CLI 出现 mbstring 重复加载警告
+
+如果宝塔 PHP 8.3 CLI 同时在 `php.ini` 和 `php-cli.ini` 声明已编译的
+`mbstring.so`，会出现 `Module "mbstring" is already loaded`。先备份对应
+配置，再确认 `php -m` 仍包含 `mbstring`，只注释重复的 `extension` 行，
+不要删除扩展文件，也不要为此重启整机服务。
+
+### 静态首页安全响应头
+
+Laravel middleware 只覆盖 API 时，Nginx 直接返回的 SPA HTML 不会继承这些
+响应头。应在本站独立 server block 内添加安全头，修改前备份配置，执行
+`nginx -t` 后再平滑 reload，并检查 `/` 和 `/api/public/homepage` 的响应头。
 
 ### GitHub 认证失败
 

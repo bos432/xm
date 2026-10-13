@@ -93,3 +93,25 @@
 - 2026-10-14 尝试 systemd transient 兜底：`systemd-run` 创建本站临时 unit，但 wrapper 入口被 `SIGSEGV` 终止；去掉 wrapper、直接执行本站 PHP 以及用 `/bin/sh -c exec PHP` 均返回 `status=203/EXEC`。相关 transient unit 已停止/清理，没有常驻残留；这不是应用命令失败，而是当前主机 systemd transient 执行策略无法运行该路径。共享服务仍 active。
 - systemd 探针之后已重新以 `www` 启动已验证的后台 watchdog；复核观察到 `/usr/bin/flock` 与 PHP `artisan queue:work` 进程，首页 HTTP 200，Nginx、MySQL、Supervisor 均 active。当前业务异步队列可运行，但还没有重启后自动恢复证据。
 - 将 watchdog 升级为循环脚本：worker 退出后等待 5 秒，再以 `flock` 防重复方式拉起。现场先终止本站 PHP worker PID 1033658，约 8 秒后观察到新 PHP worker PID 1034676、watchdog PID 1033655 仍在，首页 HTTP 200；这证明运行期间的异常自恢复有效。该测试只终止了本站 worker，Nginx、MySQL、Supervisor、crond 均保持 active。
+
+## 2026-10-14 持久化队列守护补强
+
+- 经授权通过宝塔 UI 临时放行系统加固 5 分钟，仅新增本站计划任务：`nxm.zlck888.com 队列 worker 守护`，执行用户 `www`、每分钟、启用任务锁，状态显示正常；未关闭其它安全策略或变更其它站点。
+- 首次执行验证发现宝塔每分钟再次启动循环 watchdog，造成守护壳进程累积。已在生产 watchdog 增加 `storage/framework/nxm_queue_worker_watchdog.lock` 外层单实例锁；锁文件由 `www` 创建，属主/权限 `www:www 0640`。随后等待完整 cron 周期，确认只保留一个 watchdog 和一个 queue worker。另对本站 queue worker 做定向终止，约 8 秒后新 worker PID 出现；这验证了任务周期和进程内自恢复，不等同于整机重启恢复演练。
+- 失败队列为 0；Nginx、MySQL、Supervisor、crond 均 active；首页仍返回 HTTP 200。未重启或 reload 任何共享服务。
+- 候选仓库已加入同款 watchdog、部署安装步骤和文档。发布脚本安装 watchdog 时同时将属主设为 `$WEB_USER`，避免 `www` 计划任务无法执行 root-owned 文件。提交 `62d8002` 尚未推到 GitHub，当前网络对 `github.com:443` 超时/重置。
+- 整机重启恢复仍未验证。静态 HTML 安全头、mbstring 重复加载、六角色线上流程、SMTP 真实投递、备份恢复演练与压力测试仍未闭环。
+
+## 2026-10-14 最终现场复核补充
+
+- 生产 watchdog 与锁文件权限已修正为本站最小范围：脚本 `www:www 0750`，外层锁 `www:www 0660`。以 `www` 用户尝试打开锁时返回 `LOCK_BUSY`（已有本站 watchdog 持锁），证明计划任务用户具备访问权限且单实例锁有效。
+- 定向终止本站 PHP queue worker 后，约 8 秒内由本站 watchdog 拉起新的 PHP worker；之后复核仍只有一个 watchdog 和一个 worker，失败队列为 `0`。该验证覆盖 cron 运行期间自恢复，不等同于整机重启恢复。
+- Nginx 配置仅修改 `/www/server/panel/vhost/nginx/nxm.zlck888.com.conf`，修改前已生成 `*.pre-security-headers-*` 备份；`nginx -t` 和平滑 reload 成功。静态 `/` 与 Laravel API 均返回 `X-Content-Type-Options`、`X-Frame-Options`、`Referrer-Policy`、`Permissions-Policy`，原有 HSTS 保持；Nginx、MySQL、Supervisor、crond 均为 `active`。
+- PHP 8.3 的 mbstring 已编译加载，`php.ini` 与 `php-cli.ini` 的重复 extension 声明已备份后注释；`php -v` 不再输出重复加载 warning，`php -m` 仍包含 `mbstring`。未重启 PHP-FPM。
+- 清理并重新缓存 Laravel 配置后，使用已配置的健康账号执行 `artisan health:login-check`，真实验证码、登录、logout 链路通过；未记录或导出密码。旧示例密码曾失败一次，未修改账号密码。
+
+## 2026-10-14 release `20261014041039`
+
+- `main` 提交 `94ac2f8` 已通过站点根目录部署脚本发布到本站 `current`；部署命令使用 `RUN_MIGRATIONS=0 RUN_SEED=0`，数据库未改动。部署输出显示前端构建、Composer 安装、Laravel 配置/路由缓存、首页/API/验证码和真实登录健康检查均通过，并明确 `no shared services were reloaded`。
+- 发布后复核：watchdog `www:www 0750`，外层锁 `www:www 0660`；只有一个本站 watchdog 和一个 PHP queue worker；`queue:failed-count` 为 `0`；Nginx、MySQL、Supervisor、crond 均 `active`；首页返回 `HTTP/2 200`，静态响应头和 HSTS 均存在。
+- 本次发布只切换本站 `current`，没有重启整机、Nginx、PHP-FPM、MySQL 或 Supervisor，也没有改动同机其它站点。

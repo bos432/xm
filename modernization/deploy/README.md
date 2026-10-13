@@ -169,12 +169,20 @@ redirect_stderr=true
 stdout_logfile=/www/wwwroot/nxm.zlck888.com/shared/storage/logs/queue-worker.log
 ```
 
-若不使用 Supervisor，可临时用计划任务兜底：
+若本站 Supervisor 因宝塔运行环境异常无法启动，可使用本站专属 watchdog 兜底。该脚本有外层单实例锁，计划任务每分钟调用不会累积守护进程：
 
 ```bash
-cd /www/wwwroot/nxm.zlck888.com/current/backend
-/www/server/php/83/bin/php artisan queue:work database --queue=default --tries=3 --timeout=90 --stop-when-empty
+install -m 750 modernization/deploy/queue-worker-watchdog.sh \
+  /www/wwwroot/nxm.zlck888.com/shared/bin/queue-worker-watchdog.sh
 ```
+
+宝塔计划任务配置为：Shell 脚本、执行用户 `www`、每隔 1 分钟执行一次、开启进程锁，脚本内容：
+
+```bash
+/www/wwwroot/nxm.zlck888.com/shared/bin/queue-worker-watchdog.sh >> /www/wwwroot/nxm.zlck888.com/shared/storage/logs/queue-worker-watchdog.log 2>&1
+```
+
+验证时应只有一个 watchdog 和一个 `artisan queue:work`，并确认 `queue:failed-count` 为 0。不要用多个常驻循环脚本直接叠加计划任务。
 
 ## E2E Smoke Test
 
