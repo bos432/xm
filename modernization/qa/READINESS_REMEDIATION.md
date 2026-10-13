@@ -6,8 +6,8 @@
 
 - 后端 Feature 测试使用显式 testing 环境变量与 SQLite 内存库运行：`vendor/bin/phpunit --display-warnings --display-deprecations --display-notices`，结果 `OK (186 tests, 825 assertions)`，退出码 0。
 - 前端把项目时间轴活动序号逻辑提取为纯 JS 工具函数，并新增 3 个 Node 内置测试；未增加 npm 依赖。新增 `npm test`、工具模块语法/JSDoc 检查 `npm run typecheck`，并将测试目录纳入 lint。
-- GitHub Actions 已增加前端测试/typecheck、PHP PCOV 覆盖率文本输出，以及在线 E2E 所需六角色账号密钥的 fail-fast 检查。Workflow 语法和实际 Ubuntu runner 结果仍需远端 CI 验证。
-- 只读核查生产站点：`current` 当时指向 release `20261013074937`；根分区使用率 53%、`/www` 66%；10 个迁移均为 Ran；首页、验证码 API、公开首页 API 均返回 HTTP 200。未读取密钥值或数据库业务内容。
+- GitHub Actions 已增加前端测试/typecheck、PHP PCOV 覆盖率文本输出，以及在线 E2E 所需六角色账号密钥的 fail-fast 检查；候选提交与 main CI 均已远端成功。
+- 部署前只读核查生产站点：`current` 指向 release `20261013074937`；根分区使用率约 54%、`/www` 66%；当时迁移均已 Ran；首页、验证码 API、公开首页 API 均返回 HTTP 200。未读取密钥值或数据库业务内容。
 
 ## 远端分支 CI 复核
 
@@ -34,15 +34,17 @@
 
 ## 发布安全边界
 
-只有候选提交通过远端 CI、生产备份/健康账号确认后，才发布到 `nxm.zlck888.com`。使用仓库 `modernization/deploy/deploy.sh`，默认只切换该站点的 `current` 符号链接；不重启 Nginx、PHP-FPM、整机或其他站点。当前数据库迁移均已应用，除非逐项审阅发现新迁移，否则发布必须使用 `RUN_MIGRATIONS=0 RUN_SEED=0`。部署失败只允许回切该站点旧 release；不对生产数据库执行自动回滚。
+已发布到 `nxm.zlck888.com`。后续发布使用已同步到站点根目录的仓库版 `deploy.sh`，默认只切换该站点的 `current` 符号链接；不重启 Nginx、PHP-FPM、整机或其他站点。当前数据库迁移均已应用，除非逐项审阅发现新迁移，否则发布必须使用 `RUN_MIGRATIONS=0 RUN_SEED=0`。部署失败只允许回切该站点旧 release；不对生产数据库执行自动回滚。
 
 ## 2026-10-14 生产部署记录
 
 - 已在部署前创建 `/www/wwwroot/nxm.zlck888.com/predeploy-0860b71-20261014014012.tar.gz`，约 2.5 MB；`tar -tzf` 完整性检查通过。旧 release `20261013074937` 保留，可用于只回切本站点。
 - 生产 `current` 已切换到 `/www/wwwroot/nxm.zlck888.com/releases/20261014014012`，release source HEAD 与 `main` 一致，为 `0860b71bb0b1052ce432c308be8062216606ace3`。
 - 部署前的专用健康账号密码只有 17 位，不满足部署脚本的 20 位最低要求。已先备份 `shared/.env`，再为仅供部署探测的 `health_check_user` 生成 48 位随机密码并同步更新该专用账号哈希，撤销其旧 tokens；密码未在终端回显。清理 Laravel config cache 后，`health:login-check` 的验证码、登录、logout 链路通过。
-- 本次部署的环境变量明确 `RUN_MIGRATIONS=0 RUN_SEED=0`。部署日志显示 `Nothing to migrate`；前后迁移状态均为 10 项 Ran，没有 seed。
+- 本次部署命令明确 `RUN_MIGRATIONS=0 RUN_SEED=0`。部署日志显示 `Nothing to migrate`；之后核对旧/新 release 迁移文件清单无差异，`migrate:status` 显示 11 项 Ran，没有 seed。
 - 重要偏差：服务器根目录 `/www/wwwroot/nxm.zlck888.com/deploy.sh` 与版本库脚本不一致。根目录脚本会无条件运行 `artisan migrate --force`，且切换 release 后会 `nginx -t` 并 reload Nginx；这次 reload 成功，Nginx 保持 active，配置测试成功。仓库版脚本才正确按 `RUN_MIGRATIONS` 分支并不 reload 共享服务。后续部署必须先修复/替换根目录脚本，避免其忽略迁移开关；不可直接假定仓库版部署安全逻辑已经同步到服务器。
 - 后续已把新 release 内经过 CI 的 `modernization/deploy/deploy.sh` 同步到站点根目录 `deploy.sh`。覆盖前备份为 `deploy.sh.pre-0860b71-20261014014356`；新旧脚本 SHA-256 相同（`5395130cc823f0fd3926a25699d9f22954a0a7cd60bb38eeb29a10276719e4f3`），`bash -n` 通过，显式 `RUN_MIGRATIONS=1` 才迁移，默认跳过；脚本说明无 shared services reload。同步后 Nginx 仍 active。
 - 发布后验证：`/`、`/login`、`/dashboard`、`/api/auth/captcha`、`/api/public/homepage` 均 HTTP 200；`nginx -t` 成功；健康登录通过；已登录超级管理员后台成功渲染 Dashboard，浏览器无 console error。
+- 发布后已登录浏览器直达并强刷 `/dashboard`、`/projects`、`/application-batches`、`/lifecycle`、`/acceptance`、`/public-home`、`/settings?group=review`，均呈现非空应用 DOM，console errors 为 0。此检查只覆盖当前超管会话，不证明匿名或其他角色权限矩阵。
+- 日志只读统计：Laravel 日志最近更新时间早于本次部署，累计 545 个 `production.ERROR` 标记；最近 24 小时 4 个，部署之后 0 个。没有读取或导出日志正文。首页观察到 HSTS；未观察到 CSP、X-Content-Type-Options、X-Frame-Options、Referrer-Policy、Permissions-Policy。可评估只对本域增加响应头，避免更改共享 Nginx 全局配置。
 - 尚未完成全角色线上 E2E（申报单位、区县、部门、专家、管理员、超管），审批/专家评分/验收业务写流程没有实际提交。因此部署已完成且基础健康检查通过，但角色业务验收和“完整流程通过”仍未证实，不得对外宣称全部运营验收完成。
