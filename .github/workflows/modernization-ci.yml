@@ -39,6 +39,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Unit tests
+        run: npm test
+
+      - name: Type check utility modules
+        run: npm run typecheck
+
       - name: Build
         run: npm run build
 
@@ -64,7 +70,7 @@ jobs:
         with:
           php-version: '8.3'
           extensions: mbstring, pdo_sqlite, sqlite3, zip, fileinfo, gd
-          coverage: none
+          coverage: pcov
 
       - name: Prepare Laravel environment
         run: |
@@ -75,7 +81,7 @@ jobs:
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Full backend feature suite
-        run: php artisan test
+        run: php artisan test --coverage-text
 
   deployment-safety:
     name: Deployment backup and rollback simulations
@@ -116,6 +122,34 @@ jobs:
 
       - name: Install browser
         run: npx playwright install --with-deps chromium
+
+      - name: Require all role credentials
+        shell: bash
+        env:
+          E2E_UNIT_USERNAME: ${{ secrets.E2E_UNIT_USERNAME }}
+          E2E_UNIT_PASSWORD: ${{ secrets.E2E_UNIT_PASSWORD }}
+          E2E_COUNTY_USERNAME: ${{ secrets.E2E_COUNTY_USERNAME }}
+          E2E_COUNTY_PASSWORD: ${{ secrets.E2E_COUNTY_PASSWORD }}
+          E2E_DEPARTMENT_USERNAME: ${{ secrets.E2E_DEPARTMENT_USERNAME }}
+          E2E_DEPARTMENT_PASSWORD: ${{ secrets.E2E_DEPARTMENT_PASSWORD }}
+          E2E_EXPERT_USERNAME: ${{ secrets.E2E_EXPERT_USERNAME }}
+          E2E_EXPERT_PASSWORD: ${{ secrets.E2E_EXPERT_PASSWORD }}
+          E2E_ADMIN_USERNAME: ${{ secrets.E2E_ADMIN_USERNAME }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+          E2E_SUPER_ADMIN_USERNAME: ${{ secrets.E2E_SUPER_ADMIN_USERNAME }}
+          E2E_SUPER_ADMIN_PASSWORD: ${{ secrets.E2E_SUPER_ADMIN_PASSWORD }}
+        run: |
+          missing=0
+          for role in UNIT COUNTY DEPARTMENT EXPERT ADMIN SUPER_ADMIN; do
+            for field in USERNAME PASSWORD; do
+              key="E2E_${role}_${field}"
+              if [[ -z "${!key}" ]]; then
+                printf 'Missing required GitHub secret: %s\n' "$key"
+                missing=1
+              fi
+            done
+          done
+          exit "$missing"
 
       - name: Run online E2E
         env:

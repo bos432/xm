@@ -7,7 +7,9 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "lint": "eslint src --ext .js,.vue",
+    "lint": "eslint src tests --ext .js,.vue",
+    "test": "node --test tests/timeline.test.js",
+    "typecheck": "node scripts/typecheck-utilities.mjs",
     "e2e": "node scripts/run-e2e.mjs"
   },
   "dependencies": {

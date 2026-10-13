@@ -542,6 +542,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Checked, CloseBold, Connection, Delete, Download, Files, Plus, Search, UploadFilled, View } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api, downloadApi } from '../api.js'
+import { timelineActiveIndex } from '../utils/timeline.js'
 import { useSessionStore } from '../store.js'
 import { useTextStore } from '../texts.js'
 import RichTextEditor from '../components/RichTextEditor.vue'
@@ -1639,13 +1640,6 @@ function formatBytes(value) {
   if (size < 1024) return `${size} B`
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`
   return `${(size / 1024 / 1024).toFixed(1)} MB`
-}
-
-function timelineActiveIndex(items) {
-  const currentIndex = items.findIndex((item) => item.status === 'current')
-  if (currentIndex >= 0) return currentIndex
-  const doneIndexes = items.map((item, index) => (item.status === 'done' ? index : -1)).filter((index) => index >= 0)
-  return doneIndexes.length ? Math.max(...doneIndexes) + 1 : 0
 }
 
 function timelineDescription(item) {
