@@ -9,6 +9,13 @@
 - GitHub Actions 已增加前端测试/typecheck、PHP PCOV 覆盖率文本输出，以及在线 E2E 所需六角色账号密钥的 fail-fast 检查。Workflow 语法和实际 Ubuntu runner 结果仍需远端 CI 验证。
 - 只读核查生产站点：`current` 当时指向 release `20261013074937`；根分区使用率 53%、`/www` 66%；10 个迁移均为 Ran；首页、验证码 API、公开首页 API 均返回 HTTP 200。未读取密钥值或数据库业务内容。
 
+## 远端分支 CI 复核
+
+- 整改分支触发器已包含 `codex/**`，避免只在 `main` 执行而无法验证候选分支。
+- 候选提交 `fb94ee7a4c5f1805e41fa1c1f890be9175e9b0e2` 的 GitHub Actions 运行 [38438733066](https://github.com/bos432/xm/actions/runs/38438733066) 结果为 `success`：Frontend lint and build、Backend feature tests、Deployment backup and rollback simulations 均成功；Optional online E2E 为 `skipped`。
+- 最初 coverage job 失败后，在 `phpunit.xml` 显式纳入 `app/**/*.php` 作为 coverage source，再跑 CI 成功。GitHub 公共 API 不提供该仓库 job 日志下载权限，因此此处不填未能读取的 coverage 百分比；CI 命令使用 `--coverage-text`，但覆盖率数值需有权限查看 Actions 日志后补录。
+- 同一提交本机复验：PHPUnit `186 tests, 825 assertions` 全通过；无本机 coverage driver，故本机不报告覆盖率。
+
 ## 本地验证记录
 
 - 前端：`npm test` 3/3；`npm run typecheck`、`npm run lint`、`npm run build` 退出码均为 0；Playwright 列出 9 项 E2E 场景。
@@ -18,9 +25,9 @@
 
 ## 尚未验证/完成
 
-- 远端 GitHub Actions 尚未运行，PCOV 实际覆盖率和完整 Ubuntu CI 结果未知；GitHub CLI 未认证，不能读取运行记录或检查在线 secrets 是否存在。
+- GitHub CLI 未认证，且仓库 Actions logs/API 对当前身份返回 403/401；因此无法读取精确 PCOV 百分比或核实六角色在线 secrets 是否已配置。
 - 六角色 E2E 未运行：不能确认专用账号凭据已配置；也未执行生产审批、评分、验收等业务写操作。
-- 生产未部署本分支；本地 WSL/Bash 部署模拟环境启动失败。因此，不能称本次整改已经上线或系统已通过运营验收。
+- 生产未部署本分支；部署隔离模拟已由 Ubuntu CI 通过。本地 Bash 模拟因 Windows 环境缺少 `flock` 无法运行。因此，不能称本次整改已经上线或系统已通过运营验收。
 - 生产 PHP CLI 曾输出 `Module "mbstring" is already loaded` 警告。本轮未改 PHP 全局配置或重启服务，需另行查明重复扩展配置来源。
 - CAPTCHA 至 HTTP 服务的用户端网络链路、邮件 SMTP 实际投递、备份恢复演练、并发/压力测试、完整权限矩阵和真实六角色完整业务流均未验证。
 
