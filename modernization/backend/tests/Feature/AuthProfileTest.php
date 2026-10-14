@@ -15,9 +15,18 @@ class AuthProfileTest extends TestCase
 {
     public function test_unauthenticated_api_requests_return_json_even_without_accept_header(): void
     {
-        $this->call('GET', '/api/auth/me')
-            ->assertUnauthorized()
-            ->assertJsonPath('message', 'Unauthenticated.');
+        foreach ([
+            '/api/auth/me',
+            '/api/projects',
+            '/api/reviews/tasks',
+            '/api/settings/groups',
+            '/api/users',
+            '/api/security/events',
+        ] as $path) {
+            $this->call('GET', $path)
+                ->assertUnauthorized()
+                ->assertJsonPath('message', 'Unauthenticated.');
+        }
     }
 
     use RefreshDatabase;
