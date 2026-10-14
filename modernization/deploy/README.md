@@ -220,6 +220,25 @@ database or use a separate isolated MySQL instance. No off-server backup target
 is configured yet, so the scheduled local copies do not protect against loss
 of this host or its disk.
 
+## SMTP Delivery Readiness
+
+The production effective Laravel mailer was checked after applying database
+runtime overrides: `mail.default=log`, `queue.default=database`, and SMTP
+username/password are not configured. SMTP host, port, and encryption values
+exist but are not sufficient to authenticate or deliver mail. Consequently,
+queued mail jobs can be consumed without reaching recipients while the `log`
+mailer is active. The queue being empty does not prove delivery.
+
+Before enabling operational email, have the organization's mailbox administrator
+provide the approved SMTP host, port, TLS mode, sender address, SMTP username,
+and an app-specific password. Configure them through the super-admin **System
+Settings → Mail SMTP** page; never commit secrets or paste them into deployment
+commands. Keep `MAIL_MAILER=log` until all SMTP fields and the sender are
+validated. Then send one test message only to an explicitly approved test
+mailbox, verify receipt and the mail log, and only then enable business
+notifications. Rotate/revoke the test credential if it was exposed during
+setup. The current production setup has not passed SMTP delivery verification.
+
 ## E2E Smoke Test
 
 Playwright tests read credentials from environment variables and keep generated

@@ -162,4 +162,5 @@
 - 复核未重启或 reload Nginx、MySQL、Supervisor、crond、PHP-FPM 或主机，也未修改其它站点。
 - 继续只读查看 `shared/.env` 的非敏感配置键和值：`MAIL_MAILER=log`、`QUEUE_CONNECTION=database`；`artisan queue:monitor database:default --max=100` 输出队列大小 `[0] OK`，`queue:failed-count` 输出 `0`。因此队列消费者虽运行正常，邮件目前配置为写日志而非 SMTP，真实邮件通知不可用；未读取邮箱密码等凭据、未改 `.env`、未发送邮件。该项是运营上线前阻断，需由系统运营方提供 SMTP 主机/端口/加密类型/发件账号及密码后，使用专用测试收件箱验证投递。
 - 上述只读终端还确认 `/` 分区 54%（79G 中使用 41G、可用 35G），`/www` 分区 67%（295G 中使用 201G、可用 94G），`nginx -t` 成功；`migrate:status` 当前 10 项均为 Ran。曾误试不存在的 `artisan config:get` 子命令，仅返回 usage/error，未修改配置；之后只读取 `.env` 中两个非敏感键并使用受支持的 `queue:monitor` 完成检查。
+- 2026-10-14 再通过 Laravel bootstrap + `RuntimeConfig::applyMailSettings()` 执行脱敏运行时检查，确认数据库配置覆盖后的**实际生效** `mail.default=log`、`queue.default=database`，SMTP host/port/encryption 字段非空，但 SMTP username/password 均未设置；没有输出具体主机/端口/加密值、用户名或密码。`jobs` 和 `failed_jobs` 表计数均为 0。由此确认邮件当前不会通过 SMTP 外发，邮件通知属于生产功能阻断，而不仅是配置推测。未触发测试邮件或修改配置。
 - 当前生产 release 为 `20261014112743`，只读探测显示其目录不是 Git checkout，不能从生产文件直接取得源码 SHA；GitHub 主线当前为 `f071e470bc22d7923f35567b4999d2fb1ccd687e`。当日 deploy 记录证明此前发布 release `20261014112743` 是当时版本，但 `f071e47` 仅含文档提交，故生产代码与主线代码等价于 `f071e47` 的父代码提交 `2ac82e8`，未为文档变化重新部署。
