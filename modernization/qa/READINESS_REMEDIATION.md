@@ -164,3 +164,10 @@
 - 上述只读终端还确认 `/` 分区 54%（79G 中使用 41G、可用 35G），`/www` 分区 67%（295G 中使用 201G、可用 94G），`nginx -t` 成功；`migrate:status` 当前 10 项均为 Ran。曾误试不存在的 `artisan config:get` 子命令，仅返回 usage/error，未修改配置；之后只读取 `.env` 中两个非敏感键并使用受支持的 `queue:monitor` 完成检查。
 - 2026-10-14 再通过 Laravel bootstrap + `RuntimeConfig::applyMailSettings()` 执行脱敏运行时检查，确认数据库配置覆盖后的**实际生效** `mail.default=log`、`queue.default=database`，SMTP host/port/encryption 字段非空，但 SMTP username/password 均未设置；没有输出具体主机/端口/加密值、用户名或密码。`jobs` 和 `failed_jobs` 表计数均为 0。由此确认邮件当前不会通过 SMTP 外发，邮件通知属于生产功能阻断，而不仅是配置推测。未触发测试邮件或修改配置。
 - 当前生产 release 为 `20261014112743`，只读探测显示其目录不是 Git checkout，不能从生产文件直接取得源码 SHA；GitHub 主线当前为 `f071e470bc22d7923f35567b4999d2fb1ccd687e`。当日 deploy 记录证明此前发布 release `20261014112743` 是当时版本，但 `f071e47` 仅含文档提交，故生产代码与主线代码等价于 `f071e47` 的父代码提交 `2ac82e8`，未为文档变化重新部署。
+
+## 2026-10-14 本轮复验与恢复权限检查
+
+- 候选分支当前 `b8ba020` 上，在隔离 Ubuntu 24.04 容器执行 `bash -n modernization/deploy/site-backup.sh modernization/deploy/tests/site-backup-test.sh && bash modernization/deploy/tests/site-backup-test.sh`，三项均 PASS：凭据不泄露且两类归档校验通过；dump 失败保留旧备份并清理临时文件；过期清理仅删除本站归档。首次错误使用只读容器挂载导致脚本无法 chmod、测试未启动；随即换成一次性可写挂载重跑通过，候选 Git 工作区最终无变更。
+- 前端 `npm ci --include=optional --no-audit --no-fund` 成功；`npm test` 为 3/3，`npm run typecheck`、`npm run lint`、`npm run build` 均退出 0。后端在本机执行 `php vendor/bin/phpunit --display-warnings --display-deprecations --display-notices`，输出 `OK (188 tests, 846 assertions)`。
+- 尝试为安全恢复演练只读检查主机 MySQL 授权：`command -v mysql` 找到 `/usr/bin/mysql`，版本 `mysql Ver 14.14 Distrib 5.7.40`；不提供密码执行 `mysql -NBe "SHOW GRANTS FOR CURRENT_USER()"` 返回 `ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)`。未查询/读取密码、未创建数据库、未修改 grants 或生产数据。此前网站 DB 账号创建隔离库也已被拒绝，因此数据库恢复演练仍缺独立 DBA 授权的隔离库或单独的隔离 MySQL 实例。
+- 本轮未执行线上业务写流程、未向用户发送邮件、未改变任何服务器服务。SMTP 参数/测试收件箱、隔离恢复环境和六角色专用账号仍是完成端到端运营验收所需的外部条件。
