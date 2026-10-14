@@ -194,3 +194,9 @@
 - 在本机一次性 Docker 容器内使用 MySQL 8.4，容器 `--network none`、未挂载宿主机目录/Socket/生产文件；临时初始化独立数据目录和 socket-only mysqld，创建 `restore_drill` 数据库，导入合成 SQL 并查询得到 `7|e2e-restore-check`，输出 `PASS isolated MySQL SQL import and row verification`。容器退出时自动停止 mysqld 并删除临时目录。
 - 本项仅证明隔离 MySQL 的初始化、SQL 导入和数据读取步骤可工作；没有使用生产归档，也没有验证 MySQL 5.7 源端到 8.4 目标端的完整兼容性、生产数据量耗时或 private-upload 实际恢复。因此生产备份恢复演练仍未通过，仍需对真实本站归档在受限隔离实例中恢复并抽样核验。
 - 推送通道再核验：本机分支新增提交后仍 `ahead 2`；GitHub HTTPS 443 连接重置，GitHub API 只读正常；SSH-over-443 可连接但公钥认证被拒，`gh` 未登录。未改变 GitHub 授权配置或输出任何凭据。
+
+## 2026-10-14 Git 分支交付审计
+
+- 只读 GitHub compare 检查发现 `main=8487ff9` 没有包含远端 `codex/authz-ops-hardening` 的 `036f04d`（授权与审核边界修复）及 `50a7d90`（部署/健康账号加固）；`codex/production-ready-integration` 也包含另一组相关代码提交。远端 `main` 当前没有打开的 PR。
+- 这些候选分支与 `main` 分叉且落后 50 余个提交，变更涉及审核、验收、生命周期权限、Seeder、部署脚本、路由和依赖锁文件；不能直接 merge/cherry-pick 到生产主线。GitHub API 后续触发匿名 rate limit，无法从 API 获得这些提交各自完整 CI/job 结论；本机只能确认当前工作区主线的门禁结果，不能把候选分支宣称为已验证或已发布。
+- 此分支事实意味着此前“main CI 成功”只覆盖 `main` 当前代码，不证明所有候选功能修复已经进主线。下一步需在最新 `main` 基础上按领域逐项重放并补齐回归、跑完整 CI，再开 PR/快进发布；任何候选修复都不得直接部署。
