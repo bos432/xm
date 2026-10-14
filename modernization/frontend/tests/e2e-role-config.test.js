@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { e2eRoleCredentials } from '../src/e2e-role-config.js'
+import { e2eRoleCredentials, fetchAuthenticatedRole } from '../src/e2e-role-config.js'
 
 test('E2E role credentials map business admin and super admin to distinct role accounts', () => {
   assert.deepEqual(e2eRoleCredentials.admin, {
@@ -14,4 +14,23 @@ test('E2E role credentials map business admin and super admin to distinct role a
     expectedRole: 'super_admin'
   })
   assert.notEqual(e2eRoleCredentials.admin.expectedRole, e2eRoleCredentials.super_admin.expectedRole)
+})
+
+test('authenticated role verification reads the API role payload', async () => {
+  let request
+  const role = await fetchAuthenticatedRole(async (path, options) => {
+    request = { path, options }
+    return { ok: true, json: async () => ({ id: 7, role: 'admin' }) }
+  }, 'test-token')
+
+  assert.equal(role, 'admin')
+  assert.equal(request.path, '/api/auth/me')
+  assert.equal(request.options.headers.Authorization, 'Bearer test-token')
+})
+
+test('authenticated role verification rejects unauthorized profile responses', async () => {
+  await assert.rejects(
+    fetchAuthenticatedRole(async () => ({ ok: false, json: async () => ({}) }), 'expired-token'),
+    /Could not verify the authenticated E2E role/
+  )
 })

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { e2eRoleCredentials } from '../../frontend/src/e2e-role-config.js'
+import { e2eRoleCredentials, fetchAuthenticatedRole } from '../../frontend/src/e2e-role-config.js'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -67,15 +67,9 @@ async function loginFromHomepage(page, account) {
   await captcha.fill(String(answerCaptcha(await captcha.getAttribute('placeholder'))))
   await page.getByRole('button', { name: /登录系统|登录/ }).click()
   await expect(page).toHaveURL(/\/dashboard/)
-  const profile = await page.evaluate(async () => {
-    const token = localStorage.getItem('pas_token')
-    const response = await fetch('/api/auth/me', {
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
-    })
-    return { ok: response.ok, user: await response.json() }
-  })
-  expect(profile.ok).toBeTruthy()
-  expect(profile.user.role).toBe(account.expectedRole)
+  const token = await page.evaluate(() => localStorage.getItem('pas_token'))
+  const role = await fetchAuthenticatedRole((path, options) => page.request.get(path, options), token)
+  expect(role).toBe(account.expectedRole)
 }
 
 async function loginByApi(page, account) {
