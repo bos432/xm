@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "lint": "eslint src tests --ext .js,.vue",
-    "test": "node --test tests/timeline.test.js",
+    "test": "node --test tests/timeline.test.js tests/settings-navigation.test.js",
     "typecheck": "node scripts/typecheck-utilities.mjs",
     "e2e": "node scripts/run-e2e.mjs"
   },
