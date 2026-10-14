@@ -188,3 +188,9 @@
 - 线上 Playwright 完整套件 run `20261014-qa-full`：`1 passed, 8 skipped`。公开首页实际通过；六角色登录/项目页面、专家认证权限、超管首页素材/安全中心均因专用凭据缺失按测试定义 skipped，未尝试账号密码，也未提交或修改业务数据。首次用 `--grep` 单测的 Windows 调用返回 `No tests found`，因此改为完整套件执行；该次无测试运行，不作为通过证据。
 - 推送阻断复核：`git status` 显示本地 HEAD `4b76993`、工作区干净且较 `origin/codex/qa-gates-production` ahead 1；远端 `main` 经 GitHub API 确认为 `8487ff9`。HTTPS 443 TCP 不通，`git push` 超时/连接重置；改用 HTTP/1.1 仍失败。SSH-over-443 可连通，但返回 `Permission denied (publickey)`；`gh auth status` 为未登录。未读取或输出凭据，未尝试绕过 GitHub 写入授权。提交 `4b76993` 仍需有权用户完成 GitHub 登录/网络恢复后推送。
 - 以上本地回归和公开首页 E2E 不替代生产角色端到端验收。SMTP、异地副本、恢复演练、六角色业务流和整机重启恢复仍未通过；没有为追求表面绿色而关闭这些门禁。
+
+## 2026-10-14 隔离 MySQL 恢复链路演练
+
+- 在本机一次性 Docker 容器内使用 MySQL 8.4，容器 `--network none`、未挂载宿主机目录/Socket/生产文件；临时初始化独立数据目录和 socket-only mysqld，创建 `restore_drill` 数据库，导入合成 SQL 并查询得到 `7|e2e-restore-check`，输出 `PASS isolated MySQL SQL import and row verification`。容器退出时自动停止 mysqld 并删除临时目录。
+- 本项仅证明隔离 MySQL 的初始化、SQL 导入和数据读取步骤可工作；没有使用生产归档，也没有验证 MySQL 5.7 源端到 8.4 目标端的完整兼容性、生产数据量耗时或 private-upload 实际恢复。因此生产备份恢复演练仍未通过，仍需对真实本站归档在受限隔离实例中恢复并抽样核验。
+- 推送通道再核验：本机分支新增提交后仍 `ahead 2`；GitHub HTTPS 443 连接重置，GitHub API 只读正常；SSH-over-443 可连接但公钥认证被拒，`gh` 未登录。未改变 GitHub 授权配置或输出任何凭据。
