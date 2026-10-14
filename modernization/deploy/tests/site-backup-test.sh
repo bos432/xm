@@ -76,3 +76,18 @@ fi
 [[ -f "$OLD_DB" ]]
 ! compgen -G "$BACKUP_DIR/*.tmp" >/dev/null
 printf 'PASS dump failure preserves existing backups and removes partial files\n'
+
+cat > "$MOCK_BIN/mysqldump" <<'MOCK'
+#!/usr/bin/env bash
+printf 'CREATE DATABASE nxm_test;\n'
+MOCK
+chmod +x "$MOCK_BIN/mysqldump"
+printf 'unrelated archive\n' > "$BACKUP_DIR/other-site-database-20000101.sql.gz"
+
+if ! run_backup > "$TEST_ROOT/retention.log" 2>&1; then
+  cat "$TEST_ROOT/retention.log" >&2
+  exit 1
+fi
+[[ ! -e "$OLD_DB" ]]
+[[ -f "$BACKUP_DIR/other-site-database-20000101.sql.gz" ]]
+printf 'PASS retention removes only expired archives owned by this site\n'
