@@ -62,8 +62,22 @@ class OssBackupCommandTest extends TestCase
 
         $sent = 0;
         $heads = 0;
-        Http::fake(function (Request $request) use (&$sent, &$heads) {
+        Http::fake(function (Request $request) use (&$sent, &$heads, $secret) {
             $sent++;
+            $method = $request->method();
+            $date = $request->header('Date')[0];
+            $contentType = $method === 'PUT' ? $request->header('Content-Type')[0] : '';
+            $resource = '/nxm-backup/'.ltrim((string) parse_url($request->url(), PHP_URL_PATH), '/');
+            $expectedSignature = base64_encode(hash_hmac(
+                'sha1',
+                implode("\n", [$method, '', $contentType, $date, $resource]),
+                $secret,
+                true
+            ));
+            if ($request->header('Authorization')[0] !== 'OSS test-access-key:'.$expectedSignature) {
+                return Http::response('', 403);
+            }
+
             if ($request->method() === 'PUT') {
                 return Http::response('', 200);
             }
@@ -80,7 +94,7 @@ class OssBackupCommandTest extends TestCase
         $this->assertStringContainsString('Uploaded and verified 2 OSS backup objects.', $output);
         $this->assertSame(4, $sent);
         Http::assertSent(fn (Request $request) => $request->method() === 'PUT'
-            && str_contains($request->url(), 'oss-cn-huhehaote.aliyuncs.com/nxm-backup/nxm.zlck888.com/daily/')
+            && str_contains($request->url(), 'nxm-backup.oss-cn-huhehaote.aliyuncs.com/nxm.zlck888.com/daily/')
             && str_starts_with((string) $request->header('Authorization')[0], 'OSS test-access-key:')
             && $request->header('Content-Type')[0] === 'application/octet-stream');
         $this->assertStringNotContainsString($secret, $output);
@@ -127,6 +141,27 @@ class OssBackupCommandTest extends TestCase
 
         $this->assertSame(1, $exitCode);
         $this->assertStringContainsString('regional Alibaba Cloud HTTPS endpoint', $output);
+        Http::assertNothingSent();
+    }
+
+    public function test_prefix_traversal_is_rejected_without_sending_requests(): void
+    {
+        $database = tempnam(sys_get_temp_dir(), 'nxm-db-');
+        $files = tempnam(sys_get_temp_dir(), 'nxm-files-');
+        file_put_contents($database, 'database archive');
+        file_put_contents($files, 'private files archive');
+        RuntimeConfig::set('backup.oss_enabled', '1', 'backup', false);
+        RuntimeConfig::set('backup.oss_endpoint', 'https://oss-cn-huhehaote.aliyuncs.com', 'backup', false);
+        RuntimeConfig::set('backup.oss_bucket', 'nxm-backup', 'backup', false);
+        RuntimeConfig::set('backup.oss_prefix', '../other-site', 'backup', false);
+        RuntimeConfig::set('backup.oss_access_key_id', 'test-access-key', 'backup', true);
+        RuntimeConfig::set('backup.oss_access_key_secret', 'test-secret', 'backup', true);
+        Http::fake();
+
+        [$exitCode, $output] = $this->runOssBackup($database, $files);
+
+        $this->assertSame(1, $exitCode);
+        $this->assertStringContainsString('unsupported path segments', $output);
         Http::assertNothingSent();
     }
 }

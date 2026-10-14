@@ -31,6 +31,9 @@ cat > "$MOCK_BIN/php" <<'MOCK'
 #!/usr/bin/env bash
 set -Eeuo pipefail
 [[ "$*" == *"site:backup:oss"* ]]
+if [[ "${MOCK_OSS_FAIL:-0}" == 1 ]]; then
+  exit 1
+fi
 printf '%s\n' "$*" > "${BACKUP_PHP_CALL_LOG:?}"
 MOCK
 chmod +x "$MOCK_BIN/php"
@@ -88,6 +91,19 @@ fi
 [[ -f "$OLD_DB" ]]
 ! compgen -G "$BACKUP_DIR/*.tmp" >/dev/null
 printf 'PASS dump failure preserves existing backups and removes partial files\n'
+
+cat > "$MOCK_BIN/mysqldump" <<'MOCK'
+#!/usr/bin/env bash
+printf 'CREATE TABLE nxm_fixture (id INT);\n'
+MOCK
+chmod +x "$MOCK_BIN/mysqldump"
+if MOCK_OSS_FAIL=1 run_backup > "$TEST_ROOT/oss-failure.log" 2>&1; then
+  printf 'FAIL OSS upload failure unexpectedly passed\n' >&2
+  exit 1
+fi
+[[ -f "$OLD_DB" ]]
+[[ -f "${DB_ARCHIVE[0]}" && -f "${FILES_ARCHIVE[0]}" ]]
+printf 'PASS OSS failure preserves the newly verified local archives and skips retention cleanup\n'
 
 cat > "$MOCK_BIN/mysqldump" <<'MOCK'
 #!/usr/bin/env bash

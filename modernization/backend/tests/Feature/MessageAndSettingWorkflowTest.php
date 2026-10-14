@@ -86,6 +86,10 @@ class MessageAndSettingWorkflowTest extends TestCase
         ]])->assertStatus(422);
 
         $this->putJson('/api/settings/groups/backup', ['values' => [
+            'backup.oss_endpoint' => 'https://oss-cn-huhehaote.aliyuncs.com/unexpected-path',
+        ]])->assertStatus(422);
+
+        $this->putJson('/api/settings/groups/backup', ['values' => [
             'backup.oss_prefix' => '../other-site',
         ]])->assertStatus(422);
     }

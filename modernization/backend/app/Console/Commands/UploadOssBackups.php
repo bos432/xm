@@ -64,16 +64,16 @@ class UploadOssBackups extends Command
         if ($stream === false) {
             throw new RuntimeException('could not read local archive');
         }
-        if (filesize($archive) >= 5 * 1024 * 1024 * 1024) {
+        if (filesize($archive) >= 5_000_000_000) {
             fclose($stream);
-            throw new RuntimeException('archive exceeds the 5 GiB single-request upload limit');
+            throw new RuntimeException('archive exceeds the 5 GB single-request upload limit');
         }
 
         $date = gmdate('D, d M Y H:i:s').' GMT';
         $contentType = 'application/octet-stream';
         $resource = '/'.$bucket.'/'.$object;
         $signature = $this->signature('PUT', '', $contentType, $date, $resource, $secret);
-        $url = $endpoint.'/'.$bucket.'/'.$this->encodeObject($object);
+        $url = 'https://'.$bucket.'.'.parse_url($endpoint, PHP_URL_HOST).'/'.$this->encodeObject($object);
         try {
             $request = $this->client($accessKey, $signature, $date, $contentType)
                 ->withBody($stream, $contentType)
@@ -121,7 +121,8 @@ class UploadOssBackups extends Command
         $parts = parse_url($value);
         if (! is_array($parts) || ($parts['scheme'] ?? '') !== 'https' || empty($parts['host'])
             || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment'])
-            || isset($parts['port']) || ! preg_match('/^(?:oss-[a-z0-9-]+|[a-z0-9-]+\.oss-[a-z0-9-]+)\.aliyuncs\.com$/', $parts['host'])) {
+            || isset($parts['port']) || ! in_array($parts['path'] ?? '', ['', '/'], true)
+            || ! preg_match('/^(?:oss-[a-z0-9-]+|[a-z0-9-]+\.oss-[a-z0-9-]+)\.aliyuncs\.com$/', $parts['host'])) {
             throw new RuntimeException('OSS endpoint must be a regional Alibaba Cloud HTTPS endpoint without credentials or query parameters');
         }
 

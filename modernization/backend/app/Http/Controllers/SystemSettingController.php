@@ -166,7 +166,8 @@ class SystemSettingController extends Controller
             $parts = parse_url((string) $value);
             if (! is_array($parts) || ($parts['scheme'] ?? '') !== 'https' || empty($parts['host'])
                 || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment'])
-                || isset($parts['port']) || ! preg_match('/^oss-[a-z0-9-]+\.aliyuncs\.com$/', $parts['host'])) {
+                || isset($parts['port']) || ! in_array($parts['path'] ?? '', ['', '/'], true)
+                || ! preg_match('/^(?:oss-[a-z0-9-]+|[a-z0-9-]+\.oss-[a-z0-9-]+)\.aliyuncs\.com$/', $parts['host'])) {
                 abort(422, 'OSS Endpoint 必须是阿里云地域 HTTPS 地址，不能包含账号、密码或查询参数');
             }
         }
