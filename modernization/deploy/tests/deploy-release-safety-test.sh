@@ -47,15 +47,15 @@ set -e
 destination="${@: -1}"
 mkdir -p "$destination/modernization/frontend" "$destination/modernization/backend/database/migrations" \
     "$destination/modernization/backend/bootstrap" "$destination/modernization/backend/storage" \
-    "$destination/modernization/deploy"
+    "$destination/modernization/deploy" "$destination/modernization/frontend/dist"
 printf '{"scripts":{"build":"true"}}\n' > "$destination/modernization/frontend/package.json"
 touch "$destination/modernization/backend/database/migrations/2026_06_06_000001_create_modernization_core_tables.php"
 for name in 2026_06_06_000002_create_runtime_support_tables.php; do
   touch "$destination/modernization/backend/database/migrations/$name"
 done
-mkdir -p "$destination/modernization/frontend/dist"
-touch "$destination/modernization/frontend/dist/index.html"
-  touch "$destination/modernization/deploy/queue-worker-watchdog.sh"
+touch "$destination/modernization/frontend/dist/index.html" \
+  "$destination/modernization/deploy/queue-worker-watchdog.sh" \
+  "$destination/modernization/deploy/site-backup.sh"
 MOCK
 
 cat > "$MOCK_BIN/node" <<'MOCK'
@@ -118,6 +118,7 @@ SUCCESS_TARGET="$(readlink -f "$APP_ROOT/current")"
 [[ "$SUCCESS_TARGET" != "$APP_ROOT/releases/previous" ]]
 ! grep -q 'nginx reload' "$TEST_ROOT/success.log"
 grep -q 'HTTPS captcha/login/logout health check passed' "$TEST_ROOT/success.log"
+[[ -x "$APP_ROOT/shared/bin/site-backup.sh" ]]
 compgen -G "$APP_ROOT/shared/backups/database/app_test-before-*.sql.gz" >/dev/null
 gzip -t "$APP_ROOT"/shared/backups/database/*.sql.gz
 grep -q 'artisan migrate --force' "$TEST_ROOT/php.log"

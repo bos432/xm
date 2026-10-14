@@ -15,6 +15,7 @@ case "$command_name" in
       "$destination/modernization/backend/database/migrations/2026_06_06_000001_create_modernization_core_tables.php" \
       "$destination/modernization/backend/database/migrations/2026_06_06_000002_create_runtime_support_tables.php"
     touch "$destination/modernization/deploy/queue-worker-watchdog.sh"
+    touch "$destination/modernization/deploy/site-backup.sh"
     ;;
   node|chown)
     exit 0

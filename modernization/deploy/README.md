@@ -184,6 +184,26 @@ install -m 750 modernization/deploy/queue-worker-watchdog.sh \
 
 验证时应只有一个 watchdog 和一个 `artisan queue:work`，并确认 `queue:failed-count` 为 0。不要用多个常驻循环脚本直接叠加计划任务。
 
+## Site Backup
+
+Deployments install the site-scoped backup script at
+`/www/wwwroot/nxm.zlck888.com/shared/bin/site-backup.sh`. Schedule it once daily
+in BT Panel as a Shell task running as `www`, with process locking enabled. For
+example, run at 02:10 server time and send output to the site's own log:
+
+```bash
+/www/wwwroot/nxm.zlck888.com/shared/bin/site-backup.sh >> /www/wwwroot/nxm.zlck888.com/shared/storage/logs/site-backup.log 2>&1
+```
+
+The script backs up only the database named in this site's `shared/.env` and
+`storage/app/private` uploads. Verified archives are stored under
+`shared/backups/daily` with mode `0600`; files older than 14 days are removed.
+It does not back up other sites or alter shared services. Keep an independent,
+off-server copy for disaster recovery; the local schedule alone is not an
+offsite backup. Restore only into an isolated database/directory first, verify
+the result, and follow the incident recovery procedure before any production
+restore. The production database has not been modified by backup verification.
+
 ## E2E Smoke Test
 
 Playwright tests read credentials from environment variables and keep generated
