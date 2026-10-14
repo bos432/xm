@@ -195,6 +195,13 @@
 - 本项仅证明隔离 MySQL 的初始化、SQL 导入和数据读取步骤可工作；没有使用生产归档，也没有验证 MySQL 5.7 源端到 8.4 目标端的完整兼容性、生产数据量耗时或 private-upload 实际恢复。因此生产备份恢复演练仍未通过，仍需对真实本站归档在受限隔离实例中恢复并抽样核验。
 - 推送通道再核验：本机分支新增提交后仍 `ahead 2`；GitHub HTTPS 443 连接重置，GitHub API 只读正常；SSH-over-443 可连接但公钥认证被拒，`gh` 未登录。未改变 GitHub 授权配置或输出任何凭据。
 
+## 2026-10-14 线上匿名安全 E2E 固化
+
+- 在独立分支 `codex/anonymous-api-smoke-probes` 提交 `d255b3f3f3be24cff30c29aba0ccf8eed9f0edbb`，扩展 Playwright 线上 smoke：公开验证码/门户 API 预期 200 JSON；6 个受保护接口在空 Accept 头时预期 JSON 401 与 `Unauthenticated.`；`.env` 与 Laravel 日志路径预期 404。CI 的 E2E 清单门禁同步要求保留此用例并检查总数 10。
+- 在线只读实跑 `20261014-smoke-probes-full` 输出 `2 passed, 8 skipped`：公开门户首页和新增匿名 API 安全探针通过；依赖六角色账号的 8 项仍按定义 skipped。未登录、未写入项目/审核/验收数据。
+- 同一主线代码组合复验：前端单测 3/3、typecheck/lint/build 均通过；后端 `188 tests, 846 assertions`；Ubuntu 24.04 容器中的站点备份、部署隔离和回滚模拟全部 PASS。Windows 原生 Docker/WSL 的只读挂载尝试在脚本启动前因无法 chmod 退出；换一次性可写容器后测试通过，挂载内容经 `git status` 确认无变化。
+- smoke 分支已推送。GitHub API 匿名 rate limit 暂时阻止读取该提交的 CI job 结果；因此仍待 CI 确认后再开 PR。未部署该提交，生产行为验证的是已运行版本的匿名读接口。
+
 ## 2026-10-14 Git 分支交付审计
 
 - 只读 GitHub compare 检查发现 `main=8487ff9` 没有包含远端 `codex/authz-ops-hardening` 的 `036f04d`（授权与审核边界修复）及 `50a7d90`（部署/健康账号加固）；`codex/production-ready-integration` 也包含另一组相关代码提交。远端 `main` 当前没有打开的 PR。
