@@ -156,3 +156,7 @@
 - 隔离恢复验证仍未完成：本站 MySQL 账号没有创建临时数据库的权限，MySQL 返回 `Access denied`。没有更改线上数据库权限或对生产库导入。需 DBA 提供短期、限定隔离库的恢复权限，或准备隔离 MySQL 实例。
 - 异地/离线副本仍未配置；计划任务只保存在同一台主机磁盘，不能抵御整机/磁盘故障。生产运营就绪仍有灾备缺口，不能将本地备份等同于异地灾备，也不能称数据库恢复演练通过。
 - 安全策略说明：本次创建任务成功，UI 没有要求关闭系统加固；因此没有关闭系统加固，也没有调整其他安全项或共享服务。
+- 后续通过宝塔主机终端进行只读复核：`readlink -f current` 指向 `/www/wwwroot/nxm.zlck888.com/releases/20261014112743`；`systemctl is-active nginx mysqld supervisord crond` 依次输出 `active`。首页和验证码 API 分别返回 HTTP 200。
+- 归档目录直接核验到本次任务产生 `nxm-database-20261014-113154.sql.gz`（73,256 bytes，`www:www`，`0600`）和 `nxm-private-files-20261014-113154.tar.gz`（1,639,961 bytes，`www:www`，`0600`）。同目录的 `.backup.lock` 显示 `0644`，只作为 flock 锁文件，不包含归档内容；备份数据本身保持 `0600`。当前磁盘每日备份已验证生成。
+- 只读进程检查看到一个本站 watchdog PID `1045657` 和一个 PHP `artisan queue:work` PID `1045658`；`artisan queue:failed-count` 输出 `0`。该快照证明检查时运行，不构成整机重启恢复演练或邮件 SMTP 实际投递证明。
+- 复核未重启或 reload Nginx、MySQL、Supervisor、crond、PHP-FPM 或主机，也未修改其它站点。
