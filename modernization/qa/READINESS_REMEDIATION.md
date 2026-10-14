@@ -171,3 +171,5 @@
 - 前端 `npm ci --include=optional --no-audit --no-fund` 成功；`npm test` 为 3/3，`npm run typecheck`、`npm run lint`、`npm run build` 均退出 0。后端在本机执行 `php vendor/bin/phpunit --display-warnings --display-deprecations --display-notices`，输出 `OK (188 tests, 846 assertions)`。
 - 尝试为安全恢复演练只读检查主机 MySQL 授权：`command -v mysql` 找到 `/usr/bin/mysql`，版本 `mysql Ver 14.14 Distrib 5.7.40`；不提供密码执行 `mysql -NBe "SHOW GRANTS FOR CURRENT_USER()"` 返回 `ERROR 1045 (28000): Access denied for user 'root'@'localhost' (using password: NO)`。未查询/读取密码、未创建数据库、未修改 grants 或生产数据。此前网站 DB 账号创建隔离库也已被拒绝，因此数据库恢复演练仍缺独立 DBA 授权的隔离库或单独的隔离 MySQL 实例。
 - 本轮未执行线上业务写流程、未向用户发送邮件、未改变任何服务器服务。SMTP 参数/测试收件箱、隔离恢复环境和六角色专用账号仍是完成端到端运营验收所需的外部条件。
+- 再次读取宝塔计划任务列表：本站备份任务仍为“正常”、周期每天 02:10，但面板“上次执行时间”仍为 `2026-10-14 11:31:54`（手动触发验证时刻）；尚未观察到次日定时触发记录，因此定时调度的跨日持续运行仍待观察，不把一次手动成功等同于自动日常运行。
+- 曾尝试经宝塔终端只读查询交付手册所列五个专用 E2E 用户的用户名/角色/启用状态（不查密码哈希），终端在命令送达前显示 `token error`，没有得到数据库查询结果。没有尝试任何密码。受控 E2E 密码不在本机环境变量，六角色线上 E2E 仍未执行。
