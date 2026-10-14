@@ -18,7 +18,7 @@
 | A-06 | 草稿、专家认证、审核/验收记录的角色数据隔离 | 已覆盖测试 | `ProjectAuthorizationTest`、`ProjectLifecycleManagementTest`、`ReviewAndAdminAuthorizationTest`、`ProjectAcceptanceWorkflowTest`；六角色线上验证未完成 |
 | A-07 | OSS 上传失败时 fail-closed 并保留本地归档 | 已覆盖测试 | `OssBackupCommandTest` 和隔离 shell 模拟；真实 OSS 未测 |
 | A-08 | 部署健康检查失败回滚本站 release 且不 reload Nginx | 已覆盖测试 | `deploy-release-safety-test.sh`、`deploy-rollback-test.sh` 隔离模拟；生产回滚未触发 |
-| A-09 | 生产 HTTPS 证书匹配本站域名 | 已覆盖测试 | 公网 SNI 只读核验 `CN=nxm.zlck888.com`，有效期至 `2027-01-12 10:59:59 UTC`；首页/登录/验证码/公开首页 HTTP 200 |
+| A-09 | 生产 HTTPS 证书匹配本站域名 | 已覆盖测试 | 修复后公网 SNI 返回 `CN=nxm.zlck888.com`，有效期至 `2027-01-12 10:59:59 UTC`；Chromium 线上公开 E2E 与首页/登录/验证码/公开首页均通过 |
 | A-10 | OSS 异地备份及隔离环境恢复 | 仅实现未测 | 生产无 `backup.oss_*` 配置记录，开关关闭；未上传或恢复 |
 | A-11 | SMTP 实际投递至批准的测试邮箱 | 仅实现未测 | SMTP username/password 缺失；未发送测试邮件 |
 | A-12 | 六角色浏览器完整流程：申报至终审/验收 | 未实现验收证据 | E2E 清单共 10 项，登录/页面与部分权限探测，不执行完整申报、逐级审核和验收链路；缺隔离账号 |
@@ -30,7 +30,8 @@
 | --- | --- | --- | --- | --- | --- |
 | QA-01 | P0 阻断 | 异地灾备 | 超管“系统配置 -> 备份与 OSS”；脱敏运行时检查 | OSS 关闭且生产 `backup.oss_*` 记录缺失，尚无站外副本/恢复证据 | 在后台配置专用最小权限 RAM 与目标 Bucket；获准后上传一份备份、核对对象大小，并恢复到隔离 MySQL/存储 |
 | QA-02 | P0 阻断 | 邮件通知 | 脱敏 Laravel 运行时检查：SMTP username/password 为 missing | 系统不能证明邮件经 SMTP 发出；预期批准测试收件箱收到邮件 | 配置 SMTP 与专用收件箱，发一封测试邮件并核对收件与队列/日志结果 |
-| QA-03 | P1 严重 | 证书密钥管理 | 宝塔本站 SSL 证书详情页显示明文私钥（内容未复制到报告） | 可查看该页的面板用户能看到私钥；预期最小化密钥暴露 | 将旧私钥视为已泄露，撤销/换钥；核查面板访问记录并咨询如何禁用明文回显。不得复用旧密钥 |
+| QA-03 | P1 严重 | 证书密钥管理 | 宝塔本站 SSL 详情曾显示私钥明文；本站私钥文件原权限 `0644` | 私钥曾可被非 root 本地用户读取；预期 root-only | 文件权限已改为 `0600 root:root`；仍应将历史明文暴露视为可能泄露，确认撤销旧密钥及宝塔回显策略 |
+| QA-06 | P0 阻断（已修复，需持续观测） | 本站 HTTPS/Nginx | Playwright 线上首页用例曾报 `ERR_CERT_COMMON_NAME_INVALID`；Nginx 检查本站 vhost 只有 `listen 80` | 443 请求命中默认 `413.chaimen666.com` 证书；预期本站独立 TLS vhost | 已新增仅被本站 vhost extension include 的 TLS 配置、测试后平滑 reload；HTTPS 与 Chromium E2E 已复测通过 |
 | QA-04 | P1 严重 | 浏览器 E2E | `cd modernization/frontend && npm run e2e -- --list`；检查 `modernization/e2e/tests/smoke.spec.js` | 共 10 个用例，角色用例检查登录、页面/权限；不覆盖“提交 -> 区县 -> 部门 -> 多专家评分 -> 终审 -> 验收关闭”全链 | 提供隔离数据库/存储及六角色专用凭据，扩展并实际运行完整 E2E，保留 E2E 数据 |
 | QA-05 | P2 一般 | 测试基础设施 | `cd modernization/backend && php artisan test --compact --coverage` | 退出码 1：`Code coverage driver not available. Did you install Xdebug or PCOV?`，覆盖率未知 | 仅在 CI/测试镜像启用 Xdebug 或 PCOV，发布覆盖率报告；不在生产安装 |
 
@@ -120,6 +121,31 @@ Total: 10 tests in 1 file
 exit code: 0
 ```
 
+### 线上公开浏览器 E2E（只读）
+
+首次命令：`E2E_BASE_URL=https://nxm.zlck888.com npm run e2e -- --grep public`（Windows PowerShell 设置环境变量后执行）
+
+修复前实际输出：
+
+```text
+Error: page.goto: net::ERR_CERT_COMMON_NAME_INVALID at https://nxm.zlck888.com/
+1 failed
+1 did not run
+```
+
+修复后同一筛选重跑：
+
+```text
+ok 1 public homepage exposes portal login and no duplicate old registration link
+ok 2 public and anonymous API probes return safe responses
+2 passed (4.5s)
+exit code: 0
+```
+
+修复根因证据：DNS `nxm.zlck888.com -> 47.239.156.27`；当时 SNI 返回 `CN=413.chaimen666.com`；本站 `/www/server/panel/vhost/nginx/nxm.zlck888.com.conf` 只有 `listen 80`，没有 TLS listener。本站证书 SAN 为 `DNS:nxm.zlck888.com`，证书与私钥公钥 SHA-256 匹配。通过本站已有 extension include 新增 `nxm-tls.conf`，配置只引用本站证书；`nginx -t` 成功后仅发送 Nginx 平滑 reload。本站私钥权限从 `0644` 收紧到 `0600 root:root`。
+
+同机回归：`https://413.chaimen666.com/`、`https://rd.chaimen666.com/`、`https://mongoyia.com/` 均 HTTP 200；Nginx、MySQL、Supervisor、crond 均 active。
+
 ### 线上只读冒烟
 
 PowerShell `Invoke-WebRequest` GET `/`、`/login`、`/api/auth/captcha`、`/api/public/homepage`，另执行 `nxm.zlck888.com:443` 的 TLS SNI 握手：
@@ -139,7 +165,7 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - 未向批准的测试邮箱发送 SMTP 邮件；没有 SMTP 账号凭据及测试收件确认。
 - 未能给出覆盖率百分比或基于实际覆盖数据的高风险未覆盖文件 TOP5；PHP 覆盖率驱动缺失。不能把文件重要性排序伪装成覆盖率结果。
 - 未执行生产压力/并发或整机重启恢复测试；没有隔离生产等价环境/维护窗口，不以线上业务承担此类破坏性验证。
-- 未验证宝塔证书部署器的文件级影响范围，也未完成旧私钥撤销；线上 TLS 域名和有效期已做公网只读确认。
+- 未验证宝塔证书部署器的全部历史文件影响范围，也未完成历史暴露私钥的 CA 撤销；当前本站新证书有效且 HTTPS 经浏览器确认通过。
 
 ## 高风险文件候选（静态风险排序，不代表覆盖率排名）
 
