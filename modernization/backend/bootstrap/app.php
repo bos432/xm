@@ -14,6 +14,8 @@ use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 
+require_once __DIR__.'/../app/Console/Commands/UploadOssBackups.php';
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withProviders([
         AuthRateLimitServiceProvider::class,
@@ -23,6 +25,9 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
+    ->withCommands([
+        App\Console\Commands\UploadOssBackups::class,
+    ])
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('api/*') ? null : '/login');
         $middleware->append(AddSecurityHeaders::class);

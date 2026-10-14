@@ -13,7 +13,7 @@ MOCK_BIN="$TEST_ROOT/bin"
 APP_ROOT="$TEST_ROOT/app"
 BACKUP_DIR="$APP_ROOT/shared/backups/daily"
 mkdir -p "$MOCK_BIN" "$APP_ROOT/shared/storage/app/private/project-files" \
-  "$APP_ROOT/shared/storage/logs" "$BACKUP_DIR"
+  "$APP_ROOT/shared/storage/logs" "$BACKUP_DIR" "$APP_ROOT/current/backend"
 chmod +x "$BACKUP_SCRIPT"
 
 cat > "$APP_ROOT/shared/.env" <<'ENV'
@@ -26,6 +26,14 @@ DB_PORT=3306
 ENV
 printf 'private fixture\n' > "$APP_ROOT/shared/storage/app/private/project-files/document.txt"
 printf 'must not be archived\n' > "$APP_ROOT/shared/storage/logs/laravel.log"
+touch "$APP_ROOT/current/backend/artisan"
+cat > "$MOCK_BIN/php" <<'MOCK'
+#!/usr/bin/env bash
+set -Eeuo pipefail
+[[ "$*" == *"site:backup:oss"* ]]
+printf '%s\n' "$*" > "${BACKUP_PHP_CALL_LOG:?}"
+MOCK
+chmod +x "$MOCK_BIN/php"
 
 cat > "$MOCK_BIN/mysqldump" <<'MOCK'
 #!/usr/bin/env bash
@@ -39,7 +47,8 @@ chmod +x "$MOCK_BIN/mysqldump"
 
 run_backup() {
   env PATH="$MOCK_BIN:$PATH" APP_ROOT="$APP_ROOT" \
-    BACKUP_DIR="$BACKUP_DIR" RETENTION_DAYS=14 \
+    BACKUP_DIR="$BACKUP_DIR" RETENTION_DAYS=14 PHP_BIN="$MOCK_BIN/php" \
+    BACKUP_PHP_CALL_LOG="$TEST_ROOT/php-call.log" \
     bash "$BACKUP_SCRIPT" "$@"
 }
 
@@ -56,6 +65,8 @@ gzip -dc "${DB_ARCHIVE[0]}" | grep -q 'CREATE TABLE nxm_fixture'
 tar -tzf "${FILES_ARCHIVE[0]}" | grep -q 'project-files/document.txt'
 ! tar -tzf "${FILES_ARCHIVE[0]}" | grep -q 'laravel.log'
 ! grep -Fq 'fixture-secret-must-not-be-logged' "$TEST_ROOT/success.log"
+grep -q -- '--database=' "$TEST_ROOT/php-call.log"
+grep -q -- '--files=' "$TEST_ROOT/php-call.log"
 [[ "$(stat -c '%a' "${DB_ARCHIVE[0]}")" == 600 ]]
 [[ "$(stat -c '%a' "${FILES_ARCHIVE[0]}")" == 600 ]]
 printf 'PASS database and private uploads are archived and verified without exposing credentials\n'

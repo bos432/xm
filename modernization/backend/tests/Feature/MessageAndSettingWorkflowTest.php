@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+require_once __DIR__.'/../../app/Http/Controllers/SystemSettingController.php';
+
 use App\Models\Message;
 use App\Models\SystemSetting;
 use App\Models\User;
@@ -37,6 +39,65 @@ class MessageAndSettingWorkflowTest extends TestCase
         $ids = collect($this->getJson('/api/messages')->assertOk()->json('data'))->pluck('id');
         $this->assertTrue($ids->contains($ownMessage->id));
         $this->assertCount(1, $ids);
+    }
+
+    public function test_super_admin_can_configure_oss_backup_and_secret_is_never_returned(): void
+    {
+        $admin = User::factory()->create(['role' => 'super_admin']);
+        Sanctum::actingAs($admin);
+
+        $secret = 'oss-secret-'.str()->random(12);
+        $response = $this->putJson('/api/settings/groups/backup', ['values' => [
+            'backup.oss_enabled' => true,
+            'backup.oss_endpoint' => 'https://oss-cn-huhehaote.aliyuncs.com',
+            'backup.oss_bucket' => 'nxm-backup',
+            'backup.oss_prefix' => 'nxm.zlck888.com/daily',
+            'backup.oss_access_key_id' => 'test-access-key',
+            'backup.oss_access_key_secret' => $secret,
+        ]]);
+        $response->assertOk()->assertJsonMissing(['value' => $secret]);
+
+        $groups = $this->getJson('/api/settings/groups')->assertOk()->json('groups');
+        $backupGroup = collect($groups)->firstWhere('key', 'backup');
+        $this->assertNotNull($backupGroup);
+        $secretField = collect($backupGroup['fields'])->firstWhere('key', 'backup.oss_access_key_secret');
+        $this->assertTrue($secretField['configured']);
+        $this->assertNotSame($secret, $secretField['value']);
+
+        $setting = SystemSetting::query()->where('key', 'backup.oss_access_key_secret')->firstOrFail();
+        $this->assertTrue($setting->is_secret);
+        $this->assertNotSame($secret, $setting->value);
+        $this->assertSame($secret, RuntimeConfig::value('backup.oss_access_key_secret'));
+
+        $this->getJson('/api/settings/groups')->assertOk()->assertJsonMissing(['value' => $secret]);
+    }
+
+    public function test_oss_settings_reject_unsafe_endpoint_and_prefix(): void
+    {
+        $admin = User::factory()->create(['role' => 'super_admin']);
+        Sanctum::actingAs($admin);
+
+        $this->putJson('/api/settings/groups/backup', ['values' => [
+            'backup.oss_endpoint' => 'http://oss-cn-huhehaote.aliyuncs.com',
+        ]])->assertStatus(422);
+
+        $this->putJson('/api/settings/groups/backup', ['values' => [
+            'backup.oss_endpoint' => 'https://attacker.example',
+        ]])->assertStatus(422);
+
+        $this->putJson('/api/settings/groups/backup', ['values' => [
+            'backup.oss_prefix' => '../other-site',
+        ]])->assertStatus(422);
+    }
+
+    public function test_non_super_admin_cannot_view_or_change_oss_settings(): void
+    {
+        Sanctum::actingAs(User::factory()->create(['role' => 'unit']));
+
+        $this->getJson('/api/settings/groups')->assertForbidden();
+        $this->putJson('/api/settings/groups/backup', ['values' => [
+            'backup.oss_enabled' => true,
+        ]])->assertForbidden();
     }
 
     public function test_user_can_filter_own_messages_by_status_and_type(): void

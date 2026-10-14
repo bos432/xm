@@ -204,6 +204,25 @@ offsite backup. Restore only into an isolated database/directory first, verify
 the result, and follow the incident recovery procedure before any production
 restore. The production database has not been modified by backup verification.
 
+### Alibaba Cloud OSS off-site copy
+
+OSS is optional and remains disabled until a super administrator enables it in
+**System Settings → Backup and OSS**. Enter the Alibaba Cloud regional HTTPS
+Endpoint, target Bucket, a site-specific object prefix, and a dedicated RAM
+AccessKey ID/Secret. Secret fields are encrypted in the settings table and only
+masked values are returned to the browser. Never put these credentials in Git,
+`.env`, shell arguments, or task logs. Restrict the RAM identity to object
+uploads and object metadata reads under this Bucket/prefix; do not grant bucket
+administration or access to other site prefixes.
+
+After saving, run the existing site backup task manually once and inspect
+`shared/storage/logs/site-backup.log` for `Uploaded and verified 2 OSS backup
+objects.` The script retains both local archives if OSS is unavailable or
+misconfigured and marks the scheduled task failed. Do not treat OSS as active
+until this live upload and an isolated restore/download check have succeeded.
+The web application does not need a restart after changing these runtime
+settings.
+
 Production has a Baota scheduled task named `nxm.zlck888.com 本站数据库与上传备份`.
 It runs this site's script daily at 02:10 server-local time as `www`, with the
 task process lock enabled. Its command appends output to
@@ -216,9 +235,9 @@ Important recovery limitation: the production database account cannot create
 an isolated restore database, so a full database restore rehearsal has not
 passed. Do not grant broader privileges to the production account to work
 around this. Arrange a temporary least-privilege restore grant for an isolated
-database or use a separate isolated MySQL instance. No off-server backup target
-is configured yet, so the scheduled local copies do not protect against loss
-of this host or its disk.
+database or use a separate isolated MySQL instance. Configure and verify the
+optional OSS target before relying on off-host copies; it remains disabled
+until valid credentials are entered in super-admin settings.
 
 ## SMTP Delivery Readiness
 

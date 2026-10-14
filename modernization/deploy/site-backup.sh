@@ -7,6 +7,10 @@ ENV_FILE="$SHARED_DIR/.env"
 BACKUP_DIR="${BACKUP_DIR:-$SHARED_DIR/backups/daily}"
 RETENTION_DAYS="${RETENTION_DAYS:-14}"
 MYSQLDUMP_BIN="${MYSQLDUMP_BIN:-$(command -v mysqldump || true)}"
+PHP_BIN="${PHP_BIN:-$(command -v php || true)}"
+if [[ -z "$PHP_BIN" || ! -x "$PHP_BIN" ]] && [[ -x /www/server/php/83/bin/php ]]; then
+  PHP_BIN=/www/server/php/83/bin/php
+fi
 
 log() {
   printf '[%s] %s\n' "$(date '+%F %T')" "$*"
@@ -33,6 +37,7 @@ read_env_value() {
 [[ -d "$SHARED_DIR/storage/app/private" ]] || fail "Private upload directory is missing"
 [[ "$RETENTION_DAYS" =~ ^[1-9][0-9]*$ ]] || fail "RETENTION_DAYS must be a positive integer"
 [[ -n "$MYSQLDUMP_BIN" && -x "$MYSQLDUMP_BIN" ]] || fail "mysqldump is not available"
+[[ -n "$PHP_BIN" && -x "$PHP_BIN" ]] || fail "PHP CLI is not available"
 
 DB_CONNECTION="$(read_env_value DB_CONNECTION)"
 DB_NAME="$(read_env_value DB_DATABASE)"
@@ -89,6 +94,11 @@ chmod 600 "$DB_TMP" "$FILES_TMP"
 mv -- "$DB_TMP" "$DB_ARCHIVE"
 mv -- "$FILES_TMP" "$FILES_ARCHIVE"
 log "Verified database and private-upload archives for this site"
+
+ARTISAN="$APP_ROOT/current/backend/artisan"
+[[ -f "$ARTISAN" ]] || fail "Current release Artisan entry point is missing"
+"$PHP_BIN" "$ARTISAN" site:backup:oss --database="$DB_ARCHIVE" --files="$FILES_ARCHIVE" \
+  || fail "OSS backup failed; verified local archives have been retained"
 
 find "$BACKUP_DIR" -maxdepth 1 -type f \
   \( -name 'nxm-database-*.sql.gz' -o -name 'nxm-private-files-*.tar.gz' \) \
