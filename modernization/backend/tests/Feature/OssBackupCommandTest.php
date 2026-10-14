@@ -62,11 +62,15 @@ class OssBackupCommandTest extends TestCase
 
         $sent = 0;
         $heads = 0;
-        Http::fake(function (Request $request) use (&$sent, &$heads, $secret) {
+        Http::fake(function (Request $request, array $options) use (&$sent, &$heads, $secret, $database, $files) {
             $sent++;
+            $this->assertFalse($options['allow_redirects']);
             $method = $request->method();
             $date = $request->header('Date')[0];
             $contentType = $method === 'PUT' ? $request->header('Content-Type')[0] : '';
+            if ($method === 'HEAD') {
+                $this->assertSame('', implode('', $request->header('Content-Type')));
+            }
             $resource = '/nxm-backup/'.ltrim((string) parse_url($request->url(), PHP_URL_PATH), '/');
             $expectedSignature = base64_encode(hash_hmac(
                 'sha1',
@@ -79,6 +83,8 @@ class OssBackupCommandTest extends TestCase
             }
 
             if ($request->method() === 'PUT') {
+                $this->assertContains(realpath($request->toPsrRequest()->getBody()->getMetadata('uri')), [realpath($database), realpath($files)]);
+
                 return Http::response('', 200);
             }
 
@@ -90,7 +96,7 @@ class OssBackupCommandTest extends TestCase
 
         [$exitCode, $output] = $this->runOssBackup($database, $files);
 
-        $this->assertSame(0, $exitCode);
+        $this->assertSame(0, $exitCode, $output);
         $this->assertStringContainsString('Uploaded and verified 2 OSS backup objects.', $output);
         $this->assertSame(4, $sent);
         Http::assertSent(fn (Request $request) => $request->method() === 'PUT'
@@ -163,5 +169,61 @@ class OssBackupCommandTest extends TestCase
         $this->assertSame(1, $exitCode);
         $this->assertStringContainsString('unsupported path segments', $output);
         Http::assertNothingSent();
+    }
+
+    public function test_remote_length_mismatch_fails_and_retains_both_archives(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        $disk->put('backup/database.sql.gz', 'database archive');
+        $disk->put('backup/files.tar.gz', 'private files archive');
+        $this->configureOss();
+        Http::fake(fn (Request $request) => $request->method() === 'PUT'
+            ? Http::response('', 200)
+            : Http::response('', 200, ['Content-Length' => '1']));
+
+        [$exitCode, $output] = $this->runOssBackup($disk->path('backup/database.sql.gz'), $disk->path('backup/files.tar.gz'));
+
+        $this->assertSame(1, $exitCode, $output);
+        $this->assertStringContainsString('OSS object verification failed', $output);
+        $disk->assertExists('backup/database.sql.gz');
+        $disk->assertExists('backup/files.tar.gz');
+        Http::assertSentCount(2);
+    }
+
+    public function test_empty_archive_is_rejected_before_either_archive_is_uploaded(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        $disk->put('backup/database.sql.gz', 'database archive');
+        $disk->put('backup/files.tar.gz', '');
+        $this->configureOss();
+        Http::fake(fn (Request $request) => Http::response('', 200, ['Content-Length' => str_ends_with($request->url(), 'database.sql.gz') ? '16' : '0']));
+
+        [$exitCode, $output] = $this->runOssBackup($disk->path('backup/database.sql.gz'), $disk->path('backup/files.tar.gz'));
+
+        $this->assertSame(1, $exitCode, $output);
+        Http::assertNothingSent();
+    }
+
+    public function test_missing_archive_is_rejected_before_sending_requests(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+        $disk = \Illuminate\Support\Facades\Storage::disk('local');
+        $disk->put('backup/database.sql.gz', 'database archive');
+        $this->configureOss();
+        Http::fake();
+
+        [$exitCode, $output] = $this->runOssBackup($disk->path('backup/database.sql.gz'), $disk->path('backup/missing.tar.gz'));
+
+        $this->assertSame(1, $exitCode, $output);
+        Http::assertNothingSent();
+    }
+
+    private function configureOss(): void
+    {
+        foreach (['enabled' => '1', 'endpoint' => 'https://oss-cn-huhehaote.aliyuncs.com', 'bucket' => 'nxm-backup', 'prefix' => 'nxm.zlck888.com/daily', 'access_key_id' => 'test-access-key', 'access_key_secret' => 'test-secret'] as $key => $value) {
+            RuntimeConfig::set('backup.oss_'.$key, $value, 'backup', str_starts_with($key, 'access_key'));
+        }
     }
 }

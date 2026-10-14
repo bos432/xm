@@ -27,7 +27,7 @@ class UploadOssBackups extends Command
         $database = (string) $this->option('database');
         $files = (string) $this->option('files');
         foreach ([$database, $files] as $archive) {
-            if ($archive === '' || ! is_file($archive) || ! is_readable($archive)) {
+            if ($archive === '' || ! is_file($archive) || ! is_readable($archive) || filesize($archive) < 1) {
                 $this->error('OSS backup failed: a local archive is missing or unreadable.');
 
                 return self::FAILURE;
@@ -105,7 +105,7 @@ class UploadOssBackups extends Command
             $headers['Content-Type'] = $contentType;
         }
 
-        return Http::withHeaders($headers)->connectTimeout(15)->timeout(120);
+        return Http::withHeaders($headers)->withoutRedirecting()->connectTimeout(15)->timeout(120);
     }
 
     private function signature(string $method, string $contentMd5, string $contentType, string $date, string $resource, string $secret): string
