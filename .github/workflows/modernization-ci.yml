@@ -6,10 +6,12 @@ on:
     paths:
       - 'modernization/**'
       - '.github/workflows/modernization-ci.yml'
+      - '.github/workflows/production-smoke.yml'
   pull_request:
     paths:
       - 'modernization/**'
       - '.github/workflows/modernization-ci.yml'
+      - '.github/workflows/production-smoke.yml'
   workflow_dispatch:
 
 jobs:
