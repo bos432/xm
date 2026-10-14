@@ -138,3 +138,4 @@
 - 2026-10-14 生产线上 E2E run `20261014-103437`：公开首页 `1 passed`；其余 8 项（六角色页面、角色权限 API、超管门户/安全中心）因六角色专用凭据未配置而 skipped。运行前 grep 筛选在 Windows 参数传递下未匹配测试，随即直接运行完整 E2E 套件成功执行公开首页；未猜测账号或写入业务数据。
 - 最新工作区候选分支有 2 个本地提交未推送（`3a1535f` 与 `754adaa`），推送再次因 GitHub 443 `Failed to connect` 失败；远端最新可读状态仍停留在 `486441b`，主线 `18598c7` 未动。Docker Ubuntu 24.04 本地模拟验证对应夹具通过，但最终候选版本尚无 CI 结果。
 - 2026-10-14 最新再测 `github.com:443`：TLS/HTTP 推送端点不可连接，GitHub REST API 可读；SSH 连接返回 `Permission denied (publickey)`。没有检测或输出任何凭据。六路径匿名认证矩阵回归通过，修复仍未部署。
+- 2026-10-14 候选分支推送恢复后，最新提交 `1dbd616781f58496097e39575d9f28cadd7f3828` 的 GitHub Actions run `38502151470` 终态 `success`：Frontend lint and build、Backend feature tests、Deployment backup and rollback simulations 全部 success；Optional online E2E 为 skipped（未配置六角色测试 Secrets）。
