@@ -116,3 +116,18 @@
 - 发布后复核：watchdog `www:www 0750`，外层锁 `www:www 0660`；只有一个本站 watchdog 和一个 PHP queue worker；`queue:failed-count` 为 `0`；Nginx、MySQL、Supervisor、crond 均 `active`；首页返回 `HTTP/2 200`，静态响应头和 HSTS 均存在。
 - 本次发布只切换本站 `current`，没有重启整机、Nginx、PHP-FPM、MySQL 或 Supervisor，也没有改动同机其它站点。
 - 发布后线上 E2E run `20261014-041420`：公开首页用例 `1 passed`；六角色登录/页面、专家认证权限、超管首页素材与安全中心共 `8 skipped`，原因仍是本机未配置专用 E2E 账号密码。该结果证明公开入口，不证明角色业务全流程。
+
+## 2026-10-14 延续验收：本机门禁与线上匿名暴露面
+
+- 在隔离分支 `codex/qa-gates-production`（HEAD 与 `origin/main` 同为 `18598c7f103f8c23eec36eb3353fafbfa623e8f6`）复跑：前端 `npm test` 为 3/3、`npm run typecheck`、`npm run lint`、`npm run build` 均退出 0；后端 `vendor/bin/phpunit --display-warnings --display-deprecations --display-notices` 输出 `OK (187 tests, 834 assertions)`。以上只证明自动化代码门禁，不是生产角色验收。
+- 对生产域执行匿名只读 HTTPS GET：`/`、`/login`、`/dashboard`、`/application-batches`、`/public-home`、`/api/auth/captcha`、`/api/public/homepage` 均 HTTP 200。验证码接口只核对字段存在（`captcha_id, question`），未记录验证码 ID；门户 API 的 `brand.logo_url`、`brand.favicon_url` 均存在。静态 HTML 有 HSTS 和 `X-Content-Type-Options: nosniff`。
+- 同一只读探测 `/ .env`（实际路径 `/.env`）和 `/storage/logs/laravel.log` 返回 404，响应正文未匹配 APP_KEY、DB_PASSWORD 或 MAIL_PASSWORD 模式。探测 `/vendor/phpunit/phpunit/phpunit` 返回 200 `text/html`，正文与根路径完全相同且不含 PHPUnit 字样，证实这是 SPA history fallback，并非 PHPUnit 源文件暴露；后续可考虑 Nginx deny 规则减少扫描噪音，但当前没有证据显示敏感文件可下载。
+- 当前远端 HEAD 与本机一致；本机 `gh auth status` 输出 `You are not logged into any GitHub hosts`，所以无法从 Actions API 核验最新 workflow run 明细或在线 E2E Secrets 状态。既有本仓库 Actions 成功记录仍可参考，但不能当作本次运行证据。
+- 不依赖生产写入继续验证的项目已完成。仍未闭环且不能虚报：六角色完整提交/区县/部门/多专家评分/终审/延期/验收业务流；SMTP 实际收信；备份恢复演练；并发/压力测试；整机重启后 watchdog 自动恢复。六角色 E2E 必须使用专用测试账号并在确认其为安全测试数据后运行；重启演练必须由运维安排维护窗口，因其可能影响同机其他站点。
+
+## 2026-10-14 API 未认证错误协商缺陷
+
+- 生产匿名 GET `/api/auth/me`、`/api/projects`、`/api/reviews/tasks`、`/api/settings/groups`、`/api/users`、`/api/security/events`（不带 `Accept`）均稳定返回 500 HTML，正文是通用 Symfony 错误页，没有堆栈或密钥；带 `Accept: application/json` 时同一组接口均返回 `401 application/json` 和 `{"message":"Unauthenticated."}`。因此未认证请求不会越权，但非标准客户端/健康探针省略 Accept 时收到 500，属 P1 可用性与错误码问题。
+- 根因由本地最小回归用例复现：Laravel 默认访客回调调用不存在的 `route('login')`，导致 `RouteNotFoundException`。修复为 API 访客不生成页面重定向、返回认证异常 JSON 401；非 API 页面继续跳转 `/login`。新增无 Accept 头回归测试。
+- 修复后后端全量 `vendor/bin/phpunit --display-warnings --display-deprecations --display-notices`：`OK (188 tests, 836 assertions)`；定向 `AuthProfileTest`：`OK (14 tests, 72 assertions)`。前端测试 3/3、typecheck、lint、build 均通过。部署脚本 Bash 模拟在当前 Windows 机器因 WSL `CreateInstance/E_FAIL` 无法启动，未能本地验证；workflow 定义包含 Ubuntu 上的部署安全模拟 job。
+- 补丁仍在隔离候选分支，未部署；生产匿名接口的无 Accept 500 尚未被生产修复，需候选 CI 通过并经安全发布流程部署后复测。此次只读复测均带 JSON Accept，仍为 401。
