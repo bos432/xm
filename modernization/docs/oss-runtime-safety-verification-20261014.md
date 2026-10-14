@@ -100,6 +100,27 @@ typecheck 仅验证既有脚本所覆盖的 JS 工具代码，不代表所有 Vu
 
 ## 部署与验收步骤
 
+### Git 发布证据
+
+修复提交 `bacb1db` 已推送至候选分支，再以非强制方式快进远端 main：
+
+```text
+git -c http.sslBackend=schannel -c http.lowSpeedLimit=100 -c http.lowSpeedTime=20 push origin HEAD:main
+To https://github.com/bos432/xm.git
+   60d4088..bacb1db  HEAD -> main
+```
+
+这是代码发布，不是生产部署。尝试读取该提交的 CI 状态：
+
+```text
+gh run list --repo bos432/xm --branch main --limit 3 --json databaseId,headSha,status,conclusion,url,workflowName
+To get started with GitHub CLI, please run: gh auth login
+Alternatively, populate the GH_TOKEN environment variable with a GitHub API authentication token.
+exit code: 1
+```
+
+当前 GitHub CLI 没有认证，未能验证 Actions 状态。不读取浏览器 token，也不自动登录或创建密钥。不能把本地测试通过写成 CI 已通过。
+
 1. 合并候选修复到 main，核对 main 新提交已包含这两项修改，才可部署。不可从原始脏工作区直接 push main，也不可强推。
 2. 使用本站既有 deploy.sh，显式 `RUN_SEED=0 RUN_MIGRATIONS=0`；无需迁移。不重启服务器、Nginx、MySQL，不修改其他站点配置。
 3. 发布后只读核对 release 的 source SHA、Artisan 命令注册、公开首页/验证码，以及超管“备份与 OSS”入口。
