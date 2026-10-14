@@ -1,0 +1,47 @@
+name: Production Read-only Smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 18 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  public-and-anonymous-api:
+    name: Public pages and anonymous API boundaries
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: modernization/frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: modernization/frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --include=dev --include=optional --no-audit --no-fund
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run production smoke suite
+        env:
+          E2E_BASE_URL: https://nxm.zlck888.com
+        run: npm run e2e
+
+      - name: Retain smoke report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-smoke-report-${{ github.run_id }}
+          path: modernization/e2e/reports/runs/
+          if-no-files-found: ignore
+          retention-days: 14
