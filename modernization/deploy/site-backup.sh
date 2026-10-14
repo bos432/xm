@@ -81,7 +81,7 @@ tar -czf "$FILES_TMP" -C "$SHARED_DIR/storage/app/private" . \
 gzip -t "$DB_TMP" || fail "Database archive verification failed"
 gzip -t "$FILES_TMP" || fail "Private upload archive verification failed"
 [[ "$(gzip -dc "$DB_TMP" | wc -c)" -gt 0 ]] || fail "Database archive is empty"
-HAS_SCHEMA="$(gzip -dc "$DB_TMP" | awk '/^(CREATE TABLE|-- Current Database:)/ { found = 1 } END { print found + 0 }')"
+HAS_SCHEMA="$(gzip -dc "$DB_TMP" | awk '/^(CREATE TABLE|-- Current Database:|DROP TABLE)/ { found = 1 } END { print found + 0 }')"
 [[ "$HAS_SCHEMA" == 1 ]] || fail "Database archive contains no schema statements"
 [[ "$(gzip -dc "$FILES_TMP" | wc -c)" -gt 0 ]] || fail "Private upload archive is empty"
 
