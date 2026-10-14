@@ -173,3 +173,11 @@
 - 本轮未执行线上业务写流程、未向用户发送邮件、未改变任何服务器服务。SMTP 参数/测试收件箱、隔离恢复环境和六角色专用账号仍是完成端到端运营验收所需的外部条件。
 - 复核宝塔任务的系统调度时间线：root crontab 存在 `10 2 * * * flock ... /www/server/cron/34d85a97c6aecf07dc65118ecafd7a88`，`crond` 为 active，日志显示宝塔在 `2026-10-14 11:32 CST` reload 了该 root crontab。主机当前时间 `2026-10-14 12:02 CST`，所以该任务下一个自然触发时点是 `2026-10-15 02:10 CST`，尚未到达；面板“上次执行时间”仍为 `2026-10-14 11:31:54` 的人工成功记录属于预期。此处不能据此认定 cron 故障，也尚不能声称已经观察到自动日常备份；应在首次计划触发后检查新的归档和 cron 记录。
 - 曾尝试经宝塔终端只读查询交付手册所列五个专用 E2E 用户的用户名/角色/启用状态（不查密码哈希），终端在命令送达前显示 `token error`，没有得到数据库查询结果。没有尝试任何密码。受控 E2E 密码不在本机环境变量，六角色线上 E2E 仍未执行。
+
+## 2026-10-14 最新线上复核（本轮）
+
+- 本机隔离工作区干净，`codex/qa-gates-production`、远端候选分支和 GitHub `main` 均指向 `8487ff9efbd509b9ba8dc7f3c50eb077a9db1a09`。GitHub Actions run [38509646577](https://github.com/bos432/xm/actions/runs/38509646577) 对该 SHA 的终态为 `success`：Frontend lint and build、Backend feature tests、Deployment backup and rollback simulations 全部 `success`；Optional online E2E 为 `skipped`。
+- 生产匿名请求逐项复测（不带 `Accept`）：`/api/auth/me`、`/api/projects`、`/api/reviews/tasks`、`/api/settings/groups`、`/api/users`、`/api/security/events` 全部返回 `401 application/json`，响应为 `{"message":"Unauthenticated."}`。因此历史记录中 API 未认证时返回 HTML 500 的问题在当前生产运行态不再复现；此项只验证匿名错误协商，不代表授权矩阵或业务流程全覆盖。
+- 生产只读 HTTP 探针：`/`、`/login`、`/dashboard`、`/application-batches`、`/public-home` 均为 `200 text/html`；`/api/auth/captcha`、`/api/public/homepage` 均为 `200 application/json`；`/.env` 与 `/storage/logs/laravel.log` 均为 404。未登录进入业务页面只验证 SPA 深链接可回退，不验证登录后的页面数据和权限。
+- 没有将本轮文档 SHA 当作生产应用代码版本，也没有触发部署。匿名 API 修复提交 `546f7fd` 是当前 `main` 的祖先，且线上行为复测符合修复预期；但本轮未获取线上 release 的源码 SHA。
+- 仍未验收的运营阻断保持不变：SMTP 实际投递、异地备份、隔离数据库恢复演练、六角色完整业务 E2E（CI 在线 E2E skipped）、整机重启恢复。不得将当前绿色常规 CI、匿名 API 复测或本地备份成功等同于完整运营验收。
