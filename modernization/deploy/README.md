@@ -204,6 +204,22 @@ offsite backup. Restore only into an isolated database/directory first, verify
 the result, and follow the incident recovery procedure before any production
 restore. The production database has not been modified by backup verification.
 
+Production has a Baota scheduled task named `nxm.zlck888.com 本站数据库与上传备份`.
+It runs this site's script daily at 02:10 server-local time as `www`, with the
+task process lock enabled. Its command appends output to
+`/www/wwwroot/nxm.zlck888.com/shared/storage/logs/site-backup.log`. A manual
+Baota run on 2026-10-14 reported `Successful`; earlier direct execution verified
+both archive formats. The task log also contains a non-fatal locale warning
+(`LC_ALL: cannot change locale (en_US.UTF-8)`).
+
+Important recovery limitation: the production database account cannot create
+an isolated restore database, so a full database restore rehearsal has not
+passed. Do not grant broader privileges to the production account to work
+around this. Arrange a temporary least-privilege restore grant for an isolated
+database or use a separate isolated MySQL instance. No off-server backup target
+is configured yet, so the scheduled local copies do not protect against loss
+of this host or its disk.
+
 ## E2E Smoke Test
 
 Playwright tests read credentials from environment variables and keep generated
