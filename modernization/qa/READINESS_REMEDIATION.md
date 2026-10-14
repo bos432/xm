@@ -160,3 +160,6 @@
 - 归档目录直接核验到本次任务产生 `nxm-database-20261014-113154.sql.gz`（73,256 bytes，`www:www`，`0600`）和 `nxm-private-files-20261014-113154.tar.gz`（1,639,961 bytes，`www:www`，`0600`）。同目录的 `.backup.lock` 显示 `0644`，只作为 flock 锁文件，不包含归档内容；备份数据本身保持 `0600`。当前磁盘每日备份已验证生成。
 - 只读进程检查看到一个本站 watchdog PID `1045657` 和一个 PHP `artisan queue:work` PID `1045658`；`artisan queue:failed-count` 输出 `0`。该快照证明检查时运行，不构成整机重启恢复演练或邮件 SMTP 实际投递证明。
 - 复核未重启或 reload Nginx、MySQL、Supervisor、crond、PHP-FPM 或主机，也未修改其它站点。
+- 继续只读查看 `shared/.env` 的非敏感配置键和值：`MAIL_MAILER=log`、`QUEUE_CONNECTION=database`；`artisan queue:monitor database:default --max=100` 输出队列大小 `[0] OK`，`queue:failed-count` 输出 `0`。因此队列消费者虽运行正常，邮件目前配置为写日志而非 SMTP，真实邮件通知不可用；未读取邮箱密码等凭据、未改 `.env`、未发送邮件。该项是运营上线前阻断，需由系统运营方提供 SMTP 主机/端口/加密类型/发件账号及密码后，使用专用测试收件箱验证投递。
+- 上述只读终端还确认 `/` 分区 54%（79G 中使用 41G、可用 35G），`/www` 分区 67%（295G 中使用 201G、可用 94G），`nginx -t` 成功；`migrate:status` 当前 10 项均为 Ran。曾误试不存在的 `artisan config:get` 子命令，仅返回 usage/error，未修改配置；之后只读取 `.env` 中两个非敏感键并使用受支持的 `queue:monitor` 完成检查。
+- 当前生产 release 为 `20261014112743`，只读探测显示其目录不是 Git checkout，不能从生产文件直接取得源码 SHA；GitHub 主线当前为 `f071e470bc22d7923f35567b4999d2fb1ccd687e`。当日 deploy 记录证明此前发布 release `20261014112743` 是当时版本，但 `f071e47` 仅含文档提交，故生产代码与主线代码等价于 `f071e47` 的父代码提交 `2ac82e8`，未为文档变化重新部署。
