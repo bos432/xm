@@ -129,7 +129,7 @@
 
 - 生产匿名 GET `/api/auth/me`、`/api/projects`、`/api/reviews/tasks`、`/api/settings/groups`、`/api/users`、`/api/security/events`（不带 `Accept`）均稳定返回 500 HTML，正文是通用 Symfony 错误页，没有堆栈或密钥；带 `Accept: application/json` 时同一组接口均返回 `401 application/json` 和 `{"message":"Unauthenticated."}`。因此未认证请求不会越权，但非标准客户端/健康探针省略 Accept 时收到 500，属 P1 可用性与错误码问题。
 - 根因由本地最小回归用例复现：Laravel 默认访客回调调用不存在的 `route('login')`，导致 `RouteNotFoundException`。修复为 API 访客不生成页面重定向、返回认证异常 JSON 401；非 API 页面继续跳转 `/login`。新增无 Accept 头回归测试。
-- 修复后后端全量 `vendor/bin/phpunit --display-warnings --display-deprecations --display-notices`：`OK (188 tests, 836 assertions)`；定向 `AuthProfileTest`：`OK (14 tests, 72 assertions)`。前端测试 3/3、typecheck、lint、build 均通过。部署脚本 Bash 模拟在当前 Windows 机器因 WSL `CreateInstance/E_FAIL` 无法启动，未能本地验证；workflow 定义包含 Ubuntu 上的部署安全模拟 job。
+- 修复后最初后端全量 `vendor/bin/phpunit --display-warnings --display-deprecations --display-notices`：`OK (188 tests, 836 assertions)`；扩大无 Accept 回归覆盖到 6 个受保护 API 后，当前结果更新为 `OK (188 tests, 846 assertions)`，定向 `AuthProfileTest` 为 `OK (14 tests, 82 assertions)`。前端测试 3/3、typecheck、lint、build 均通过。部署脚本 Bash 模拟在当前 Windows WSL 因 `CreateInstance/E_FAIL` 无法启动，已改用隔离 Ubuntu Docker 验证。
 - 补丁仍在隔离候选分支，未部署；生产匿名接口的无 Accept 500 尚未被生产修复，需候选 CI 通过并经安全发布流程部署后复测。此次只读复测均带 JSON Accept，仍为 401。
 - 候选 Actions 运行 `38500876398` 在已固定 `ubuntu-24.04` 后仍失败于“本站隔离和回滚”模拟；公开 annotations 仅有 exit code 1，Actions 日志下载 API 返回 403。复核 mock 仓库后发现其也未生成部署脚本要求的 `queue-worker-watchdog.sh`；已在 `modernization/deploy/tests/mock-command.sh` 补齐该 fixture。
 - 为获得 Linux 等价验证，在本机隔离 Docker Ubuntu 24.04 容器运行：`bash -n modernization/deploy/tests/deploy-release-safety-test.sh modernization/deploy/tests/deploy-rollback-test.sh modernization/deploy/tests/mock-command.sh && bash modernization/deploy/tests/deploy-release-safety-test.sh && bash modernization/deploy/tests/deploy-rollback-test.sh`。完整输出的关键结果：`PASS successful deploy backs up database, switches current, and does not reload nginx`、health failure rollback、缺健康凭据 fail closed、数据库备份失败/空备份保护、SQLite 备份与相对路径拒绝均 PASS，最后 `Deployment isolation and rollback checks passed.`。容器内无生产凭据、无生产挂载，仅挂载候选工作区供测试。
@@ -137,3 +137,4 @@
 - 2026-10-14 再次运行前端供应链检查：`npm audit --audit-level=low` 输出 `found 0 vulnerabilities`；`npm run e2e -- --list` 列出 9 项场景。
 - 2026-10-14 生产线上 E2E run `20261014-103437`：公开首页 `1 passed`；其余 8 项（六角色页面、角色权限 API、超管门户/安全中心）因六角色专用凭据未配置而 skipped。运行前 grep 筛选在 Windows 参数传递下未匹配测试，随即直接运行完整 E2E 套件成功执行公开首页；未猜测账号或写入业务数据。
 - 最新工作区候选分支有 2 个本地提交未推送（`3a1535f` 与 `754adaa`），推送再次因 GitHub 443 `Failed to connect` 失败；远端最新可读状态仍停留在 `486441b`，主线 `18598c7` 未动。Docker Ubuntu 24.04 本地模拟验证对应夹具通过，但最终候选版本尚无 CI 结果。
+- 2026-10-14 最新再测 `github.com:443`：TLS/HTTP 推送端点不可连接，GitHub REST API 可读；SSH 连接返回 `Permission denied (publickey)`。没有检测或输出任何凭据。六路径匿名认证矩阵回归通过，修复仍未部署。
