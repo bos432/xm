@@ -9,10 +9,12 @@ case "$command_name" in
     destination="${!#}"
     mkdir -p "$destination/modernization/frontend" \
       "$destination/modernization/backend/bootstrap" \
-      "$destination/modernization/backend/database/migrations"
+      "$destination/modernization/backend/database/migrations" \
+      "$destination/modernization/deploy"
     touch "$destination/modernization/backend/artisan" \
       "$destination/modernization/backend/database/migrations/2026_06_06_000001_create_modernization_core_tables.php" \
       "$destination/modernization/backend/database/migrations/2026_06_06_000002_create_runtime_support_tables.php"
+    touch "$destination/modernization/deploy/queue-worker-watchdog.sh"
     ;;
   node|chown)
     exit 0
