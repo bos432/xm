@@ -105,6 +105,35 @@ test('public homepage exposes portal login and no duplicate old registration lin
   await saveScreenshot(page, 'public-home')
 })
 
+test('public and anonymous API probes return safe responses', async ({ request }) => {
+  for (const path of ['/api/auth/captcha', '/api/public/homepage']) {
+    const response = await request.get(path)
+    expect(response.status(), path).toBe(200)
+    expect(response.headers()['content-type'], path).toContain('application/json')
+  }
+
+  const protectedPaths = [
+    '/api/auth/me',
+    '/api/projects',
+    '/api/reviews/tasks',
+    '/api/settings/groups',
+    '/api/users',
+    '/api/security/events'
+  ]
+
+  for (const path of protectedPaths) {
+    const response = await request.get(path, { headers: { accept: '' } })
+    expect(response.status(), path).toBe(401)
+    expect(response.headers()['content-type'], path).toContain('application/json')
+    await expect(response.json(), path).resolves.toMatchObject({ message: 'Unauthenticated.' })
+  }
+
+  for (const path of ['/.env', '/storage/logs/laravel.log']) {
+    const response = await request.get(path)
+    expect(response.status(), path).toBe(404)
+  }
+})
+
 for (const account of roles) {
   test(`${account.role} can log in and open project lifecycle and acceptance history`, async ({ page }) => {
     await loginFromHomepage(page, account)
