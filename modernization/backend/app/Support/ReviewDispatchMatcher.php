@@ -16,6 +16,10 @@ class ReviewDispatchMatcher
             return null;
         }
 
+        if ($assignment = $this->assignment($project, $stage)) {
+            return $assignment;
+        }
+
         $rule = $this->match($project, $stage);
         if (! $rule && $stage !== Role::EXPERT) {
             return null;
@@ -24,7 +28,10 @@ class ReviewDispatchMatcher
         $users = $rule ? $this->activeTargetUsers($rule) : $this->activeExperts();
         if ($stage === Role::EXPERT && RuntimeConfig::boolValue('review.expert_assignment.random_enabled', true)) {
             $count = max(1, (int) ($rule?->expert_count ?: RuntimeConfig::intValue('review.expert_assignment.count', 3)));
-            $users = $users->shuffle()->take($count)->values();
+            $users = $users
+                ->sortBy(fn (User $user): string => hash('sha256', $project->id.':'.$stage.':'.$user->id))
+                ->take($count)
+                ->values();
         }
 
         if ($stage === Role::EXPERT && $users->isEmpty()) {

@@ -215,4 +215,60 @@ class ReviewWorkflowTest extends TestCase
         $this->assertDatabaseCount('project_reviews', 1);
         $this->assertSame(Role::ADMIN, $project->refresh()->current_reviewer_role);
     }
+
+    public function test_expert_assignment_snapshot_is_preserved_until_every_assigned_expert_reviews(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $department = User::factory()->create(['role' => Role::DEPARTMENT]);
+        $experts = User::factory()->count(4)->create(['role' => Role::EXPERT]);
+        $admin = User::factory()->create(['role' => Role::ADMIN]);
+        $project = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'status' => Project::STATUS_REVIEWING,
+            'current_reviewer_role' => Role::DEPARTMENT,
+        ]);
+
+        Sanctum::actingAs($department);
+        $this->postJson("/api/projects/{$project->id}/reviews", [
+            'decision' => 'approve',
+            'comment' => '部门审核通过',
+        ])->assertCreated()
+            ->assertJsonPath('project.current_reviewer_role', Role::EXPERT);
+
+        $project->refresh();
+        $assignedIds = array_map('intval', data_get($project->metadata, 'review_dispatch.assignments.expert.assigned_user_ids', []));
+        $this->assertCount(3, $assignedIds);
+        $this->assertTrue(collect($assignedIds)->every(fn (int $id): bool => $experts->pluck('id')->contains($id)));
+        $assigned = User::query()->whereIn('id', $assignedIds)->orderBy('id')->get();
+
+        foreach ($assigned->take(2) as $expert) {
+            Sanctum::actingAs($expert);
+            $this->postJson("/api/projects/{$project->id}/reviews", [
+                'decision' => 'recommend',
+                'metadata' => ['score_criteria' => []],
+            ])->assertCreated()
+                ->assertJsonPath('project.current_reviewer_role', Role::EXPERT);
+
+            $storedIds = data_get($project->fresh()->metadata, 'review_dispatch.assignments.expert.assigned_user_ids');
+            $this->assertEqualsCanonicalizing($assignedIds, array_map('intval', $storedIds));
+        }
+
+        $this->assertSame(2, ProjectReview::query()->where('project_id', $project->id)->where('stage', Role::EXPERT)->count());
+
+        Sanctum::actingAs($assigned->last());
+        $this->postJson("/api/projects/{$project->id}/reviews", [
+            'decision' => 'recommend',
+            'metadata' => ['score_criteria' => []],
+        ])->assertCreated()
+            ->assertJsonPath('project.current_reviewer_role', Role::ADMIN);
+
+        $this->assertSame(3, ProjectReview::query()->where('project_id', $project->id)->where('stage', Role::EXPERT)->count());
+        $this->assertDatabaseHas('messages', [
+            'recipient_id' => $admin->id,
+            'project_id' => $project->id,
+            'title' => '收到待审项目',
+        ]);
+    }
 }

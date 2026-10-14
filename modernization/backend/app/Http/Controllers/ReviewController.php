@@ -193,6 +193,7 @@ class ReviewController extends Controller
             if ($stage === Role::EXPERT && ! $this->dispatchMatcher->assignment($project, Role::EXPERT)) {
                 $this->dispatchMatcher->apply($project, Role::EXPERT);
                 $project->save();
+                $project->refresh();
             }
 
             if ($stage === Role::EXPERT && $this->hasExistingExpertReview($project, $request->user()->id)) {
@@ -211,11 +212,6 @@ class ReviewController extends Controller
             ]);
 
             $nextState = $this->nextProjectState($project, $data['decision']);
-            if (($nextState['current_reviewer_role'] ?? null) === Role::EXPERT
-                && ! $this->dispatchMatcher->assignment($project, Role::EXPERT)) {
-                $this->dispatchMatcher->apply($project, Role::EXPERT);
-                $project->save();
-            }
             if ($stage === Role::ADMIN && $data['decision'] === 'accept') {
                 $projectMetadata = is_array($project->metadata) ? $project->metadata : [];
                 $projectMetadata['final_support'] = $data['metadata']['final_support'] ?? [];
@@ -227,8 +223,9 @@ class ReviewController extends Controller
 
             $assignment = null;
             if ($project->current_reviewer_role) {
-                $assignment = $this->dispatchMatcher->apply($project, $project->current_reviewer_role);
-                if ($assignment) {
+                $assignment = $this->dispatchMatcher->assignment($project, $project->current_reviewer_role);
+                if (! $assignment) {
+                    $assignment = $this->dispatchMatcher->apply($project, $project->current_reviewer_role);
                     $project->save();
                     $project->refresh();
                 }
