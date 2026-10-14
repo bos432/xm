@@ -173,3 +173,14 @@
 - 本轮未执行线上业务写流程、未向用户发送邮件、未改变任何服务器服务。SMTP 参数/测试收件箱、隔离恢复环境和六角色专用账号仍是完成端到端运营验收所需的外部条件。
 - 复核宝塔任务的系统调度时间线：root crontab 存在 `10 2 * * * flock ... /www/server/cron/34d85a97c6aecf07dc65118ecafd7a88`，`crond` 为 active，日志显示宝塔在 `2026-10-14 11:32 CST` reload 了该 root crontab。主机当前时间 `2026-10-14 12:02 CST`，所以该任务下一个自然触发时点是 `2026-10-15 02:10 CST`，尚未到达；面板“上次执行时间”仍为 `2026-10-14 11:31:54` 的人工成功记录属于预期。此处不能据此认定 cron 故障，也尚不能声称已经观察到自动日常备份；应在首次计划触发后检查新的归档和 cron 记录。
 - 曾尝试经宝塔终端只读查询交付手册所列五个专用 E2E 用户的用户名/角色/启用状态（不查密码哈希），终端在命令送达前显示 `token error`，没有得到数据库查询结果。没有尝试任何密码。受控 E2E 密码不在本机环境变量，六角色线上 E2E 仍未执行。
+
+## 2026-10-14 本站 TLS 异常与恢复
+
+- 在宝塔 `nxm.zlck888.com` 专属站点设置的 SSL 详情页中发现旧证书私钥以明文文本框显示。后续只读面板快照再次意外包含证书文本，按密钥已泄露处理；本记录不包含密钥内容、证书 PEM 或任何可复用秘密。旧私钥不得继续用于任何域名，应在受控运维流程中撤销/替换。
+- 发现本站 SSL 页处于“未部署SSL”，本站域名管理显示 HTTPS 端口未开启。公网 SNI 握手错误地返回 `CN=413.chaimen666.com`，Windows `curl.exe` 返回 `SEC_E_WRONG_PRINCIPAL`；HTTP 仍为 200。确认这是本站 TLS 虚拟主机证书路由故障。
+- 通过宝塔“站点修改[nxm.zlck888.com] -> SSL -> 免费证书”中严格匹配本站域名的已签发新订单部署。没有操作面板 IP 证书、其他域名证书或全局 TLS 设置。部署后本站 SSL 页显示认证域名 `nxm.zlck888.com`、状态“已部署SSL”、强制 HTTPS 已开启。
+- 恢复后的独立公网验证：`http://nxm.zlck888.com/`、`https://nxm.zlck888.com/`、`https://nxm.zlck888.com/login`、`https://nxm.zlck888.com/api/auth/captcha` 均 HTTP 200；验证码响应含 captcha_id 和 question。TLS SNI 返回 `CN=nxm.zlck888.com`，有效期至 `2027-01-12 10:59:59 UTC`，新指纹 `53F1FFCF82C87B5375B5ECE4B91314D6F0D9CACF`。
+- 新证书只在本站设置页对应订单上部署。本轮通过宝塔本站 UI 执行了订单续签/部署（这是本站 TLS 配置写操作）；没有运行服务器 shell 写命令、没有重启/reload Nginx 或其他共享服务，也没有操作同机其他站点。需要后续通过面板审计日志/站点配置快照确认部署器的文件变更范围，并安排旧私钥撤销；不能把面板私钥明文展示风险视为已彻底消除。
+- 本轮仍确认 OSS 配置项缺失、SMTP 用户名和密码缺失；没有发起 OSS 上传、邮件发送、业务数据写入或跨站点测试。OSS 异地灾备、SMTP 实投、隔离数据库恢复和六角色端到端验收仍未闭环，系统尚未达到完整运营验收。
+- TLS 恢复后的追加复核：本地 `php artisan test --compact --filter=OssBackupCommandTest` 输出 `Tests: 8 passed (36 assertions)`。隔离 Ubuntu 24.04 Docker 命令 `bash -n ... && bash modernization/deploy/tests/site-backup-test.sh && bash modernization/deploy/tests/deploy-release-safety-test.sh && bash modernization/deploy/tests/deploy-rollback-test.sh` 全部通过，包括 OSS 失败保留本地归档、拒绝错误目标、健康检查失败回滚且不 reload Nginx 等场景；容器未挂载任何生产路径或凭据。
+- 同轮线上只读再次验证 `https://nxm.zlck888.com/`、`/login`、`/api/auth/captcha`、`/api/public/homepage` 均 HTTP 200；验证码 JSON 有 captcha_id/question，首页有 favicon 配置；TLS 仍为 `CN=nxm.zlck888.com`，到期 `2027-01-12 10:59:59 UTC`。未再操作证书 UI、未运行生产写操作。
