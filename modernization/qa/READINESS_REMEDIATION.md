@@ -181,3 +181,10 @@
 - 生产只读 HTTP 探针：`/`、`/login`、`/dashboard`、`/application-batches`、`/public-home` 均为 `200 text/html`；`/api/auth/captcha`、`/api/public/homepage` 均为 `200 application/json`；`/.env` 与 `/storage/logs/laravel.log` 均为 404。未登录进入业务页面只验证 SPA 深链接可回退，不验证登录后的页面数据和权限。
 - 没有将本轮文档 SHA 当作生产应用代码版本，也没有触发部署。匿名 API 修复提交 `546f7fd` 是当前 `main` 的祖先，且线上行为复测符合修复预期；但本轮未获取线上 release 的源码 SHA。
 - 仍未验收的运营阻断保持不变：SMTP 实际投递、异地备份、隔离数据库恢复演练、六角色完整业务 E2E（CI 在线 E2E skipped）、整机重启恢复。不得将当前绿色常规 CI、匿名 API 复测或本地备份成功等同于完整运营验收。
+
+## 2026-10-14 最新回归与推送通道复核
+
+- 本机前端门禁复跑：`npm test` 为 3/3；`npm run typecheck`、`npm run lint`、`npm run build` 全部退出 0；`npm audit --audit-level=low` 输出 `found 0 vulnerabilities`。后端 `php vendor/bin/phpunit --display-warnings --display-deprecations --display-notices` 输出 `OK (188 tests, 846 assertions)`。
+- 线上 Playwright 完整套件 run `20261014-qa-full`：`1 passed, 8 skipped`。公开首页实际通过；六角色登录/项目页面、专家认证权限、超管首页素材/安全中心均因专用凭据缺失按测试定义 skipped，未尝试账号密码，也未提交或修改业务数据。首次用 `--grep` 单测的 Windows 调用返回 `No tests found`，因此改为完整套件执行；该次无测试运行，不作为通过证据。
+- 推送阻断复核：`git status` 显示本地 HEAD `4b76993`、工作区干净且较 `origin/codex/qa-gates-production` ahead 1；远端 `main` 经 GitHub API 确认为 `8487ff9`。HTTPS 443 TCP 不通，`git push` 超时/连接重置；改用 HTTP/1.1 仍失败。SSH-over-443 可连通，但返回 `Permission denied (publickey)`；`gh auth status` 为未登录。未读取或输出凭据，未尝试绕过 GitHub 写入授权。提交 `4b76993` 仍需有权用户完成 GitHub 登录/网络恢复后推送。
+- 以上本地回归和公开首页 E2E 不替代生产角色端到端验收。SMTP、异地副本、恢复演练、六角色业务流和整机重启恢复仍未通过；没有为追求表面绿色而关闭这些门禁。
