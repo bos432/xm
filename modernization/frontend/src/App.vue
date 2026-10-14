@@ -214,7 +214,8 @@ const settingsMenuChildren = [
   { label: '邮件 SMTP', path: '/settings?group=mail', group: 'mail' },
   { label: '上传策略', path: '/settings?group=upload', group: 'upload' },
   { label: '安全策略', path: '/settings?group=security', group: 'security' },
-  { label: '审核与评分', path: '/settings?group=review', group: 'review' }
+  { label: '审核与评分', path: '/settings?group=review', group: 'review' },
+  { label: '备份与 OSS', path: '/settings?group=backup', group: 'backup' }
 ]
 const projectsMenuChildren = [
   { label: '草稿项目', path: '/projects?status=draft', query: { status: 'draft' } },
