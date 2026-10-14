@@ -202,6 +202,12 @@
 - 同一主线代码组合复验：前端单测 3/3、typecheck/lint/build 均通过；后端 `188 tests, 846 assertions`；Ubuntu 24.04 容器中的站点备份、部署隔离和回滚模拟全部 PASS。Windows 原生 Docker/WSL 的只读挂载尝试在脚本启动前因无法 chmod 退出；换一次性可写容器后测试通过，挂载内容经 `git status` 确认无变化。
 - smoke 分支已推送。GitHub API 匿名 rate limit 暂时阻止读取该提交的 CI job 结果；因此仍待 CI 确认后再开 PR。未部署该提交，生产行为验证的是已运行版本的匿名读接口。
 
+## 2026-10-14 只读生产 smoke PR
+
+- smoke 分支后续加入独立 workflow `.github/workflows/production-smoke.yml`：每日 UTC 18:30（服务器本地约次日 02:30）和手动触发，运行 E2E suite；只读访问公开首页、验证码/门户 API、匿名认证边界和敏感路径，不注入任何账号凭据；每次结果保留 14 天。该 workflow 只在主线合并后启用。
+- 已创建 PR [#7](https://github.com/bos432/xm/pull/7)，head `7e97474d16dd34d78907f2b0fb90ce2c83d8cd2f`，base `main` `8487ff9efbd509b9ba8dc7f3c50eb077a9db1a09`。PR 非 draft、GitHub 报告 `mergeable=true`；Front-end、Backend、Deployment safety required checks 均 completed/success；Optional online E2E 为 skipped（workflow_dispatch 条件）。创建时 reviewer 数为 0。
+- PR 尚未获 review/合并；没有将它部署到生产，也没有修改生产数据或同机服务。合并仍需仓库 reviewer 按团队流程审查。
+
 ## 2026-10-14 Git 分支交付审计
 
 - 只读 GitHub compare 检查发现 `main=8487ff9` 没有包含远端 `codex/authz-ops-hardening` 的 `036f04d`（授权与审核边界修复）及 `50a7d90`（部署/健康账号加固）；`codex/production-ready-integration` 也包含另一组相关代码提交。远端 `main` 当前没有打开的 PR。
