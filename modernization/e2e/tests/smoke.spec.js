@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { e2eRoleCredentials } from '../../frontend/src/e2e-role-config.js'
 
 test.describe.configure({ mode: 'serial' })
 
@@ -8,41 +9,35 @@ const sampleProjectId = process.env.E2E_PROJECT_ID || '5'
 const roles = [
   {
     role: 'unit',
-    usernameEnv: 'E2E_UNIT_USERNAME',
-    passwordEnv: 'E2E_UNIT_PASSWORD',
+    ...e2eRoleCredentials.unit,
     menus: ['运行概览', '项目申报', '验收管理', '全周期管理'],
     hiddenTexts: ['专家认证']
   },
   {
     role: 'county',
-    usernameEnv: 'E2E_COUNTY_USERNAME',
-    passwordEnv: 'E2E_COUNTY_PASSWORD',
+    ...e2eRoleCredentials.county,
     menus: ['运行概览', '项目申报', '验收管理', '审核任务', '全周期管理'],
     hiddenTexts: ['专家认证']
   },
   {
     role: 'department',
-    usernameEnv: 'E2E_DEPARTMENT_USERNAME',
-    passwordEnv: 'E2E_DEPARTMENT_PASSWORD',
+    ...e2eRoleCredentials.department,
     menus: ['运行概览', '项目申报', '验收管理', '审核任务', '全周期管理'],
     hiddenTexts: ['专家认证']
   },
   {
     role: 'expert',
-    usernameEnv: 'E2E_EXPERT_USERNAME',
-    passwordEnv: 'E2E_EXPERT_PASSWORD',
+    ...e2eRoleCredentials.expert,
     menus: ['运行概览', '项目申报', '验收管理', '审核任务', '全周期管理']
   },
   {
     role: 'admin',
-    usernameEnv: 'E2E_ADMIN_USERNAME',
-    passwordEnv: 'E2E_ADMIN_PASSWORD',
+    ...e2eRoleCredentials.admin,
     menus: ['运行概览', '项目申报', '申报批次', '验收管理', '全周期管理', '单位管理', '账号管理']
   },
   {
     role: 'super_admin',
-    usernameEnv: 'E2E_SUPER_ADMIN_USERNAME',
-    passwordEnv: 'E2E_SUPER_ADMIN_PASSWORD',
+    ...e2eRoleCredentials.super_admin,
     menus: ['首页管理', '邮件中心', '角色权限', '安全中心', '系统文案', '系统配置']
   }
 ]
@@ -72,6 +67,15 @@ async function loginFromHomepage(page, account) {
   await captcha.fill(String(answerCaptcha(await captcha.getAttribute('placeholder'))))
   await page.getByRole('button', { name: /登录系统|登录/ }).click()
   await expect(page).toHaveURL(/\/dashboard/)
+  const profile = await page.evaluate(async () => {
+    const token = localStorage.getItem('pas_token')
+    const response = await fetch('/api/auth/me', {
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+    })
+    return { ok: response.ok, user: await response.json() }
+  })
+  expect(profile.ok).toBeTruthy()
+  expect(profile.user.role).toBe(account.expectedRole)
 }
 
 async function loginByApi(page, account) {
