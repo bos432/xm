@@ -32,7 +32,8 @@ cat > "$MOCK_BIN/mysqldump" <<'MOCK'
 set -Eeuo pipefail
 [[ "${MYSQL_PWD:-}" == fixture-secret-must-not-be-logged ]]
 [[ "$*" != *fixture-secret-must-not-be-logged* ]]
-printf 'CREATE DATABASE nxm_test;\n'
+[[ " $* " == *" --no-tablespaces "* ]]
+printf 'CREATE TABLE nxm_fixture (id INT);\n'
 MOCK
 chmod +x "$MOCK_BIN/mysqldump"
 
@@ -51,7 +52,7 @@ DB_ARCHIVE=("$BACKUP_DIR"/nxm-database-*.sql.gz)
 FILES_ARCHIVE=("$BACKUP_DIR"/nxm-private-files-*.tar.gz)
 [[ -f "${DB_ARCHIVE[0]}" && -f "${FILES_ARCHIVE[0]}" ]]
 gzip -t "${DB_ARCHIVE[0]}" "${FILES_ARCHIVE[0]}"
-gzip -dc "${DB_ARCHIVE[0]}" | grep -q 'CREATE DATABASE nxm_test'
+gzip -dc "${DB_ARCHIVE[0]}" | grep -q 'CREATE TABLE nxm_fixture'
 tar -tzf "${FILES_ARCHIVE[0]}" | grep -q 'project-files/document.txt'
 ! tar -tzf "${FILES_ARCHIVE[0]}" | grep -q 'laravel.log'
 ! grep -Fq 'fixture-secret-must-not-be-logged' "$TEST_ROOT/success.log"
@@ -79,7 +80,7 @@ printf 'PASS dump failure preserves existing backups and removes partial files\n
 
 cat > "$MOCK_BIN/mysqldump" <<'MOCK'
 #!/usr/bin/env bash
-printf 'CREATE DATABASE nxm_test;\n'
+printf 'CREATE TABLE nxm_fixture (id INT);\n'
 MOCK
 chmod +x "$MOCK_BIN/mysqldump"
 printf 'unrelated archive\n' > "$BACKUP_DIR/other-site-database-20000101.sql.gz"

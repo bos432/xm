@@ -67,9 +67,9 @@ cleanup() {
 }
 trap cleanup EXIT
 
-MYSQL_ARGS=("--user=$DB_USER" "--host=$DB_HOST" "--port=$DB_PORT" --single-transaction --routines --triggers "$DB_NAME")
+MYSQL_ARGS=("--user=$DB_USER" "--host=$DB_HOST" "--port=$DB_PORT" --single-transaction --no-tablespaces --routines --triggers "$DB_NAME")
 if [[ -n "$DB_SOCKET" ]]; then
-  MYSQL_ARGS=("--user=$DB_USER" "--socket=$DB_SOCKET" --single-transaction --routines --triggers "$DB_NAME")
+  MYSQL_ARGS=("--user=$DB_USER" "--socket=$DB_SOCKET" --single-transaction --no-tablespaces --routines --triggers "$DB_NAME")
 fi
 
 log "Starting site database and private-upload backup"
@@ -81,6 +81,7 @@ tar -czf "$FILES_TMP" -C "$SHARED_DIR/storage/app/private" . \
 gzip -t "$DB_TMP" || fail "Database archive verification failed"
 gzip -t "$FILES_TMP" || fail "Private upload archive verification failed"
 [[ "$(gzip -dc "$DB_TMP" | wc -c)" -gt 0 ]] || fail "Database archive is empty"
+gzip -dc "$DB_TMP" | grep -Eq '^(CREATE TABLE|-- Current Database:)' || fail "Database archive contains no schema statements"
 [[ "$(gzip -dc "$FILES_TMP" | wc -c)" -gt 0 ]] || fail "Private upload archive is empty"
 
 chmod 600 "$DB_TMP" "$FILES_TMP"
