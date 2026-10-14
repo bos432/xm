@@ -46,7 +46,8 @@ cat > "$MOCK_BIN/git" <<'MOCK'
 set -e
 destination="${@: -1}"
 mkdir -p "$destination/modernization/frontend" "$destination/modernization/backend/database/migrations" \
-  "$destination/modernization/backend/bootstrap" "$destination/modernization/backend/storage"
+    "$destination/modernization/backend/bootstrap" "$destination/modernization/backend/storage" \
+    "$destination/modernization/deploy"
 printf '{"scripts":{"build":"true"}}\n' > "$destination/modernization/frontend/package.json"
 touch "$destination/modernization/backend/database/migrations/2026_06_06_000001_create_modernization_core_tables.php"
 for name in 2026_06_06_000002_create_runtime_support_tables.php; do
@@ -54,6 +55,7 @@ for name in 2026_06_06_000002_create_runtime_support_tables.php; do
 done
 mkdir -p "$destination/modernization/frontend/dist"
 touch "$destination/modernization/frontend/dist/index.html"
+  touch "$destination/modernization/deploy/queue-worker-watchdog.sh"
 MOCK
 
 cat > "$MOCK_BIN/node" <<'MOCK'
