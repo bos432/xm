@@ -200,3 +200,9 @@
 - 只读 GitHub compare 检查发现 `main=8487ff9` 没有包含远端 `codex/authz-ops-hardening` 的 `036f04d`（授权与审核边界修复）及 `50a7d90`（部署/健康账号加固）；`codex/production-ready-integration` 也包含另一组相关代码提交。远端 `main` 当前没有打开的 PR。
 - 这些候选分支与 `main` 分叉且落后 50 余个提交，变更涉及审核、验收、生命周期权限、Seeder、部署脚本、路由和依赖锁文件；不能直接 merge/cherry-pick 到生产主线。GitHub API 后续触发匿名 rate limit，无法从 API 获得这些提交各自完整 CI/job 结论；本机只能确认当前工作区主线的门禁结果，不能把候选分支宣称为已验证或已发布。
 - 此分支事实意味着此前“main CI 成功”只覆盖 `main` 当前代码，不证明所有候选功能修复已经进主线。下一步需在最新 `main` 基础上按领域逐项重放并补齐回归、跑完整 CI，再开 PR/快进发布；任何候选修复都不得直接部署。
+
+### 更正：生产就绪修复已在主线
+
+- 上述候选分支差异比较不应被解释为“授权/部署修复未合入”。Git 图确认 PR 合并提交 `1522b47142baf591ef2d7f070a91265637592340` 的父提交是 `370ecc4ac3152eaeeea0ada881c2bee4d20b54af`，且 `1522b47` 是 `main=8487ff9` 的祖先；它已包含授权与审核边界、健康账号/Seeder 加固、富文本上传授权、部署隔离与回滚模拟等相关实现。旧候选分支只是相对它们的共同祖先落后，并非待合并 PR。
+- 在从 `origin/main=8487ff9` 新建的干净隔离 worktree 对该主线实际代码重新验证：后端 PHPUnit `OK (188 tests, 846 assertions)`；针对审核/验收/生命周期/上传/Seeder/健康检查的定向组 `64 passed (250 assertions)`；前端 `npm test` 3/3，typecheck、lint、build 成功；部署备份与发布回滚脚本在无网络 Ubuntu 24.04 Docker 容器全部 PASS，包括凭据不泄露、失败备份保护、发布健康失败回滚、缺健康凭据 fail-closed、SQLite 备份与相对路径拒绝。Windows 原生 Docker/WSL 首次运行因 `CreateInstance/E_FAIL` 未启动脚本，随后在上述 Linux 容器成功执行相同门禁。
+- 当前已修正集成结论：生产就绪代码的主线门禁证据充分；先前报告中“修复尚未合入主线”的表述为误读，已由本节纠正。该结论仍不代替线上六角色 E2E、SMTP 实投、生产归档恢复、异地灾备和重启演练。
