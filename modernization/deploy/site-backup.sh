@@ -90,6 +90,16 @@ mv -- "$DB_TMP" "$DB_ARCHIVE"
 mv -- "$FILES_TMP" "$FILES_ARCHIVE"
 log "Verified database and private-upload archives for this site"
 
+PHP_BIN="${PHP_BIN:-$(command -v php || true)}"
+if [[ -z "$PHP_BIN" || ! -x "$PHP_BIN" ]] && [[ -x /www/server/php/83/bin/php ]]; then
+  PHP_BIN=/www/server/php/83/bin/php
+fi
+[[ -n "$PHP_BIN" && -x "$PHP_BIN" ]] || fail "PHP CLI is not available; verified local archives have been retained"
+ARTISAN="$APP_ROOT/current/backend/artisan"
+[[ -f "$ARTISAN" ]] || fail "Current release Artisan entry point is missing; verified local archives have been retained"
+"$PHP_BIN" "$ARTISAN" site:backup:oss --database="$DB_ARCHIVE" --files="$FILES_ARCHIVE" \
+  || fail "OSS backup failed; verified local archives have been retained"
+
 find "$BACKUP_DIR" -maxdepth 1 -type f \
   \( -name 'nxm-database-*.sql.gz' -o -name 'nxm-private-files-*.tar.gz' \) \
   -mtime "+$RETENTION_DAYS" -delete

@@ -16,9 +16,7 @@ class SystemSettingController extends Controller
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly MailCenter $mailCenter,
-    )
-    {
-    }
+    ) {}
 
     public function index(Request $request)
     {
@@ -123,6 +121,7 @@ class SystemSettingController extends Controller
             }
 
             $value = $data['values'][$key];
+            $this->validateSettingValue($field, $value);
             $setting = SystemSetting::query()->where('key', $key)->first();
             if (($field['secret'] ?? false) && blank($value) && $setting) {
                 continue;
@@ -159,6 +158,29 @@ class SystemSettingController extends Controller
         $this->auditLogger->record($request, 'settings.mail_test_queued', $log, ['to' => $data['to']]);
 
         return response()->json($log, 202);
+    }
+
+    private function validateSettingValue(array $field, mixed $value): void
+    {
+        if (($field['key'] ?? '') === 'backup.oss_endpoint' && filled($value)) {
+            $parts = parse_url((string) $value);
+            if (! is_array($parts) || ($parts['scheme'] ?? '') !== 'https' || empty($parts['host'])
+                || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment'])
+                || isset($parts['port']) || ! in_array($parts['path'] ?? '', ['', '/'], true)
+                || ! preg_match('/^(?:oss-[a-z0-9-]+|[a-z0-9-]+\.oss-[a-z0-9-]+)\.aliyuncs\.com$/', $parts['host'])) {
+                abort(422, 'OSS Endpoint 必须是阿里云地域 HTTPS 地址，不能包含账号、密码或查询参数');
+            }
+        }
+
+        if (($field['key'] ?? '') === 'backup.oss_bucket' && filled($value)
+            && ! preg_match('/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/', (string) $value)) {
+            abort(422, 'OSS Bucket 名称格式不正确');
+        }
+
+        if (($field['key'] ?? '') === 'backup.oss_prefix' && filled($value)
+            && (! preg_match('/^[A-Za-z0-9._\/-]+$/', (string) $value) || str_contains((string) $value, '..'))) {
+            abort(422, 'OSS 目录前缀只允许字母、数字、点、下划线、连字符和斜线');
+        }
     }
 
     public function update(Request $request, SystemSetting $setting)
@@ -288,6 +310,19 @@ class SystemSettingController extends Controller
                     ['key' => 'review.score_enabled.admin', 'label' => '管理员终审评分', 'type' => 'boolean', 'default' => '0'],
                     ['key' => 'review.expert_assignment.random_enabled', 'label' => '专家组随机分配', 'type' => 'boolean', 'default' => '1'],
                     ['key' => 'review.expert_assignment.count', 'label' => '默认专家人数', 'type' => 'number', 'default' => '3'],
+                ],
+            ],
+            [
+                'key' => 'backup',
+                'title' => '备份与 OSS',
+                'description' => '配置本站数据库和私有附件备份的阿里云 OSS 归档。请使用阿里云地域 Endpoint 和仅限目标 Bucket/目录的 RAM 最小权限密钥。启用后每日备份完成都会上传并核验对象大小；上传失败会保留本地归档并报错。',
+                'fields' => [
+                    ['key' => 'backup.oss_enabled', 'label' => '启用 OSS 异地备份', 'type' => 'boolean', 'default' => '0'],
+                    ['key' => 'backup.oss_endpoint', 'label' => 'OSS Endpoint（HTTPS）', 'type' => 'text', 'default' => 'https://oss-cn-huhehaote.aliyuncs.com'],
+                    ['key' => 'backup.oss_bucket', 'label' => 'Bucket 名称', 'type' => 'text', 'default' => ''],
+                    ['key' => 'backup.oss_prefix', 'label' => '本站对象目录前缀', 'type' => 'text', 'default' => 'nxm.zlck888.com/daily'],
+                    ['key' => 'backup.oss_access_key_id', 'label' => 'RAM AccessKey ID', 'type' => 'password', 'default' => '', 'secret' => true],
+                    ['key' => 'backup.oss_access_key_secret', 'label' => 'RAM AccessKey Secret', 'type' => 'password', 'default' => '', 'secret' => true],
                 ],
             ],
         ];
