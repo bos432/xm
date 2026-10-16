@@ -1,8 +1,8 @@
-# 新系统 QA 验收报告（2026-10-17）
+# 新系统 QA 验收报告（2026-10-17 更新）
 
 ## 范围
 
-本报告基于隔离工作区 `codex/protect-history-default-batch` 的实际测试，以及历史对 `https://nxm.zlck888.com` 的只读探测。本轮只修改隔离工作区后端 bootstrap 与认证 middleware，未修改依赖版本、生产数据库、OSS 对象或 SMTP 配置；没有读取或记录生产凭据/密钥。本次所有测试使用显式 worktree base path 和隔离分支优先的 Composer PSR-4 映射，避免误测主工作区代码。
+本报告汇总 modernization 系统自动化测试、2026-10-17 对 `https://nxm.zlck888.com` 的只读生产探测，以及当日仅本站 release `20261017040227` 的发布后验证。E2E 批次隔离变更提交 `c0750b1` 已推送 `main` 并部署本站；QA 报告更新提交 `402544a` 只更新文档。部署使用 `RUN_SEED=0`、`RUN_MIGRATIONS=0`，没有重启共享服务或触碰其他站点。当前配置为空的 OSS/SMTP 未写入秘密，也未执行真实 OSS 上传、邮件发送或恢复。
 
 ## 验收清单
 
@@ -19,21 +19,21 @@
 | A-07 | OSS 上传失败时 fail-closed 并保留本地归档 | 已覆盖测试 | `OssBackupCommandTest` 和隔离 shell 模拟；真实 OSS 未测 |
 | A-08 | 部署健康检查失败回滚本站 release 且不 reload Nginx | 已覆盖测试 | `deploy-release-safety-test.sh`、`deploy-rollback-test.sh` 隔离模拟；生产回滚未触发 |
 | A-09 | 生产 HTTPS 证书匹配本站域名 | 已覆盖测试 | 修复后公网 SNI 返回 `CN=nxm.zlck888.com`，有效期至 `2027-01-12 10:59:59 UTC`；Chromium 线上公开 E2E 与首页/登录/验证码/公开首页均通过 |
-| A-10 | OSS 异地备份及隔离环境恢复 | 仅实现未测 | 生产无 `backup.oss_*` 配置记录，开关关闭；未上传或恢复 |
-| A-11 | SMTP 实际投递至批准的测试邮箱 | 仅实现未测 | SMTP username/password 缺失；未发送测试邮件 |
-| A-12 | 六角色浏览器完整流程：申报至终审/验收 | 部分覆盖，未完成闭环 | 2026-10-17 六个受限 E2E 账号均完成生产验证码登录、`/api/auth/me` 角色匹配及登出；生产浏览器仍为超管会话，未切换该共享会话；尚未创建项目或推进审核/验收数据 |
+| A-10 | OSS 异地备份及隔离环境恢复 | 部分配置、未完成验收 | 超管页面显示 OSS 已启用、Bucket/前缀已填写、密钥遮罩；未执行真实 PUT/HEAD 或恢复，不能证明凭据有效 |
+| A-11 | SMTP 实际投递至批准的测试邮箱 | 未启用/未完成验收 | 超管页面 Mailer 为 `log`，SMTP 主机和发件邮箱为空；未发送测试邮件 |
+| A-12 | 六角色浏览器完整流程：申报至终审/验收 | 部分覆盖，未完成闭环 | 六个 E2E 账号历史 API 验证有记录；当前标签共享超管会话，未切换账号、未创建项目或推进流程。专家认证页只有 2 条 E2E 专家认证已通过记录，不能证明有足够正式认证专家 |
 | A-13 | 测试覆盖率数字及未覆盖高风险文件排序 | 未实现验收证据 | PHPUnit coverage driver 不可用，未生成覆盖率或逐文件覆盖数据 |
 
 ## 缺陷表
 
 | ID | 严重级 | 模块 | 复现命令/证据 | 实际 vs 预期 | 修复建议 |
 | --- | --- | --- | --- | --- | --- |
-| QA-01 | P0 阻断 | 异地灾备 | 超管“系统配置 -> 备份与 OSS”；脱敏运行时检查 | OSS 关闭且生产 `backup.oss_*` 记录缺失，尚无站外副本/恢复证据 | 在后台配置专用最小权限 RAM 与目标 Bucket；获准后上传一份备份、核对对象大小，并恢复到隔离 MySQL/存储 |
-| QA-02 | P0 阻断 | 邮件通知 | 脱敏 Laravel 运行时检查：SMTP username/password 为 missing | 系统不能证明邮件经 SMTP 发出；预期批准测试收件箱收到邮件 | 配置 SMTP 与专用收件箱，发一封测试邮件并核对收件与队列/日志结果 |
+| QA-01 | P0 阻断运营验收 | 异地灾备 | 本轮未执行真实 OSS 上传/恢复 | 无站外备份及隔离恢复证据 | 在后台配置最小权限 RAM 与目标 Bucket，验证 PUT/HEAD 后恢复到隔离 MySQL/存储 |
+| QA-02 | P0 阻断运营验收 | 邮件通知 | 本轮未向批准测试收件箱发送邮件 | SMTP 投递与到达未验 | 配置 SMTP 与专用测试收件箱，发送测试邮件并核对投递及日志 |
 | QA-03 | P1 严重 | 证书密钥管理 | 宝塔本站 SSL 详情曾显示私钥明文；本站私钥文件原权限 `0644` | 私钥曾可被非 root 本地用户读取；预期 root-only | 文件权限已改为 `0600 root:root`；仍应将历史明文暴露视为可能泄露，确认撤销旧密钥及宝塔回显策略 |
 | QA-06 | P0 阻断（已修复，需持续观测） | 本站 HTTPS/Nginx | Playwright 线上首页用例曾报 `ERR_CERT_COMMON_NAME_INVALID`；Nginx 检查本站 vhost 只有 `listen 80` | 443 请求命中默认 `413.chaimen666.com` 证书；预期本站独立 TLS vhost | 已新增仅被本站 vhost extension include 的 TLS 配置、测试后平滑 reload；HTTPS 与 Chromium E2E 已复测通过 |
 | QA-04 | P1 严重 | 浏览器 E2E | `cd modernization/frontend && npm run e2e -- --list`；检查 `modernization/e2e/tests/smoke.spec.js` | 共 10 个用例，角色用例检查登录、页面/权限；不覆盖“提交 -> 区县 -> 部门 -> 多专家评分 -> 终审 -> 验收关闭”全链 | 提供隔离数据库/存储及六角色专用凭据，扩展并实际运行完整 E2E，保留 E2E 数据 |
-| QA-05 | P2 一般 | 测试基础设施 | `cd modernization/backend && php artisan test --compact --coverage` | 退出码 1：`Code coverage driver not available. Did you install Xdebug or PCOV?`，覆盖率未知 | 仅在 CI/测试镜像启用 Xdebug 或 PCOV，发布覆盖率报告；不在生产安装 |
+| QA-05 | P2 一般 | 测试基础设施 | PHPUnit 全量可运行；当前 PHP `-m` 未见 `xdebug`/`pcov` | 功能测试通过但覆盖率未知，未生成逐文件覆盖统计 | 仅在 CI/测试镜像启用 Xdebug 或 PCOV，发布覆盖率报告；不在生产安装 |
 | QA-07 | 已修复、已部署、线上已复验 | API 未认证响应 / health headers | `GET https://nxm.zlck888.com/api/auth/me` 无凭据；`GET https://nxm.zlck888.com/up` | `/api/auth/me` 返回 401 JSON `Unauthenticated.`；`/up` 返回原 HTML health page 且包含 `X-Content-Type-Options: nosniff`、`X-Frame-Options`、`Referrer-Policy`、`Permissions-Policy` | 持续监控；无须对其他站点或共享服务做改动 |
 
 ## 已执行命令与完整关键输出
@@ -205,7 +205,7 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 4. `modernization/backend/app/Console/Commands/UploadOssBackups.php`：签名上传、远端校验和凭据错误处理。
 5. `modernization/deploy/site-backup.sh`：生产备份、留存和故障路径。
 
-## 2026-10-17 发布与线上验证
+## 历史发布记录（2026-10-17 03:38）
 
 - GitHub `main` 已推进到 `85d78ca`，包含历史默认批次保护、Dashboard 批次统计修复和 QA-07 修复。
 - 已通过宝塔终端仅部署 `/www/wwwroot/nxm.zlck888.com`，release `20261017033857`；`RUN_SEED=0`、`RUN_MIGRATIONS=0`，没有改数据库/调用 Seeder/重载 Nginx、MySQL或服务器。
@@ -215,7 +215,7 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - 六个生产 E2E 账号均通过验证码登录、角色身份查询、logout；凭据保留在服务器 root-only 文件，未写入报告；未通过浏览器登录测试账号，因为当前共享 in-app 标签仍是超管会话。
 - 只读生产批次查询显示开放批次为 E2E 测试批次；本轮未使用它们创建或推进有状态项目。正式业务批次的真实年度、时间范围、指南及材料要求仍需业务方提供。
 
-## 2026-10-17 E2E 批次隔离复测（未发布）
+## E2E 批次隔离复测与发布（2026-10-17 04:02）
 
 - 发现：线上开放批次查询曾向公众返回旧式命名的 `E2E-*` 测试批次；生产六个专用 E2E 账号均没有 `metadata.e2e` 标记，直接只按 metadata 放行会阻断这些账号使用测试批次。
 - 修复候选：统一开放批次 scope 排除 metadata 标记及名称/编号包含 `E2E-` 的测试批次；项目创建仅允许 `unit` 角色且 username 严格匹配 `e2e_YYYYMMDDops_unit`，或有明确 `metadata.e2e=true` 的账号选择 E2E 批次。普通单位 E2E 批次访问回归测试保留。
@@ -224,9 +224,13 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - 本地曾缺 Composer/vendor；通过临时 bootstrap 只读复用主工作区已安装的 Composer vendor，并将 Laravel 测试环境的 `APP_BASE_PATH` 指向隔离工作区完成测试。临时 bootstrap 已删除，主工作区文件未修改。Docker 不可用，但部署模拟所需 Bash 可用且三项均通过。
 - 提交 `c0750b1` 已快进推送到 GitHub `main`，并仅部署本站 release `20261017040227`；部署环境 `RUN_SEED=0`、`RUN_MIGRATIONS=0`，Laravel 登录健康检查成功，健康 token 已撤销。未重载/重启 Nginx、MySQL、服务器或其他站点。
 - 部署后验证：`/api/public/application-batches/open` 返回 HTTP 200 和 `[]`；`/` 返回 200；未认证 `/api/auth/me` 返回 401 JSON；`/up` 返回 200。本站 current 指向 `/www/wwwroot/nxm.zlck888.com/releases/20261017040227`；Nginx、MySQL 均 active，本站 queue worker 2 个，`artisan queue:failed` 输出 `INFO No failed jobs found.`；所有当前登记的迁移均显示 `Ran`（本次发布未执行迁移）。
+- 生产超管只读页面核验：评分模板显示 `专家评分项当前总分：100 / 100`；评分策略为专家评分开启、随机分配开启、每项目 3 位专家。用户列表有至少 4 个启用专家账号，但全周期“专家认证”页仅显示 2 条 E2E 专家认证已通过，故无法认定已有三位正式认证专家可供分配。
+- 生产超管只读配置核验：OSS 开关已开启、Endpoint/Bucket/对象前缀已填写，AccessKey 仅显示遮罩；未执行上传/恢复，凭据有效性和远端对象状态未知。邮件配置页 Mailer 为 `log`，SMTP 主机和发件邮箱为空；未触发测试邮件。
+- 批次管理页面保留多条开放 E2E 历史批次及历史默认批次；公网 `/api/public/application-batches/open` 返回 `[]`，符合只开放非 E2E 业务批次的规则。另有“测试 / 001”批次也不对公众开放；不得把测试数据改名冒充正式批次。
 - 线上账号角色浏览器验证未完成：新建标签继承了已有超管会话，为保护共享会话未输入其他账号密码，也没有创建或推进项目。服务器专用账号仍保留；线上 E2E 登录及测试草稿访问需在真正隔离的浏览器上下文验证。
+- 线上归档目录/OSS 对象复核未完成：再次打开宝塔终端后终端区域为空白，输入框操作超时；未刷新或重试，避免干扰运行中的终端与服务。未检查本地备份文件、OSS 对象或备份任务日志。
 - 运营限制：当前公开开放批次接口为空，故虽该版本与基础服务健康，真实申报尚不能开始。业务负责人需先在后台配置正式批次年度、起止时间、范围、指南和必传材料；不得把 E2E 批次改名冒充正式批次。
 
 ## 当前运营判断
 
-源码与生产发布验证通过，但系统仍不能宣称完整运营验收：本轮无有状态六角色业务闭环；开放的是 E2E 批次，不是业务负责人定义的正式申报批次；OSS 异地恢复、SMTP 实际投递、覆盖率数字、旧私钥轮换仍未闭环。前端 lint、typecheck、4 项测试和生产构建均通过。正式申报开放前，必须由业务负责人确定并配置批次年度、起止时间、范围、指南和必传材料，并完成隔离环境下申报至验收关闭的全流程验收。
+批次隔离代码已通过自动化并上线本站，公开端点已不再暴露测试批次，基础服务健康，专家评分模板为 100 分。系统仍未完成运营验收：正式开放批次为空；SMTP 尚未启用；OSS 虽已配置目标且开关开启，但上传与恢复未经验证；仅有两条 E2E 专家认证通过记录，不能证明能为项目分配三位正式认证专家；六角色浏览器闭环、覆盖率数字、历史暴露私钥撤销/轮换仍未闭环。因此当前版本已部署，但正式开放申报前仍须完成业务配置和运营验收。
