@@ -21,7 +21,7 @@
 | A-09 | 生产 HTTPS 证书匹配本站域名 | 已覆盖测试 | 修复后公网 SNI 返回 `CN=nxm.zlck888.com`，有效期至 `2027-01-12 10:59:59 UTC`；Chromium 线上公开 E2E 与首页/登录/验证码/公开首页均通过 |
 | A-10 | OSS 异地备份及隔离环境恢复 | 仅实现未测 | 生产无 `backup.oss_*` 配置记录，开关关闭；未上传或恢复 |
 | A-11 | SMTP 实际投递至批准的测试邮箱 | 仅实现未测 | SMTP username/password 缺失；未发送测试邮件 |
-| A-12 | 六角色浏览器完整流程：申报至终审/验收 | 未实现验收证据 | E2E 清单共 10 项，登录/页面与部分权限探测，不执行完整申报、逐级审核和验收链路；缺隔离账号 |
+| A-12 | 六角色浏览器完整流程：申报至终审/验收 | 部分覆盖，未完成闭环 | 2026-10-17 六个受限 E2E 账号均完成生产验证码登录、`/api/auth/me` 角色匹配及登出；生产浏览器仍为超管会话，未切换该共享会话；尚未创建项目或推进审核/验收数据 |
 | A-13 | 测试覆盖率数字及未覆盖高风险文件排序 | 未实现验收证据 | PHPUnit coverage driver 不可用，未生成覆盖率或逐文件覆盖数据 |
 
 ## 缺陷表
@@ -34,7 +34,7 @@
 | QA-06 | P0 阻断（已修复，需持续观测） | 本站 HTTPS/Nginx | Playwright 线上首页用例曾报 `ERR_CERT_COMMON_NAME_INVALID`；Nginx 检查本站 vhost 只有 `listen 80` | 443 请求命中默认 `413.chaimen666.com` 证书；预期本站独立 TLS vhost | 已新增仅被本站 vhost extension include 的 TLS 配置、测试后平滑 reload；HTTPS 与 Chromium E2E 已复测通过 |
 | QA-04 | P1 严重 | 浏览器 E2E | `cd modernization/frontend && npm run e2e -- --list`；检查 `modernization/e2e/tests/smoke.spec.js` | 共 10 个用例，角色用例检查登录、页面/权限；不覆盖“提交 -> 区县 -> 部门 -> 多专家评分 -> 终审 -> 验收关闭”全链 | 提供隔离数据库/存储及六角色专用凭据，扩展并实际运行完整 E2E，保留 E2E 数据 |
 | QA-05 | P2 一般 | 测试基础设施 | `cd modernization/backend && php artisan test --compact --coverage` | 退出码 1：`Code coverage driver not available. Did you install Xdebug or PCOV?`，覆盖率未知 | 仅在 CI/测试镜像启用 Xdebug 或 PCOV，发布覆盖率报告；不在生产安装 |
-| QA-07 | P1 严重（本分支已修复，尚未上线） | API 未认证响应 / health headers | `php vendor/bin/phpunit -c phpunit.xml --bootstrap qa-bootstrap.php --filter 'test_unauthenticated_api_requests_return_json_even_without_accept_header|test_application_responses_include_browser_security_headers'` | 修复前 API 无 Accept 请求会因不存在的 `login` route 返回 500；内建 `/up` 响应缺少安全头。隔离分支修复后 2 tests、21 assertions 通过 | 显式注册 Sanctum provider；API 认证使用不产生重定向的 middleware；health route 显式带安全头。待远端推送、部署与线上验证 |
+| QA-07 | 已修复、已部署、线上已复验 | API 未认证响应 / health headers | `GET https://nxm.zlck888.com/api/auth/me` 无凭据；`GET https://nxm.zlck888.com/up` | `/api/auth/me` 返回 401 JSON `Unauthenticated.`；`/up` 返回原 HTML health page 且包含 `X-Content-Type-Options: nosniff`、`X-Frame-Options`、`Referrer-Policy`、`Permissions-Policy` | 持续监控；无须对其他站点或共享服务做改动 |
 
 ## 已执行命令与完整关键输出
 
@@ -84,6 +84,19 @@ exit code: 0
 ```text
 Tests:    8 passed (36 assertions)
 Duration: 0.73s
+exit code: 0
+```
+
+### 前端隔离构建检查
+
+命令：`npm ci --include=dev --no-audit --no-fund && npm run lint && npm run typecheck && npm test && npm run build`
+
+```text
+added 167 packages
+lint exit code: 0
+typecheck exit code: 0
+tests 4; pass 4; fail 0
+vite v8.0.16; 1628 modules transformed; built in 447ms
 exit code: 0
 ```
 
@@ -192,6 +205,16 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 4. `modernization/backend/app/Console/Commands/UploadOssBackups.php`：签名上传、远端校验和凭据错误处理。
 5. `modernization/deploy/site-backup.sh`：生产备份、留存和故障路径。
 
+## 2026-10-17 发布与线上验证
+
+- GitHub `main` 已推进到 `85d78ca`，包含历史默认批次保护、Dashboard 批次统计修复和 QA-07 修复。
+- 已通过宝塔终端仅部署 `/www/wwwroot/nxm.zlck888.com`，release `20261017033857`；`RUN_SEED=0`、`RUN_MIGRATIONS=0`，没有改数据库/调用 Seeder/重载 Nginx、MySQL或服务器。
+- 部署脚本完成首页、验证码、公开首页 API 和本站专用健康账号登录/登出检查。
+- 线上只读探测：`/`、`/login`、`/api/auth/captcha`、`/api/public/homepage` 均 200；`/api/auth/me` 未认证为 401 JSON；`/up` 为原 HTML 页面并有浏览器安全头。
+- 生产队列检查：`failed_jobs=0`；queue watchdog/worker 进程存在；Nginx、MySQL active。名为 `nxm-zlck888-queue.service` 的 systemd unit 不存在（inactive），不能据此判断 worker 停止；实际本站 watchdog 与 artisan worker 进程仍运行。
+- 六个生产 E2E 账号均通过验证码登录、角色身份查询、logout；凭据保留在服务器 root-only 文件，未写入报告；未通过浏览器登录测试账号，因为当前共享 in-app 标签仍是超管会话。
+- 只读生产批次查询显示开放批次为 E2E 测试批次；本轮未使用它们创建或推进有状态项目。正式业务批次的真实年度、时间范围、指南及材料要求仍需业务方提供。
+
 ## 当前运营判断
 
-源码测试与隔离部署/备份模拟通过；本分支后端全量 206 tests、935 assertions 通过，QA-07 在本分支已修复但未上线；历史公网 HTTPS 只读探测曾正常。但这不足以证明系统已达到完整运营状态：本分支未推送/合并/部署，OSS 异地恢复、SMTP 实际投递、隔离六角色 E2E、旧私钥轮换仍未闭环。生产开放前必须完成并留存这些证据。前端本轮测试 4/4、typecheck 通过；隔离 worktree 未安装前端依赖，lint/build 无法在该 worktree 完成，不用主工作区不匹配依赖强行替代。
+源码与生产发布验证通过，但系统仍不能宣称完整运营验收：本轮无有状态六角色业务闭环；开放的是 E2E 批次，不是业务负责人定义的正式申报批次；OSS 异地恢复、SMTP 实际投递、覆盖率数字、旧私钥轮换仍未闭环。前端 lint、typecheck、4 项测试和生产构建均通过。正式申报开放前，必须由业务负责人确定并配置批次年度、起止时间、范围、指南和必传材料，并完成隔离环境下申报至验收关闭的全流程验收。
