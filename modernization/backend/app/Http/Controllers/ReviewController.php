@@ -441,9 +441,7 @@ class ReviewController extends Controller
 
     private function expertStageComplete(Project $project): bool
     {
-        $metadata = is_array($project->metadata) ? $project->metadata : [];
-        $assignment = $metadata['review_dispatch']['assignments'][Role::EXPERT] ?? null;
-        $assignment = is_array($assignment) ? $assignment : [];
+        $assignment = $this->dispatchMatcher->assignment($project, Role::EXPERT);
         $assignedUserIds = array_values(array_unique(array_map('intval', $assignment['assigned_user_ids'] ?? [])));
         if ($assignedUserIds === []) {
             return false;
