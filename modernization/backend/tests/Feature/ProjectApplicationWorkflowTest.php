@@ -57,6 +57,75 @@ class ProjectApplicationWorkflowTest extends TestCase
         $this->assertSame(Project::STATUS_DRAFT, $project->fresh()->status);
     }
 
+    public function test_regular_unit_cannot_create_project_in_an_e2e_batch(): void
+    {
+        $unit = Unit::factory()->create();
+        $user = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $batch = ApplicationBatch::create([
+            'name' => 'E2E-PRIVATE 测试批次',
+            'code' => 'E2E-PRIVATE-BATCH',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/projects', [
+            'title' => '普通单位误入 E2E 批次',
+            'application_batch_id' => $batch->id,
+        ])->assertUnprocessable();
+
+        $this->assertDatabaseMissing('projects', ['title' => '普通单位误入 E2E 批次']);
+    }
+
+    public function test_dedicated_e2e_unit_can_create_project_in_e2e_batch(): void
+    {
+        $unit = Unit::factory()->create();
+        $user = User::factory()->create([
+            'unit_id' => $unit->id,
+            'role' => 'unit',
+            'metadata' => ['e2e' => true],
+        ]);
+        $batch = ApplicationBatch::create([
+            'name' => 'E2E-PRIVATE 测试批次',
+            'code' => 'E2E-PRIVATE-BATCH',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/projects', [
+            'title' => 'E2E-ONLY 测试项目',
+            'application_batch_id' => $batch->id,
+        ])->assertCreated()
+            ->assertJsonPath('application_batch_id', $batch->id);
+    }
+
+    public function test_legacy_named_e2e_unit_can_create_project_in_e2e_batch(): void
+    {
+        $unit = Unit::factory()->create();
+        $user = User::factory()->create([
+            'username' => 'e2e_20261016ops_unit',
+            'unit_id' => $unit->id,
+            'role' => 'unit',
+        ]);
+        $batch = ApplicationBatch::create([
+            'name' => 'E2E-PRIVATE 测试批次',
+            'code' => 'E2E-PRIVATE-BATCH',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/projects', [
+            'title' => 'E2E-LEGACY-ACCOUNT 测试项目',
+            'application_batch_id' => $batch->id,
+        ])->assertCreated()
+            ->assertJsonPath('application_batch_id', $batch->id);
+    }
+
     public function test_unit_user_can_create_submit_and_withdraw_project(): void
     {
         $unit = Unit::factory()->create();

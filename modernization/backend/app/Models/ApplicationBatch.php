@@ -10,8 +10,11 @@ class ApplicationBatch extends Model
     use HasFactory;
 
     public const STATUS_DRAFT = 'draft';
+
     public const STATUS_OPEN = 'open';
+
     public const STATUS_CLOSED = 'closed';
+
     public const STATUS_ARCHIVED = 'archived';
 
     public const HISTORY_DEFAULT_CODE = 'HISTORY-DEFAULT';
@@ -43,7 +46,26 @@ class ApplicationBatch extends Model
 
     public function scopeAvailableForNewApplications($query)
     {
-        return $query->where('code', '!=', self::HISTORY_DEFAULT_CODE);
+        return $query
+            ->where('code', '!=', self::HISTORY_DEFAULT_CODE)
+            ->where(function ($query): void {
+                $query->whereNull('metadata')
+                    ->orWhere(function ($query): void {
+                        $query->whereNull('metadata->e2e')
+                            ->orWhereJsonDoesntContain('metadata->e2e', true);
+                    });
+            })
+            ->where('name', 'not like', '%E2E-%')
+            ->where('code', 'not like', '%E2E-%');
+    }
+
+    public function scopeE2eForTesting($query)
+    {
+        return $query->where(function ($query): void {
+            $query->whereJsonContains('metadata->e2e', true)
+                ->orWhere('name', 'like', '%E2E-%')
+                ->orWhere('code', 'like', '%E2E-%');
+        });
     }
 
     public function isSystemDefault(): bool
@@ -51,9 +73,18 @@ class ApplicationBatch extends Model
         return $this->code === self::HISTORY_DEFAULT_CODE;
     }
 
+    public function isE2e(): bool
+    {
+        $metadata = is_array($this->metadata) ? $this->metadata : [];
+        $identity = strtoupper(trim($this->code.' '.$this->name));
+
+        return filter_var($metadata['e2e'] ?? false, FILTER_VALIDATE_BOOLEAN)
+            || str_contains($identity, 'E2E-');
+    }
+
     public function isOpenNow(): bool
     {
-        if ($this->status !== self::STATUS_OPEN || $this->isSystemDefault()) {
+        if ($this->status !== self::STATUS_OPEN || $this->isSystemDefault() || $this->isE2e()) {
             return false;
         }
 

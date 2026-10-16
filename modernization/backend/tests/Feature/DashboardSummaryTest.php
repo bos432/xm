@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Message;
 use App\Models\ApplicationBatch;
+use App\Models\Message;
 use App\Models\MigrationBatch;
 use App\Models\OperationLog;
 use App\Models\Project;
@@ -28,6 +28,23 @@ class DashboardSummaryTest extends TestCase
             'code' => 'BUSINESS-EXPIRED',
             'starts_at' => now()->subDays(10),
             'ends_at' => now()->subDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
+
+        $this->getJson('/api/dashboard/summary')->assertOk()
+            ->assertJsonPath('batches.open', 0)
+            ->assertJsonPath('batches.current', null);
+    }
+
+    public function test_open_batch_summary_excludes_e2e_batches(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        Sanctum::actingAs($admin);
+        ApplicationBatch::create([
+            'name' => 'E2E-OPEN 自动化批次',
+            'code' => 'E2E-OPEN-BATCH',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
             'status' => ApplicationBatch::STATUS_OPEN,
         ]);
 

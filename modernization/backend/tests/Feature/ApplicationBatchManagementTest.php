@@ -58,6 +58,28 @@ class ApplicationBatchManagementTest extends TestCase
         $this->assertDatabaseHas('application_batches', ['id' => $history->id]);
     }
 
+    public function test_public_open_batches_exclude_legacy_named_e2e_batches(): void
+    {
+        ApplicationBatch::create([
+            'name' => 'E2E-LEGACY 自动化批次',
+            'code' => 'E2E-LEGACY-BATCH',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
+        $business = ApplicationBatch::create([
+            'name' => '正常业务批次',
+            'code' => 'BUSINESS-PUBLIC',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
+
+        $this->getJson('/api/public/application-batches/open')->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.id', $business->id);
+    }
+
     public function test_system_history_batch_cannot_be_repurposed_through_management_api(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
