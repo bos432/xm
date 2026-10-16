@@ -222,8 +222,10 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - 新增/调整测试：公开开放批次排除旧式命名 E2E 批次、Dashboard 排除 E2E 批次、普通单位拒绝 E2E 批次、metadata 标记测试单位允许、线上现存命名格式测试单位允许。最终全量后端 suite：`OK (211 tests, 947 assertions)`；批次/申报定向回归：`OK (31 tests, 136 assertions)`。
 - 最终自动化检查通过：前端 `npm run lint`、`npm run typecheck`、`npm test -- --run`（4/4）、`npm run build`；5 个变更 PHP 文件 Pint `--test` 通过，PHP 语法检查通过，三个部署备份/发布隔离/回滚脚本模拟通过，`git diff --check` 通过。
 - 本地曾缺 Composer/vendor；通过临时 bootstrap 只读复用主工作区已安装的 Composer vendor，并将 Laravel 测试环境的 `APP_BASE_PATH` 指向隔离工作区完成测试。临时 bootstrap 已删除，主工作区文件未修改。Docker 不可用，但部署模拟所需 Bash 可用且三项均通过。
-- 提交 `9ef98e4` 已推送到隔离分支 `codex/protect-history-default-batch`。没有推送 `main`、没有部署。生产仍运行上一发布版本；本站服务和其他站点均未触碰。
-- 线上账号角色浏览器验证未完成：新建标签继承了已有超管会话，为保护共享会话未输入其他账号密码，也没有创建或推进项目。发布后仍需在真正隔离的浏览器上下文验证公众接口隐藏测试批次、专用账号可访问其测试批次。
+- 提交 `c0750b1` 已快进推送到 GitHub `main`，并仅部署本站 release `20261017040227`；部署环境 `RUN_SEED=0`、`RUN_MIGRATIONS=0`，Laravel 登录健康检查成功，健康 token 已撤销。未重载/重启 Nginx、MySQL、服务器或其他站点。
+- 部署后验证：`/api/public/application-batches/open` 返回 HTTP 200 和 `[]`；`/` 返回 200；未认证 `/api/auth/me` 返回 401 JSON；`/up` 返回 200。本站 current 指向 `/www/wwwroot/nxm.zlck888.com/releases/20261017040227`；Nginx、MySQL 均 active，本站 queue worker 2 个，`artisan queue:failed` 输出 `INFO No failed jobs found.`；所有当前登记的迁移均显示 `Ran`（本次发布未执行迁移）。
+- 线上账号角色浏览器验证未完成：新建标签继承了已有超管会话，为保护共享会话未输入其他账号密码，也没有创建或推进项目。服务器专用账号仍保留；线上 E2E 登录及测试草稿访问需在真正隔离的浏览器上下文验证。
+- 运营限制：当前公开开放批次接口为空，故虽该版本与基础服务健康，真实申报尚不能开始。业务负责人需先在后台配置正式批次年度、起止时间、范围、指南和必传材料；不得把 E2E 批次改名冒充正式批次。
 
 ## 当前运营判断
 
