@@ -235,3 +235,9 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 ## 当前运营判断
 
 批次隔离代码已通过自动化并上线本站，公开端点已不再暴露测试批次，基础服务健康，专家评分模板为 100 分。系统仍未完成运营验收：正式开放批次为空；SMTP 尚未启用；OSS 虽已配置目标且开关开启，但上传与恢复未经验证；仅有两条 E2E 专家认证通过记录，不能证明能为项目分配三位正式认证专家；六角色浏览器闭环、覆盖率数字、历史暴露私钥撤销/轮换仍未闭环。因此当前版本已部署，但正式开放申报前仍须完成业务配置和运营验收。
+
+## 当前提交复测（2026-10-17）
+
+- 隔离 checkout 后端全量：复用主工作区现成 Composer vendor，但 PHPUnit bootstrap 将 `App`、`Tests`、Factories、Seeders 和 Laravel base path 均显式指向当前隔离 checkout；`OK (211 tests, 947 assertions)`，退出码 0。临时 bootstrap 已删除，主工作区和依赖未修改。
+- 当前 checkout 前端：`npm run lint`、`npm run typecheck`、`npm test`（4/4）和 `npm run build` 均退出码 0。
+- 当前 checkout `git diff --check` 通过；未生成跟踪文件变更。上述为代码自动化证据，不替代生产六角色闭环、真实 SMTP 或 OSS 恢复验收。
