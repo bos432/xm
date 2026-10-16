@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Message;
+use App\Models\ApplicationBatch;
 use App\Models\MigrationBatch;
 use App\Models\OperationLog;
 use App\Models\Project;
@@ -16,6 +17,24 @@ use Tests\TestCase;
 class DashboardSummaryTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_open_batch_summary_excludes_system_history_batch(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        Sanctum::actingAs($admin);
+
+        ApplicationBatch::create([
+            'name' => '已过期正式批次',
+            'code' => 'BUSINESS-EXPIRED',
+            'starts_at' => now()->subDays(10),
+            'ends_at' => now()->subDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
+
+        $this->getJson('/api/dashboard/summary')->assertOk()
+            ->assertJsonPath('batches.open', 0)
+            ->assertJsonPath('batches.current', null);
+    }
 
     public function test_unit_summary_is_scoped_to_own_unit(): void
     {

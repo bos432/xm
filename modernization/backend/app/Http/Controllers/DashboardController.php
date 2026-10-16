@@ -69,6 +69,7 @@ class DashboardController extends Controller
             ],
             'batches' => [
                 'open' => ApplicationBatch::query()
+                    ->availableForNewApplications()
                     ->where('status', ApplicationBatch::STATUS_OPEN)
                     ->where(function ($query): void {
                         $query->whereNull('starts_at')->orWhere('starts_at', '<=', now());
@@ -78,7 +79,14 @@ class DashboardController extends Controller
                     })
                     ->count(),
                 'current' => ApplicationBatch::query()
+                    ->availableForNewApplications()
                     ->where('status', ApplicationBatch::STATUS_OPEN)
+                    ->where(function ($query): void {
+                        $query->whereNull('starts_at')->orWhere('starts_at', '<=', now());
+                    })
+                    ->where(function ($query): void {
+                        $query->whereNull('ends_at')->orWhere('ends_at', '>=', now());
+                    })
                     ->orderByDesc('starts_at')
                     ->first(),
             ],
