@@ -268,3 +268,11 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - deploy 输出：`Health HTTP login passed for [health_check_user]; token revoked via logout.`、`Local credential validation and HTTPS captcha/login/logout health check passed`、`Deployment complete: 20261017044409`、`Activated the release through the site current symlink; no shared services were reloaded`。
 - 部署后宝塔只读核验：`current=/www/wwwroot/nxm.zlck888.com/releases/20261017044409`；开放批次 API 为 `[]`；`artisan queue:failed` 输出 `INFO No failed jobs found.`；`systemctl is-active nginx mysql mariadb` 输出 `active / active / inactive`（本站连接的服务名为 mysql，未触碰 MariaDB unit）；本站 flock watchdog 下观察到 2 个 `artisan queue:work` 进程；首页与 `/up` 均 `HTTP/2 200`。
 - SMTP 设置仍未配置/投递。本次发布修复了非 SMTP 驱动的错误状态与敏感邮件正文风险，但不代表 SMTP 已运营验收。公开批次为空，系统尚未开放正式申报。
+
+## 运营门槛复核（2026-10-17 04:50 UTC+8）
+
+- 本站 release 仍为 `20261017044409`；只读复核输出：`HOME_HTTP=200`、`HEALTH_HTTP=200`、`OPEN_BATCHES=[]`、`INFO No failed jobs found.`；`systemctl is-active nginx mysql mysqld mariadb` 依次为 `active / active / active / inactive`。Nginx、MySQL 均正常；MariaDB 是未使用的 unit，本轮未操作。
+- 通过 Laravel bootstrap 和只读 SQL `select status, count(*) ... from expert_certifications group by status` 获取汇总：线上认证表仅有 `approved: 2`，少于当前每项目随机分配人数 3。未读取专家姓名、用户字段、认证附件或任何凭据，也未修改数据库。
+- 只读查询 `system_settings` 的非 secret 键确认：专家评分开关开启、随机分配开启、`review.expert_assignment.count=3`、`mail.mailer=log`；没有读取 SMTP/OSS 凭据值。
+- 尝试通过 `php artisan tinker` 统计生产配置时发现该发行环境没有 Tinker 命令；该尝试未执行查询。后续只读查询在正确 Composer bootstrap 后成功。另一次初始 bootstrap 顺序错误产生 PHP 异常但未写入数据。
+- 当前生产正式运营阻断项：公开正式批次为 0；approved 专家数不足当前随机派单人数；SMTP 尚未配置和实际投递；OSS 下载/隔离恢复演练缺失；六角色浏览器业务闭环仍未用独立 cookie 环境完成。除正式批次业务参数与 SMTP 运维参数外，其他验收仍需取得真正隔离的浏览器/恢复目标和审计证据。
