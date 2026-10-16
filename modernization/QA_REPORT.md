@@ -16,10 +16,10 @@
 | A-04 | 并发重复专家评分不能重复推进 | 已覆盖测试 | `ReviewWorkflowTest::test_only_one_concurrent_expert_review_can_advance_the_project` |
 | A-05 | 验收材料提交、延期、延期审核、项目关闭 | 已覆盖测试 | `ProjectAcceptanceWorkflowTest` 中提交材料、延期处理、待延期禁止关闭及关闭测试 |
 | A-06 | 草稿、专家认证、审核/验收记录的角色数据隔离 | 已覆盖测试 | `ProjectAuthorizationTest`、`ProjectLifecycleManagementTest`、`ReviewAndAdminAuthorizationTest`、`ProjectAcceptanceWorkflowTest`；六角色线上验证未完成 |
-| A-07 | OSS 上传失败时 fail-closed 并保留本地归档 | 已覆盖测试 | `OssBackupCommandTest` 和隔离 shell 模拟；真实 OSS 未测 |
+| A-07 | OSS 上传失败时 fail-closed 并保留本地归档 | 已覆盖测试 | `OssBackupCommandTest` 和隔离 shell 模拟；生产成功路径另见当前复核 |
 | A-08 | 部署健康检查失败回滚本站 release 且不 reload Nginx | 已覆盖测试 | `deploy-release-safety-test.sh`、`deploy-rollback-test.sh` 隔离模拟；生产回滚未触发 |
 | A-09 | 生产 HTTPS 证书匹配本站域名 | 已覆盖测试 | 修复后公网 SNI 返回 `CN=nxm.zlck888.com`，有效期至 `2027-01-12 10:59:59 UTC`；Chromium 线上公开 E2E 与首页/登录/验证码/公开首页均通过 |
-| A-10 | OSS 异地备份及隔离环境恢复 | 部分配置、未完成验收 | 超管页面显示 OSS 已启用、Bucket/前缀已填写、密钥遮罩；未执行真实 PUT/HEAD 或恢复，不能证明凭据有效 |
+| A-10 | OSS 异地备份及隔离环境恢复 | 上传/对象校验已证实；恢复未完成 | 超管页面显示 OSS 已启用、Bucket/前缀已填写；本站备份日志 2026-10-16 11:19、10-17 00:24、02:10 均记录本地归档校验及 `Uploaded and verified 2 OSS backup objects.`；未执行隔离下载/恢复 |
 | A-11 | SMTP 实际投递至批准的测试邮箱 | 未启用/未完成验收 | 超管页面 Mailer 为 `log`，SMTP 主机和发件邮箱为空；未发送测试邮件 |
 | A-12 | 六角色浏览器完整流程：申报至终审/验收 | 部分覆盖，未完成闭环 | 六个 E2E 账号历史 API 验证有记录；当前标签共享超管会话，未切换账号、未创建项目或推进流程。专家认证页只有 2 条 E2E 专家认证已通过记录，不能证明有足够正式认证专家 |
 | A-13 | 测试覆盖率数字及未覆盖高风险文件排序 | 未实现验收证据 | PHPUnit coverage driver 不可用，未生成覆盖率或逐文件覆盖数据 |
@@ -189,7 +189,7 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 ## 无法验证的部分
 
 - 未能用隔离数据走六角色浏览器完整申报、审核、评分、延期及验收链；现有浏览器用例不覆盖完整链路，也没有隔离账号/环境凭据。
-- 未对生产指定 Bucket 执行真实 OSS PUT/HEAD 或 GET/恢复；虽已配置目标，凭据有效性和远端对象状态未知。
+- 未执行 OSS 对象 GET/下载及隔离恢复；真实 PUT/HEAD 已由本站备份日志证明成功，但没有独立恢复演练证据。
 - 未向批准的测试邮箱发送 SMTP 邮件；没有 SMTP 账号凭据及测试收件确认。
 - 未能给出覆盖率百分比或基于实际覆盖数据的高风险未覆盖文件 TOP5；PHP 覆盖率驱动缺失。不能把文件重要性排序伪装成覆盖率结果。
 - 未执行生产压力/并发或整机重启恢复测试；没有隔离生产等价环境/维护窗口，不以线上业务承担此类破坏性验证。
@@ -228,16 +228,23 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - 生产超管只读配置核验：OSS 开关已开启、Endpoint/Bucket/对象前缀已填写，AccessKey 仅显示遮罩；未执行上传/恢复，凭据有效性和远端对象状态未知。邮件配置页 Mailer 为 `log`，SMTP 主机和发件邮箱为空；未触发测试邮件。
 - 批次管理页面保留多条开放 E2E 历史批次及历史默认批次；公网 `/api/public/application-batches/open` 返回 `[]`，符合只开放非 E2E 业务批次的规则。另有“测试 / 001”批次也不对公众开放；不得把测试数据改名冒充正式批次。
 - 线上账号角色浏览器验证未完成：新建标签继承了已有超管会话，为保护共享会话未输入其他账号密码，也没有创建或推进项目。服务器专用账号仍保留；线上 E2E 登录及测试草稿访问需在真正隔离的浏览器上下文验证。
-- 线上归档目录/OSS 对象复核未完成：再次打开宝塔终端后终端区域为空白，输入框操作超时；未刷新或重试，避免干扰运行中的终端与服务。未检查本地备份文件、OSS 对象或备份任务日志。
-- 文档更新时间复核：页面截图证据显示 OSS 配置目标已填写，不应把它表述为“未配置”；只确认了配置存在，没有验证实际功能。
+- 线上备份日志只读复核：本站计划任务日志记录 2026-10-16 11:19、2026-10-17 00:24、02:10 依次完成数据库/私有文件归档、归档校验和 `Uploaded and verified 2 OSS backup objects.`；2026-10-17 02:10 后按本站 14 天保留策略清理旧归档。日志另有一次 `find: Failed to restore initial working directory: /root: Permission denied`，之后三次备份成功；需在宝塔计划任务页确认失败记录是否仅为已恢复的历史运行。
+- 当前 worker 只读检查：1 个 `www` 用户 `artisan queue:work database --queue=default` 进程；`flock` 正持有本站 `nxm_queue_worker.lock`。此前本站队列计数为 2，当前进程数为 1，应以 watchdog 单 worker 的现状为准；尚未核实计划任务面板中的 watchdog 调度项。
+- 未对已成功上传的 OSS 对象执行 GET/下载与隔离恢复；终端本轮只读取现存日志和进程状态，没有运行备份脚本或改动服务。
 - 运营限制：当前公开开放批次接口为空，故虽该版本与基础服务健康，真实申报尚不能开始。业务负责人需先在后台配置正式批次年度、起止时间、范围、指南和必传材料；不得把 E2E 批次改名冒充正式批次。
 
 ## 当前运营判断
 
-批次隔离代码已通过自动化并上线本站，公开端点已不再暴露测试批次，基础服务健康，专家评分模板为 100 分。系统仍未完成运营验收：正式开放批次为空；SMTP 尚未启用；OSS 虽已配置目标且开关开启，但上传与恢复未经验证；仅有两条 E2E 专家认证通过记录，不能证明能为项目分配三位正式认证专家；六角色浏览器闭环、覆盖率数字、历史暴露私钥撤销/轮换仍未闭环。因此当前版本已部署，但正式开放申报前仍须完成业务配置和运营验收。
+批次隔离代码已通过自动化并上线本站，公开端点已不再暴露测试批次，基础服务健康，专家评分模板为 100 分。本站 OSS 本地归档、上传及对象长度校验已有生产日志证据，但隔离恢复未演练；当前 1 个 www 队列 worker 正常持有本站锁。系统仍未完成运营验收：正式开放批次为空；SMTP 尚未启用；仅有两条 E2E 专家认证通过记录，不能证明能为项目分配三位正式认证专家；六角色浏览器闭环、覆盖率数字、历史暴露私钥撤销/轮换仍未闭环。因此当前版本已部署，但正式开放申报前仍须完成业务配置和运营验收。
 
 ## 当前提交复测（2026-10-17）
 
 - 隔离 checkout 后端全量：复用主工作区现成 Composer vendor，但 PHPUnit bootstrap 将 `App`、`Tests`、Factories、Seeders 和 Laravel base path 均显式指向当前隔离 checkout；`OK (211 tests, 947 assertions)`，退出码 0。临时 bootstrap 已删除，主工作区和依赖未修改。
 - 当前 checkout 前端：`npm run lint`、`npm run typecheck`、`npm test`（4/4）和 `npm run build` 均退出码 0。
 - 当前 checkout `git diff --check` 通过；未生成跟踪文件变更。上述为代码自动化证据，不替代生产六角色闭环、真实 SMTP 或 OSS 恢复验收。
+
+## 生产只读复核补充（2026-10-17）
+
+- 宝塔终端只读命令确认 current 仍为 `/www/wwwroot/nxm.zlck888.com/releases/20261017040227`；`/api/public/application-batches/open` 返回 `HTTP 200 []`；Nginx、MySQL 均为 `active`；`artisan queue:failed` 输出 `INFO No failed jobs found.`。
+- 本站当前仅观察到 1 个 `www` 队列 worker，由本站 watchdog flock 锁保护。没有改动 watchdog、Supervisor、Nginx、MySQL 或其他站点。
+- 备份日志最近成功记录显示 OSS 上传并通过 HEAD 对象长度校验；未读取 `.env`、RAM 密钥或上传文件内容，也未执行恢复。
