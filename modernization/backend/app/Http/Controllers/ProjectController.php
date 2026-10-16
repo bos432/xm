@@ -899,6 +899,7 @@ class ProjectController extends Controller
     private function resolveOpenBatch(?int $batchId = null): ApplicationBatch
     {
         $query = ApplicationBatch::query()
+            ->availableForNewApplications()
             ->where('status', ApplicationBatch::STATUS_OPEN)
             ->where(function ($query): void {
                 $query->whereNull('starts_at')->orWhere('starts_at', '<=', now());

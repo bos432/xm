@@ -38,6 +38,43 @@ class ApplicationBatchManagementTest extends TestCase
         $this->assertFalse($business->pluck('code')->contains('E2E-FILTER'));
     }
 
+    public function test_new_application_batches_excludes_system_history_default(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        Sanctum::actingAs($admin);
+
+        $history = ApplicationBatch::query()->where('code', ApplicationBatch::HISTORY_DEFAULT_CODE)->firstOrFail();
+        $business = ApplicationBatch::create([
+            'name' => '正常业务批次',
+            'code' => 'BUSINESS-AVAILABLE',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
+
+        $this->getJson('/api/public/application-batches/open')->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.id', $business->id);
+        $this->assertDatabaseHas('application_batches', ['id' => $history->id]);
+    }
+
+    public function test_system_history_batch_cannot_be_repurposed_through_management_api(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        Sanctum::actingAs($admin);
+        $history = ApplicationBatch::query()->where('code', ApplicationBatch::HISTORY_DEFAULT_CODE)->firstOrFail();
+
+        $this->postJson("/api/application-batches/{$history->id}/close")->assertUnprocessable();
+        $this->putJson("/api/application-batches/{$history->id}", [
+            'name' => '2026 正式申报批次',
+            'code' => 'HISTORY-DEFAULT',
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ])->assertUnprocessable();
+
+        $this->assertSame(ApplicationBatch::STATUS_OPEN, $history->fresh()->status);
+        $this->assertSame('历史默认批次', $history->fresh()->name);
+    }
+
     public function test_only_super_admin_can_bulk_archive_e2e_application_batches(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);

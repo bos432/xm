@@ -14,6 +14,8 @@ class ApplicationBatch extends Model
     public const STATUS_CLOSED = 'closed';
     public const STATUS_ARCHIVED = 'archived';
 
+    public const HISTORY_DEFAULT_CODE = 'HISTORY-DEFAULT';
+
     protected $fillable = [
         'name',
         'code',
@@ -39,9 +41,19 @@ class ApplicationBatch extends Model
         ];
     }
 
+    public function scopeAvailableForNewApplications($query)
+    {
+        return $query->where('code', '!=', self::HISTORY_DEFAULT_CODE);
+    }
+
+    public function isSystemDefault(): bool
+    {
+        return $this->code === self::HISTORY_DEFAULT_CODE;
+    }
+
     public function isOpenNow(): bool
     {
-        if ($this->status !== self::STATUS_OPEN) {
+        if ($this->status !== self::STATUS_OPEN || $this->isSystemDefault()) {
             return false;
         }
 

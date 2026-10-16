@@ -89,6 +89,24 @@ class PublicHomeManagementTest extends TestCase
         $this->assertFalse($batchNames->contains('早期测试批次'));
     }
 
+    public function test_public_homepage_does_not_advertise_history_default_batch_as_open_for_applications(): void
+    {
+        PublicHomeSection::create(['key' => 'nav', 'title' => '门户']);
+        $this->assertDatabaseHas('application_batches', ['code' => ApplicationBatch::HISTORY_DEFAULT_CODE]);
+        $businessBatch = ApplicationBatch::create([
+            'name' => '正式业务批次',
+            'code' => 'BUSINESS-CURRENT',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
+
+        $response = $this->getJson('/api/public/homepage')->assertOk();
+
+        $this->assertSame($businessBatch->id, $response->json('current_batch.id'));
+        $this->assertSame([$businessBatch->id], collect($response->json('open_batches'))->pluck('id')->all());
+    }
+
     public function test_only_admin_can_manage_public_home_content(): void
     {
         $user = User::factory()->create(['role' => 'unit']);

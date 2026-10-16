@@ -205,6 +205,7 @@ class PublicHomeController extends Controller
     private function openBatchesPayload(): Collection
     {
         return ApplicationBatch::query()
+            ->availableForNewApplications()
             ->where('status', ApplicationBatch::STATUS_OPEN)
             ->where(function ($query): void {
                 $query->whereNull('starts_at')->orWhere('starts_at', '<=', now());
@@ -228,6 +229,10 @@ class PublicHomeController extends Controller
 
     private function isE2eBatch(ApplicationBatch $batch): bool
     {
+        if ($batch->isSystemDefault()) {
+            return true;
+        }
+
         $metadata = is_array($batch->metadata) ? $batch->metadata : [];
         $identity = strtoupper(trim($batch->code.' '.$batch->name));
 

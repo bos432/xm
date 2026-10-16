@@ -2,10 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\ApplicationBatch;
+use App\Models\DictionaryItem;
 use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Models\ProjectReview;
-use App\Models\DictionaryItem;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,10 +19,55 @@ class ProjectApplicationWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_unit_cannot_create_a_new_project_in_the_system_history_batch(): void
+    {
+        $unit = Unit::factory()->create();
+        $user = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $historyBatch = ApplicationBatch::query()->where('code', ApplicationBatch::HISTORY_DEFAULT_CODE)->firstOrFail();
+        Sanctum::actingAs($user);
+
+        $this->postJson('/api/projects', [
+            'title' => '误入历史批次的新项目',
+            'application_batch_id' => $historyBatch->id,
+            'category' => '科技项目',
+            'project_type' => '重点扶持',
+        ])->assertUnprocessable();
+
+        $this->assertDatabaseMissing('projects', ['title' => '误入历史批次的新项目']);
+    }
+
+    public function test_submitting_existing_history_project_is_rejected_without_changing_legacy_link(): void
+    {
+        $unit = Unit::factory()->create();
+        $user = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $historyBatch = ApplicationBatch::query()->where('code', ApplicationBatch::HISTORY_DEFAULT_CODE)->firstOrFail();
+        $project = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $user->id,
+            'application_batch_id' => $historyBatch->id,
+            'status' => Project::STATUS_DRAFT,
+        ]);
+        Sanctum::actingAs($user);
+
+        $this->postJson("/api/projects/{$project->id}/submit")
+            ->assertUnprocessable()
+            ->assertJsonPath('message', '申报批次未开放，不能提交');
+
+        $this->assertSame($historyBatch->id, $project->fresh()->application_batch_id);
+        $this->assertSame(Project::STATUS_DRAFT, $project->fresh()->status);
+    }
+
     public function test_unit_user_can_create_submit_and_withdraw_project(): void
     {
         $unit = Unit::factory()->create();
         $user = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        ApplicationBatch::create([
+            'name' => '流程测试批次',
+            'code' => 'BUSINESS-WORKFLOW',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
         $activeCountyReviewer = User::factory()->create(['role' => 'county', 'is_active' => true]);
         $inactiveCountyReviewer = User::factory()->create(['role' => 'county', 'is_active' => false]);
 

@@ -44,6 +44,7 @@ class ApplicationBatchController extends Controller
     public function openBatches()
     {
         return ApplicationBatch::query()
+            ->availableForNewApplications()
             ->where('status', ApplicationBatch::STATUS_OPEN)
             ->where(function ($query): void {
                 $query->whereNull('starts_at')->orWhere('starts_at', '<=', now());
@@ -78,6 +79,10 @@ class ApplicationBatchController extends Controller
     public function update(Request $request, ApplicationBatch $applicationBatch)
     {
         $this->authorizeManage($request);
+
+        if ($applicationBatch->isSystemDefault()) {
+            abort(422, '系统历史归集批次不可修改');
+        }
 
         $applicationBatch->update($this->validatedData($request, $applicationBatch));
         $this->auditLogger->record($request, 'application_batch.updated', $applicationBatch);
@@ -127,6 +132,10 @@ class ApplicationBatchController extends Controller
     private function changeStatus(Request $request, ApplicationBatch $batch, string $status, string $action)
     {
         $this->authorizeManage($request);
+
+        if ($batch->isSystemDefault()) {
+            abort(422, '系统历史归集批次不可调整状态');
+        }
 
         $batch->update(['status' => $status]);
         $this->auditLogger->record($request, $action, $batch);

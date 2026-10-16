@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\ApplicationBatch;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -80,6 +81,13 @@ class PublicAuthRegistrationTest extends TestCase
         ])->assertOk();
 
         Sanctum::actingAs($user->refresh());
+        ApplicationBatch::create([
+            'name' => '注册流程测试批次',
+            'code' => 'BUSINESS-REGISTER-TEST',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
         $this->postJson('/api/projects', [
             'title' => '注册单位申报测试项目',
             'category' => '科技项目',
