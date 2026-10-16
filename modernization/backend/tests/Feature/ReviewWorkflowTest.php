@@ -136,6 +136,56 @@ class ReviewWorkflowTest extends TestCase
             ->assertJsonPath('project.current_reviewer_role', null);
     }
 
+    public function test_all_assigned_experts_complete_the_stage_using_nested_dispatch_snapshot(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
+        $firstExpert = User::factory()->create(['role' => 'expert']);
+        $secondExpert = User::factory()->create(['role' => 'expert']);
+        $admin = User::factory()->create(['role' => 'admin']);
+        $project = Project::factory()->create([
+            'unit_id' => $unit->id,
+            'owner_id' => $owner->id,
+            'status' => Project::STATUS_REVIEWING,
+            'current_reviewer_role' => 'expert',
+            'metadata' => [
+                'review_dispatch' => [
+                    'assignments' => [
+                        'expert' => [
+                            'assigned_user_ids' => [$firstExpert->id, $secondExpert->id],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        ProjectReview::create([
+            'project_id' => $project->id,
+            'reviewer_id' => $firstExpert->id,
+            'stage' => 'expert',
+            'decision' => 'recommend',
+            'score' => 91,
+            'comment' => '专家一已完成',
+            'reviewed_at' => now()->subMinute(),
+        ]);
+
+        Sanctum::actingAs($secondExpert);
+        $this->postJson("/api/projects/{$project->id}/reviews", [
+            'decision' => 'recommend',
+            'score' => 93,
+            'comment' => '专家二已完成',
+        ])->assertCreated()
+            ->assertJsonPath('project.status', Project::STATUS_REVIEWING)
+            ->assertJsonPath('project.current_reviewer_role', 'admin');
+
+        $this->assertDatabaseHas('messages', [
+            'recipient_id' => $admin->id,
+            'project_id' => $project->id,
+            'type' => 'review',
+            'title' => '收到待审项目',
+        ]);
+    }
+
     public function test_admin_final_review_persists_support_information_on_project(): void
     {
         $unit = Unit::factory()->create();
