@@ -292,3 +292,9 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - API 响应出现重复的同值安全头（Nginx 与 Laravel 都设置），以及 `Access-Control-Allow-Origin: *`。目前 API 采用 Bearer token，未验证带 credentials 的跨域请求；CORS 通配项疑似来自服务器层，因同机其他站点共用 Nginx，本轮没有改共享服务器配置。建议由运维确认本站 location 是否可独立收敛，不能贸然全局更改。
 - TLS SNI 证书 Subject 为 `CN=nxm.zlck888.com`，有效至 `2027-01-12 10:59:59 UTC`。
 - 当前前端门禁：`npm run lint`、`npm run typecheck`、`npm test`（4/4）和 `npm run build` 均退出码 0。
+
+## CORS 只读预检补充（2026-10-17）
+
+- 从非本站 Origin `https://example.invalid` 对 `/api/auth/me` 发只读 OPTIONS：HTTP 204，`Access-Control-Allow-Origin: *`、仅允许 GET、允许 `authorization,content-type`，未返回 `Access-Control-Allow-Credentials`。随后带同一 Origin 的匿名 GET `/api/auth/me` 返回 `401 application/json` 和 `{"message":"Unauthenticated."}`；匿名公开首页 API 返回 200。没有发送 Authorization token、Cookie 或业务写请求。
+- 结论：证据未显示浏览器可跨站携带会话凭据读取受保护 API；wildcard 仍扩大匿名公开 API 的跨站可读面。配置来源不在应用源码，推测位于站点服务器层，尚未证明具体配置文件。建议运维评估仅本站级 CORS allowlist；不得直接编辑共享 Nginx 全局配置。
+- 本轮未尝试撤销历史暴露私钥：现有浏览器仅在 ECS 详情页，无法验证证书/CA 状态；文件权限收紧不能代替证书密钥轮换或撤销。
