@@ -15,9 +15,7 @@ class SendMailLogJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function __construct(private readonly int $mailLogId)
-    {
-    }
+    public function __construct(private readonly int $mailLogId) {}
 
     public function handle(): void
     {
@@ -27,6 +25,15 @@ class SendMailLogJob implements ShouldQueue
         }
 
         RuntimeConfig::applyMailSettings();
+
+        if (in_array(config('mail.default'), ['log', 'array'], true)) {
+            $log->update([
+                'status' => 'failed',
+                'error' => '邮件未发送：当前邮件驱动不支持实际投递，请配置 SMTP。',
+            ]);
+
+            return;
+        }
 
         try {
             Mail::raw($log->body, function ($message) use ($log): void {

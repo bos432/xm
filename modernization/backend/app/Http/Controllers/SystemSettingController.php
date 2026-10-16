@@ -147,6 +147,11 @@ class SystemSettingController extends Controller
             abort(403, '只有超级管理员可以发送测试邮件');
         }
 
+        RuntimeConfig::applyMailSettings();
+        if (config('mail.default') !== 'smtp') {
+            abort(422, '请先配置并启用 SMTP，当前邮件驱动不会实际投递邮件');
+        }
+
         $data = $request->validate([
             'to' => ['required', 'email', 'max:255'],
         ]);

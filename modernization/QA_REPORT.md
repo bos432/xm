@@ -248,3 +248,15 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - 宝塔终端只读命令确认 current 仍为 `/www/wwwroot/nxm.zlck888.com/releases/20261017040227`；`/api/public/application-batches/open` 返回 `HTTP 200 []`；Nginx、MySQL 均为 `active`；`artisan queue:failed` 输出 `INFO No failed jobs found.`。
 - 本站当前仅观察到 1 个 `www` 队列 worker，由本站 watchdog flock 锁保护。没有改动 watchdog、Supervisor、Nginx、MySQL 或其他站点。
 - 备份日志最近成功记录显示 OSS 上传并通过 HEAD 对象长度校验；未读取 `.env`、RAM 密钥或上传文件内容，也未执行恢复。
+
+## 生产邮件投递安全复核（2026-10-17）
+
+- 缺陷 `MAIL-01`：当运行时邮件驱动为 `log` 或 `array` 时，队列邮件任务仍可能调用 Laravel mail facade，并把日志状态更新为 `sent`。这会把“未真实投递”误报为已发送；若 `log` 驱动接收密码重置邮件，还可能把含重置 token 的邮件正文写入应用日志。
+- 修复：`SendMailLogJob` 在 `log/array` 驱动下不调用 mailer，将记录标记为失败并提示配置 SMTP；超级管理员测试邮件接口在非 SMTP 驱动下返回 422，不创建邮件记录。SMTP 配置仍由后台管理。
+- 新增专项测试 `modernization/backend/tests/Feature/MailDeliverySafetyTest.php`：覆盖非投递驱动不发送且不标记成功、SMTP 驱动调用 mail facade 后标记成功、测试邮件接口拒绝非 SMTP 配置。
+- 隔离 checkout 本身没有 `modernization/backend/vendor`。为避免安装/改动依赖，本轮只读复用主工作区现成 Composer vendor，并通过临时 `qa-bootstrap.php` 将 Laravel `APP_BASE_PATH` 及 App/Tests/Factories/Seeders PSR-4 路径绑定到隔离 checkout；脚本在测试后删除，主工作区未修改。
+- 专项实际命令：`php <existing-vendor>/bin/phpunit --bootstrap modernization/backend/qa-bootstrap.php --configuration modernization/backend/phpunit.xml modernization/backend/tests/Feature/MailDeliverySafetyTest.php`；输出 `OK (3 tests, 10 assertions)`。
+- 全量实际命令：`php <existing-vendor>/bin/phpunit --bootstrap modernization/backend/qa-bootstrap.php --configuration modernization/backend/phpunit.xml`；输出 `OK (214 tests, 957 assertions)`。本次测试实际执行隔离 checkout 代码与测试。
+- PHP Pint 对本次 3 个 PHP 文件执行 `--test`，输出 `PASS ... 3 files`；PHP 语法检查和 `git diff --check` 通过。
+- 未对生产 SMTP 配置、邮件队列或邮件日志做修改/发送。生产 mailer 仍为 `log`，之前只读 `mail_logs` 汇总为空；SMTP 真实投递仍待业务方配置参数后验证。
+- 上述自动化验证通过，但不替代生产 SMTP 实际投递、队列发送及收件确认。生产仍是 `log` 驱动，因此新修复部署后预期行为是清晰标记未发送，而非假报送达。
