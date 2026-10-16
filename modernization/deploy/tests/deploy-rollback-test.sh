@@ -51,6 +51,18 @@ fi
 FIRST_RELEASE="$(readlink "$APP_ROOT/current")"
 [[ "$FIRST_RELEASE" == "$APP_ROOT"/releases/* ]]
 [[ ! -e "$DEPLOY_TEST_NGINX_CALLED" ]]
+[[ -L "$FIRST_RELEASE/backend/storage" ]]
+[[ -L "$FIRST_RELEASE/backend/bootstrap/cache" ]]
+for runtime_dir in \
+  "$APP_ROOT/shared/storage/app/private" \
+  "$APP_ROOT/shared/storage/app/public" \
+  "$APP_ROOT/shared/storage/framework/cache" \
+  "$APP_ROOT/shared/storage/framework/sessions" \
+  "$APP_ROOT/shared/storage/framework/views" \
+  "$APP_ROOT/shared/storage/logs" \
+  "$APP_ROOT/shared/bootstrap-cache"; do
+  [[ -d "$runtime_dir" ]]
+done
 ! grep -q 'composer.phar config -g' "$DEPLOY_TEST_COMMAND_LOG"
 ! grep -Fq 'Fixture-Health-Check-Password-2026' "$DEPLOY_TEST_COMMAND_LOG" "$DEPLOY_TEST_CURL_ARGS"
 ! grep -Fq '/api/auth/login' "$DEPLOY_TEST_CURL_ARGS"

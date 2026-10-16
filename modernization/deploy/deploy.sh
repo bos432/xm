@@ -188,7 +188,19 @@ cd "$BACKEND_DIR"
 rm -rf storage bootstrap/cache
 ln -s "$SHARED_DIR/.env" .env
 ln -s "$SHARED_DIR/storage" storage
-mkdir -p bootstrap/cache
+mkdir -p \
+  "$SHARED_DIR/storage/app/private" \
+  "$SHARED_DIR/storage/app/public" \
+  "$SHARED_DIR/storage/framework/cache" \
+  "$SHARED_DIR/storage/framework/sessions" \
+  "$SHARED_DIR/storage/framework/views" \
+  "$SHARED_DIR/storage/logs" \
+  "$SHARED_DIR/bootstrap-cache" \
+  bootstrap/cache
+chown -R "$WEB_USER" "$SHARED_DIR/storage" "$SHARED_DIR/bootstrap-cache" || true
+chmod -R ug+rwX "$SHARED_DIR/storage" "$SHARED_DIR/bootstrap-cache" || true
+rm -rf bootstrap/cache
+ln -s "$SHARED_DIR/bootstrap-cache" bootstrap/cache
 cp "$COMPOSER_BIN" composer.phar
 
 log "Installing site-local queue watchdog"
