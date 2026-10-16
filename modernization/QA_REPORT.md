@@ -260,3 +260,11 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - PHP Pint 对本次 3 个 PHP 文件执行 `--test`，输出 `PASS ... 3 files`；PHP 语法检查和 `git diff --check` 通过。
 - 未对生产 SMTP 配置、邮件队列或邮件日志做修改/发送。生产 mailer 仍为 `log`，之前只读 `mail_logs` 汇总为空；SMTP 真实投递仍待业务方配置参数后验证。
 - 上述自动化验证通过，但不替代生产 SMTP 实际投递、队列发送及收件确认。生产仍是 `log` 驱动，因此新修复部署后预期行为是清晰标记未发送，而非假报送达。
+
+## 邮件安全修复本站发布（2026-10-17 04:44 UTC+8）
+
+- 提交 `bd31d2708c7cda00099dc950680beb61ce0531f8` 已推送至 GitHub `main`，随后仅部署本站 release `20261017044409`。
+- 线上命令使用 `APP_ROOT=/www/wwwroot/nxm.zlck888.com`、`REPO_URL=https://github.com/bos432/xm.git`、`BRANCH=main`、`RUN_SEED=0`、`RUN_MIGRATIONS=0`；没有执行数据库迁移或 Seeder。
+- deploy 输出：`Health HTTP login passed for [health_check_user]; token revoked via logout.`、`Local credential validation and HTTPS captcha/login/logout health check passed`、`Deployment complete: 20261017044409`、`Activated the release through the site current symlink; no shared services were reloaded`。
+- 部署后宝塔只读核验：`current=/www/wwwroot/nxm.zlck888.com/releases/20261017044409`；开放批次 API 为 `[]`；`artisan queue:failed` 输出 `INFO No failed jobs found.`；`systemctl is-active nginx mysql mariadb` 输出 `active / active / inactive`（本站连接的服务名为 mysql，未触碰 MariaDB unit）；本站 flock watchdog 下观察到 2 个 `artisan queue:work` 进程；首页与 `/up` 均 `HTTP/2 200`。
+- SMTP 设置仍未配置/投递。本次发布修复了非 SMTP 驱动的错误状态与敏感邮件正文风险，但不代表 SMTP 已运营验收。公开批次为空，系统尚未开放正式申报。
