@@ -39,10 +39,12 @@ bash /path/to/deploy.sh
 ```
 
 Before deployment, provision `shared/.env` (with the existing production `APP_KEY`),
-`shared/composer.phar`, `shared/storage/`, and `shared/bootstrap-cache/` (the last
-directory is retained for compatibility but not linked into new releases). The deployment script refuses to migrate or overwrite
-these persistent paths automatically; perform any one-time migration separately
-after taking and validating a backup.
+`shared/composer.phar`, `shared/storage/`, and `shared/bootstrap-cache/`. The
+deployment script creates the Laravel runtime subdirectories, links both
+`storage` and `bootstrap/cache` to the site-owned shared paths, and grants the
+configured web user access to those paths. It does not migrate or overwrite
+application data; perform any database migration separately after taking and
+validating a backup.
 
 ## Normal Deployment
 
