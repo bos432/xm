@@ -284,3 +284,11 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - 原始报告目录：`modernization/e2e/reports/runs/20261017-readonly-public/`、`modernization/e2e/reports/runs/20261017-role-smoke-audit/`。
 - 既有 GitHub Actions 在线 E2E workflow 需要 GitHub Secrets 中六角色凭据并手动 dispatch；本机 `gh auth status` 为 `You are not logged into any GitHub hosts`，不能触发该 workflow。本轮未从服务器读取/复制 root-only 密码，也未在继承超管 cookie 的共享浏览器输入测试账号。
 - 生产未产生项目、审核、评分、验收或其他业务写入；只读测试没有解决正式批次、专家数量、SMTP 实投、OSS 隔离恢复等运营门槛。
+
+## 公网安全头与前端门禁复核（2026-10-17）
+
+- 对本站 `/`、`/login`、`/dashboard`、`/projects` 执行 HTTPS GET：全部 HTTP 200，均返回 `X-Content-Type-Options: nosniff`、`X-Frame-Options: SAMEORIGIN`、`Referrer-Policy: strict-origin-when-cross-origin`、`Permissions-Policy: camera=(), microphone=(), geolocation=()`。这与 2026-10-14 记录的“静态 HTML 缺这些头”不同，当前已实际观察到静态响应头存在。
+- 公共 API `/api/auth/captcha`、`/api/public/homepage`、`/api/public/application-batches/open` 为 200；未认证 `/api/auth/me`、`/api/projects`、`/api/reviews/tasks` 为 401；`/.env` 和 `/storage/logs/laravel.log` 为 404。
+- API 响应出现重复的同值安全头（Nginx 与 Laravel 都设置），以及 `Access-Control-Allow-Origin: *`。目前 API 采用 Bearer token，未验证带 credentials 的跨域请求；CORS 通配项疑似来自服务器层，因同机其他站点共用 Nginx，本轮没有改共享服务器配置。建议由运维确认本站 location 是否可独立收敛，不能贸然全局更改。
+- TLS SNI 证书 Subject 为 `CN=nxm.zlck888.com`，有效至 `2027-01-12 10:59:59 UTC`。
+- 当前前端门禁：`npm run lint`、`npm run typecheck`、`npm test`（4/4）和 `npm run build` 均退出码 0。
