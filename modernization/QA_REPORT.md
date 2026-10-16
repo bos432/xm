@@ -1,8 +1,8 @@
-# 新系统 QA 验收报告（2026-10-14）
+# 新系统 QA 验收报告（2026-10-17）
 
 ## 范围
 
-本报告基于隔离工作区 `codex/oss-backup-runtime-safety` 的实际测试，以及对 `https://nxm.zlck888.com` 的只读探测。本轮未修改应用源码、依赖版本、生产数据库、OSS 对象或 SMTP 配置；没有读取或记录生产凭据/密钥。
+本报告基于隔离工作区 `codex/protect-history-default-batch` 的实际测试，以及历史对 `https://nxm.zlck888.com` 的只读探测。本轮只修改隔离工作区后端 bootstrap 与认证 middleware，未修改依赖版本、生产数据库、OSS 对象或 SMTP 配置；没有读取或记录生产凭据/密钥。本次所有测试使用显式 worktree base path 和隔离分支优先的 Composer PSR-4 映射，避免误测主工作区代码。
 
 ## 验收清单
 
@@ -22,7 +22,7 @@
 | A-10 | OSS 异地备份及隔离环境恢复 | 仅实现未测 | 生产无 `backup.oss_*` 配置记录，开关关闭；未上传或恢复 |
 | A-11 | SMTP 实际投递至批准的测试邮箱 | 仅实现未测 | SMTP username/password 缺失；未发送测试邮件 |
 | A-12 | 六角色浏览器完整流程：申报至终审/验收 | 未实现验收证据 | E2E 清单共 10 项，登录/页面与部分权限探测，不执行完整申报、逐级审核和验收链路；缺隔离账号 |
-| A-13 | 测试覆盖率数字及未覆盖高风险文件排序 | 未实现验收证据 | 覆盖率驱动不可用，未生成覆盖率或逐文件覆盖数据 |
+| A-13 | 测试覆盖率数字及未覆盖高风险文件排序 | 未实现验收证据 | PHPUnit coverage driver 不可用，未生成覆盖率或逐文件覆盖数据 |
 
 ## 缺陷表
 
@@ -34,16 +34,31 @@
 | QA-06 | P0 阻断（已修复，需持续观测） | 本站 HTTPS/Nginx | Playwright 线上首页用例曾报 `ERR_CERT_COMMON_NAME_INVALID`；Nginx 检查本站 vhost 只有 `listen 80` | 443 请求命中默认 `413.chaimen666.com` 证书；预期本站独立 TLS vhost | 已新增仅被本站 vhost extension include 的 TLS 配置、测试后平滑 reload；HTTPS 与 Chromium E2E 已复测通过 |
 | QA-04 | P1 严重 | 浏览器 E2E | `cd modernization/frontend && npm run e2e -- --list`；检查 `modernization/e2e/tests/smoke.spec.js` | 共 10 个用例，角色用例检查登录、页面/权限；不覆盖“提交 -> 区县 -> 部门 -> 多专家评分 -> 终审 -> 验收关闭”全链 | 提供隔离数据库/存储及六角色专用凭据，扩展并实际运行完整 E2E，保留 E2E 数据 |
 | QA-05 | P2 一般 | 测试基础设施 | `cd modernization/backend && php artisan test --compact --coverage` | 退出码 1：`Code coverage driver not available. Did you install Xdebug or PCOV?`，覆盖率未知 | 仅在 CI/测试镜像启用 Xdebug 或 PCOV，发布覆盖率报告；不在生产安装 |
+| QA-07 | P1 严重（本分支已修复，尚未上线） | API 未认证响应 / health headers | `php vendor/bin/phpunit -c phpunit.xml --bootstrap qa-bootstrap.php --filter 'test_unauthenticated_api_requests_return_json_even_without_accept_header|test_application_responses_include_browser_security_headers'` | 修复前 API 无 Accept 请求会因不存在的 `login` route 返回 500；内建 `/up` 响应缺少安全头。隔离分支修复后 2 tests、21 assertions 通过 | 显式注册 Sanctum provider；API 认证使用不产生重定向的 middleware；health route 显式带安全头。待远端推送、部署与线上验证 |
 
 ## 已执行命令与完整关键输出
 
 ### 后端全量测试
 
-命令：`cd modernization/backend && php artisan test --compact`
+命令：`$env:APP_BASE_PATH='X:\modernization\backend'; php '<主工作区 vendor>\bin\phpunit' -c phpunit.xml --bootstrap qa-bootstrap.php`
 
 ```text
-Tests:    199 passed (899 assertions)
-Duration: 5.42s
+OK (206 tests, 935 assertions)
+Duration: 3.879s
+exit code: 0
+```
+
+定向回归命令：`php '<主工作区 vendor>\bin\phpunit' -c phpunit.xml --bootstrap qa-bootstrap.php --filter 'test_unauthenticated_api_requests_return_json_even_without_accept_header|test_application_responses_include_browser_security_headers'`
+
+```text
+OK (2 tests, 21 assertions)
+exit code: 0
+```
+
+Pint：`pint --test bootstrap/app.php app/Http/Middleware/Authenticate.php`
+
+```text
+PASS 2 files
 exit code: 0
 ```
 
@@ -179,4 +194,4 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 
 ## 当前运营判断
 
-源码测试与隔离部署/备份模拟通过；公网 HTTPS 入口当前正常。但这不足以证明系统已达到完整运营状态：OSS 异地恢复、SMTP 实际投递、隔离六角色 E2E、旧私钥轮换仍未闭环。生产开放前必须完成并留存这些证据。
+源码测试与隔离部署/备份模拟通过；本分支后端全量 206 tests、935 assertions 通过，QA-07 在本分支已修复但未上线；历史公网 HTTPS 只读探测曾正常。但这不足以证明系统已达到完整运营状态：本分支未推送/合并/部署，OSS 异地恢复、SMTP 实际投递、隔离六角色 E2E、旧私钥轮换仍未闭环。生产开放前必须完成并留存这些证据。前端本轮测试 4/4、typecheck 通过；隔离 worktree 未安装前端依赖，lint/build 无法在该 worktree 完成，不用主工作区不匹配依赖强行替代。
