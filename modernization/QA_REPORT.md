@@ -276,3 +276,11 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - 只读查询 `system_settings` 的非 secret 键确认：专家评分开关开启、随机分配开启、`review.expert_assignment.count=3`、`mail.mailer=log`；没有读取 SMTP/OSS 凭据值。
 - 尝试通过 `php artisan tinker` 统计生产配置时发现该发行环境没有 Tinker 命令；该尝试未执行查询。后续只读查询在正确 Composer bootstrap 后成功。另一次初始 bootstrap 顺序错误产生 PHP 异常但未写入数据。
 - 当前生产正式运营阻断项：公开正式批次为 0；approved 专家数不足当前随机派单人数；SMTP 尚未配置和实际投递；OSS 下载/隔离恢复演练缺失；六角色浏览器业务闭环仍未用独立 cookie 环境完成。除正式批次业务参数与 SMTP 运维参数外，其他验收仍需取得真正隔离的浏览器/恢复目标和审计证据。
+
+## 线上公开与角色 Smoke 复测（2026-10-17）
+
+- 本地执行 `E2E_BASE_URL=https://nxm.zlck888.com E2E_RUN_ID=20261017-readonly-public npm run e2e -- --grep public`（PowerShell 分别设置环境变量后执行）：`2 passed (4.2s)`。覆盖公开首页登录入口/内容，以及验证码和公开 API 状态、未认证受保护 API 的 401 JSON、敏感路径 404。
+- 完整 smoke 命令 `E2E_BASE_URL=https://nxm.zlck888.com E2E_RUN_ID=20261017-role-smoke-audit npm run e2e`：`2 passed, 8 skipped (3.9s)`。通过项与公开筛选相同；六个角色页面/登录、专家认证权限 API 和超管首页/安全中心因本机缺少 `E2E_*` 凭据而 skip。skip 不能作为角色验证通过。
+- 原始报告目录：`modernization/e2e/reports/runs/20261017-readonly-public/`、`modernization/e2e/reports/runs/20261017-role-smoke-audit/`。
+- 既有 GitHub Actions 在线 E2E workflow 需要 GitHub Secrets 中六角色凭据并手动 dispatch；本机 `gh auth status` 为 `You are not logged into any GitHub hosts`，不能触发该 workflow。本轮未从服务器读取/复制 root-only 密码，也未在继承超管 cookie 的共享浏览器输入测试账号。
+- 生产未产生项目、审核、评分、验收或其他业务写入；只读测试没有解决正式批次、专家数量、SMTP 实投、OSS 隔离恢复等运营门槛。
