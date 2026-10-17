@@ -277,6 +277,42 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 
 以上未验证项继续保持原报告中的运营阻断级别，不以页面可打开替代业务闭环证据。
 
+### 生产六角色只读 API 复核（2026-10-17 追加）
+
+通过本站服务器本机读取 `/root/nxm-e2e-ops-20261016.credentials.json`（文件权限 `600`），只向本站 API 发起登录和 GET 请求；脚本没有输出密码、没有创建项目、没有提交审核、没有修改配置。
+
+六角色登录结果：
+
+```text
+unit         200 login_ok
+county       200 login_ok
+department   200 login_ok
+expert       200 login_ok
+admin        200 login_ok
+super_admin  200 login_ok
+```
+
+权限矩阵关键结果（`auth/me; projects; reviews/tasks; acceptance; lifecycle/expert-certifications; settings/groups`）：
+
+```text
+unit        200;403;403;200;403;403
+county      200;200;200;200;403;403
+department  200;200;200;200;403;403
+expert      200;200;200;200;200;403
+admin       200;200;200;200;403;403
+super_admin 200;200;200;200;200;200
+```
+
+生产运行只读结果：
+
+```text
+current: /www/wwwroot/nxm.zlck888.com/releases/20261017173454
+queue: INFO No failed jobs found.
+migrations: all registered migrations Ran
+```
+
+该矩阵证明认证和接口级角色隔离当前可用，但不替代六角色事务闭环；由于公开正式批次仍为空，本轮没有向生产写入项目或审核数据。
+
 - 隔离 checkout 后端全量：复用主工作区现成 Composer vendor，但 PHPUnit bootstrap 将 `App`、`Tests`、Factories、Seeders 和 Laravel base path 均显式指向当前隔离 checkout；`OK (211 tests, 947 assertions)`，退出码 0。临时 bootstrap 已删除，主工作区和依赖未修改。
 - 当前 checkout 前端：`npm run lint`、`npm run typecheck`、`npm test`（4/4）和 `npm run build` 均退出码 0。
 - 当前 checkout `git diff --check` 通过；未生成跟踪文件变更。上述为代码自动化证据，不替代生产六角色闭环、真实 SMTP 或 OSS 恢复验收。
