@@ -26,8 +26,13 @@
     <el-table :data="batches" border v-loading="loading">
       <el-table-column prop="name" label="批次名称" min-width="220" />
       <el-table-column prop="code" label="编号" width="150" />
-      <el-table-column label="状态" width="100">
-        <template #default="{ row }"><el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag></template>
+      <el-table-column label="状态 / 申报资格" min-width="170">
+        <template #default="{ row }">
+          <div class="batch-status-cell">
+            <el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}</el-tag>
+            <span class="muted">{{ applicationEligibility(row) }}</span>
+          </div>
+        </template>
       </el-table-column>
       <el-table-column prop="starts_at" label="开始时间" width="170" />
       <el-table-column prop="ends_at" label="结束时间" width="170" />
@@ -180,6 +185,27 @@ function emptyForm() {
 
 function statusMeta(value) {
   return statusLabels[value] || { label: value || '-', type: 'info' }
+}
+
+function applicationEligibility(batch, now = new Date()) {
+  let metadata = batch?.metadata || {}
+  if (typeof metadata === 'string') {
+    try {
+      metadata = JSON.parse(metadata)
+    } catch {
+      metadata = {}
+    }
+  }
+  const identity = `${batch?.code || ''} ${batch?.name || ''}`.toUpperCase()
+  if (batch?.code === 'HISTORY-DEFAULT') return '历史默认批次，不可申报'
+  if (metadata.e2e === true || identity.includes('E2E-')) return '测试批次，不可申报'
+  if (batch?.status !== 'open') return '当前不可申报'
+
+  const startsAt = batch?.starts_at ? new Date(batch.starts_at) : null
+  const endsAt = batch?.ends_at ? new Date(batch.ends_at) : null
+  if (startsAt && !Number.isNaN(startsAt.getTime()) && startsAt > now) return '尚未开始申报'
+  if (endsAt && !Number.isNaN(endsAt.getTime()) && endsAt < now) return '申报时间已结束'
+  return '当前可申报'
 }
 
 function dictionaryOptionValue(item) {
