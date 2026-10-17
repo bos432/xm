@@ -982,3 +982,12 @@ exit code: 0
 - GitHub Actions 对隔离分支提交 `aaa3c2a243987fa6b708f23a18a4a9ea8068ddae` 的 workflow run `39059076625` 显示 `completed successfully`；`mysql57-migrations`、`backend`、`frontend`、`deployment-safety` 四个 job 均显示成功。证据页：https://github.com/bos432/xm/actions/runs/39059076625 。该 run 只验证候选分支 CI，不代表候选已合并或部署。
 - `git ls-remote` 确认隔离分支为 `aaa3c2a243987fa6b708f23a18a4a9ea8068ddae`，`main` 仍为 `e0f067530f6f50a7ddb4069c00ef51ea32016241`。生产首页、`/login`、`/dashboard`、`/projects`、`/application-batches` HEAD 均返回 HTTP 200；登录验证码 API 返回 HTTP 200 并生成算术题；公开正式批次 API `GET /api/public/application-batches/open` 返回 HTTP 200、响应 `[]`。这些是匿名入口/路由健康证据，不是登录后业务闭环证据。
 - 当前生产仍未具备正式开放条件：无公开申报批次；正式认证专家及派单容量未确认；六角色完整审核/评分/验收 UI 闭环未验收；SMTP 实际投递未验证；OSS 下载与隔离恢复未完成；历史证书私钥的轮换/撤销证明未取得。不得开放正式申报或把候选分支标记为已上线运营。
+
+### 生产主机 PHP 8.3 隔离回归（2026-10-18）
+
+- 通过已登录宝塔终端只使用本站 release 候选分支 `codex/composer-security-fix`，将源码克隆至唯一临时前缀 `/tmp/nxm-release-check-qa`；未访问 production `.env`、未连生产 MySQL、未切换 `current`、未触碰 Nginx/PHP-FPM/MySQL/其他站点。
+- 服务器默认 `php` 指向 PHP 8.4 CLI，缺少 `fileinfo`；使用明确的 `/www/server/php/83/bin/php` 后，依赖安装成功。PHP 8.3.30 环境具备 `fileinfo`、`pdo_mysql`、`sqlite3`、`zip`；候选 Composer install 及 Laravel package discovery 成功。`ALLOW_NON_RELEASE_BACKEND=1` 仅用于临时副本的 MySQL 5.7 migration compatibility helper。
+- 在服务器临时副本中 npm CI 安装 169 包成功；前端 lint、Node tests `5/5`、typecheck、Vite production build 全成功。配置的 npm mirror audit endpoint 返回 `404 NOT_IMPLEMENTED`，未改全局 registry；单次使用 `npm audit --registry=https://registry.npmjs.org --audit-level=moderate` 复核为 `found 0 vulnerabilities`。
+- 后端仅使用临时 SQLite 文件执行完整 migrations（10 项均 DONE）、`artisan route:list --except-vendor --json`、PHPUnit `OK (231 tests, 1050 assertions)`、Composer locked audit `No security vulnerability advisories found.`。另有一条首次误写成 `/tmp/.../source` 的 helper 路径导致 `No such file or directory`，随后使用正确的 clone 路径 `/tmp/nxm-release-check-qa/modernization/backend` 重跑并全部通过；无业务副作用。
+- 清理命令确认 `/tmp/nxm-release-check-qa` 与 `/tmp/nxm-composer-home` 均不存在（`ISOLATED_TEMP_CLEANUP_PASS`）。这是 PHP/OS 依赖兼容性和 SQLite 功能回归证据，不是生产备份恢复、生产 MySQL 数据兼容或上线证据。
+- GitHub 真实 MySQL 5.7 migration job 与本机 SQLite 回归均通过，但因不能把生产备份导入生产库且尚无 DBA 隔离 MySQL 目标，仍未完成生产数据副本的 Laravel 11→12 升级/回滚演练。生产 `main` 和 current 保持原样。
