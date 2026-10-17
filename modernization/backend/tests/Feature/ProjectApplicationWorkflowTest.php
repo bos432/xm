@@ -126,6 +126,37 @@ class ProjectApplicationWorkflowTest extends TestCase
             ->assertJsonPath('application_batch_id', $batch->id);
     }
 
+    public function test_legacy_named_e2e_unit_can_submit_project_in_e2e_batch(): void
+    {
+        $unit = Unit::factory()->create();
+        $user = User::factory()->create([
+            'username' => 'e2e_20261016ops_unit',
+            'unit_id' => $unit->id,
+            'role' => 'unit',
+        ]);
+        $batch = ApplicationBatch::create([
+            'name' => 'E2E-PRIVATE 提交流程批次',
+            'code' => 'E2E-PRIVATE-SUBMIT-BATCH',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+            'status' => ApplicationBatch::STATUS_OPEN,
+        ]);
+        Sanctum::actingAs($user);
+
+        $project = Project::create([
+            'unit_id' => $unit->id,
+            'owner_id' => $user->id,
+            'application_batch_id' => $batch->id,
+            'title' => 'E2E-LEGACY-ACCOUNT 提交项目',
+            'status' => Project::STATUS_DRAFT,
+        ]);
+
+        $this->postJson("/api/projects/{$project->id}/submit")
+            ->assertOk()
+            ->assertJsonPath('status', Project::STATUS_SUBMITTED)
+            ->assertJsonPath('current_reviewer_role', 'county');
+    }
+
     public function test_unit_user_can_create_submit_and_withdraw_project(): void
     {
         $unit = Unit::factory()->create();

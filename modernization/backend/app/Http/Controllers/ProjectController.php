@@ -308,7 +308,7 @@ class ProjectController extends Controller
 
         $project->loadMissing(['applicationBatch', 'files']);
         $batch = $project->applicationBatch ?: $this->resolveOpenBatch($project->application_batch_id);
-        if (! $batch->isOpenNow()) {
+        if (! $this->batchIsOpenForApplicant($batch, $request->user())) {
             return response()->json(['message' => '申报批次未开放，不能提交'], 422);
         }
         $this->ensureBatchAllowsProject($batch, $project->only(['category', 'project_type']));
@@ -933,6 +933,27 @@ class ProjectController extends Controller
         }
 
         abort(422, '请选择当前开放的申报批次');
+    }
+
+    private function batchIsOpenForApplicant(ApplicationBatch $batch, User $user): bool
+    {
+        if ($batch->status !== ApplicationBatch::STATUS_OPEN || $batch->isSystemDefault()) {
+            return false;
+        }
+
+        $withinWindow = (! $batch->starts_at || $batch->starts_at->lte(now()))
+            && (! $batch->ends_at || $batch->ends_at->gte(now()));
+
+        if (! $withinWindow) {
+            return false;
+        }
+
+        $isE2eApplicant = $user->role === Role::UNIT && (
+            (bool) ($user->metadata['e2e'] ?? false)
+            || preg_match('/^e2e_\d{8}ops_unit$/i', (string) $user->username) === 1
+        );
+
+        return $isE2eApplicant || ! $batch->isE2e();
     }
 
     private function ensureBatchAllowsProject(ApplicationBatch $batch, array $data): void
