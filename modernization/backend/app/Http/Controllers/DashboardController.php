@@ -92,16 +92,20 @@ class DashboardController extends Controller
             ],
             'registrations' => null,
             'role_focus' => $this->roleFocus($request),
-            'operation_logs' => [
+            'operation_logs' => null,
+            'security' => null,
+            'migration' => null,
+        ];
+
+        if ($request->user()->role === Role::SUPER_ADMIN) {
+            $summary['operation_logs'] = [
                 'recent' => OperationLog::query()
                     ->with('user:id,name,username,role')
                     ->latest()
                     ->limit(6)
                     ->get(),
-            ],
-            'security' => null,
-            'migration' => null,
-        ];
+            ];
+        }
 
         if (in_array($request->user()->role, Role::adminRoles(), true)) {
             $summary['acceptance']['pending_extensions'] = AcceptanceExtension::query()
@@ -134,29 +138,31 @@ class DashboardController extends Controller
                     ->count(),
             ];
 
-            $summary['security'] = [
-                'security_events_24h' => SecurityEvent::query()
-                    ->where('created_at', '>=', now()->subDay())
-                    ->count(),
-                'active_locks' => SecurityLock::query()
-                    ->where('is_active', true)
-                    ->where(function ($query): void {
-                        $query->whereNull('locked_until')->orWhere('locked_until', '>', now());
-                    })
-                    ->count(),
-                'recent_security_events' => SecurityEvent::query()
-                    ->with('user:id,name,username,role')
-                    ->latest()
-                    ->limit(5)
-                    ->get(),
-                'login_throttle_relaxed' => $this->loginThrottleRelaxedStatus(),
-            ];
+            if ($request->user()->role === Role::SUPER_ADMIN) {
+                $summary['security'] = [
+                    'security_events_24h' => SecurityEvent::query()
+                        ->where('created_at', '>=', now()->subDay())
+                        ->count(),
+                    'active_locks' => SecurityLock::query()
+                        ->where('is_active', true)
+                        ->where(function ($query): void {
+                            $query->whereNull('locked_until')->orWhere('locked_until', '>', now());
+                        })
+                        ->count(),
+                    'recent_security_events' => SecurityEvent::query()
+                        ->with('user:id,name,username,role')
+                        ->latest()
+                        ->limit(5)
+                        ->get(),
+                    'login_throttle_relaxed' => $this->loginThrottleRelaxedStatus(),
+                ];
 
-            $summary['migration'] = [
-                'latest_batch' => MigrationBatch::query()->latest()->first(),
-                'preflight' => $this->readJsonReport('legacy-migration-preflight-checklist.json'),
-                'go_live_gate' => $this->readJsonReport('legacy-migration-go-live-gate.json'),
-            ];
+                $summary['migration'] = [
+                    'latest_batch' => MigrationBatch::query()->latest()->first(),
+                    'preflight' => $this->readJsonReport('legacy-migration-preflight-checklist.json'),
+                    'go_live_gate' => $this->readJsonReport('legacy-migration-go-live-gate.json'),
+                ];
+            }
         }
 
         return response()->json($summary);
@@ -225,13 +231,13 @@ class DashboardController extends Controller
                             ->orWhere('metadata', 'like', '%"registration_status": "pending"%');
                     })
                     ->count(),
-                'security_events_24h' => SecurityEvent::query()
-                    ->where('created_at', '>=', now()->subDay())
-                    ->count(),
             ];
 
             if ($user->role === Role::SUPER_ADMIN) {
                 $focus += [
+                    'security_events_24h' => SecurityEvent::query()
+                        ->where('created_at', '>=', now()->subDay())
+                        ->count(),
                     'mail_failed' => MailLog::query()->where('status', 'failed')->count(),
                     'active_locks' => SecurityLock::query()
                         ->where('is_active', true)

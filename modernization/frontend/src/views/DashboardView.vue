@@ -344,12 +344,12 @@ const roleFocusMetrics = computed(() => {
     const items = [
       { label: '待终审项目', value: focus.final_review_pending ?? 0, note: '科技局终审', to: '/reviews?tab=tasks' },
       { label: '待延期处理', value: focus.pending_extensions ?? 0, note: '延期申请', to: '/projects?pending_extension=1' },
-      { label: '注册待审核', value: focus.pending_registrations ?? 0, note: '单位和账号启用', to: '/units?pending_registration=1' },
-      { label: '异常登录', value: focus.security_events_24h ?? 0, note: '24 小时安全事件', to: '/security?keyword=auth' }
+      { label: '注册待审核', value: focus.pending_registrations ?? 0, note: '单位和账号启用', to: '/units?pending_registration=1' }
     ]
 
     if (session.role === 'super_admin') {
       items.push(
+        { label: '异常登录', value: focus.security_events_24h ?? 0, note: '24 小时安全事件', to: '/security?keyword=auth' },
         { label: '邮件失败', value: focus.mail_failed ?? 0, note: '邮件中心待处理', to: '/mail-center' },
         { label: '锁定数量', value: focus.active_locks ?? 0, note: '账号/IP 锁定', to: '/security' }
       )

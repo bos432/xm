@@ -115,6 +115,58 @@ class DashboardSummaryTest extends TestCase
             ->assertJsonPath('reviews.pending', 1);
     }
 
+    public function test_admin_summary_hides_system_operations_details(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        SecurityEvent::create([
+            'type' => 'auth.login_failed',
+            'severity' => 'warning',
+            'ip_address' => '203.0.113.10',
+            'username' => 'private-account',
+            'payload' => ['username' => 'private-account'],
+        ]);
+
+        Sanctum::actingAs($admin);
+
+        $this->getJson('/api/dashboard/summary')->assertOk()
+            ->assertJsonPath('security', null)
+            ->assertJsonPath('migration', null)
+            ->assertJsonPath('operation_logs', null)
+            ->assertJsonMissingPath('role_focus.security_events_24h')
+            ->assertJsonMissingPath('security.recent_security_events.0.ip_address')
+            ->assertJsonMissingPath('operation_logs.recent.0.user.username');
+    }
+
+    public function test_super_admin_summary_includes_system_operations_details(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+        SecurityEvent::create([
+            'type' => 'auth.login_failed',
+            'severity' => 'warning',
+            'ip_address' => '203.0.113.11',
+            'username' => 'audited-account',
+            'payload' => ['username' => 'audited-account'],
+        ]);
+        MigrationBatch::create([
+            'name' => '迁移门禁上下文',
+            'mode' => 'dry_run',
+            'source_path' => 'scripts/mock.sql',
+            'status' => 'blocked',
+        ]);
+        OperationLog::create([
+            'user_id' => $superAdmin->id,
+            'action' => 'auth.login_success',
+            'target_type' => User::class,
+        ]);
+
+        Sanctum::actingAs($superAdmin);
+
+        $this->getJson('/api/dashboard/summary')->assertOk()
+            ->assertJsonPath('security.recent_security_events.0.ip_address', '203.0.113.11')
+            ->assertJsonPath('migration.latest_batch.name', '迁移门禁上下文')
+            ->assertJsonPath('operation_logs.recent.0.action', 'auth.login_success');
+    }
+
     public function test_admin_summary_includes_migration_context(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
@@ -193,11 +245,8 @@ class DashboardSummaryTest extends TestCase
 
         $this->getJson('/api/dashboard/summary')->assertOk()
             ->assertJsonPath('acceptance.pending_extensions', 2)
-            ->assertJsonPath('migration.latest_batch.name', '核心数据预演')
-            ->assertJsonPath('migration.latest_batch.status', 'blocked')
-            ->assertJsonPath('security.security_events_24h', 5)
-            ->assertJsonPath('security.recent_security_events.0.type', 'project_file.invalid_disk')
-            ->assertJsonPath('security.recent_security_events.0.payload.disk', 'public')
-            ->assertJsonPath('security.recent_security_events.1.type', 'project_file.invalid_path');
+            ->assertJsonPath('migration', null)
+            ->assertJsonPath('security', null)
+            ->assertJsonPath('operation_logs', null);
     }
 }
