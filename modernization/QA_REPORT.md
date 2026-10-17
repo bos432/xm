@@ -991,3 +991,30 @@ exit code: 0
 - 后端仅使用临时 SQLite 文件执行完整 migrations（10 项均 DONE）、`artisan route:list --except-vendor --json`、PHPUnit `OK (231 tests, 1050 assertions)`、Composer locked audit `No security vulnerability advisories found.`。另有一条首次误写成 `/tmp/.../source` 的 helper 路径导致 `No such file or directory`，随后使用正确的 clone 路径 `/tmp/nxm-release-check-qa/modernization/backend` 重跑并全部通过；无业务副作用。
 - 清理命令确认 `/tmp/nxm-release-check-qa` 与 `/tmp/nxm-composer-home` 均不存在（`ISOLATED_TEMP_CLEANUP_PASS`）。这是 PHP/OS 依赖兼容性和 SQLite 功能回归证据，不是生产备份恢复、生产 MySQL 数据兼容或上线证据。
 - GitHub 真实 MySQL 5.7 migration job 与本机 SQLite 回归均通过，但因不能把生产备份导入生产库且尚无 DBA 隔离 MySQL 目标，仍未完成生产数据副本的 Laravel 11→12 升级/回滚演练。生产 `main` 和 current 保持原样。
+
+### OSS 现存备份只读下载完整性验证（2026-10-18）
+
+- 通过已登录宝塔本站 root 终端，读取 Laravel RuntimeConfig 并仅在 PHP 进程内解密 OSS 连接配置；未打印密钥、访问令牌、数据库内容或用户文件名。使用 OSS GET 只读获取本站前缀下既有备份对象 `nxm-database-20261018-021001.sql.gz`（84,796 bytes）和 `nxm-private-files-20261018-021001.tar.gz`（1,639,960 bytes）。未 PUT、覆盖或删除 OSS 对象。
+- 两份下载均生成 SHA-256；`gzip -t` 均通过。数据库压缩归档可以被 gzip 完整解压（未导入、未输出 SQL 内容）；私有文件 tar 目录成功枚举 29 项，并逐项拒绝绝对路径及 `..` 路径穿越。仅做清单结构检查，没有解压或改写生产文件。
+- 临时下载目录 `/tmp/nxm-oss-check-20261018` 与脚本 `/tmp/nxm-oss-check.php` 已用终端命令确认均不存在（`CHECK_SCRIPT_ABSENT`、`CHECK_DIR_ABSENT`）。没有创建新 MySQL 实例；生产主机已有多个 mysqld 进程，避免额外负载和端口/资源冲突。
+- 这证明两个特定现存 OSS 对象目前可读取且压缩/归档结构完整，不证明 SQL 可导入生产版本 MySQL、附件可安全恢复、数据库与文件备份时间点一致，或恢复后的应用可启动。没有隔离 MySQL 目标，真实备份恢复仍为 P0 灾备门禁。
+- 同一线上验收详情只读查看了既有 E2E 记录 `E2E-20260630-103223`：详情显示单位提交、区县审核、部门审核、专家评审、管理员终审关闭和延期已通过记录；说明此前保留的这条 E2E 链路可回看。该记录的“验收材料”显示 `No Data`，因此不能证明有验收附件被提交并能下载；本轮没有重新创建项目、提交或改变业务数据，也没有用该记录冒充当前全角色验收通过。
+
+### 当前生产运营配置复核（2026-10-18，只读）
+
+- 超管浏览器访问 `/application-batches` 并点击“刷新”：正式批次“测试 / 001”显示“开放”但“申报时间已结束”；其余 4 个 `E2E-*` 项都显示“测试批次，不可申报”，另有“历史默认批次”显示“历史默认批次，不可申报”。因此当前没有可供公众真实申报的有效正式批次；没有替业务方创建或开放批次。
+- 超管浏览器访问 `/lifecycle?tab=expert_certifications`：当前列表只显示 2 个已通过认证的 E2E 专家账号；审核与评分设置页显示默认专家人数 3。两名测试专家不能作为正式专家资源，也不足以满足 3 人派单。
+- 超管浏览器访问 `/settings?group=mail`：Mailer 为 `log`，SMTP 主机、用户名、发件邮箱均未配置；本轮不发送邮件，因此通知投递未验证。
+- 超管浏览器访问 `/settings?group=review`：页面实际显示区县、部门、专家、管理员终审评分开关以及专家组随机分配和人数配置，证明配置入口当前可访问；本轮未点击保存或改变配置。
+- 上述页面浏览器控制台未观察到 error/warn；这是页面加载时的控制台观察，不是 API 全面错误率或日志/并发/压力测试。
+- 更新证据已提交本地隔离分支 `cabd04ca8a4c7887c9573523ebed3107b97b036b`。`git push`（HTTPS/HTTP 1.1）在 443 连接超时，`git ls-remote` 亦未能连通；因此该提交未到 GitHub，不得合并或部署。本轮所有生产检查均为 GET/页面读取；未产生生产业务写入或共享服务操作。
+
+### 本机候选分支复跑门禁（2026-10-18）
+
+- 前端命令：`npm run lint; npm test; npm run typecheck; npm run build`（工作目录 `modernization/frontend`）。结果：lint exit 0；Node tests `5 passed, 0 failed`；typecheck exit 0；Vite 8.0.16 构建 `1628 modules transformed`、`built in 481ms`，exit 0。
+- 前端安全审计命令：`npm audit --registry=https://registry.npmjs.org --audit-level=moderate`。完整摘要：`found 0 vulnerabilities`，exit 0。
+- 后端命令：`php vendor/bin/phpunit -c phpunit.xml`（工作目录 `modernization/backend`，PHP 8.3.30、PHPUnit 11.5.57）。输出：`OK (231 tests, 1050 assertions)`，exit 0。
+- 本机未找到 Composer CLI/PHAR，故未独立重跑 `composer audit`；也未加载 Xdebug/PCOV，未产生 PHPUnit coverage 百分比及高风险文件逐文件覆盖排行。这两项仍须由远端 CI/装有 Composer 与 coverage driver 的隔离环境验证，不能略称全门禁完成。
+- 相对 `origin/main` 的候选差异统计为 `16 files changed, 1697 insertions(+), 1588 deletions(-)`；只涉及 `.github/workflows` 和 `modernization/` 下代码、报告、运行手册。`git diff --check origin/main...HEAD` 无输出且 exit 0。
+- 文档 SHA 已 amend 为本地 `e3f193b1bf2f87314b1abd6c6a10bbe8acb722df`（父提交 `39a11d0d30fc18442b828a2bb63dda31a0f5b774`）；本地分支相对 `origin/codex/composer-security-fix` ahead 1。GitHub 443 连接失败，最新 SHA 尚未推送，故没有新的 Actions 证据。
+- 超管只读打开 `/reviews?scope=visible`：待审核列表显示 `No Data`，控制台未观察到 error/warn。这只表示当前登录超管视图没有其可见待办；不是专家/区县/部门各角色待办队列验证，也不是审结流程可用性的证明。
