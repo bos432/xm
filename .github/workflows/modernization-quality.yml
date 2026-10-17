@@ -70,5 +70,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Verify isolated release switch and rollback
+      - name: Validate deployment shell syntax
+        run: bash -n modernization/deploy/deploy.sh modernization/deploy/site-backup.sh modernization/deploy/tests/site-backup-test.sh modernization/deploy/tests/deploy-release-safety-test.sh modernization/deploy/tests/deploy-rollback-test.sh modernization/deploy/tests/mock-command.sh
+      - name: Verify backup and OSS failure handling
+        run: bash modernization/deploy/tests/site-backup-test.sh
+      - name: Verify deployment backup, switch, and rollback safety
+        run: bash modernization/deploy/tests/deploy-release-safety-test.sh
+      - name: Verify release isolation and rollback
         run: bash modernization/deploy/tests/deploy-rollback-test.sh

@@ -947,3 +947,13 @@ exit code: 0
 ```
 
 修复提交前的初始回归曾暴露测试注入变量未正确透传、trap 未清掉预备临时文件两个问题；均已修复并由最终脚本模拟覆盖。最终全量门禁结果列于下方；待提交新 SHA 的远端 CI 结束后，再评估进入 staging，不直接生产部署。
+
+## 新 SHA CI 与隔离合成恢复演练（2026-10-18）
+
+- 已成功推送候选提交 `7c8c5ca54876f9fb777eb6768be6b87e2abdf161` 至 `codex/composer-security-fix`。GitHub Actions `39057209346`（Modernization CI）及 `39057209444`（Modernization Quality Gate）均 completed/success；CI 必需前端、后端和部署安全 job 全部 success，Optional online E2E 按本轮无生产写入边界为 skipped。
+- 仅本机创建合成 schema 恢复实验：MariaDB `12.3.2`，随机临时 datadir 和端口 `37817`，`bind_address=127.0.0.1`；无生产凭据、无生产备份或业务数据。候选 Laravel 11 项 migration 全部成功，产生 41 张表；导出后在隔离目标库恢复得到 41 张表、54 个外键约束、migrations 记录 11 条。实例由本轮进程停止，PID 退出，端口复核关闭。
+- 首次按默认外键检查导入，因 mysqldump 表顺序导致先建 referencing table 而失败；第二次仅在隔离目标导入连接使用 `FOREIGN_KEY_CHECKS=0`，恢复后核对外键元数据数量。此经验已加入隔离恢复 runbook。该演练没有真实业务行数据，不证明生产 dump 可恢复、外键实际行数据一致，也不证明 OSS 可下载；生产隔离恢复仍待 DBA 提供受限目标和真实归档。
+- 为避免已部署脚本无条件设置健康命令中的数据库环境这一外部风险，实验使用单次命令将环境只指向本机隔离库；未启用 Laravel Seeder、队列、邮件、OSS 写入或外部回调。
+- 本机实验初始化失败的测试目录均留在随机 Temp 目录作诊断，没有清理既存 MariaDB 安装数据目录；失败的服务进程均确认已退出，无测试端口监听。早先一次未启动实例的临时目录因本机策略拒绝删除而保留，不存在对应 mysqld/mariadbd 进程或监听端口。
+- 生产站点只读 TLS 检查：证书 `CN=nxm.zlck888.com`，notAfter `2027-01-12T10:59:59Z`，thumbprint `53F1FFCF82C87B5375B5ECE4B91314D6F0D9CACF`。QA 报告没有找到历史暴露旧私钥已向 CA 撤销/作废的证据；该安全处置仍未闭环，不能以当前新证书匹配替代旧密钥撤销证明。
+- 当前候选未部署。即使候选 CI 成功且合成 schema dump/restore 通过，正式运营仍被真实 OSS 归档恢复、六角色完整流程、SMTP 实投、足量正式认证专家/开放批次、容量与灾备恢复、历史暴露私钥处置阻断。
