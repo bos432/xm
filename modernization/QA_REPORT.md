@@ -480,3 +480,12 @@ PowerShell 对 `/`、`/login`、`/api/auth/captcha`、`/api/public/homepage`、`
 - 后续网络复核：`Resolve-DnsName github.com -Type A` 返回 `20.205.243.166`；`Test-NetConnection github.com -Port 443 -InformationLevel Quiet` 返回 `TCP connect ... failed`、`False`。目前本地 `main` 基点 `cdc993a` 后有修复提交 `71b3ad4` 和报告提交 `7c6fc66`、`5851af5`；远端 `main` 未更新。推送失败期间没有尝试绕过 GitHub 或直接上传服务器。
 - 本次修复从 `origin/main` 文档提交 `cdc993a` 直接创建单独提交，未夹带隔离分支上其他领先提交。`modernization/frontend/dist` 为构建产物且被忽略，不进入提交。
 - 最新运营门槛仍为：公网正式开放批次 `[]`；可确认的认证记录只有 2 条 E2E 专家；SMTP 未实投；OSS GET/隔离恢复、六角色业务闭环未验收。当前不能开放正式申报。
+
+## 批次资格提示发布及线上复验（2026-10-17 17:35 UTC+8）
+
+- GitHub 网络恢复后，`git fetch origin main` 确认远端仍为 `cdc993a`，本地提交以其为祖先快进推送：`cdc993a..0966098 HEAD -> main`；`git ls-remote origin refs/heads/main` 返回 `0966098d15374fd25e09713c54904aa65b29308a`。
+- 仅对 `/www/wwwroot/nxm.zlck888.com` 执行 `deploy.sh`，配置 `BRANCH=main`、`RUN_SEED=0`、`RUN_MIGRATIONS=0`。部署日志：`Database migrations skipped`、`Activated the release through the site current symlink; no shared services were reloaded`、`Health HTTP login passed for [health_check_user]; token revoked via logout.`、`Deployment complete: 20261017173454`。Composer 镜像部分包返回 404 后脚本回退并成功完成依赖安装；没有改锁文件或迁移数据库。
+- 线上超管 `/application-batches` 实测：普通过期批次显示“申报时间已结束”；E2E 批次显示“测试批次，不可申报”；`HISTORY-DEFAULT` 显示“历史默认批次，不可申报”。浏览器控制台错误 `[]`。没有保存表单或改动批次。
+- 公网只读 GET：`/`、`/login`、`/api/auth/captcha`、`/api/public/homepage`、`/api/public/application-batches/open`、`/up` 均 HTTP 200；开放批次正文仍是 `[]`；匿名 `/api/auth/me`、`/api/projects` 均 HTTP 401。
+- 宝塔发布后本站检查：`CURRENT=/www/wwwroot/nxm.zlck888.com/releases/20261017173454`、`NGINX=active`、`MYSQL=active`、`FAILED_JOBS=0`、本站 `artisan queue:work database --queue=default` worker 数 `2`、`OPEN_BATCHES=[]`。部署脚本未重载共享服务；其他站点未改动。
+- 此次只解决批次状态“开放”与实际申报资格不一致造成的后台误读，不会创建正式批次。当前正式运营仍不就绪：无正式公开批次；两条已通过认证均是 E2E 专家且少于 3 人派单配置；SMTP 未配置实投；OSS GET/隔离恢复未验证；六角色完整真实业务浏览器闭环未验收。
