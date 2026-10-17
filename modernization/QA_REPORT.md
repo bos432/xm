@@ -279,7 +279,7 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 
 ### 生产六角色只读 API 复核（2026-10-17 追加）
 
-通过本站服务器本机读取 `/root/nxm-e2e-ops-20261016.credentials.json`（文件权限 `600`），只向本站 API 发起登录和 GET 请求；脚本没有输出密码、没有创建项目、没有提交审核、没有修改配置。
+通过本站服务器本机读取 `/root/nxm-e2e-ops-20261016.credentials.json`（文件权限 `600`），向本站 API 发起登录和 GET 请求。登录/矩阵脚本未输出密码；但此前的凭据结构检查误打印了账号对象，包含密码，属于测试操作安全事件，不能描述为全程无明文暴露。本节阶段未创建项目、提交审核或修改配置；后续生产测试写入另见追加记录。
 
 六角色登录结果：
 
@@ -295,11 +295,11 @@ super_admin  200 login_ok
 权限矩阵关键结果（`auth/me; projects; reviews/tasks; acceptance; lifecycle/expert-certifications; settings/groups`）：
 
 ```text
-unit        200;403;403;200;403;403
+unit        200;200;403;200;403;403
 county      200;200;200;200;403;403
 department  200;200;200;200;403;403
 expert      200;200;200;200;200;403
-admin       200;200;200;200;403;403
+admin       200;200;200;200;200;403
 super_admin 200;200;200;200;200;200
 ```
 
@@ -311,7 +311,75 @@ queue: INFO No failed jobs found.
 migrations: all registered migrations Ran
 ```
 
-该矩阵证明认证和接口级角色隔离当前可用，但不替代六角色事务闭环；由于公开正式批次仍为空，本轮没有向生产写入项目或审核数据。
+矩阵只证明这些账号在采样时各接口返回上述状态，不证明返回数据范围正确，也不等于所有授权符合设计。单位可访问自己的项目接口；业务管理员的专家认证接口返回 200，需对照预期角色权限核验是否授权过宽。该阶段未写业务数据，后续已使用 E2E 批次新增项目和审核记录，不能将本段理解为整轮均只读。
+
+## E2E 提交缺陷修复与后续验证（2026-10-17）
+
+### 生产状态与范围
+
+- 保留测试项目 ID `11`，名称 `E2E-20261017-194934-FULL-FLOW`，批次 ID `2`，不删除。
+- 修复前：创建 201，提交 422，错误为“申报批次未开放，不能提交”。当时区县、部门返回 403，因为项目尚为草稿，不能将其计为审核成功。
+- 根因：创建的批次解析允许专用 E2E 单位，而提交调用 `ApplicationBatch::isOpenNow()`，后者排除了所有 E2E 批次。
+- 修复提交 `5f30408` 已推送 main，并仅部署本站 release `20261017211540`。发布输出明确跳过迁移、未 reload 共享服务，健康 HTTP 登录通过。
+- 修复后的生产调用输出如下；接口路径依次是 `POST /api/projects/11/submit`、`POST /api/projects/11/reviews`（区县、部门分别独立登录）：
+
+```text
+SUBMIT 200 submitted county None
+COUNTY 201 reviewing department None
+DEPARTMENT 201 reviewing expert expert_count 3 assigned_ids [38, 27, 32] None
+```
+
+- 浏览器点击项目业务 -> 全部项目 -> 本轮 E2E 行的详情，实际可见：
+
+```text
+当前：专家评审中
+下一步：等待 3 位专家全部评分后，系统自动流转到管理员终审。已完成 0 位。
+分配专家 3；已评分 0；平均分 -；最高/最低 - / -
+区县审核：通过；部门审核：通过
+终审支持：不支持
+```
+
+截图：`qa/evidence/20261017/project-11-expert-pending.png`。这是超管只读详情证据，不是专家本人评分页面证据。当前尚未提交任何专家评分、终审或验收，完整闭环依然未完成。
+
+### 新增边界回归
+
+新增 `tests/Feature/E2eBatchSubmissionBoundaryTest.php`，只使用 SQLite 测试库。覆盖普通单位不能提交 E2E 批次、两种专用 E2E 身份可提交、过期/未来/关闭/归档批次被拒、带 E2E 标记的历史归集批次仍被拒；拒绝后不得改变草稿状态/提交时间或生成成功提交日志。
+
+命令（工作目录 `modernization/backend`）：
+
+```powershell
+php vendor/bin/phpunit -c phpunit.xml --filter E2eBatchSubmissionBoundaryTest
+php vendor/bin/phpunit -c phpunit.xml
+php vendor/bin/pint --test tests/Feature/E2eBatchSubmissionBoundaryTest.php
+php vendor/bin/phpunit -c phpunit.xml --coverage-text
+```
+
+关键输出：
+
+```text
+Boundary suite: OK (8 tests, 44 assertions), exit 0
+Full suite: OK (225 tests, 1012 assertions), exit 0
+Pint: PASS 1 file, exit 0
+Coverage:
+There was 1 PHPUnit test runner warning:
+1) No code coverage driver available
+WARNINGS!
+Tests: 225, Assertions: 1012, Warnings: 1.
+exit 1
+```
+
+覆盖率不可得；按本轮硬性验收要求，此项仍为 P0 测试门禁阻断，不能跳过或用单测通过数代替百分比。高风险文件 TOP5 仍只是静态候选，非实际未覆盖排名。
+
+### 追加缺陷与缺失证据
+
+| ID | 严重级 | 模块 | 复现命令/动作 | 实际 vs 预期 | 修复建议 |
+| --- | --- | --- | --- | --- | --- |
+| QA-08 | P1（修复已上线） | E2E 申报 | 专用 E2E 单位 `POST /api/projects` 后 `POST /api/projects/{id}/submit` | 创建成功但提交被批次资格校验拒绝；预期同一授权规则 | `5f30408` 已修复并生产复测提交成功；8 项边界回归通过 |
+| QA-09 | P2 | 详情/终审展示 | 超管打开项目 11 详情 | 尚在专家阶段、无终审记录，却显示“终审支持：不支持”；预期“尚未终审/待确定” | 按终审记录是否存在区分未决定与决定不支持；未修改源码 |
+| QA-10 | P1 安全事件 | 测试操作/凭据 | 凭据结构检查曾把整个账号对象打印到终端 | 六个 E2E 账号密码出现在终端和工具截图；root:600 不能消除历史泄露 | 按可能暴露处理；通过受控渠道轮换六个测试密码、撤销测试 token 并更新 root-only 文件；未经执行不能声称已处置。报告不记录密码 |
+| QA-11 | 待核验 | 专家认证授权 | 业务管理员 `GET /api/lifecycle/expert-certifications` | 实际 200，旧报告误写为 403；预期须对照正式角色权限确认 | 复核角色权限及数据范围，不能仅凭 200 判定安全 |
+
+后续阻断：专家分配为 38、27、32，当前受控文件仅含专家 38，尚缺专家 27/32 的现有登录凭据；不能冒充专家、重置未知账号或降低专家人数制造闭环。正式批次、SMTP 真实投递、OSS 下载/隔离恢复、六角色 UI 闭环和截图版完整交付仍未完成。公开正式批次为空不妨碍已授权 E2E 批次验收，但不得把 E2E API 流程当作正式业务或完整 UI 验收。
 
 - 隔离 checkout 后端全量：复用主工作区现成 Composer vendor，但 PHPUnit bootstrap 将 `App`、`Tests`、Factories、Seeders 和 Laravel base path 均显式指向当前隔离 checkout；`OK (211 tests, 947 assertions)`，退出码 0。临时 bootstrap 已删除，主工作区和依赖未修改。
 - 当前 checkout 前端：`npm run lint`、`npm run typecheck`、`npm test`（4/4）和 `npm run build` 均退出码 0。
