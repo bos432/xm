@@ -477,5 +477,6 @@ PowerShell 对 `/`、`/login`、`/api/auth/captcha`、`/api/public/homepage`、`
 - 新增 6 个纯函数断言，覆盖 E2E、历史默认、已过期、未开始、有效时间窗和关闭批次。
 - 前端验证：`npm run lint`、`npm run typecheck`、`npm test`（5/5）及 `npm run build` 全部通过，Vite 8.0.16 构建 1628 个模块成功。
 - 提交 `71b3ad4 fix: clarify application batch eligibility` 已在本地创建。两次 `git push origin HEAD:main` 均失败：`Failed to connect to github.com port 443 after 210xx ms: Could not connect to server`；已尝试 Git `http.sslBackend=schannel` 仍失败。故该修复**尚未推送或部署**，不能声称线上已生效；待网络恢复后推送，再按本站 release 流程以 `RUN_SEED=0`、`RUN_MIGRATIONS=0` 发布并回归。
+- 后续网络复核：`Resolve-DnsName github.com -Type A` 返回 `20.205.243.166`；`Test-NetConnection github.com -Port 443 -InformationLevel Quiet` 返回 `TCP connect ... failed`、`False`。目前本地 `main` 基点 `cdc993a` 后有修复提交 `71b3ad4` 和报告提交 `7c6fc66`、`5851af5`；远端 `main` 未更新。推送失败期间没有尝试绕过 GitHub 或直接上传服务器。
 - 本次修复从 `origin/main` 文档提交 `cdc993a` 直接创建单独提交，未夹带隔离分支上其他领先提交。`modernization/frontend/dist` 为构建产物且被忽略，不进入提交。
 - 最新运营门槛仍为：公网正式开放批次 `[]`；可确认的认证记录只有 2 条 E2E 专家；SMTP 未实投；OSS GET/隔离恢复、六角色业务闭环未验收。当前不能开放正式申报。
