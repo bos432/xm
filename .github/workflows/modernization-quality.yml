@@ -1,0 +1,74 @@
+name: Modernization Quality Gate
+
+on:
+  pull_request:
+    paths:
+      - 'modernization/**'
+      - '.github/workflows/modernization-quality.yml'
+  push:
+    branches: ['**']
+    paths:
+      - 'modernization/**'
+      - '.github/workflows/modernization-quality.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: modernization/backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_sqlite, zip, xml, gd
+          coverage: none
+      - uses: ramsey/composer-install@v3
+        with:
+          working-directory: modernization/backend
+      - name: Validate Composer manifests
+        run: composer validate --no-check-publish
+      - name: Audit PHP dependencies
+        run: composer audit
+      - name: Run backend feature tests
+        run: vendor/bin/phpunit --no-coverage
+      - name: Dry-run migrations
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+        run: php artisan migrate --pretend --force
+      - name: Validate API route registration
+        run: php artisan route:list --except-vendor --json > /tmp/modernization-routes.json
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: modernization/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: modernization/frontend/package-lock.json
+      - run: npm ci
+      - name: Audit frontend dependencies
+        run: npm audit --audit-level=moderate
+      - run: npm run lint
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+
+  deployment-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify isolated release switch and rollback
+        run: bash modernization/deploy/tests/deploy-rollback-test.sh

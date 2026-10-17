@@ -381,7 +381,7 @@ const reviewShortcut = computed(() => {
 })
 
 const baseline = [
-  { area: '框架', current: 'ThinkPHP 3.1.2，旧 API 和大控制器', target: 'Laravel 11 API，按领域拆分控制器和模型' },
+  { area: '框架', current: 'ThinkPHP 3.1.2，旧 API 和大控制器', target: 'Laravel 12 API，按领域拆分控制器和模型' },
   { area: '文件', current: '公开目录存在上传脚本和历史后门风险', target: '统一文件服务、鉴权下载、扩展名和大小限制' },
   { area: '配置', current: '数据库和接口凭据写在 PHP 配置', target: '.env + 配置表，敏感值脱敏展示' },
   { area: '前端', current: '静态模板和旧组件库混杂', target: 'Vue 3 工作台，角色化导航和任务列表' }

@@ -4,7 +4,7 @@ This directory is the new-system workspace for the ThinkPHP 3.1.2 replacement. I
 
 ## What Is Implemented Here
 
-- `backend/`: Laravel 11 source scaffold, API routes, controllers, models, migrations, and security defaults for the core workflow.
+- `backend/`: Laravel 12 source, API routes, controllers, models, migrations, and security defaults for the core workflow. The Laravel 12 dependency security upgrade is currently an isolated candidate and is not yet deployed to production.
 - `frontend/`: Vue 3 + Vite + Element Plus application shell for the rebuilt admin and application portals.
 - `scripts/`: non-destructive legacy risk scanning and migration helper scripts.
 - `docs/`: implementation notes, legacy table mapping, rollout checklist, and acceptance tests.

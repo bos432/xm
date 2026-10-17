@@ -2,7 +2,7 @@
 
 > 文档核对日期：2026-10-12
 >
-> 本次评估的实现代码基线：`4401767`（2026-10-13，生产部署后最终文档修订）
+> 本次评估的实现代码基线：`4401767`（2026-10-13，生产部署后最终文档修订）；2026-10-18 隔离安全升级候选分支尚未发布。
 > 范围：仅 `modernization` 下的 Laravel/Vue 新系统。旧 ThinkPHP 系统作为历史系统，不在本项目开发范围内。
 
 ## 1. 当前结论
@@ -50,7 +50,7 @@
 
 | 路径 | 内容 |
 | --- | --- |
-| `modernization/backend` | Laravel 11、PHP 8.3 API、权限、业务逻辑、迁移、Seeder、Feature tests |
+| `modernization/backend` | 生产部署基线 Laravel 11；隔离安全升级候选 Laravel 12；PHP 8.3 API、权限、业务逻辑、迁移、Seeder、Feature tests |
 | `modernization/frontend` | Vue 3、Vue Router、Pinia、Element Plus、Vite 前端 |
 | `modernization/e2e` | Playwright Chromium 冒烟脚本与运行配置 |
 | `modernization/deploy` | 生产发布脚本及部署说明 |
