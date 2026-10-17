@@ -1039,3 +1039,12 @@ exit code: 0
 - 宝塔计划任务页只读确认本站“队列 worker 守护”任务状态正常、每分钟运行；同页本站数据库及上传备份任务正常，最近一次执行显示 `2026-10-18 02:10:05`。没有编辑/执行任务或改 cron。
 - watchdog 日志尾部含历史 `SQLSTATE[HY000] [2002] Connection refused`（worker 查询 Laravel queue restart cache 时），因此本轮做了只读数据库健康复核：`systemctl is-active mysql` 输出 `active`；127.0.0.1:3306 TCP probe 输出 `OPEN`；以 `www` 用户从当前 release 执行 `php artisan migrate:status` 成功，10 条迁移全部为 `Ran`。不查看凭据、不修改或重启 MySQL。连接拒绝未在当前探测中复现，但日志提示曾发生过瞬时数据库连接失败，应保留监控。
 - 后续报告本地提交截至 `129dfbb241f94fc585ccd9804fe0d532e6f98a42`；本轮 HTTPS/HTTP 1.1 + schannel 推送仍因连接 `github.com:443` 约 21 秒超时而失败。本地后续报告修订尚未推送；无 merge/deploy。
+
+### Queue worker watchdog release-following 回归修复（2026-10-18）
+
+- 最新只读复核又发现运行态回归：`current/backend` 为 `releases/20261017215647/backend`，唯一 worker PID `3827191` 的 cwd 回到旧 release `releases/20261016191109/backend`，失败队列计数为 0。根因是 watchdog 在循环外只 `cd current/backend` 一次，worker 被回收后仍从旧 cwd 重启。
+- 隔离候选修改 `modernization/deploy/queue-worker-watchdog.sh`：把 `cd -P /www/wwwroot/nxm.zlck888.com/current/backend` 放入每轮 worker 启动之前，使每次重启物理解析当前 release；路径不可用则等待后重试。生产 watchdog 和 cron 均未修改。
+- 新增 `queue-worker-watchdog-test.sh` 在唯一临时目录模拟两个 release：第一次 worker 触发 current 原子切换，第二次 worker 必须从新 release cwd 启动。输出：`PASS watchdog re-resolves current release before each worker start`。测试及 shell syntax 检查已加入 CI 的 deployment-safety job。
+- 更新 `security-upgrade-20261018.md` 发布 runbook，明确每次 worker invocation 都须重新解析 current。专用 watchdog 测试、site backup、deploy release safety、deploy rollback 均通过；大范围 lint/build/PHP、Actions 对新 SHA 的结果尚待复跑。候选未部署。
+- 完整本机候选门禁复跑：frontend lint、5/5 Node tests、typecheck、Vite build 通过；PHPUnit `231 tests, 1050 assertions` 通过；shell syntax、watchdog release-following、site-backup、deploy release-safety、deploy rollback、两份 workflow YAML parse、`git diff --check` 均通过。
+- 最新只读生产复核仍显示 `current=.../releases/20261017215647/backend`、唯一 `www` worker PID `3827191` cwd=`.../releases/20261016191109/backend`、失败队列 `0`。因此线上 watchdog 仍是旧脚本；候选修复尚未部署，生产 worker release drift 仍待修复。GitHub 443 对候选提交 `0c276f2059c0c253957492ada18d89aa8524deda` 推送超时，远端 Actions 未执行；不把本机模拟替代 hosted CI，也不直接覆盖线上脚本。

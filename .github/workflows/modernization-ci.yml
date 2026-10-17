@@ -94,7 +94,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate deployment shell syntax
-        run: bash -n modernization/deploy/deploy.sh modernization/deploy/apply-mysql57-compatibility.sh modernization/deploy/site-backup.sh modernization/deploy/tests/site-backup-test.sh modernization/deploy/tests/deploy-release-safety-test.sh modernization/deploy/tests/deploy-rollback-test.sh modernization/deploy/tests/mock-command.sh
+        run: bash -n modernization/deploy/deploy.sh modernization/deploy/queue-worker-watchdog.sh modernization/deploy/apply-mysql57-compatibility.sh modernization/deploy/site-backup.sh modernization/deploy/tests/site-backup-test.sh modernization/deploy/tests/queue-worker-watchdog-test.sh modernization/deploy/tests/deploy-release-safety-test.sh modernization/deploy/tests/deploy-rollback-test.sh modernization/deploy/tests/mock-command.sh
 
       - name: Verify site-local backup safety
         run: bash modernization/deploy/tests/site-backup-test.sh
@@ -104,6 +104,9 @@ jobs:
 
       - name: Simulate site isolation and rollback
         run: bash modernization/deploy/tests/deploy-rollback-test.sh
+
+      - name: Verify queue worker follows current release
+        run: bash modernization/deploy/tests/queue-worker-watchdog-test.sh
 
   online-e2e:
     name: Optional online E2E
