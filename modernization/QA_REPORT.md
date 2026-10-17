@@ -808,3 +808,5 @@ exit 0
 - 当前 Windows checkout 的 `core.autocrlf=true`。直接执行全量 `php vendor/bin/pint --test` 返回失败，报告 `146 files, 131 style issues`，主要是 checkout 换行和既有格式规则差异；本轮未对 146 个文件做大范围格式化，避免无关代码变更。此前针对本轮修改文件的 Pint 检查仍通过。
 - `composer audit` 在本机不可执行，因为没有安装 Composer 命令，仓库也没有 `vendor/bin/composer`；这项依赖审计不能宣称已完成。部署使用的 Composer 依赖安装由服务器上的 `shared/composer.phar` 负责，线上依赖漏洞状态仍需在服务器执行同等审计后确认。
 - 本轮没有修改源码、依赖、生产配置或其他站点，仅追加 QA 报告。上述质量门缺口不影响已运行的 PHP/前端测试，但在正式运营验收记录中保留为未完全验证项。
+
+服务器端补充：本站当前 release 上执行 `/www/server/php/83/bin/php composer.phar audit --no-interaction --format=summary`，完整摘要输出 `Found 50 security vulnerability advisories affecting 13 packages.`。详细输出确认锁定包 `symfony/routing v7.3.0` 有 medium 级 URL Generator 路径遍历 / Host 注入类公告；其他 12 个受影响包尚未逐项导出核对。命令只读，未改 lock/vendor 或运行中服务。该项为生产安全阻断；需在隔离 checkout 用 Composer 漏洞数据库核对 13 包、做最小兼容升级并跑完整测试后，只部署本站。
