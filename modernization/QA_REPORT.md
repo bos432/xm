@@ -363,3 +363,10 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - 只读检查恢复准备：生产主机为 Alibaba Cloud Linux 3，具备 mysql/mysqldump/gzip/tar；未发现可查询的隔离数据库管理连接。尝试 Artisan `tinker` 查询配置时命令不存在；未尝试读取 `.env` 或数据库密码。既有部署手册明确生产 DB 用户没有创建隔离数据库权限。故未执行 OSS 对象 GET、解压或数据库恢复，避免触碰生产库。
 - Chromium UI E2E 生产重试：自发行版 DNF 仓库将 `alsa-lib` RPM 解包到 `/tmp`、只用临时 `LD_LIBRARY_PATH`，没有安装包；Chromium 随后仍因 `libatspi.so.0` 缺失启动失败。临时目录已删除、无测试进程残留。没有改变服务器软件包、服务或其他站点。
 - 两个仍需外部运维条件的验收项：提供最小权限的隔离 MySQL 恢复目标/临时授权；在隔离测试镜像或维护流程内准备 Chromium 所需的完整运行时依赖。正式批次业务参数、真实认证专家以及 SMTP 测试邮箱仍需业务/邮件管理员提供，不能由技术侧伪造。
+
+## Dashboard 系统运行数据角色隔离线上复验（2026-10-17）
+
+- 使用六个专用 E2E 账号分别登录，GET `/api/dashboard/summary` 后只检查 `security`、`migration`、`operation_logs` 三个字段的 null/present 状态，不读取内部统计、日志或安全事件内容；每个账号均登出。
+- `unit/county/department/expert/admin`：Dashboard HTTP 200，三个敏感字段均为 `null`。
+- `super_admin`：Dashboard HTTP 200，三个字段均为非空（内容未读取）。总体 `DASHBOARD_ROLE_ISOLATION=PASS`。
+- 该结果验证本地修复 `5e870b2` 已在生产生效；没有写入业务数据。
