@@ -976,3 +976,9 @@ exit code: 0
 - 为消除生产部署与 CI 各自复制七条 `sed` 造成的漂移，新增 `modernization/deploy/apply-mysql57-compatibility.sh`；`deploy.sh` 与 MySQL 5.7 workflow 均调用同一脚本。默认只接受 `releases/*/backend` 路径，CI 对 workspace 临时副本必须显式设置 `ALLOW_NON_RELEASE_BACKEND=1`；必需 migration 文件缺失则失败退出。
 - `deploy-release-safety-test.sh` 模拟部署成功后检查 release 内 metadata JSON 列已转为 longText、索引键列长度为 191。部署安全、备份、rollback 三套本地 Bash 测试均通过；workflow YAML 解析通过；前端 lint、5/5 单测、typecheck/build/npm audit 通过；PHPUnit 231 tests / 1050 assertions 与 Composer audit 通过。`npm ci` 从 lockfile 安装 167 个包并报告 0 vulnerabilities。
 - 共用脚本尚未进入 GitHub，MySQL 5.7 Docker service job 也未实际执行。当前本机无 MySQL 5.7 和运行中的 Docker engine；GitHub push/API 受网络超时/限流影响，因此此项仍是发布阻断。
+
+## 运营目标继续推进（2026-10-18）
+
+- GitHub Actions 对隔离分支提交 `aaa3c2a243987fa6b708f23a18a4a9ea8068ddae` 的 workflow run `39059076625` 显示 `completed successfully`；`mysql57-migrations`、`backend`、`frontend`、`deployment-safety` 四个 job 均显示成功。证据页：https://github.com/bos432/xm/actions/runs/39059076625 。该 run 只验证候选分支 CI，不代表候选已合并或部署。
+- `git ls-remote` 确认隔离分支为 `aaa3c2a243987fa6b708f23a18a4a9ea8068ddae`，`main` 仍为 `e0f067530f6f50a7ddb4069c00ef51ea32016241`。生产首页、`/login`、`/dashboard`、`/projects`、`/application-batches` HEAD 均返回 HTTP 200；登录验证码 API 返回 HTTP 200 并生成算术题；公开正式批次 API `GET /api/public/application-batches/open` 返回 HTTP 200、响应 `[]`。这些是匿名入口/路由健康证据，不是登录后业务闭环证据。
+- 当前生产仍未具备正式开放条件：无公开申报批次；正式认证专家及派单容量未确认；六角色完整审核/评分/验收 UI 闭环未验收；SMTP 实际投递未验证；OSS 下载与隔离恢复未完成；历史证书私钥的轮换/撤销证明未取得。不得开放正式申报或把候选分支标记为已上线运营。
