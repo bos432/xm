@@ -321,3 +321,11 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - `git diff --check` 通过。当前本地存在 QA 报告更新及 DashboardController 格式化改动，尚未提交。没有生产写操作、没有登录/切换角色、没有创建或推进项目。
 
 **运营结论仍为未就绪：**公开正式批次为空，单位无法开始正式申报；SMTP 实投、OSS 隔离恢复、六角色完整闭环和覆盖率数字仍未验收。基础公开入口健康不等于业务流程全部正常。
+
+## Dashboard 权限修复部署复核（2026-10-17 17:00 UTC+8）
+
+- `193cd17de3fbc7f9692802317236e49cb0386e7d` 已位于 GitHub `main`；通过本站 `modernization/deploy/deploy.sh` 部署，`RUN_SEED=0`、`RUN_MIGRATIONS=0`。release 为 `20261017165958`，current 已切到 `/www/wwwroot/nxm.zlck888.com/releases/20261017165958`。
+- 部署脚本完成依赖安装、Laravel 配置/路由缓存、current 原子切换和站点健康检查；日志关键行：`Health HTTP login passed for [health_check_user]; token revoked via logout.`、`Local credential validation and HTTPS captcha/login/logout health check passed`、`Deployment complete: 20261017165958`、`no shared services were reloaded`。
+- 发布后本站只读核验：`FAILED_JOBS=0`、`NGINX=active`、`MYSQL=active`、首页 `200`、未认证 `/api/auth/me=401`、公开开放批次 `[]`。未触碰其他站点，也没有重载/重启共享服务。
+- 发布后浏览器共享超管会话可访问批次管理页面，页面仍列出多条历史及测试批次状态“开放”，其时间范围包含已过期记录；这与公开开放批次 API 返回 `[]` 并不矛盾，但不应把这些测试/历史记录当作正式申报批次。没有关闭、删除或改名任何批次。
+- 本次上线仅证明 Dashboard 系统运行数据权限修复已部署，以及发布健康门禁通过；不能代表整套业务达到正式运营条件。正式批次仍未配置；认证专家数是否满足实际派单需求、SMTP 实投、OSS 隔离恢复、六角色真实业务全流程仍需单独验收。
