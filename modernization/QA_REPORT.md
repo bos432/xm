@@ -375,3 +375,97 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 
 - 尝试在服务器通过应用运行时读取加密 OSS 配置，并下载最新数据库/私有文件对象到随机名临时目录，仅比较长度和 SHA-256，不解压、不恢复。临时 PHP 脚本因 shell/base64 转义错误，在 PHP 第 6 行解析失败；错误发生在 Laravel bootstrap、配置读取和发起网络请求之前，因此**没有执行 OSS GET，也没有验证对象读取权限**。
 - `/tmp/nxm-oss-verify.php` 后续只读确认不存在；没有创建或保留下载归档，没有变更 OSS 配置/权限或生产数据。该项仍为未验证，不能据此判定 OSS 成功或失败。
+
+## 本轮功能复测（2026-10-17）
+
+### 自动化命令
+
+前端命令：`npm run lint`、`npm run typecheck`、`npm test`、`npm run build`（工作目录 `modernization/frontend`）。
+
+```text
+lint: exit code 0
+typecheck: exit code 0
+tests 4; pass 4; fail 0
+vite v8.0.16; 1628 modules transformed
+✓ built in 6.10s
+exit code: 0
+```
+
+后端命令：`php -d extension=zip vendor/bin/phpunit -c phpunit.xml`（工作目录 `modernization/backend`）。
+
+```text
+OK (216 tests, 965 assertions)
+exit code: 0
+```
+
+部署/备份隔离验证命令：`bash -n ../deploy/site-backup.sh ../deploy/tests/site-backup-test.sh ../deploy/tests/deploy-release-safety-test.sh ../deploy/tests/deploy-rollback-test.sh && bash ../deploy/tests/site-backup-test.sh && bash ../deploy/tests/deploy-release-safety-test.sh && bash ../deploy/tests/deploy-rollback-test.sh`。
+
+```text
+PASS database and private uploads are archived and verified without exposing credentials
+PASS dump failure preserves existing backups and removes partial files
+PASS OSS failure preserves the newly verified local archives and skips retention cleanup
+PASS retention removes only expired archives owned by this site
+PASS successful deploy backs up database, switches current, and does not reload nginx
+PASS failed HTTP login health check restores the previous release
+PASS missing health credentials fail before switching releases
+PASS failed database backup stops before release switch and migration
+PASS empty database backup stops before release switch and migration
+PASS SQLite database backup is made before migration
+PASS relative SQLite path is rejected before migration
+Deployment isolation and rollback checks passed.
+exit code: 0
+```
+
+### 生产只读检查
+
+线上公开浏览器命令：`$env:E2E_BASE_URL='https://nxm.zlck888.com'; $env:E2E_RUN_ID='20261017-functional-smoke'; npm run e2e -- --grep public`。
+
+```text
+ok 1 public homepage exposes portal login and no duplicate old registration link
+ok 2 public and anonymous API probes return safe responses
+2 passed (3.4s)
+exit code: 0
+```
+
+PowerShell 对 `/`、`/login`、`/api/auth/captcha`、`/api/public/homepage`、`/api/public/application-batches/open`、`/up`、`/api/auth/me`、`/api/projects`、`/api/reviews/tasks` 执行只读 GET：
+
+```text
+/ HTTP=200
+/login HTTP=200
+/api/auth/captcha HTTP=200
+/api/public/homepage HTTP=200
+/api/public/application-batches/open HTTP=200 []
+/up HTTP=200
+/api/auth/me HTTP=401
+/api/projects HTTP=401
+/api/reviews/tasks HTTP=401
+```
+
+浏览器当前后台 `/settings?group=backup` 可正常渲染；展示队列驱动 `database`、待处理任务 `0`、失败任务 `0`。OSS 启用开关及 endpoint/bucket/前缀字段正常显示，密钥仅显示掩码占位，本轮未读取/编辑密钥、未点保存。该页面浏览器控制台错误条目为 `[]`。
+
+### 仍未验证 / 运营阻断
+
+- 页面/自动化冒烟不等于每个菜单的端到端业务验证；六角色申报、逐级审核、多专家评分、延期和验收完整 UI 链仍未完成。
+- 正式开放批次仍为 `[]`，单位当前不能开始正式申报；不擅自创建正式业务批次。
+- SMTP 尚未配置且未实投；OSS 对象 GET/隔离恢复仍未完成；不能把已有上传/HEAD 或 shell 模拟当成恢复成功。
+- 覆盖率驱动不可用，覆盖率百分比未知。
+- 本轮没有生产写操作，没有修改应用/系统配置、数据库或其他站点服务。
+
+## 生产运营数据复核补充（2026-10-17）
+
+使用当前已登录的超级管理员后台只读检查：
+
+- `/settings?group=review` 正常渲染。区县/部门/管理员评分开关关闭，专家评分开启，专家组随机分配开启，默认专家人数为 `3`；队列待处理 `0`、失败 `0`。未点击保存。
+- `/lifecycle` 的“专家认证”标签当前显示 `No Data`。这与较早报告所记“曾看到 2 条 E2E 专家认证已通过”不同；当前页面是最新证据，但还不能判断是认证记录后来变化还是接口/筛选异常。结合默认派单 3 人，生产专家可用数量目前无法证明，正式自动派单能力未验收。
+- `/application-batches` 当前显示“测试 001”、多条 `E2E-*` 批次及“历史默认批次”状态为“开放”，部分批次开始/结束日期已过；此前公网 `/api/public/application-batches/open` 返回 `[]`。没有关闭/归档这些历史数据。管理页面状态可能是存储状态，公开接口还按业务可申报条件过滤；需由批次管理页面明确区分“状态开放但时间已过/测试批次不可申报”，避免管理员误以为可以正式申报。
+- 宝塔本站只读检查输出：`CURRENT=/www/wwwroot/nxm.zlck888.com/releases/20261017165958`、`NGINX=active`、`MYSQL=active`；本站 watchdog 与锁保护下可见两个 `artisan queue:work database --queue=default --tries=3 --timeout=90 --sleep=3` 进程。`queue:failed` 未发现失败任务。最新可见备份日志为 `2026-10-17 02:10:01`，记载本地归档校验和 `Uploaded and verified 2 OSS backup objects.`；这仍只是 PUT/HEAD 证据，不是 GET/恢复证据。
+- 宝塔终端曾显示前次 OSS PHP 验证尝试因脚本解析错误退出，随后 `VERIFY_SCRIPT_ABSENT`；本轮没有再尝试传输/下载 OSS 对象，也没有在生产机运行新脚本。
+
+### 新增/更新验收问题
+
+| ID | 严重级 | 模块 | 复现命令/证据 | 实际 vs 预期 | 修复/验收建议 |
+| --- | --- | --- | --- | --- | --- |
+| QA-08 | P1 严重（运营就绪阻断） | 专家认证/随机派单 | 超管打开 `/lifecycle` -> “专家认证”；页面显示 `No Data`；审核评分配置默认人数 `3` | 无法证明有足够认证专家可供随机分配，预期专家库至少满足规则人数且可见 | 先排查专家认证列表 API/数据状态；由业务管理员完成真实专家认证并确认可派单人数，再做隔离项目派单验收；不伪造认证记录 |
+| QA-09 | P2 一般 | 申报批次状态提示 | 超管打开 `/application-batches`；可见过期 E2E/历史批次状态仍为“开放”，公网开放批次 API 为 `[]` | 管理页面“开放”字面状态与当前不可申报结果容易混淆 | 在列表显式显示时间有效性和测试批次标记，避免把历史/测试批次误认为正式可申报；确认后再另行实施，不直接改动生产批次 |
+
+当前是否适合正式开放申报：**否**。可观察到的硬阻断仍包括无正式公开批次、认证专家库当前页面为空、SMTP 未实投、OSS 下载/隔离恢复未验证，以及六角色完整浏览器业务闭环未验收。
