@@ -795,11 +795,11 @@ function formatCurrency(value) {
 function finalSupportText(project) {
   const support = project?.final_support || project?.metadata?.final_support || {}
   const isSupported = support.is_supported === undefined || support.is_supported === null
-    ? '-'
+    ? '待确定'
     : (support.is_supported ? '支持' : '不支持')
   const total = support.total_support_amount_wan ?? support.support_amount_wan
   const supportAmount = total === undefined || total === null || total === ''
-    ? '-'
+    ? '待确定'
     : `合计 ${Number(total || 0).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} 万元（补助 ${Number(support.subsidy_amount_wan || 0)}，贴息 ${Number(support.interest_amount_wan || 0)}，其他 ${Number(support.other_amount_wan || 0)}）`
   return {
     isSupported,

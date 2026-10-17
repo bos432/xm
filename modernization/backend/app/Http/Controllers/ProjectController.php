@@ -773,6 +773,13 @@ class ProjectController extends Controller
         );
         $normalized['support_amount_wan'] = $normalized['total_support_amount_wan'];
 
+        if ($support === []) {
+            $normalized['is_recommended'] = null;
+            $normalized['is_supported'] = null;
+            $normalized['total_support_amount_wan'] = null;
+            $normalized['support_amount_wan'] = null;
+        }
+
         return $normalized;
     }
 
