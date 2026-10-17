@@ -355,3 +355,11 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - 临时 `alsa-lib` RPM/解包目录已删除；确认没有残留 Playwright/Chromium 测试进程。未安装软件包、未改系统配置或服务。服务器 E2E 结果为 1 个公共首页用例失败于浏览器启动、9 个未运行，不能标记通过。
 - 改在隔离的 Windows 验收工作区执行 `$env:E2E_BASE_URL='https://nxm.zlck888.com'; $env:E2E_RUN_ID='20261017-public-final'; npm run e2e -- --grep public`：`2 passed (3.8s)`。该结果只覆盖公开首页与匿名 API，不替代六角色 UI 工作流。
 - 六角色认证、角色身份匹配及只读 API 权限矩阵已通过上一节记录的服务器端 HTTP 测试；完整页面交互路径仍未完成。
+
+## 生产灾备条件只读复核（2026-10-17）
+
+- 只读检查本站 `shared/storage/logs/site-backup.log` 和 `shared/backups/daily`：最近记录 `2026-10-17 02:10:01` 显示本地数据库/私有文件归档校验通过，`Uploaded and verified 2 OSS backup objects.`；本地能看到对应 `nxm-database-20261017-021001.sql.gz`（80,345 bytes）及 `nxm-private-files-20261017-021001.tar.gz`（1,639,960 bytes）。该记录仅证明 PUT 成功且 HEAD `Content-Length` 匹配，未证明 OSS GET 或恢复成功。未输出/读取 AccessKey。
+- 当前 release 的上传命令 `site:backup:oss` 只实现 PUT+HEAD，没有对象下载/恢复功能；本轮没有通过额外命令修改或扩展生产代码。
+- 只读检查恢复准备：生产主机为 Alibaba Cloud Linux 3，具备 mysql/mysqldump/gzip/tar；未发现可查询的隔离数据库管理连接。尝试 Artisan `tinker` 查询配置时命令不存在；未尝试读取 `.env` 或数据库密码。既有部署手册明确生产 DB 用户没有创建隔离数据库权限。故未执行 OSS 对象 GET、解压或数据库恢复，避免触碰生产库。
+- Chromium UI E2E 生产重试：自发行版 DNF 仓库将 `alsa-lib` RPM 解包到 `/tmp`、只用临时 `LD_LIBRARY_PATH`，没有安装包；Chromium 随后仍因 `libatspi.so.0` 缺失启动失败。临时目录已删除、无测试进程残留。没有改变服务器软件包、服务或其他站点。
+- 两个仍需外部运维条件的验收项：提供最小权限的隔离 MySQL 恢复目标/临时授权；在隔离测试镜像或维护流程内准备 Chromium 所需的完整运行时依赖。正式批次业务参数、真实认证专家以及 SMTP 测试邮箱仍需业务/邮件管理员提供，不能由技术侧伪造。
