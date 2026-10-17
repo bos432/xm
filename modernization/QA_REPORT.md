@@ -964,3 +964,9 @@ exit code: 0
 - 只读公网 GET：`https://nxm.zlck888.com/`、`/login`、`/api/auth/captcha`、`/api/public/homepage`、`/up` 均 HTTP 200。此为匿名入口/可用性 smoke，不证明业务账号、权限或项目审批流程。
 - GitHub `main` 只读分支 SHA 仍为 `e0f067530f6f50a7ddb4069c00ef51ea32016241`；候选分支 `codex/composer-security-fix` 位于 `0e145a93a3c18de66048d82bf72a1fc774c3da43`，工作区与远端跟踪分支同步且干净；没有合并、没有部署生产。
 - 发布阻断状态复核：真实生产备份从 OSS 下载并恢复到隔离目标（未完成）；六角色完整提交/审核/多专家评分/终审/验收链（未完成）；SMTP 实际投递（未完成）；公开正式申报批次和足量认证专家（历史只读快照显示未满足，尚无当前复核）；容量/灾备（未完成）；历史明文暴露旧证书私钥的 CA 撤销/作废证明（未找到）。因此“站点现在响应 200”和“候选门禁绿”均不足以授予正式运营签收。
+
+## MySQL 5.7 迁移兼容性门禁（候选增补）
+
+- 风险依据：生产历史只读记录显示 MySQL `5.7.40`；先前 CI 只对 SQLite 做 migration dry-run，本机合成恢复使用 MariaDB `12.3.2`，都不能证明生产 MySQL 5.7 兼容。
+- 在 `.github/workflows/modernization-quality.yml` 增加独立 `mysql57-migrations` 必需 job：GitHub 临时 `mysql:5.7` service、空专用 schema、PDO MySQL；先执行 `deploy.sh` 中完全相同的七条迁移 compatibility sed，再跑完整 migrations，并通过 Laravel 查询迁移表确认至少 11 条记录。仅使用合成数据库，不连接生产。
+- workflow YAML 使用本地 `js-yaml` 成功解析，结构确认 MySQL service=image `mysql:5.7`。实际 MySQL 5.7 执行结果须以含此变更的最新 SHA Actions 为准；本地没有 MySQL 5.7 容器，不能把 MariaDB 12.3 的合成演练代替此门禁。该次新增门禁的最新提交和 Actions 终态待 CI 复核。
