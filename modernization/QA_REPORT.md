@@ -489,3 +489,12 @@ PowerShell 对 `/`、`/login`、`/api/auth/captcha`、`/api/public/homepage`、`
 - 公网只读 GET：`/`、`/login`、`/api/auth/captcha`、`/api/public/homepage`、`/api/public/application-batches/open`、`/up` 均 HTTP 200；开放批次正文仍是 `[]`；匿名 `/api/auth/me`、`/api/projects` 均 HTTP 401。
 - 宝塔发布后本站检查：`CURRENT=/www/wwwroot/nxm.zlck888.com/releases/20261017173454`、`NGINX=active`、`MYSQL=active`、`FAILED_JOBS=0`、本站 `artisan queue:work database --queue=default` worker 数 `2`、`OPEN_BATCHES=[]`。部署脚本未重载共享服务；其他站点未改动。
 - 此次只解决批次状态“开放”与实际申报资格不一致造成的后台误读，不会创建正式批次。当前正式运营仍不就绪：无正式公开批次；两条已通过认证均是 E2E 专家且少于 3 人派单配置；SMTP 未配置实投；OSS GET/隔离恢复未验证；六角色完整真实业务浏览器闭环未验收。
+
+## 当前线上状态复核（2026-10-17 17:45 UTC+8）
+
+- 当前源码发布仍是本站 release `20261017173454`（main 代码提交 `0966098`），`nginx`、`mysql` 均为 active；本站队列 worker 观察到 2 个，`queue:failed` 为 0。部署命令明确跳过 migration/seeder、没有重载共享服务。
+- 批次资格 UI 发布后复验通过：普通过期批次显示“申报时间已结束”；E2E 名称批次显示“测试批次，不可申报”；历史默认批次显示“历史默认批次，不可申报”。公网 `/api/public/application-batches/open` 仍 HTTP 200 且为 `[]`，匿名 `/api/auth/me` 和 `/api/projects` 为 401。
+- 本机再次运行前端 `npm run lint`、`npm run typecheck`、`npm test`（5/5）及 `npm run build`，均退出码 0；线上 Chromium 公开 E2E `E2E_RUN_ID=20261017-post-deploy-final npm run e2e -- --grep public` 为 `2 passed (4.1s)`。不代表六角色流程通过。
+- 尝试以应用运行时配置对 OSS 最新数据库/私有文件归档执行只读 GET+SHA-256 校验，但宝塔终端传输 Base64 脚本失败，未达到 PHP lint、Laravel bootstrap 或 OSS 请求；另一次压缩传输未得到脚本输出且终端重连。之后经同一终端确认 `/tmp/nxm-oss-read-check.php` 为 `SCRIPT_ABSENT`，没有残留校验进程。没有发起 OSS GET、没有下载/解压/恢复归档。OSS 对象读取和隔离恢复继续标记为未验证。
+- 本地临时校验脚本已删除，Git 工作区未留下源码或未跟踪临时文件。此处不把脚本传输尝试记作 OSS 验收成功，也没有修改生产数据、OSS 权限、站点配置或其他服务。
+- 正式运营仍不就绪：公开正式批次为 0；仅有 2 条 E2E 专家认证通过记录而派单人数为 3；SMTP 未配置并未实投；OSS GET/隔离恢复无证据；六角色完整 UI 业务闭环未完成。需要业务方提供正式批次参数、足量真实认证专家及 SMTP 测试收件箱；需要运维提供隔离恢复目标/授权。当前不得开放正式申报。
