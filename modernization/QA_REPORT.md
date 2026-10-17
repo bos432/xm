@@ -749,3 +749,24 @@ exit 0
 ```
 
 覆盖率仍无法执行：当前 PHP 环境没有可用 code coverage driver；项目现有 `npm run typecheck` 也只是工具文件检查，不是完整 Vue/TypeScript 类型检查。这两项不能宣称通过。
+
+## 验收专项自动化复核（2026-10-17 22:35 UTC+8）
+
+```text
+cd modernization/backend
+php vendor/bin/phpunit -c phpunit.xml --filter ProjectAcceptanceWorkflowTest
+OK (13 tests, 71 assertions)
+exit 0
+
+cd ../frontend
+npm run typecheck
+exit 0
+
+cd ../backend
+php vendor/bin/phpunit -c phpunit.xml --coverage-text
+Tests: 231, Assertions: 1050, Warnings: 1
+Warning: No code coverage driver available
+exit 1
+```
+
+验收专项自动化覆盖：管理员 E2E/非 E2E 范围筛选、审核人待处理/已处理/全部可见隔离、单位不能查看其他单位验收、批次配置的必传验收材料校验。线上仍没有对项目 11 伪造或跳过验收申请；真实单位提交材料后的多角色验收尚未完成。
