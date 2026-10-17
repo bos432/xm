@@ -1025,3 +1025,17 @@ exit code: 0
 - GitHub Actions `Modernization CI #163` run `39060775508` 状态 `Success`，耗时 31s；包含 Frontend lint and build、Backend feature tests、Deployment backup and rollback simulations；Optional online E2E 为 workflow 标记的可选步骤，0s / 未执行。
 - GitHub Actions `Modernization Quality Gate #10` run `39060775505` 状态 `Success`，耗时 44s；backend、`mysql57-migrations`、frontend、deployment-safety 四个 job 均成功。页面显示 GitHub 对 `actions/checkout@v4` / `actions/setup-node@v4` 等 Node 20 运行时弃用提示，以及 `ubuntu-latest` 即将迁移 Ubuntu 26 的提示；均为 runner/action 维护提醒，不影响本次 job 成功状态。
 - 当前候选已推送并通过 CI，但仍未合并 `main`、未部署生产。分支 CI 不会弥补正式批次、正式专家、邮件实投、隔离恢复和完整角色业务验收等运营条件。
+
+### 本站队列 worker release 对齐修复（2026-10-18）
+
+- 宝塔 root 终端只读快照显示 `current/backend` 解析到 `/www/wwwroot/nxm.zlck888.com/releases/20261017215647/backend`，当时唯一实际 `www` 队列 worker PID `3145799` 的 `/proc/<pid>/cwd` 却为旧 release `/www/wwwroot/nxm.zlck888.com/releases/20261016191109/backend`。其命令是 `artisan queue:work database --queue=default --tries=3 --timeout=90 --sleep=3`，父进程为本站 `nxm_queue_worker.lock` 的 `flock`；失败队列计数为 `0`。
+- 按当前 `shared/bin/queue-worker-watchdog.sh` 设计，先对 PID、www 用户、旧 release cwd、worker 参数及本站 flock 父进程逐项比对，然后只向 PID `3145799` 发送 TERM。没有执行 `queue:restart`、没有改计划任务、没有重启 Supervisor/PHP-FPM/Nginx/MySQL/服务器，未触碰其他站点。
+- watchdog 随后启动 PID `3827190`；复核显示仅一个本站 queue worker，用户 `www`，cwd `/www/wwwroot/nxm.zlck888.com/releases/20261017215647/backend` 与当前 release 完全一致，`artisan queue:failed-count` 为 `0`。所以此次是已验证的本站进程级 release 对齐修复。
+- 观察到旧 watchdog 的 sudo 父进程链仍存活，但外层 watchdog flock 和 worker flock 均各只有一个持有者，实际 worker 仅一个；没有证据表明存在并行消费。为避免影响生产队列和权限链，本轮不清理该父链。应在未来本站维护窗口检查宝塔 cron 启动/退出模式，并优化脚本收尾/调度，避免留下长期等待父进程。
+- 本站终端当时显示 cron helper `/www/server/cron/dabef4f12405f53c357b68f78eac99b4` 启动该 watchdog；本轮未修改其任务配置。下次发布后须确认新 worker cwd 与 `current` 一致。
+- 后续只读复核（goal continuation）：worker 仍唯一且 cwd 仍对齐 `releases/20261017215647/backend`，失败队列仍为 `0`；无第二个 worker 被创建。
+- 该运行态记录提交 `27f5371` 的再次推送尝试（`git -c http.sslBackend=schannel -c http.version=HTTP/1.1 push ...`）仍失败：`Failed to connect to github.com port 443 after 21097 ms: Could not connect to server`。提交仅在本地候选 worktree，不能视作远端已保存；无 merge/deploy。
+- 源码复核 watchdog 是有意的无限守护循环：外层 flock 保持唯一 watchdog，内层 flock 确保只有一个 worker；若把 cron wrapper 调整为普通返回，可能停止守护或周期性重复启动，因此未直接改生产脚本或调度。残留 sudo 父进程属宝塔 cron 执行包装链的行为仍需在隔离环境/受控维护窗口验证，当前 worker 自身状态健康。
+- 宝塔计划任务页只读确认本站“队列 worker 守护”任务状态正常、每分钟运行；同页本站数据库及上传备份任务正常，最近一次执行显示 `2026-10-18 02:10:05`。没有编辑/执行任务或改 cron。
+- watchdog 日志尾部含历史 `SQLSTATE[HY000] [2002] Connection refused`（worker 查询 Laravel queue restart cache 时），因此本轮做了只读数据库健康复核：`systemctl is-active mysql` 输出 `active`；127.0.0.1:3306 TCP probe 输出 `OPEN`；以 `www` 用户从当前 release 执行 `php artisan migrate:status` 成功，10 条迁移全部为 `Ran`。不查看凭据、不修改或重启 MySQL。连接拒绝未在当前探测中复现，但日志提示曾发生过瞬时数据库连接失败，应保留监控。
+- 后续报告本地提交截至 `129dfbb241f94fc585ccd9804fe0d532e6f98a42`；本轮 HTTPS/HTTP 1.1 + schannel 推送仍因连接 `github.com:443` 约 21 秒超时而失败。本地后续报告修订尚未推送；无 merge/deploy。
