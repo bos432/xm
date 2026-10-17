@@ -970,3 +970,9 @@ exit code: 0
 - 风险依据：生产历史只读记录显示 MySQL `5.7.40`；先前 CI 只对 SQLite 做 migration dry-run，本机合成恢复使用 MariaDB `12.3.2`，都不能证明生产 MySQL 5.7 兼容。
 - 在 `.github/workflows/modernization-quality.yml` 增加独立 `mysql57-migrations` 必需 job：GitHub 临时 `mysql:5.7` service、空专用 schema、PDO MySQL；先执行 `deploy.sh` 中完全相同的七条迁移 compatibility sed，再跑完整 migrations，并通过 Laravel 查询迁移表确认至少 11 条记录。仅使用合成数据库，不连接生产。
 - workflow YAML 使用本地 `js-yaml` 成功解析，结构确认 MySQL service=image `mysql:5.7`。实际 MySQL 5.7 执行结果须以含此变更的最新 SHA Actions 为准；本地没有 MySQL 5.7 容器，不能把 MariaDB 12.3 的合成演练代替此门禁。新增门禁提交 `23e75980d6053a88d544906c3b4ea701dce0c12d3` 已提交但 GitHub 443 push 连接重置；本地 `codex/composer-security-fix` 显示 ahead 1，`git ls-remote` 也因连接超时失败，GitHub REST 查询返回 403 rate limit。该提交尚未获远端 CI 验证，不得合并或部署。
+
+### 兼容变换共用实现（候选最新本地修改）
+
+- 为消除生产部署与 CI 各自复制七条 `sed` 造成的漂移，新增 `modernization/deploy/apply-mysql57-compatibility.sh`；`deploy.sh` 与 MySQL 5.7 workflow 均调用同一脚本。默认只接受 `releases/*/backend` 路径，CI 对 workspace 临时副本必须显式设置 `ALLOW_NON_RELEASE_BACKEND=1`；必需 migration 文件缺失则失败退出。
+- `deploy-release-safety-test.sh` 模拟部署成功后检查 release 内 metadata JSON 列已转为 longText、索引键列长度为 191。部署安全、备份、rollback 三套本地 Bash 测试均通过；workflow YAML 解析通过；前端 lint、5/5 单测、typecheck/build/npm audit 通过；PHPUnit 231 tests / 1050 assertions 与 Composer audit 通过。`npm ci` 从 lockfile 安装 167 个包并报告 0 vulnerabilities。
+- 共用脚本尚未进入 GitHub，MySQL 5.7 Docker service job 也未实际执行。当前本机无 MySQL 5.7 和运行中的 Docker engine；GitHub push/API 受网络超时/限流影响，因此此项仍是发布阻断。

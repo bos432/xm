@@ -79,14 +79,9 @@ jobs:
           cp .env.example .env
           mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
       - name: Apply the exact production MySQL compatibility transforms
-        run: |
-          sed -i "s/->json(/->longText(/g" database/migrations/2026_06_06_000001_create_modernization_core_tables.php
-          sed -i "s/string('key')->primary()/string('key', 191)->primary()/g" database/migrations/2026_06_06_000002_create_runtime_support_tables.php
-          sed -i "s/string('owner')/string('owner', 191)/g" database/migrations/2026_06_06_000002_create_runtime_support_tables.php
-          sed -i "s/string('id')->primary()/string('id', 191)->primary()/g" database/migrations/2026_06_06_000002_create_runtime_support_tables.php
-          sed -i "s/string('queue')->index()/string('queue', 191)->index()/g" database/migrations/2026_06_06_000002_create_runtime_support_tables.php
-          sed -i "s/string('name')/string('name', 191)/g" database/migrations/2026_06_06_000002_create_runtime_support_tables.php
-          sed -i "s/string('uuid')->unique()/string('uuid', 191)->unique()/g" database/migrations/2026_06_06_000002_create_runtime_support_tables.php
+        env:
+          ALLOW_NON_RELEASE_BACKEND: '1'
+        run: bash "$GITHUB_WORKSPACE/modernization/deploy/apply-mysql57-compatibility.sh" "$GITHUB_WORKSPACE/modernization/backend"
       - name: Run all migrations against isolated MySQL 5.7
         env:
           APP_ENV: testing
@@ -128,7 +123,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate deployment shell syntax
-        run: bash -n modernization/deploy/deploy.sh modernization/deploy/site-backup.sh modernization/deploy/tests/site-backup-test.sh modernization/deploy/tests/deploy-release-safety-test.sh modernization/deploy/tests/deploy-rollback-test.sh modernization/deploy/tests/mock-command.sh
+        run: bash -n modernization/deploy/deploy.sh modernization/deploy/apply-mysql57-compatibility.sh modernization/deploy/site-backup.sh modernization/deploy/tests/site-backup-test.sh modernization/deploy/tests/deploy-release-safety-test.sh modernization/deploy/tests/deploy-rollback-test.sh modernization/deploy/tests/mock-command.sh
       - name: Verify backup and OSS failure handling
         run: bash modernization/deploy/tests/site-backup-test.sh
       - name: Verify deployment backup, switch, and rollback safety

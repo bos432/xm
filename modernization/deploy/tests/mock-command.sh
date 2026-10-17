@@ -11,11 +11,14 @@ case "$command_name" in
       "$destination/modernization/backend/bootstrap" \
       "$destination/modernization/backend/database/migrations" \
       "$destination/modernization/deploy"
-    touch "$destination/modernization/backend/artisan" \
-      "$destination/modernization/backend/database/migrations/2026_06_06_000001_create_modernization_core_tables.php" \
-      "$destination/modernization/backend/database/migrations/2026_06_06_000002_create_runtime_support_tables.php"
+    touch "$destination/modernization/backend/artisan"
+    printf "Schema::create('users', function (\$table) {\n    \$table->json('metadata');\n});\n" \
+      > "$destination/modernization/backend/database/migrations/2026_06_06_000001_create_modernization_core_tables.php"
+    printf "Schema::create('cache', function (\$table) {\n    \$table->string('key')->primary();\n});\n" \
+      > "$destination/modernization/backend/database/migrations/2026_06_06_000002_create_runtime_support_tables.php"
     touch "$destination/modernization/deploy/queue-worker-watchdog.sh"
     touch "$destination/modernization/deploy/site-backup.sh"
+    cp "$DEPLOY_TEST_COMPATIBILITY_SCRIPT" "$destination/modernization/deploy/apply-mysql57-compatibility.sh"
     ;;
   node|chown)
     exit 0

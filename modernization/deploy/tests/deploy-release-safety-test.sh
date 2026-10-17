@@ -3,6 +3,7 @@ set -Eeuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEPLOY_SCRIPT="$(cd "$SCRIPT_DIR/.." && pwd)/deploy.sh"
+REAL_COMPATIBILITY_SCRIPT="$SCRIPT_DIR/../apply-mysql57-compatibility.sh"
 TEST_ROOT="$(mktemp -d)"
 cleanup() {
   status=$?
@@ -53,13 +54,27 @@ mkdir -p "$destination/modernization/frontend" "$destination/modernization/backe
     "$destination/modernization/backend/bootstrap" "$destination/modernization/backend/storage" \
     "$destination/modernization/deploy" "$destination/modernization/frontend/dist"
 printf '{"scripts":{"build":"true"}}\n' > "$destination/modernization/frontend/package.json"
-touch "$destination/modernization/backend/database/migrations/2026_06_06_000001_create_modernization_core_tables.php"
-for name in 2026_06_06_000002_create_runtime_support_tables.php; do
-  touch "$destination/modernization/backend/database/migrations/$name"
-done
+cat > "$destination/modernization/backend/database/migrations/2026_06_06_000001_create_modernization_core_tables.php" <<'PHP'
+<?php
+Schema::create('users', function ($table) {
+    $table->json('metadata');
+});
+PHP
+cat > "$destination/modernization/backend/database/migrations/2026_06_06_000002_create_runtime_support_tables.php" <<'PHP'
+<?php
+Schema::create('cache', function ($table) {
+    $table->string('key')->primary();
+    $table->string('owner');
+    $table->string('id')->primary();
+    $table->string('queue')->index();
+    $table->string('name');
+    $table->string('uuid')->unique();
+});
+PHP
 touch "$destination/modernization/frontend/dist/index.html"
 printf '#!/usr/bin/env bash\n# candidate watchdog\n' > "$destination/modernization/deploy/queue-worker-watchdog.sh"
 printf '#!/usr/bin/env bash\n# candidate backup\n' > "$destination/modernization/deploy/site-backup.sh"
+cp "$REAL_COMPATIBILITY_SCRIPT" "$destination/modernization/deploy/apply-mysql57-compatibility.sh"
 MOCK
 
 cat > "$MOCK_BIN/node" <<'MOCK'
@@ -116,6 +131,7 @@ run_deploy() {
   env PATH="$MOCK_BIN:$PATH" APP_ROOT="$APP_ROOT" REPO_URL=https://example.invalid/repo.git \
     PHP_BIN="$MOCK_BIN/php" COMPOSER_BIN="$TEST_ROOT/composer.phar" NODE_BIN=node NPM_BIN=npm \
     MYSQLDUMP_BIN="$MOCK_BIN/mysqldump" MOCK_PHP_LOG="$TEST_ROOT/php.log" WEB_USER=www:www \
+    REAL_COMPATIBILITY_SCRIPT="$SCRIPT_DIR/../apply-mysql57-compatibility.sh" \
     DEPLOY_TEST_FAIL_CHOWN="$fail_chown" "$@" bash "$DEPLOY_SCRIPT"
 }
 
@@ -130,6 +146,10 @@ grep -q 'HTTPS captcha/login/logout health check passed' "$TEST_ROOT/success.log
 [[ -x "$APP_ROOT/shared/bin/site-backup.sh" ]]
 grep -q '^#!/usr/bin/env bash$' "$APP_ROOT/shared/bin/queue-worker-watchdog.sh"
 grep -q '^#!/usr/bin/env bash$' "$APP_ROOT/shared/bin/site-backup.sh"
+ACTIVE_BACKEND="$(readlink -f "$APP_ROOT/current/backend")"
+grep -q "Schema::create('users'" "$ACTIVE_BACKEND/database/migrations/2026_06_06_000001_create_modernization_core_tables.php"
+grep -q -- "->longText('metadata')" "$ACTIVE_BACKEND/database/migrations/2026_06_06_000001_create_modernization_core_tables.php"
+grep -q "string('key', 191)->primary()" "$ACTIVE_BACKEND/database/migrations/2026_06_06_000002_create_runtime_support_tables.php"
 compgen -G "$APP_ROOT/shared/backups/database/app_test-before-*.sql.gz" >/dev/null
 gzip -t "$APP_ROOT"/shared/backups/database/*.sql.gz
 grep -q 'artisan migrate --force' "$TEST_ROOT/php.log"

@@ -38,6 +38,8 @@ export WEB_USER=fixture:fixture
 export DEPLOY_TEST_COMMAND_LOG="$TEMP_ROOT/commands.log"
 export DEPLOY_TEST_CURL_ARGS="$TEMP_ROOT/curl-args.log"
 export DEPLOY_TEST_NGINX_CALLED="$TEMP_ROOT/nginx-called"
+export DEPLOY_TEST_COMPATIBILITY_SCRIPT="$REPO_ROOT/modernization/deploy/apply-mysql57-compatibility.sh"
+export ALLOW_NON_RELEASE_BACKEND=1
 
 run_deploy() {
   REPO_URL=fixture BRANCH=main FRONTEND_API_BASE=/api RUN_SEED=0 \
