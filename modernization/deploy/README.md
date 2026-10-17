@@ -23,6 +23,25 @@ The BT Panel website root should point to:
 /www/wwwroot/nxm.zlck888.com/current/public
 ```
 
+## Site TLS and HSTS
+
+The site's TLS listener is maintained separately from application releases by
+the BT Panel Nginx configuration. The site-specific extension currently lives
+at `/www/server/panel/vhost/nginx/extension/nxm.zlck888.com/nxm-tls.conf`.
+It must contain the site's TLS listener/certificate settings and:
+
+```nginx
+add_header Strict-Transport-Security "max-age=31536000" always;
+```
+
+This directive belongs only in the `nxm.zlck888.com` TLS server context. Do not
+add it to shared `nginx.conf` or a wildcard include that affects other sites.
+Before reloading Nginx, back up the site extension and run `nginx -t`; reload
+only when the syntax check succeeds. After editing TLS settings in BT Panel,
+verify the header on the HTTPS homepage, login page, and `/up`, because the
+panel may regenerate its extension file. HSTS is served by Nginx and is not
+part of the application release/current symlink.
+
 Each release uses its own Composer home. Activation atomically switches only
 this site's `current` symlink; the script does not reload or restart Nginx,
 PHP-FPM, or any other shared service. If a post-switch health check fails, it
