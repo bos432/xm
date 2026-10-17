@@ -381,6 +381,34 @@ exit 1
 
 后续阻断：专家分配为 38、27、32，当前受控文件仅含专家 38，尚缺专家 27/32 的现有登录凭据；不能冒充专家、重置未知账号或降低专家人数制造闭环。正式批次、SMTP 真实投递、OSS 下载/隔离恢复、六角色 UI 闭环和截图版完整交付仍未完成。公开正式批次为空不妨碍已授权 E2E 批次验收，但不得把 E2E API 流程当作正式业务或完整 UI 验收。
 
+## QA-09 修复验证（2026-10-17，发布状态单独记录）
+
+代码提交 `630b345` 修复无终审支持记录被默认显示为“不支持”的问题：详情 API 在无支持记录时返回 null 结论/总金额；项目详情和审核详情两处显示“待确定”。明确不支持、分项支持和旧版补助支持记录仍按原值展示；不改数据库数据、不改审批状态。
+
+新增 `FinalSupportPresentationTest` 的六个案例覆盖缺失/空记录、明确不支持、三类金额合计、旧版补助和旧版无支持。首跑因测试夹具缺少 `unit_id` 产生 6 errors，已补齐单位/所有人关联后重跑；不将首跑算作通过。
+
+命令与输出（后端目录）：
+
+```text
+php vendor/bin/phpunit -c phpunit.xml --filter FinalSupportPresentationTest
+OK (6 tests, 38 assertions)
+exit 0
+
+php vendor/bin/phpunit -c phpunit.xml
+OK (231 tests, 1050 assertions)
+exit 0
+
+php vendor/bin/pint --test app/Http/Controllers/ProjectController.php tests/Feature/FinalSupportPresentationTest.php
+PASS 2 files
+exit 0
+```
+
+前端目录命令：`npm run lint`、`npm run typecheck`、`npm test`、`npm run build`；均退出 0，单测 5/5，Vite 1628 modules transformed，built in 439ms。
+
+注意：现有 `scripts/typecheck-utilities.mjs` 仅对 `src/utils/timeline.js` 做注释检查及 `node --check`，不是 Vue/整个前端的 TypeScript 语义检查。以前的“类型检查通过”只能指这个脚本；项目级类型安全证据仍缺失，不能用该输出代替。
+
+发布状态：提交 `630b345` 已在本地生成，前两次 GitHub 推送均报 `Recv failure: Connection was reset`。此时未执行生产部署，QA-09 仍为“本地已修复，线上未复验”，不能标为已上线关闭。下一步仅在远端确认提交存在后部署本站，再打开项目 11 的详情复验；不得把本地测试等同于生产已修复。
+
 - 隔离 checkout 后端全量：复用主工作区现成 Composer vendor，但 PHPUnit bootstrap 将 `App`、`Tests`、Factories、Seeders 和 Laravel base path 均显式指向当前隔离 checkout；`OK (211 tests, 947 assertions)`，退出码 0。临时 bootstrap 已删除，主工作区和依赖未修改。
 - 当前 checkout 前端：`npm run lint`、`npm run typecheck`、`npm test`（4/4）和 `npm run build` 均退出码 0。
 - 当前 checkout `git diff --check` 通过；未生成跟踪文件变更。上述为代码自动化证据，不替代生产六角色闭环、真实 SMTP 或 OSS 恢复验收。
