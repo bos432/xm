@@ -957,3 +957,10 @@ exit code: 0
 - 本机实验初始化失败的测试目录均留在随机 Temp 目录作诊断，没有清理既存 MariaDB 安装数据目录；失败的服务进程均确认已退出，无测试端口监听。早先一次未启动实例的临时目录因本机策略拒绝删除而保留，不存在对应 mysqld/mariadbd 进程或监听端口。
 - 生产站点只读 TLS 检查：证书 `CN=nxm.zlck888.com`，notAfter `2027-01-12T10:59:59Z`，thumbprint `53F1FFCF82C87B5375B5ECE4B91314D6F0D9CACF`。QA 报告没有找到历史暴露旧私钥已向 CA 撤销/作废的证据；该安全处置仍未闭环，不能以当前新证书匹配替代旧密钥撤销证明。
 - 当前候选未部署。即使候选 CI 成功且合成 schema dump/restore 通过，正式运营仍被真实 OSS 归档恢复、六角色完整流程、SMTP 实投、足量正式认证专家/开放批次、容量与灾备恢复、历史暴露私钥处置阻断。
+
+### 候选 CI 与公网只读状态复核（2026-10-18）
+
+- 候选最终提交 `0e145a93a3c18de66048d82bf72a1fc774c3da43` 的 GitHub Actions：Modernization CI `39057607666` completed/success，Modernization Quality Gate `39057607694` completed/success；CI 中前端、后端、扩展部署安全模拟全 success；Optional online E2E 为 skipped。
+- 只读公网 GET：`https://nxm.zlck888.com/`、`/login`、`/api/auth/captcha`、`/api/public/homepage`、`/up` 均 HTTP 200。此为匿名入口/可用性 smoke，不证明业务账号、权限或项目审批流程。
+- GitHub `main` 只读分支 SHA 仍为 `e0f067530f6f50a7ddb4069c00ef51ea32016241`；候选分支 `codex/composer-security-fix` 位于 `0e145a93a3c18de66048d82bf72a1fc774c3da43`，工作区与远端跟踪分支同步且干净；没有合并、没有部署生产。
+- 发布阻断状态复核：真实生产备份从 OSS 下载并恢复到隔离目标（未完成）；六角色完整提交/审核/多专家评分/终审/验收链（未完成）；SMTP 实际投递（未完成）；公开正式申报批次和足量认证专家（历史只读快照显示未满足，尚无当前复核）；容量/灾备（未完成）；历史明文暴露旧证书私钥的 CA 撤销/作废证明（未找到）。因此“站点现在响应 200”和“候选门禁绿”均不足以授予正式运营签收。
