@@ -969,4 +969,4 @@ exit code: 0
 
 - 风险依据：生产历史只读记录显示 MySQL `5.7.40`；先前 CI 只对 SQLite 做 migration dry-run，本机合成恢复使用 MariaDB `12.3.2`，都不能证明生产 MySQL 5.7 兼容。
 - 在 `.github/workflows/modernization-quality.yml` 增加独立 `mysql57-migrations` 必需 job：GitHub 临时 `mysql:5.7` service、空专用 schema、PDO MySQL；先执行 `deploy.sh` 中完全相同的七条迁移 compatibility sed，再跑完整 migrations，并通过 Laravel 查询迁移表确认至少 11 条记录。仅使用合成数据库，不连接生产。
-- workflow YAML 使用本地 `js-yaml` 成功解析，结构确认 MySQL service=image `mysql:5.7`。实际 MySQL 5.7 执行结果须以含此变更的最新 SHA Actions 为准；本地没有 MySQL 5.7 容器，不能把 MariaDB 12.3 的合成演练代替此门禁。该次新增门禁的最新提交和 Actions 终态待 CI 复核。
+- workflow YAML 使用本地 `js-yaml` 成功解析，结构确认 MySQL service=image `mysql:5.7`。实际 MySQL 5.7 执行结果须以含此变更的最新 SHA Actions 为准；本地没有 MySQL 5.7 容器，不能把 MariaDB 12.3 的合成演练代替此门禁。新增门禁提交 `23e75980d6053a88d544906c3b4ea701dce0c12d3` 已提交但 GitHub 443 push 连接重置；本地 `codex/composer-security-fix` 显示 ahead 1，`git ls-remote` 也因连接超时失败，GitHub REST 查询返回 403 rate limit。该提交尚未获远端 CI 验证，不得合并或部署。
