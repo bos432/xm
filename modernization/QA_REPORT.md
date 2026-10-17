@@ -770,3 +770,41 @@ exit 1
 ```
 
 验收专项自动化覆盖：管理员 E2E/非 E2E 范围筛选、审核人待处理/已处理/全部可见隔离、单位不能查看其他单位验收、批次配置的必传验收材料校验。线上仍没有对项目 11 伪造或跳过验收申请；真实单位提交材料后的多角色验收尚未完成。
+
+## 上线前依赖与部署隔离复核（2026-10-17 23:00 UTC+8）
+
+```text
+npm audit --omit=dev --audit-level=moderate
+found 0 vulnerabilities
+
+bash -n deploy/deploy.sh deploy/site-backup.sh \
+  deploy/tests/site-backup-test.sh \
+  deploy/tests/deploy-release-safety-test.sh \
+  deploy/tests/deploy-rollback-test.sh
+exit 0
+
+bash deploy/tests/site-backup-test.sh
+PASS database and private uploads are archived and verified without exposing credentials
+PASS dump failure preserves existing backups and removes partial files
+PASS OSS failure preserves the newly verified local archives and skips retention cleanup
+PASS retention removes only expired archives owned by this site
+
+bash deploy/tests/deploy-release-safety-test.sh
+PASS successful deploy backs up database, switches current, and does not reload nginx
+PASS failed HTTP login health check restores the previous release
+PASS missing health credentials fail before switching releases
+PASS failed database backup stops before release switch and migration
+PASS empty database backup stops before release switch and migration
+PASS SQLite database backup is made before migration
+PASS relative SQLite path is rejected before migration
+
+bash deploy/tests/deploy-rollback-test.sh
+Deployment isolation and rollback checks passed.
+exit 0
+```
+
+### 质量门记录
+
+- 当前 Windows checkout 的 `core.autocrlf=true`。直接执行全量 `php vendor/bin/pint --test` 返回失败，报告 `146 files, 131 style issues`，主要是 checkout 换行和既有格式规则差异；本轮未对 146 个文件做大范围格式化，避免无关代码变更。此前针对本轮修改文件的 Pint 检查仍通过。
+- `composer audit` 在本机不可执行，因为没有安装 Composer 命令，仓库也没有 `vendor/bin/composer`；这项依赖审计不能宣称已完成。部署使用的 Composer 依赖安装由服务器上的 `shared/composer.phar` 负责，线上依赖漏洞状态仍需在服务器执行同等审计后确认。
+- 本轮没有修改源码、依赖、生产配置或其他站点，仅追加 QA 报告。上述质量门缺口不影响已运行的 PHP/前端测试，但在正式运营验收记录中保留为未完全验证项。
