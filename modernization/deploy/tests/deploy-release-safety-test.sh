@@ -23,6 +23,7 @@ MOCK_BIN="$TEST_ROOT/bin"
 APP_ROOT="$TEST_ROOT/app"
 export RUN_MIGRATIONS=1
 mkdir -p "$MOCK_BIN" "$APP_ROOT/shared/storage" "$APP_ROOT/shared/bootstrap-cache" \
+  "$APP_ROOT/shared/bin" \
   "$APP_ROOT/releases/previous/public" "$APP_ROOT/releases/previous/backend"
 command -v flock >/dev/null 2>&1 || { printf 'flock is required by deploy.sh\n' >&2; exit 1; }
 ln -s "$APP_ROOT/releases/previous" "$APP_ROOT/current"
@@ -40,6 +41,9 @@ DB_PORT=3306
 ENV
 touch "$APP_ROOT/shared/composer.phar"
 touch "$TEST_ROOT/composer.phar"
+printf 'previous watchdog\n' > "$APP_ROOT/shared/bin/queue-worker-watchdog.sh"
+printf 'previous backup\n' > "$APP_ROOT/shared/bin/site-backup.sh"
+chmod 750 "$APP_ROOT/shared/bin/queue-worker-watchdog.sh" "$APP_ROOT/shared/bin/site-backup.sh"
 
 cat > "$MOCK_BIN/git" <<'MOCK'
 #!/usr/bin/env bash
@@ -53,9 +57,9 @@ touch "$destination/modernization/backend/database/migrations/2026_06_06_000001_
 for name in 2026_06_06_000002_create_runtime_support_tables.php; do
   touch "$destination/modernization/backend/database/migrations/$name"
 done
-touch "$destination/modernization/frontend/dist/index.html" \
-  "$destination/modernization/deploy/queue-worker-watchdog.sh" \
-  "$destination/modernization/deploy/site-backup.sh"
+touch "$destination/modernization/frontend/dist/index.html"
+printf '#!/usr/bin/env bash\n# candidate watchdog\n' > "$destination/modernization/deploy/queue-worker-watchdog.sh"
+printf '#!/usr/bin/env bash\n# candidate backup\n' > "$destination/modernization/deploy/site-backup.sh"
 MOCK
 
 cat > "$MOCK_BIN/node" <<'MOCK'
@@ -119,6 +123,8 @@ SUCCESS_TARGET="$(readlink -f "$APP_ROOT/current")"
 ! grep -q 'nginx reload' "$TEST_ROOT/success.log"
 grep -q 'HTTPS captcha/login/logout health check passed' "$TEST_ROOT/success.log"
 [[ -x "$APP_ROOT/shared/bin/site-backup.sh" ]]
+grep -q '^#!/usr/bin/env bash$' "$APP_ROOT/shared/bin/queue-worker-watchdog.sh"
+grep -q '^#!/usr/bin/env bash$' "$APP_ROOT/shared/bin/site-backup.sh"
 compgen -G "$APP_ROOT/shared/backups/database/app_test-before-*.sql.gz" >/dev/null
 gzip -t "$APP_ROOT"/shared/backups/database/*.sql.gz
 grep -q 'artisan migrate --force' "$TEST_ROOT/php.log"
@@ -137,6 +143,23 @@ if ! grep -q 'restored previous release' "$TEST_ROOT/failure.log"; then
 fi
 grep -q 'Local login health check failed' "$TEST_ROOT/failure.log"
 printf 'PASS failed HTTP login health check restores the previous release\n'
+
+sleep 1
+ln -sfn "$APP_ROOT/releases/previous" "$APP_ROOT/current"
+printf 'previous watchdog\n' > "$APP_ROOT/shared/bin/queue-worker-watchdog.sh"
+printf 'previous backup\n' > "$APP_ROOT/shared/bin/site-backup.sh"
+if run_deploy MOCK_HEALTH_FAIL=1 > "$TEST_ROOT/pre-switch-health-failure.log" 2>&1; then
+  printf 'FAIL pre-switch health failure unexpectedly passed\n' >&2
+  exit 1
+fi
+[[ "$(readlink -f "$APP_ROOT/current")" == "$APP_ROOT/releases/previous" ]]
+grep -q '^previous watchdog$' "$APP_ROOT/shared/bin/queue-worker-watchdog.sh"
+grep -q '^previous backup$' "$APP_ROOT/shared/bin/site-backup.sh"
+if compgen -G "$APP_ROOT/shared/bin/.*.tmp" >/dev/null; then
+  printf 'FAIL temporary runtime scripts were not cleaned after health failure\n' >&2
+  exit 1
+fi
+printf 'PASS failed pre-switch health check preserves previous shared runtime scripts\n'
 
 sleep 1
 printf 'APP_KEY=base64:dGVzdC1rZXktdmFsdWUtZm9yLXRlc3Rz\nAPP_URL=https://nxm.zlck888.com\nDB_CONNECTION=mysql\nDB_DATABASE=app_test\nDB_USERNAME=app_test_user\nDB_PASSWORD=x\n' > "$APP_ROOT/shared/.env"

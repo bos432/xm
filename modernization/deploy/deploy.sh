@@ -203,14 +203,6 @@ rm -rf bootstrap/cache
 ln -s "$SHARED_DIR/bootstrap-cache" bootstrap/cache
 cp "$COMPOSER_BIN" composer.phar
 
-log "Installing site-local queue watchdog"
-mkdir -p "$SHARED_DIR/bin"
-install -m 750 "$SOURCE_DIR/modernization/deploy/queue-worker-watchdog.sh" "$SHARED_DIR/bin/queue-worker-watchdog.sh"
-chown "$WEB_USER" "$SHARED_DIR/bin/queue-worker-watchdog.sh" || fail "Could not assign the queue watchdog to $WEB_USER"
-log "Installing site-local database and private-upload backup"
-install -m 750 "$SOURCE_DIR/modernization/deploy/site-backup.sh" "$SHARED_DIR/bin/site-backup.sh"
-chown "$WEB_USER" "$SHARED_DIR/bin/site-backup.sh" || fail "Could not assign the site backup script to $WEB_USER"
-
 log "Installing backend dependencies"
 export COMPOSER_HOME="$BACKEND_DIR/.composer"
 mkdir -p "$COMPOSER_HOME"
@@ -267,6 +259,16 @@ FAILED_JOBS_COUNT="$("$PHP_BIN" "$BACKEND_DIR/artisan" queue:failed-count 2>/dev
 if [ "$FAILED_JOBS_COUNT" != "0" ]; then
   log "WARNING: failed queue jobs exist; check the mail/queue worker"
 fi
+
+log "Installing site-local runtime scripts after release health checks passed"
+mkdir -p "$SHARED_DIR/bin"
+WATCHDOG_TMP="$SHARED_DIR/bin/.queue-worker-watchdog-${RELEASE_ID}.tmp"
+BACKUP_TMP="$SHARED_DIR/bin/.site-backup-${RELEASE_ID}.tmp"
+install -m 750 "$SOURCE_DIR/modernization/deploy/queue-worker-watchdog.sh" "$WATCHDOG_TMP"
+install -m 750 "$SOURCE_DIR/modernization/deploy/site-backup.sh" "$BACKUP_TMP"
+chown "$WEB_USER" "$WATCHDOG_TMP" "$BACKUP_TMP" || fail "Could not assign site-local runtime scripts to $WEB_USER"
+mv -f "$WATCHDOG_TMP" "$SHARED_DIR/bin/queue-worker-watchdog.sh"
+mv -f "$BACKUP_TMP" "$SHARED_DIR/bin/site-backup.sh"
 
 log "Deployment complete: $RELEASE_ID"
 log "Website root should be: $CURRENT_LINK/public"

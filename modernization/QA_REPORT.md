@@ -806,7 +806,142 @@ exit 0
 ### 质量门记录
 
 - 当前 Windows checkout 的 `core.autocrlf=true`。直接执行全量 `php vendor/bin/pint --test` 返回失败，报告 `146 files, 131 style issues`，主要是 checkout 换行和既有格式规则差异；本轮未对 146 个文件做大范围格式化，避免无关代码变更。此前针对本轮修改文件的 Pint 检查仍通过。
-- `composer audit` 在本机不可执行，因为没有安装 Composer 命令，仓库也没有 `vendor/bin/composer`；这项依赖审计不能宣称已完成。部署使用的 Composer 依赖安装由服务器上的 `shared/composer.phar` 负责，线上依赖漏洞状态仍需在服务器执行同等审计后确认。
+- 本节所述首次 `composer audit` 尝试因本机未安装 Composer CLI 未能执行；2026-10-18 隔离复验后来通过 Composer 官方 SHA-384 校验的临时 PHAR 对候选 lockfile 完成审计，结果 `No security vulnerability advisories found.`。这只证明候选 lockfile，不代表生产当前 release 已更新。
 - 本轮没有修改源码、依赖、生产配置或其他站点，仅追加 QA 报告。上述质量门缺口不影响已运行的 PHP/前端测试，但在正式运营验收记录中保留为未完全验证项。
 
 服务器端补充：本站当前 release 上执行 `/www/server/php/83/bin/php composer.phar audit --no-interaction --format=summary`，完整摘要输出 `Found 50 security vulnerability advisories affecting 13 packages.`。详细输出确认锁定包 `symfony/routing v7.3.0` 有 medium 级 URL Generator 路径遍历 / Host 注入类公告；其他 12 个受影响包尚未逐项导出核对。命令只读，未改 lock/vendor 或运行中服务。该项为生产安全阻断；需在隔离 checkout 用 Composer 漏洞数据库核对 13 包、做最小兼容升级并跑完整测试后，只部署本站。
+
+## 隔离候选分支复验（2026-10-18）
+
+范围：仅在 worktree `codex/composer-security-fix`、候选提交 `ac2b358c95afca6242b91186ff9c5f20a61db560` 运行；没有源码/配置/依赖版本修改、生产访问写入或线上 E2E。`npm ci` 仅还原 lockfile 依赖，`node_modules` 被 Git 忽略。
+
+### 验收清单增量
+
+| 编号 | 能力/门禁 | 状态 | 证据 |
+| --- | --- | --- | --- |
+| A-14 | 前端依赖锁定安装、lint、单测、工具类型检查、生产构建、npm 漏洞审计 | 已覆盖测试 | 下方原始输出：lint通过、5/5单测、typecheck/build通过、npm audit 0漏洞 |
+| A-15 | 后端 PHPUnit 全量测试 | 已覆盖测试 | 231 tests、1050 assertions 全通过；未产生覆盖率 |
+| A-16 | Composer manifest/lock 审计 | 本机无法验证 | 当前 Windows 环境无 Composer CLI/PHAR；报告中已有候选 CI 成功记录，但本轮无法独立重取 workflow 日志 |
+| A-17 | 站点备份、发布隔离、健康失败回滚模拟 | 已覆盖测试 | 三组 Bash 模拟全部通过 |
+| A-18 | 六角色真实业务闭环、邮件投递、OSS 隔离恢复 | 未验证 | 按本轮边界不运行有写入性的线上 E2E；保持为运营验收缺口 |
+
+### 本轮命令与输出
+
+前端：`npm ci --include=dev --include=optional --no-audit --no-fund && npm run lint && npm test && npm run typecheck && npm run build && npm audit --audit-level=moderate`
+
+```text
+added 167 packages in 17s
+eslint src tests --ext .js,.vue: exit 0
+tests 5; pass 5; fail 0
+typecheck: exit 0
+vite v8.0.16; 1628 modules transformed; built in 605ms; exit 0
+found 0 vulnerabilities
+```
+
+后端：`php vendor/bin/phpunit --no-coverage`
+
+```text
+PHPUnit 11.5.57
+Runtime: PHP 8.3.30
+OK (231 tests, 1050 assertions)
+exit code: 0
+```
+
+Composer CLI 探测与尝试：`composer validate --no-check-publish; composer audit --locked; php vendor/bin/phpunit --no-coverage`
+
+```text
+composer: 术语 'composer' 不会被识别为 cmdlet、函数、脚本文件或可执行程序的名称。
+composer: 术语 'composer' 不会被识别为 cmdlet、函数、脚本文件或可执行程序的名称。
+PHPUnit 11.5.57 ... OK (231 tests, 1050 assertions)
+```
+
+说明：PowerShell 使用分号继续后续命令，故 PHPUnit 通过不能算作 Composer 两项通过。Composer 本轮状态是未能运行；既有 CI 记录不替代本机复核。
+
+部署安全模拟：`bash -n modernization/deploy/deploy.sh modernization/deploy/site-backup.sh modernization/deploy/tests/site-backup-test.sh modernization/deploy/tests/deploy-release-safety-test.sh modernization/deploy/tests/deploy-rollback-test.sh modernization/deploy/tests/mock-command.sh && bash modernization/deploy/tests/site-backup-test.sh && bash modernization/deploy/tests/deploy-release-safety-test.sh && bash modernization/deploy/tests/deploy-rollback-test.sh`
+
+```text
+PASS database and private uploads are archived and verified without exposing credentials
+PASS dump failure preserves existing backups and removes partial files
+PASS OSS failure preserves the newly verified local archives and skips retention cleanup
+PASS retention removes only expired archives owned by this site
+PASS successful deploy backs up database, switches current, and does not reload nginx
+PASS failed HTTP login health check restores the previous release
+PASS missing health credentials fail before switching releases
+PASS failed database backup stops before release switch and migration
+PASS empty database backup stops before release switch and migration
+PASS SQLite database backup is made before migration
+PASS relative SQLite path is rejected before migration
+Deployment isolation and rollback checks passed.
+exit code: 0
+```
+
+工作区：`git diff --check` 通过（仅有 CRLF 提示）；`git status --short` 仅显示本报告和 `modernization/docs/security-upgrade-20261018.md` 两个预期文档修改。依赖安装目录为忽略项。未生成覆盖率：本机无 `pcov`/`xdebug`；报告不提供虚构百分比或 TOP5 覆盖排名。
+
+### 当前遗留与发布结论
+
+- 生产 Composer 审计曾报 50 条 advisory / 13 个包；候选分支 CI 记录显示 Composer audit 成功，但本轮没有本机 Composer 可复跑，也无法用未登录的 GitHub CLI 重新核对日志，因此本地复验只能记为“无法验证”。
+- `gh run list --branch codex/composer-security-fix --limit 5 --json databaseId,name,status,conclusion,headSha` 输出要求先运行 `gh auth login`，当前没有 GitHub CLI 登录态。
+- 不部署候选。通过 CI 和隔离自动化不等于完成生产等价 staging 恢复演练；六角色写入闭环、SMTP 实投、OSS 下载恢复、容量及灾备恢复仍未完成。生产版本保持不变。
+
+### 最终本地门禁（含部署回滚补丁）
+
+命令：`cd modernization/frontend && npm run lint && npm test && npm run typecheck && npm run build && npm audit --audit-level=low`
+
+```text
+tests 5; pass 5; fail 0
+typecheck: exit 0
+vite v8.0.16; 1628 modules transformed; built in 541ms
+found 0 vulnerabilities
+exit code: 0
+```
+
+命令：`cd modernization/backend && php vendor/bin/phpunit --no-coverage && php "$env:TEMP\codex-composer-qa\composer.phar" audit --locked --no-interaction --format=summary`
+
+```text
+OK (231 tests, 1050 assertions)
+No security vulnerability advisories found.
+exit code: 0
+```
+
+Composer 工具本身由 `https://getcomposer.org/installer` 与 `https://composer.github.io/installer.sig` 获取，校验安装器 SHA-384 后安装在系统临时目录；没有改动仓库依赖或全局 Composer 配置。`composer validate --no-check-publish` 输出 `./composer.json is valid, but with a few warnings`，唯一警告未声明 license；命令退出 0。
+
+命令：`bash -n modernization/deploy/deploy.sh modernization/deploy/site-backup.sh modernization/deploy/tests/site-backup-test.sh modernization/deploy/tests/deploy-release-safety-test.sh modernization/deploy/tests/deploy-rollback-test.sh modernization/deploy/tests/mock-command.sh && bash modernization/deploy/tests/site-backup-test.sh && bash modernization/deploy/tests/deploy-release-safety-test.sh && bash modernization/deploy/tests/deploy-rollback-test.sh`
+
+```text
+PASS database and private uploads are archived and verified without exposing credentials
+PASS dump failure preserves existing backups and removes partial files
+PASS OSS failure preserves the newly verified local archives and skips retention cleanup
+PASS retention removes only expired archives owned by this site
+PASS successful deploy backs up database, switches current, and does not reload nginx
+PASS failed HTTP login health check restores the previous release
+PASS failed pre-switch health check preserves previous shared runtime scripts
+PASS missing health credentials fail before switching releases
+PASS failed database backup stops before release switch and migration
+PASS empty database backup stops before release switch and migration
+PASS SQLite database backup is made before migration
+PASS relative SQLite path is rejected before migration
+Deployment isolation and rollback checks passed.
+exit code: 0
+```
+
+## 候选发布回滚安全补强（2026-10-18）
+
+隔离代码复查发现：部署脚本在候选依赖安装、发布切换及 HTTP/login 健康检查之前，就将两个运行脚本直接覆盖至本站 `shared/bin`。如候选健康检查失败，`current` 可回滚，但共享 watchdog/备份工具仍停留在候选版本。此为本站发布原子性/回滚一致性缺陷（P1）。
+
+已在隔离候选中将共享脚本安装延后到新 release 的健康检查全部通过之后；先写入唯一临时文件、设置执行权限和属主，再用同目录 `mv` 原子替换。新增测试确保健康检查失败后 current 和旧共享脚本内容均保持不变，且不留临时文件。没有触碰线上文件或服务。
+
+命令：`bash -n modernization/deploy/deploy.sh modernization/deploy/tests/deploy-release-safety-test.sh modernization/deploy/tests/mock-command.sh && bash modernization/deploy/tests/deploy-release-safety-test.sh`
+
+```text
+PASS successful deploy backs up database, switches current, and does not reload nginx
+PASS failed HTTP login health check restores the previous release
+PASS failed pre-switch health check preserves previous shared runtime scripts
+PASS missing health credentials fail before switching releases
+PASS failed database backup stops before release switch and migration
+PASS empty database backup stops before release switch and migration
+PASS SQLite database backup is made before migration
+PASS relative SQLite path is rejected before migration
+exit code: 0
+```
+
+该修复尚未提交/推送，故不属于已通过 GitHub CI 的 `ac2b358`，不得部署。需在隔离分支完成全量门禁、推送后等待该新 SHA 的 CI，再部署前重新完成 staging 恢复/业务验收。
