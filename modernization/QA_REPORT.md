@@ -370,3 +370,8 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - `unit/county/department/expert/admin`：Dashboard HTTP 200，三个敏感字段均为 `null`。
 - `super_admin`：Dashboard HTTP 200，三个字段均为非空（内容未读取）。总体 `DASHBOARD_ROLE_ISOLATION=PASS`。
 - 该结果验证本地修复 `5e870b2` 已在生产生效；没有写入业务数据。
+
+## OSS GET 验证尝试（2026-10-17）
+
+- 尝试在服务器通过应用运行时读取加密 OSS 配置，并下载最新数据库/私有文件对象到随机名临时目录，仅比较长度和 SHA-256，不解压、不恢复。临时 PHP 脚本因 shell/base64 转义错误，在 PHP 第 6 行解析失败；错误发生在 Laravel bootstrap、配置读取和发起网络请求之前，因此**没有执行 OSS GET，也没有验证对象读取权限**。
+- `/tmp/nxm-oss-verify.php` 后续只读确认不存在；没有创建或保留下载归档，没有变更 OSS 配置/权限或生产数据。该项仍为未验证，不能据此判定 OSS 成功或失败。
