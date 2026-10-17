@@ -239,6 +239,44 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 
 ## 当前提交复测（2026-10-17）
 
+## 2026-10-17 18:02 功能复测
+
+本轮遵守只读线上检查原则：未提交表单、未创建/删除业务数据、未修改生产配置，未触碰其他站点或共享服务。
+
+### 本地工具链结果
+
+- 后端 PHPUnit：`php vendor/bin/phpunit -c phpunit.xml`，通过 `216 tests, 965 assertions`。
+- 前端安装：首次 `npm ci` 因现有 `node_modules` 的 Element Plus 目录清理失败；随后使用 `npm install --include=dev --no-audit --no-fund --force` 恢复依赖，仅修改本地未跟踪依赖目录。
+- 前端 lint：`npm run lint`，通过，退出码 0。
+- 前端类型检查：`npm run typecheck`，通过，退出码 0。
+- 前端单元测试：`npm test`，`5 tests; pass 5; fail 0`。
+- 前端构建：`npm run build`，Vite `1628 modules transformed`，构建成功，退出码 0。
+- 线上公开 E2E：`E2E_BASE_URL=https://nxm.zlck888.com npm run e2e -- --grep public`，`2 passed (3.6s)`。
+
+### 线上只读页面复测
+
+当前超管会话打开 `https://nxm.zlck888.com/application-batches`，并依次检查：
+
+- 申报批次：页面正常，测试/历史批次显示“不可申报”；当前没有正式可申报批次。
+- 系统管理：数据字典分类子菜单正常；专家评分项显示“当前总分：100 / 100”。
+- 系统配置：审核与评分入口正常；区县/部门/管理员评分关闭，专家评分和专家组随机分配开启，默认专家人数为 3。
+- 审核验收：审核任务、派单规则、验收管理及各自子菜单均正常显示。
+- 验收管理：历史 E2E 验收记录可以显示状态、延期状态、最近延期、提交时间和详情入口。
+- 当前页面 `https://nxm.zlck888.com/acceptance` 的浏览器错误日志：`[]`。
+
+### 本轮结论
+
+已证实：代码级回归、前端构建、公开访问、匿名保护接口、超管只读菜单与配置页面当前正常。
+
+仍不能声称全系统流程验收完成：
+
+1. 正式开放批次为空，无法验证真实单位提交入口。
+2. 本轮没有使用隔离六角色账号执行创建项目、提交、区县审核、部门审核、多专家评分、管理员终审、延期和验收关闭等有状态操作。
+3. SMTP 实际投递、OSS 下载及隔离恢复仍没有本轮证据。
+4. 生产压力、并发和整机重启恢复未执行。
+
+以上未验证项继续保持原报告中的运营阻断级别，不以页面可打开替代业务闭环证据。
+
 - 隔离 checkout 后端全量：复用主工作区现成 Composer vendor，但 PHPUnit bootstrap 将 `App`、`Tests`、Factories、Seeders 和 Laravel base path 均显式指向当前隔离 checkout；`OK (211 tests, 947 assertions)`，退出码 0。临时 bootstrap 已删除，主工作区和依赖未修改。
 - 当前 checkout 前端：`npm run lint`、`npm run typecheck`、`npm test`（4/4）和 `npm run build` 均退出码 0。
 - 当前 checkout `git diff --check` 通过；未生成跟踪文件变更。上述为代码自动化证据，不替代生产六角色闭环、真实 SMTP 或 OSS 恢复验收。
