@@ -308,3 +308,16 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - HSTS 缺失根因已查明：本站 `/www/server/panel/vhost/nginx/extension/nxm.zlck888.com/nxm-tls.conf` 原来只有本站 TLS listener/certificate，没有 HSTS；公共安全头由本站 vhost 单独配置，不需要编辑共享 nginx.conf。已先备份为 `nxm-tls.conf.codex-backup-20261017`，再在该本站专属 TLS include 追加 `add_header Strict-Transport-Security "max-age=31536000" always;`。`nginx -t` 输出 `syntax is ok`、`test is successful` 后才执行 `nginx -s reload`；`systemctl is-active nginx` 返回 `active`。
 - HSTS 公网复验：`/`、`/login`、`/api/auth/captcha`、`/up` 均 HTTP 200 且 `Strict-Transport-Security: max-age=31536000`；对应的 `X-Content-Type-Options`、`X-Frame-Options` 仍存在。此变更仅属于本站 TLS 扩展配置，不改 Nginx 全局配置、其他站点、MySQL 或应用代码；宝塔若重建站点 TLS 配置，须再次核验。
 - 运营阻断仍在：正式开放批次为 0；已有证据仅显示 2 个 approved 专家认证记录，少于派单人数 3；SMTP 尚未配置并实投；OSS GET/隔离恢复未验；六角色浏览器业务闭环未完成。没有创建、审批、评分、验收任何生产业务记录。
+
+## 2026-10-17 后续复测（隔离 checkout）
+
+- 前端 `npm run lint`、`npm run typecheck`、`npm test`、`npm run build` 均通过，单测 4/4。
+- `bash -n` 检查本站备份、部署安全、回滚脚本通过；依次运行 `site-backup-test.sh`、`deploy-release-safety-test.sh`、`deploy-rollback-test.sh` 均通过，最终输出 `Deployment isolation and rollback checks passed.`
+- 线上只读 Chromium 命令 `$env:E2E_BASE_URL='https://nxm.zlck888.com'; npm run e2e -- --grep public`：`2 passed (3.5s)`。
+- PowerShell `Invoke-WebRequest` 只读探测：`/`、`/login`、`/api/auth/captcha`、`/api/public/homepage`、`/up` 均 HTTP 200；未认证 `/api/auth/me` 为 HTTP 401；所有响应含 `Strict-Transport-Security: max-age=31536000`；`/api/public/application-batches/open` 为 HTTP 200 且响应 `[]`。
+- 本轮先安装缺少的测试依赖：官方 Composer PHAR、`php -d extension=zip composer.phar install --no-interaction --prefer-dist --no-progress --no-scripts --working-dir=modernization/backend`，按已锁定版本安装 110 个包；未修改 composer.json/lock，临时 PHAR 已删除，vendor 为 gitignored 本地目录。普通 `php artisan test --compact` 不可用（项目未注册 Laravel test 命令），改用官方 `php -d extension=zip vendor/bin/phpunit -c phpunit.xml`：`OK (216 tests, 965 assertions)`。Dashboard 定向测试：`OK (7 tests, 35 assertions)`。Pint 修正 DashboardController 后，三个文件 Pint 检查通过，PHP lint 无语法错误。
+- 覆盖率命令 `php -d extension=zip vendor/bin/phpunit -c phpunit.xml --coverage-text` 完成 216 tests/965 assertions，但 PHPUnit 警告 `No code coverage driver available`，所以没有可报告的覆盖率百分比。
+- 本地 `gh auth status` 显示未登录；Git Credential Manager 仅显示账户名 `bos432`，远端 `git ls-remote origin refs/heads/main` 连接超时。未读取凭据。本地 dashboard 权限修复 `5e870b24bf1bbad687239dfdbc956149668c71cf` 仍未推送/部署。
+- `git diff --check` 通过。当前本地存在 QA 报告更新及 DashboardController 格式化改动，尚未提交。没有生产写操作、没有登录/切换角色、没有创建或推进项目。
+
+**运营结论仍为未就绪：**公开正式批次为空，单位无法开始正式申报；SMTP 实投、OSS 隔离恢复、六角色完整闭环和覆盖率数字仍未验收。基础公开入口健康不等于业务流程全部正常。
