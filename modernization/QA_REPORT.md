@@ -668,3 +668,52 @@ PowerShell 对 `/`、`/login`、`/api/auth/captcha`、`/api/public/homepage`、`
 - 尝试以应用运行时配置对 OSS 最新数据库/私有文件归档执行只读 GET+SHA-256 校验，但宝塔终端传输 Base64 脚本失败，未达到 PHP lint、Laravel bootstrap 或 OSS 请求；另一次压缩传输未得到脚本输出且终端重连。之后经同一终端确认 `/tmp/nxm-oss-read-check.php` 为 `SCRIPT_ABSENT`，没有残留校验进程。没有发起 OSS GET、没有下载/解压/恢复归档。OSS 对象读取和隔离恢复继续标记为未验证。
 - 本地临时校验脚本已删除，Git 工作区未留下源码或未跟踪临时文件。此处不把脚本传输尝试记作 OSS 验收成功，也没有修改生产数据、OSS 权限、站点配置或其他服务。
 - 正式运营仍不就绪：公开正式批次为 0；仅有 2 条 E2E 专家认证通过记录而派单人数为 3；SMTP 未配置并未实投；OSS GET/隔离恢复无证据；六角色完整 UI 业务闭环未完成。需要业务方提供正式批次参数、足量真实认证专家及 SMTP 测试收件箱；需要运维提供隔离恢复目标/授权。当前不得开放正式申报。
+
+## 本轮线上功能复核（2026-10-17 22:00 UTC+8）
+
+本轮仅对本站 `nxm.zlck888.com` 做发布后的只读检查和页面浏览，没有修改其他站点、生产业务数据或系统级服务。
+
+### 发布与基础健康
+
+部署命令使用 `RUN_SEED=0 RUN_MIGRATIONS=0`，部署输出包含：
+
+```text
+Database migrations skipped; set RUN_MIGRATIONS=1 only after reviewing pending migrations and backing up the app database
+Activated the release through the site current symlink; no shared services were reloaded
+Health HTTP login passed for [health_check_user]; token revoked via logout.
+Local credential validation and HTTPS captcha/login/logout health check passed
+Deployment complete: 20261017215647
+```
+
+部署后本站只读命令及完整关键输出：
+
+```text
+readlink -f /www/wwwroot/nxm.zlck888.com/current
+/www/wwwroot/nxm.zlck888.com/releases/20261017215647
+HOME_HTTP=200
+ANON_PROJECTS_HTTP=401
+OPEN_BATCHES=[]
+```
+
+结论：本站发布切换成功，匿名项目接口未泄露数据；当前没有正式公开申报批次，因此不能从公网完整走新增正式申报流程。
+
+### 超级管理员页面复核
+
+- `系统管理 -> 数据字典 -> 专家评分项` 可直达，页面显示 `专家评分项当前总分：100 / 100`，并提示评分模板正常。
+- `系统管理 -> 系统配置 -> 审核与评分` 可直达，页面显示：区县审核评分关闭、部门审核评分关闭、专家评审评分开启、管理员终审评分关闭、专家组随机分配开启、默认专家人数 `3`。
+- `审核验收` 菜单可展开为审核任务、派单规则、验收管理；验收管理可展开全部验收、待处理验收、已处理验收、全部可见、草稿验收、审核中验收、已关闭验收。
+- 项目 11 详情显示完整基础信息、申报摘要、项目概述、预算/设备/承诺、阶段记录、审核记录和专家评分汇总；当前显示“专家评审中”，分配专家 `3`、已评分 `0`，下一步提示等待 3 位专家全部评分。
+- 同一项目未完成终审时，详情显示 `终审支持：待确定`、`支持资金：待确定`，不再把缺失终审记录误显示为“不支持/0 元”。
+- 上述页面浏览未发现浏览器控制台错误；本轮未点击保存、未改变评分开关、未改变专家人数、未改变字典数据。
+
+### 未完成或不能宣称通过的检查
+
+- 六角色真实浏览器闭环仍未完成：当前项目虽已完成单位提交、区县审核、部门审核并生成 3 人专家组，但 3 位专家的现有登录凭据不完整，不能冒充、重置未知账号或降低专家人数，因此未代替专家提交评分。
+- 专家评分保存后自动流转管理员终审、终审支持分项保存、验收线上闭环、延期申请处理和完成关闭，尚未取得真实页面操作证据。
+- 正式批次为 `[]`，不能验证正式申报入口、正式批次边界和单位新增项目提交。
+- SMTP 仍未配置实投；OSS 仍只有上传/HEAD 证据，GET 和隔离恢复未验证。
+- PHPUnit 覆盖率驱动仍不可用，因此没有覆盖率百分比；`npm run typecheck` 仍只是项目现有的工具文件检查，不等同于完整 Vue/TypeScript 类型检查。
+
+### 当前结论
+
+已验证的页面、权限、菜单、评分模板、本站发布健康检查均通过；但系统不能标记为“所有功能已验收”或“已具备正式运营条件”。正式开放前至少还需要正式申报批次、足量已认证专家、六角色评分/终审/验收闭环、SMTP 实投验证及 OSS 恢复演练。
