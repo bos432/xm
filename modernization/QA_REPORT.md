@@ -1018,3 +1018,10 @@ exit code: 0
 - 相对 `origin/main` 的候选差异统计为 `16 files changed, 1697 insertions(+), 1588 deletions(-)`；只涉及 `.github/workflows` 和 `modernization/` 下代码、报告、运行手册。`git diff --check origin/main...HEAD` 无输出且 exit 0。
 - 文档 SHA 已 amend 为本地 `e3f193b1bf2f87314b1abd6c6a10bbe8acb722df`（父提交 `39a11d0d30fc18442b828a2bb63dda31a0f5b774`）；本地分支相对 `origin/codex/composer-security-fix` ahead 1。GitHub 443 连接失败，最新 SHA 尚未推送，故没有新的 Actions 证据。
 - 超管只读打开 `/reviews?scope=visible`：待审核列表显示 `No Data`，控制台未观察到 error/warn。这只表示当前登录超管视图没有其可见待办；不是专家/区县/部门各角色待办队列验证，也不是审结流程可用性的证明。
+
+### 远端发布前门禁状态更正（2026-10-18）
+
+- 上述本机复跑期间 GitHub 网络不可达；随后本机 Git 明确配置 `schannel` 后，`git push` 成功将候选提交推至 `codex/composer-security-fix`。最新 SHA 为 `563e5561dc19f22d745c65b14144d02c12ce33fb`（本地后续仅 QA 文档追加提交的父提交）。此前“推送失败/未到 GitHub”的记录适用于推送成功之前，已由本条状态取代。
+- GitHub Actions `Modernization CI #163` run `39060775508` 状态 `Success`，耗时 31s；包含 Frontend lint and build、Backend feature tests、Deployment backup and rollback simulations；Optional online E2E 为 workflow 标记的可选步骤，0s / 未执行。
+- GitHub Actions `Modernization Quality Gate #10` run `39060775505` 状态 `Success`，耗时 44s；backend、`mysql57-migrations`、frontend、deployment-safety 四个 job 均成功。页面显示 GitHub 对 `actions/checkout@v4` / `actions/setup-node@v4` 等 Node 20 运行时弃用提示，以及 `ubuntu-latest` 即将迁移 Ubuntu 26 的提示；均为 runner/action 维护提醒，不影响本次 job 成功状态。
+- 当前候选已推送并通过 CI，但仍未合并 `main`、未部署生产。分支 CI 不会弥补正式批次、正式专家、邮件实投、隔离恢复和完整角色业务验收等运营条件。
