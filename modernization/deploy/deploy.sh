@@ -25,6 +25,10 @@ CURRENT_LINK="$APP_ROOT/current"
 PREVIOUS_CURRENT=""
 DEPLOY_SWITCHED=0
 DB_BACKUP_TMP=""
+SHARED_SCRIPT_BACKUP_DIR=""
+SHARED_SCRIPT_UPDATE_STARTED=0
+WATCHDOG_TMP=""
+BACKUP_TMP=""
 
 log() {
   printf '[%s] %s\n' "$(date '+%F %T')" "$*"
@@ -64,6 +68,23 @@ finish_deploy() {
       rm -f "$CURRENT_LINK"
       log "Deployment failed; removed the first-release current link"
     fi
+  fi
+
+  if [ "$status" -ne 0 ]; then
+    rm -f "$WATCHDOG_TMP" "$BACKUP_TMP"
+    if [ "$SHARED_SCRIPT_UPDATE_STARTED" = "1" ]; then
+      for script_name in queue-worker-watchdog.sh site-backup.sh; do
+        if [ -e "$SHARED_SCRIPT_BACKUP_DIR/$script_name" ] || [ -L "$SHARED_SCRIPT_BACKUP_DIR/$script_name" ]; then
+          mv -f "$SHARED_SCRIPT_BACKUP_DIR/$script_name" "$SHARED_DIR/bin/$script_name" \
+            || log "ERROR: could not restore shared runtime script $script_name"
+        else
+          rm -f "$SHARED_DIR/bin/$script_name" \
+            || log "ERROR: could not remove partially installed shared runtime script $script_name"
+        fi
+      done
+      log "Restored site-local shared runtime scripts after deployment failure"
+    fi
+    [ -z "$SHARED_SCRIPT_BACKUP_DIR" ] || rm -rf "$SHARED_SCRIPT_BACKUP_DIR"
   fi
 
   exit "$status"
@@ -262,13 +283,24 @@ fi
 
 log "Installing site-local runtime scripts after release health checks passed"
 mkdir -p "$SHARED_DIR/bin"
+SHARED_SCRIPT_BACKUP_DIR="$SHARED_DIR/bin/.deploy-backup-${RELEASE_ID}"
+mkdir -m 700 "$SHARED_SCRIPT_BACKUP_DIR"
+for script_name in queue-worker-watchdog.sh site-backup.sh; do
+  if [ -e "$SHARED_DIR/bin/$script_name" ] || [ -L "$SHARED_DIR/bin/$script_name" ]; then
+    cp -a "$SHARED_DIR/bin/$script_name" "$SHARED_SCRIPT_BACKUP_DIR/$script_name"
+  fi
+done
 WATCHDOG_TMP="$SHARED_DIR/bin/.queue-worker-watchdog-${RELEASE_ID}.tmp"
 BACKUP_TMP="$SHARED_DIR/bin/.site-backup-${RELEASE_ID}.tmp"
 install -m 750 "$SOURCE_DIR/modernization/deploy/queue-worker-watchdog.sh" "$WATCHDOG_TMP"
 install -m 750 "$SOURCE_DIR/modernization/deploy/site-backup.sh" "$BACKUP_TMP"
 chown "$WEB_USER" "$WATCHDOG_TMP" "$BACKUP_TMP" || fail "Could not assign site-local runtime scripts to $WEB_USER"
+SHARED_SCRIPT_UPDATE_STARTED=1
 mv -f "$WATCHDOG_TMP" "$SHARED_DIR/bin/queue-worker-watchdog.sh"
 mv -f "$BACKUP_TMP" "$SHARED_DIR/bin/site-backup.sh"
+SHARED_SCRIPT_UPDATE_STARTED=0
+rm -rf "$SHARED_SCRIPT_BACKUP_DIR"
+SHARED_SCRIPT_BACKUP_DIR=""
 
 log "Deployment complete: $RELEASE_ID"
 log "Website root should be: $CURRENT_LINK/public"

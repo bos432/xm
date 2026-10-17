@@ -97,6 +97,9 @@ MOCK
 
 cat > "$MOCK_BIN/chown" <<'MOCK'
 #!/usr/bin/env bash
+if [[ "${DEPLOY_TEST_FAIL_CHOWN:-0}" == "1" && "$*" == *".site-backup-"* ]]; then
+  exit 1
+fi
 exit 0
 MOCK
 
@@ -109,9 +112,11 @@ chmod +x "$MOCK_BIN"/*
 : > "$TEST_ROOT/php.log"
 
 run_deploy() {
+  local fail_chown="${DEPLOY_TEST_FAIL_CHOWN:-0}"
   env PATH="$MOCK_BIN:$PATH" APP_ROOT="$APP_ROOT" REPO_URL=https://example.invalid/repo.git \
     PHP_BIN="$MOCK_BIN/php" COMPOSER_BIN="$TEST_ROOT/composer.phar" NODE_BIN=node NPM_BIN=npm \
-    MYSQLDUMP_BIN="$MOCK_BIN/mysqldump" MOCK_PHP_LOG="$TEST_ROOT/php.log" WEB_USER=www:www "$@" bash "$DEPLOY_SCRIPT"
+    MYSQLDUMP_BIN="$MOCK_BIN/mysqldump" MOCK_PHP_LOG="$TEST_ROOT/php.log" WEB_USER=www:www \
+    DEPLOY_TEST_FAIL_CHOWN="$fail_chown" "$@" bash "$DEPLOY_SCRIPT"
 }
 
 if ! run_deploy > "$TEST_ROOT/success.log" 2>&1; then
@@ -160,6 +165,23 @@ if compgen -G "$APP_ROOT/shared/bin/.*.tmp" >/dev/null; then
   exit 1
 fi
 printf 'PASS failed pre-switch health check preserves previous shared runtime scripts\n'
+
+sleep 1
+ln -sfn "$APP_ROOT/releases/previous" "$APP_ROOT/current"
+printf 'previous watchdog\n' > "$APP_ROOT/shared/bin/queue-worker-watchdog.sh"
+printf 'previous backup\n' > "$APP_ROOT/shared/bin/site-backup.sh"
+if DEPLOY_TEST_FAIL_CHOWN=1 run_deploy > "$TEST_ROOT/runtime-script-install-failure.log" 2>&1; then
+  printf 'FAIL shared runtime script installation failure unexpectedly passed\n' >&2
+  exit 1
+fi
+[[ "$(readlink -f "$APP_ROOT/current")" == "$APP_ROOT/releases/previous" ]]
+grep -q '^previous watchdog$' "$APP_ROOT/shared/bin/queue-worker-watchdog.sh"
+grep -q '^previous backup$' "$APP_ROOT/shared/bin/site-backup.sh"
+if compgen -G "$APP_ROOT/shared/bin/.*.tmp" >/dev/null || compgen -G "$APP_ROOT/shared/bin/.deploy-backup-*" >/dev/null; then
+  printf 'FAIL runtime script installation left temporary files\n' >&2
+  exit 1
+fi
+printf 'PASS runtime script installation failure restores both previous shared scripts and release\n'
 
 sleep 1
 printf 'APP_KEY=base64:dGVzdC1rZXktdmFsdWUtZm9yLXRlc3Rz\nAPP_URL=https://nxm.zlck888.com\nDB_CONNECTION=mysql\nDB_DATABASE=app_test\nDB_USERNAME=app_test_user\nDB_PASSWORD=x\n' > "$APP_ROOT/shared/.env"

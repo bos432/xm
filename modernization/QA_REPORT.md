@@ -915,6 +915,7 @@ PASS retention removes only expired archives owned by this site
 PASS successful deploy backs up database, switches current, and does not reload nginx
 PASS failed HTTP login health check restores the previous release
 PASS failed pre-switch health check preserves previous shared runtime scripts
+PASS runtime script installation failure restores both previous shared scripts and release
 PASS missing health credentials fail before switching releases
 PASS failed database backup stops before release switch and migration
 PASS empty database backup stops before release switch and migration
@@ -928,7 +929,7 @@ exit code: 0
 
 隔离代码复查发现：部署脚本在候选依赖安装、发布切换及 HTTP/login 健康检查之前，就将两个运行脚本直接覆盖至本站 `shared/bin`。如候选健康检查失败，`current` 可回滚，但共享 watchdog/备份工具仍停留在候选版本。此为本站发布原子性/回滚一致性缺陷（P1）。
 
-已在隔离候选中将共享脚本安装延后到新 release 的健康检查全部通过之后；先写入唯一临时文件、设置执行权限和属主，再用同目录 `mv` 原子替换。新增测试确保健康检查失败后 current 和旧共享脚本内容均保持不变，且不留临时文件。没有触碰线上文件或服务。
+已在隔离候选中将共享脚本安装延后到新 release 的健康检查全部通过之后；先写入唯一临时文件，再备份旧共享脚本，设置候选脚本权限和属主，最后替换。任何替换过程失败时，trap 会恢复旧 release 与旧共享脚本并清理临时文件。新增测试覆盖 health check 失败与共享脚本 chown 失败两条路径。没有触碰线上文件或服务。
 
 命令：`bash -n modernization/deploy/deploy.sh modernization/deploy/tests/deploy-release-safety-test.sh modernization/deploy/tests/mock-command.sh && bash modernization/deploy/tests/deploy-release-safety-test.sh`
 
@@ -936,6 +937,7 @@ exit code: 0
 PASS successful deploy backs up database, switches current, and does not reload nginx
 PASS failed HTTP login health check restores the previous release
 PASS failed pre-switch health check preserves previous shared runtime scripts
+PASS runtime script installation failure restores both previous shared scripts and release
 PASS missing health credentials fail before switching releases
 PASS failed database backup stops before release switch and migration
 PASS empty database backup stops before release switch and migration
@@ -944,4 +946,4 @@ PASS relative SQLite path is rejected before migration
 exit code: 0
 ```
 
-该修复尚未提交/推送，故不属于已通过 GitHub CI 的 `ac2b358`，不得部署。需在隔离分支完成全量门禁、推送后等待该新 SHA 的 CI，再部署前重新完成 staging 恢复/业务验收。
+修复提交前的初始回归曾暴露测试注入变量未正确透传、trap 未清掉预备临时文件两个问题；均已修复并由最终脚本模拟覆盖。最终全量门禁结果列于下方；待提交新 SHA 的远端 CI 结束后，再评估进入 staging，不直接生产部署。
