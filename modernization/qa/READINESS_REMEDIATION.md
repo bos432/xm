@@ -1,5 +1,17 @@
 # 运营就绪整改记录
 
+## 2026-10-18 安全升级候选与生产角色只读复验
+
+- 候选安全升级提交 `2330f712a8ba9e8089528f919152640a73abded7` 已在 `codex/composer-security-fix` 隔离分支。GitHub Actions runs `39054021526` 和 `39054021605` 均 completed/success；步骤级核验覆盖 PHP 全量 Feature suite、Composer audit、migration dry-run、API route registration、npm audit/lint/unit/typecheck/build、站点备份/发布回滚模拟。可选线上 E2E job 为 skipped，故不能作为完整业务 E2E 通过证据。
+- 候选依赖：Laravel 12.70.0、PHPUnit 11.5.57、Symfony Console 7.4.21；`composer audit` 为 `No security vulnerability advisories found`，`npm audit` 为 `found 0 vulnerabilities`。本机 PHPUnit `231 tests, 1050 assertions` 全通过；前端 5 项 Node 测试、lint、typecheck、build 全通过。
+- 候选未合并 main、未部署生产。生产 `current` 仍指向 `/www/wwwroot/nxm.zlck888.com/releases/20261017215647`；尝试读取 source SHA 时 Git 因 dubious ownership 拒绝，本轮未修改 Git safe.directory、文件属主或全局配置。
+- 生产 root-only 验收凭据文件 `/root/nxm-e2e-ops-20261016.credentials.json` 权限核对为 `0600 root:root`。仅检查账号字段完整性，六个角色均具备 username/password；从未打印凭据值。
+- 使用服务器端脚本从 root-only 文件读取凭据，在 `https://nxm.zlck888.com` 逐个完成六角色验证码登录、`/api/auth/me` 菜单读取、项目/审核/验收 GET 权限冒烟，随后逐个 logout；未在浏览器或聊天暴露密码/token，未创建或修改任何项目、审核、评分、延期、验收记录。六个角色均 `login=200`、`me=200`、`logout=204`。单位 `GET /api/reviews/tasks=403`；县级、部门、专家、管理员、超管为 200。所有角色项目与验收列表 GET 为 200。超管返回 19 个菜单，管理员 13 个，单位/区县/部门/专家各 6 个。
+- 生产只读健康复核：`artisan about` 显示 production、debug OFF、maintenance OFF；`migrate:status` 最后列出的迁移为 Ran；`queue:failed` 输出 `No failed jobs found.`。直接 `ps` 两次看到本站 `www` 队列 watchdog PID 3145798、worker PID 3145799，均连续运行约 22 小时。首页、验证码 API、门户 API 分别 HTTP 200。
+- 不完整项：生产 `health:login-check` 本轮尝试因 shell 变量引号传值错误报告 password mismatch；该结果不用于判定健康账号失败，也未重试或输出密钥。Artisan 启动时出现 PHP 扩展 API 不匹配及不存在的 no-debug 扩展 warning，既存配置未改。source SHA 因 safe.directory 拒绝无法读取。
+- 未进行真实单位项目创建/提交、区县/部门审核、专家评分、管理员终审、延期申请、验收提交/关闭；未发送 SMTP 邮件、未向 OSS 上传/下载恢复、未进行压力测试或重启演练。线上角色只读冒烟不等于端到端业务验收。
+- 运营判断：公开站点、数据库迁移和当前异步 worker 基线可用；但正式业务批次、足量已认证专家、项目全链路、SMTP 实投、OSS 可恢复性及容量/灾备仍需完成验收，不签署无条件“已可完整运营”。
+
 代码基线：`origin/main` `84da667`；运营安全头补丁上线提交：`5b320472fdeb9bf6254cfe54f62b6ea8626eb10b`。本次只部署 `nxm.zlck888.com` 站点，没有改动其他站点或整机服务。
 
 ## 已落实
