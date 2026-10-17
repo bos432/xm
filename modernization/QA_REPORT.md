@@ -348,3 +348,10 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - 生产 Chromium UI E2E 仍未能启动：Playwright Chromium 缺少系统库 `libasound.so.2`。没有在生产机安装系统包；失败后确认临时凭据环境文件已删除、没有残留 Playwright 进程。现有控制台浏览器继续保留共享超管会话，没有切换账号。
 - 以上是认证、身份及只读 API 权限验证，**不等于**六角色 UI 工作流或申报→区县→部门→多专家评分→终审→验收闭环。未创建、修改、提交、审核、评分、关闭任何生产业务记录。
 - 运营门槛不变：公开开放批次为 `[]`；认证专家页面仅两条 E2E 已通过记录且派单数设置为 3；SMTP 为 `log` 未实投；OSS 下载及隔离恢复未执行。正式运营仍未就绪。
+
+## 生产浏览器 E2E 环境复核补充（2026-10-17）
+
+- 重新尝试在生产服务器执行现有 Playwright 六角色用例。服务器 OpenAnolis 3 已有 Playwright Chromium 文件，但系统共享库不齐：首次启动缺 `libasound.so.2`；从服务器自身 DNF 仓库把 `alsa-lib` RPM 解到 `/tmp` 并仅通过临时 `LD_LIBRARY_PATH` 加载后，进一步缺 `libatspi.so.0`（`chrome-headless-shell: error while loading shared libraries: libatspi.so.0`）。这表明还缺桌面运行时依赖；未继续下载/安装系统包，避免扩大生产服务器变更面。
+- 临时 `alsa-lib` RPM/解包目录已删除；确认没有残留 Playwright/Chromium 测试进程。未安装软件包、未改系统配置或服务。服务器 E2E 结果为 1 个公共首页用例失败于浏览器启动、9 个未运行，不能标记通过。
+- 改在隔离的 Windows 验收工作区执行 `$env:E2E_BASE_URL='https://nxm.zlck888.com'; $env:E2E_RUN_ID='20261017-public-final'; npm run e2e -- --grep public`：`2 passed (3.8s)`。该结果只覆盖公开首页与匿名 API，不替代六角色 UI 工作流。
+- 六角色认证、角色身份匹配及只读 API 权限矩阵已通过上一节记录的服务器端 HTTP 测试；完整页面交互路径仍未完成。
