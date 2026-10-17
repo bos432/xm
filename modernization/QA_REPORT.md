@@ -298,3 +298,13 @@ TLS CN=nxm.zlck888.com until=2027-01-12 10:59:59 UTC
 - 从非本站 Origin `https://example.invalid` 对 `/api/auth/me` 发只读 OPTIONS：HTTP 204，`Access-Control-Allow-Origin: *`、仅允许 GET、允许 `authorization,content-type`，未返回 `Access-Control-Allow-Credentials`。随后带同一 Origin 的匿名 GET `/api/auth/me` 返回 `401 application/json` 和 `{"message":"Unauthenticated."}`；匿名公开首页 API 返回 200。没有发送 Authorization token、Cookie 或业务写请求。
 - 结论：证据未显示浏览器可跨站携带会话凭据读取受保护 API；wildcard 仍扩大匿名公开 API 的跨站可读面。配置来源不在应用源码，推测位于站点服务器层，尚未证明具体配置文件。建议运维评估仅本站级 CORS allowlist；不得直接编辑共享 Nginx 全局配置。
 - 本轮未尝试撤销历史暴露私钥：现有浏览器仅在 ECS 详情页，无法验证证书/CA 状态；文件权限收紧不能代替证书密钥轮换或撤销。
+
+## 生产追加复核（2026-10-17 07:30 UTC+8）
+
+- 当前验收 checkout `9bb2acf` 与 `origin/main` 相同；本轮无生产应用代码发布。
+- 前端再次运行 `npm run lint`、`npm run typecheck`、`npm test`、`npm run build`：均通过；单测 `4/4`。
+- 线上公开 Playwright `npm run e2e -- --grep=public`：`2 passed`。线上只读 GET `/`、`/login`、`/api/auth/captcha`、`/api/public/homepage`、`/api/public/application-batches/open`、`/up` 均 HTTP 200；开放批次响应仍为 `[]`。未认证 `/api/auth/me`、`/api/projects`、`/api/reviews/tasks` 均为 401 JSON。
+- 本地后端使用已有主工作区依赖执行 `php artisan test --compact`：`176 passed (819 assertions)`。该依赖工作区含未提交修改且与验收 checkout 提交历史不一致，故只能证明该工作树的测试结果，不能代替当前 checkout 的后端套件证据。隔离 checkout 无 `vendor`，临时 bootstrap 写入被执行环境策略拒绝；未尝试绕过限制或安装依赖。
+- HSTS 缺失根因已查明：本站 `/www/server/panel/vhost/nginx/extension/nxm.zlck888.com/nxm-tls.conf` 原来只有本站 TLS listener/certificate，没有 HSTS；公共安全头由本站 vhost 单独配置，不需要编辑共享 nginx.conf。已先备份为 `nxm-tls.conf.codex-backup-20261017`，再在该本站专属 TLS include 追加 `add_header Strict-Transport-Security "max-age=31536000" always;`。`nginx -t` 输出 `syntax is ok`、`test is successful` 后才执行 `nginx -s reload`；`systemctl is-active nginx` 返回 `active`。
+- HSTS 公网复验：`/`、`/login`、`/api/auth/captcha`、`/up` 均 HTTP 200 且 `Strict-Transport-Security: max-age=31536000`；对应的 `X-Content-Type-Options`、`X-Frame-Options` 仍存在。此变更仅属于本站 TLS 扩展配置，不改 Nginx 全局配置、其他站点、MySQL 或应用代码；宝塔若重建站点 TLS 配置，须再次核验。
+- 运营阻断仍在：正式开放批次为 0；已有证据仅显示 2 个 approved 专家认证记录，少于派单人数 3；SMTP 尚未配置并实投；OSS GET/隔离恢复未验；六角色浏览器业务闭环未完成。没有创建、审批、评分、验收任何生产业务记录。
