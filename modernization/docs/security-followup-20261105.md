@@ -41,6 +41,6 @@ The open-batch API body was `[]`. This is a business configuration/readiness con
 
 ## Release Gate and Remaining Work
 
-- This follow-up has not yet passed hosted CI and is not deployed.
-- After CI succeeds, publish the reviewed commit to `main`, then deploy only this site with `RUN_MIGRATIONS=0 RUN_SEED=0`; do not reload shared services. Verify the active release and site-local queue worker.
+- Candidate commit `71568ad` is local on `codex/composer-security-fix`; pushing it failed twice because GitHub HTTPS port 443 reset/timed out. Hosted CI has not run, and the candidate is not in remote `main` or production.
+- Retry publishing the candidate branch when GitHub is reachable. After hosted CI succeeds, publish the reviewed commit to `main`, then deploy only this site with `RUN_MIGRATIONS=0 RUN_SEED=0`; do not reload shared services. Verify the active release and site-local queue worker.
 - Formal readiness remains incomplete until isolated six-role workflow, SMTP delivery, and OSS download/restore rehearsal have current evidence. Do not mutate production business data for those tests.
