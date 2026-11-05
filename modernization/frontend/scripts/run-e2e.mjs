@@ -4,9 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 const frontendDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const nodeModulesDir = resolve(frontendDir, 'node_modules')
-const playwrightBin = process.platform === 'win32'
-  ? resolve(nodeModulesDir, '.bin', 'playwright.cmd')
-  : resolve(nodeModulesDir, '.bin', 'playwright')
+const playwrightCli = resolve(nodeModulesDir, 'playwright', 'cli.js')
 const runId = process.env.E2E_RUN_ID || timestamp()
 
 const env = {
@@ -19,12 +17,11 @@ console.log(`E2E run: ${runId}`)
 console.log(`E2E reports: ${resolve(frontendDir, '..', 'e2e', 'reports', 'runs', runId)}`)
 
 const result = spawnSync(
-  playwrightBin,
-  ['test', '--config', resolve(frontendDir, '..', 'e2e', 'playwright.config.js'), ...process.argv.slice(2)],
+  process.execPath,
+  [playwrightCli, 'test', '--config', resolve(frontendDir, '..', 'e2e', 'playwright.config.js'), ...process.argv.slice(2)],
   {
     cwd: frontendDir,
     env,
-    shell: process.platform === 'win32',
     stdio: 'inherit'
   }
 )

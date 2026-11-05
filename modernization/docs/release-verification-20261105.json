@@ -1,0 +1,36 @@
+{
+  "date": "2026-11-05",
+  "phase": "QA-01",
+  "candidate_sha": "cef21d38e6989cffc9cc5e516dbd14f4a445d6c5",
+  "candidate_source": "git ls-remote origin refs/heads/main",
+  "hosted_gates": [
+    {"run_id": 41952385666, "name": "Modernization CI", "conclusion": "success", "head_sha": "cef21d38e6989cffc9cc5e516dbd14f4a445d6c5"},
+    {"run_id": 41952385683, "name": "Modernization Quality Gate", "conclusion": "success", "head_sha": "cef21d38e6989cffc9cc5e516dbd14f4a445d6c5"}
+  ],
+  "preflight": {
+    "invocation_id": "t-hk0725kr7x2stts",
+    "exit_code": 0,
+    "release": "20261018050541",
+    "commit": "59bbdecad2295834cbd6fc27b57ac409778b253c",
+    "php": "8.3.36",
+    "node": "20.19.2",
+    "npm": "10.8.2",
+    "disk_used_percent": 71,
+    "disk_available_gb_approx": 83,
+    "failed_jobs": 0,
+    "captcha_http_status": 200
+  },
+  "deployment": "passed",
+  "deployment_attempt": {"invocation_id": "t-hk0725lpfjtyhvk", "exit_code": 1, "failed_release": "20261105104120", "rollback_release": "20261018050541", "failure_stage": "HTTP login health"},
+  "cache_recovery": {"invocation_id": "t-hk0725mvkjzi800", "exit_code": 0, "permissions": "640 www:www", "http_login_logout": "passed"},
+  "successful_deployment": {"invocation_id": "t-hk0725n6ge53lds", "exit_code": 0, "release": "20261105105750", "commit": "cef21d38e6989cffc9cc5e516dbd14f4a445d6c5", "run_migrations": false, "run_seed": false},
+  "postrelease": {"invocation_id": "t-hk0725nrafxzmyo", "exit_code": 0, "http_login_logout": "passed", "failed_jobs": 0, "http_200_paths": ["/", "/login", "/dashboard", "/application-batches", "/api/auth/captcha", "/api/public/homepage", "/api/public/application-batches/open"], "cache_permissions": "640 www:www"},
+  "worker_check": {"invocation_id": "t-hk0725o8k0ewikg", "exit_code": 0, "php_workers": 1, "php_pid": 2136790, "flock_pid": 2136789, "cwd": "/www/wwwroot/nxm.zlck888.com/releases/20261105105750/backend"},
+  "anonymous_e2e": {"exit_code": 0, "passed": 2, "failed": 0, "duration_seconds": 5.7, "results_path": "../e2e/reports/runs/20261105-postrelease-public/results.json"},
+  "e2e_runner_regression": {"before_exit_code": 1, "after_exit_code": 0, "passed": 2, "duration_seconds": 4.4, "results_path": "../e2e/reports/runs/20261105-postrelease-wrapper/results.json", "production_runtime_changed": false},
+  "isolated_six_role_e2e": "not_run",
+  "smtp_delivery": "blocked_external",
+  "oss_restore": "not_run",
+  "production_business_writes": false,
+  "shared_service_restarts": false
+}
