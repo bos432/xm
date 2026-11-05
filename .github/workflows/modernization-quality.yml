@@ -120,6 +120,7 @@ jobs:
           tests/Feature/ProjectAcceptanceHintTest.php
           tests/Feature/DispatchRuleAdministrationTest.php
           tests/Feature/AdministrativeSurfaceRegressionTest.php
+          tests/Feature/LifecycleActionRegressionTest.php
           --log-junit /tmp/nxm-mysql-business-results.xml
 
       - name: Preserve isolated MySQL business regression evidence

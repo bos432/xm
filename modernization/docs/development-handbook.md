@@ -5,11 +5,13 @@
 - Published production baseline: `cef21d38e6989cffc9cc5e516dbd14f4a445d6c5` (`20261105105750`), deployed 2026-11-05 with migrations and Seeder skipped. Previous rollback target: `20261018050541` / `59bbdec`.
 - Remote `main` and production match `cef21d3`; exact-revision hosted gates passed. Independent HTTPS login/logout, seven HTTP paths, and one site PHP worker on the new release verified. Anonymous browser E2E: 2 passed.
 - Formal operations readiness is not fully verified: isolated submission and acceptance/extension closure independently read back; super-admin score configuration save/reload/restoration verified QA20. Responsive UI, other feature paths, SMTP delivery and OSS restore remain open.
-- QA26 local dispatch validation/portable ordering fixes:251tests1578assertions, changed-file Pint pass; new source not yet pushed/hosted/deployed. Prior4fb9f01 CI41986146773/Quality41986146817 completed/success and coverage78.51% apply prior source only. Full-repo formatting baseline unresolved.
+- QA27 lifecycle action regressions pass3tests82assertions; full backend254tests1660assertions. Pending source/tests remain isolated; remote last4fb9f01 after terminal5ee1de0 push failures. Prior4fb9f01 gates/coverage78.51% apply prior source only. Full-repo formatting/concurrency/operations remain open; not deployed.
 
 ## Recent Increment
 
-2026-11-05, QA-26 dispatch tests exposed silent candidate dropping and SQLite FIELD failure. Strict candidate validation/portable ordered selection fixed; snapshots preserved after rule changes/deletion. Local251tests1578assertions/Pint0. MySQL workflow includes new admin+dispatch tests. Evidence qa26-dispatch-20261105.json. Production unchanged.
+2026-11-05, QA-27 task book/progress/rectification action, cross-unit/disabled-unit/invalid-input/terminal tests passed without app source changes. Full254tests1660assertions, test Pint0. Evidence qa27-lifecycle-20261105.json; MySQL workflow includes file, new hosted run pending. Production unchanged.
+
+2026-11-05, QA-26 dispatch tests exposed silent candidate dropping and SQLite FIELD failure. Strict validation/portable selection fixed; snapshots preserved. Local251tests1578assertions/Pint0; committed5ee1de0. Push23501/78820/27127 terminal exit1; remote last4fb9f01. Evidence qa26-dispatch-20261105.json. Production unchanged.
 
 2026-11-05, QA-25 exact4fb9f01 CI/Quality all required jobs completed/success; downloaded artifact13396575056 and parsed root metrics/JUnit:78.51% statements,247tests1517assertions. Evidence qa25-hosted-coverage-20261105.json. Production unchanged.
 
@@ -55,7 +57,7 @@
 
 ## Next Step
 
-Commit/push QA26 dispatch fixes and verify exact hosted MySQL/coverage; then lifecycle and true concurrency. Tab12 unit handoff retained, viewport reset; no reseed. Broader responsive UI, SMTP/OSS restore and browser upload remain open. Production unchanged.
+Commit QA27 tests and retry candidate synchronization; inspect exact remote/gates. Next build true MySQL concurrent-write test with separate processes/isolated DB. Tab12 unit handoff retained, no reseed. Broader UI, SMTP/OSS restore and browser upload remain open. Production unchanged.
 
 ## Evidence and State
 
@@ -361,3 +363,17 @@ Commit/push QA26 dispatch fixes and verify exact hosted MySQL/coverage; then lif
 - Commands: PHP8.3.30/PHPUnit11.5.57; targeted second red exit1,4tests46assertions1error1failure; initial green4/61; full php vendor/bin/phpunit --log-junit ../docs/qa26-backend-full.xml exit0,251tests1578assertions. Changed-file Pint formatted then --test exit0; git diff --check0. An rg follow-up used wrong relative workflow path and returned2; corrected root path before commit, not a test gate failure. New-source coverage/hosted/browser not_run.
 - Data/permissions: in-memory synthetic users; four unauthorized roles CRUD/select403, active correct-role candidates only, invalid candidate updates no mutation. No production config/DB/account/business changes, external SMTP/OSS, other sites/shared services or sales/payment changes. QA_REPORT adds P2 candidate and P0 isolated verification blocker fixed_local; whole-repo formatting remains open, true concurrent writes remain not_run.
 - Next: commit/push exact QA26 and inspect isolated MySQL hosted results/coverage; then lifecycle negative paths and concurrent transaction runner. Production remains cef21d3.
+
+### QA-26 Transport Checkpoint
+
+- Commit5ee1de05f4cab0de4edce3647831af0509939265 exit0; push session23501 exit1 curl28 connection reset (misleading final Everything up-to-date is not success); REST last remote4fb9f01. Retry session78820 exit1 failed443 connection after21seconds. Both terminal, no running shell push. Command-local schannel/HTTP1.1; retry also command-local postBuffer5242880, no persistent Git/network config changed.
+- New-source hosted gates not_run, production unchanged. Next retry same existing commit and inspect remote equality; local lifecycle tests can proceed independently. No completion/deployment claim.
+
+- Final transport observation: third push27127 terminal exit1, failed github443 connection after21seconds. No pending Git process/session; no restart is needed for old handles. Local251/1578 remains valid, remote acceptance/new gates not proven. Next local lifecycle tests can progress without transport; retry existing commit when connection recovers. No production changes.
+
+## 2026-11-05 QA-27: Lifecycle Sequential Actions and Unit Isolation
+
+- Scope: task book/progress create-submit-return-edit-resubmit-approve; rectification create-response-return-resubmit-approve; other-unit list isolation/write403; draft/repeat/terminal actions422; invalid overlong fields no rows and inactive-unit writes403. First targeted run passed3/82, no new app defect/fix inferred. These are sequential requests, not true concurrency.
+- Files: backend/tests/Feature/LifecycleActionRegressionTest.php, .github/workflows/modernization-quality.yml adds file to isolated MySQL run, docs/qa27-lifecycle-20261105.json and two JUnit outputs, QA_REPORT, handbook. PHP8.3.30/PHPUnit11.5.57; targeted exit0, full php vendor/bin/phpunit --log-junit ../docs/qa27-backend-full.xml exit0,254tests1660assertions; test Pint exit0/no formatting changes. New-source coverage/hosted/browser not_run. Mistyped ProjectReviewController path read failed; use rg file discovery before next concurrency inspection.
+- Permissions/data: SQLite memory, synthetic own/other units/admin, array cache/mail; no production business data/config/account/DB writes, external SMTP/OSS, sales/payment or shared-service/other-site changes. Acceptance ledger adds verified sequential coverage only; fullrepo Pint remains open. Production lastcef21d3.
+- Next: commit/push QA27 and exact remote receipt/gates; inspect real review transaction/locking before multi-process MySQL test. No current running command session.

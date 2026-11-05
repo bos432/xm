@@ -31,6 +31,8 @@ QA-10 update: QA08-P1-DETAIL is fixed locally, not deployed. Reviewer drawer and
 
 ## Executed verification
 
+- QA27: `php vendor/bin/phpunit tests/Feature/LifecycleActionRegressionTest.php --log-junit ../docs/qa27-lifecycle-first.xml` exit0,3tests82assertions. Tasks/progress/rectification return-edit/resubmit-finalize, cross-unit403/empty list, repeat action422, invalid inputs no rows and inactive unit403 verified. Full backend `php vendor/bin/phpunit --log-junit ../docs/qa27-backend-full.xml` exit0,254tests1660assertions. Test file Pint0; no app source changes. Sequential tests do not prove concurrency. Evidence qa27-lifecycle-20261105.json; production unchanged.
+
 - QA26 full backend `php vendor/bin/phpunit --log-junit ../docs/qa26-backend-full.xml` exit0, `OK (251 tests, 1578 assertions)`. Changed-file Pint exit0. Dispatch red second run4tests46assertions1error1failure; first run also had missing unit fixture test-authoring error, corrected. Administrative and dispatch tests added to isolated MySQL workflow; new-source hosted/browser tests pending. Production unchanged.
 
 - QA24: full backend `php vendor/bin/phpunit --log-junit ../docs/qa24-backend-full.xml`, exit0, `OK (247 tests, 1517 assertions)`, PHP8.3.30. Changed-file Pint exit0. Five non-super roles denied administrative APIs; system text override/reset/export and builtin protection verified. Red security cases: 3tests,2failures,1error; see qa24-ip-behavior-red.xml. New-source coverage not measured; production unchanged. Prior562fee7 CI41984836524/Quality41984836526 confirmed completed/success, which does not cover QA24 PHP edits.

@@ -19,7 +19,7 @@
   },
   "verified":["unauthorized unit/county/department/expert CRUD and user selector403", "admin CRUD/filter and active role candidate selection", "wrong-role/inactive/duplicate/missing IDs422 with no mutation", "reverse input user order preserved", "assignment snapshot unchanged after rule modification/deletion", "invalid fields422 and no insert"],
   "changes":["scoped exists validation and distinct candidate IDs", "portable collection order preserving supplied IDs", "add dispatch and security regression files to isolated MySQL workflow"],
-  "hosted_new_source":"not_run until push",
+  "hosted_new_source":"not_run: commit5ee1de05f4cab0de4edce3647831af0509939265 push23501/78820/27127 each terminal exit1; remote last4fb9f01",
   "browser_new_source":"not_run",
   "true_concurrency":"not_run"
 }

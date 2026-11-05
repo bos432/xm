@@ -1,0 +1,12 @@
+{
+  "stage":"QA-27",
+  "runtime":"PHP8.3.30 / PHPUnit11.5.57",
+  "targeted":{"command":"php vendor/bin/phpunit tests/Feature/LifecycleActionRegressionTest.php --log-junit ../docs/qa27-lifecycle-first.xml","exit_code":0,"tests":3,"assertions":82},
+  "full":{"command":"php vendor/bin/phpunit --log-junit ../docs/qa27-backend-full.xml","exit_code":0,"tests":254,"assertions":1660,"errors":0,"failures":0},
+  "format":{"command":"php vendor/bin/pint tests/Feature/LifecycleActionRegressionTest.php","exit_code":0,"result":"passed without changes"},
+  "covered":["task book/progress create-submit-return-edit-resubmit-approve", "rectification create-response-return-resubmit-approve", "other-unit list empty and writes403", "draft review422, repeat submit/review422, approved edit422", "invalid/overlong inputs422 with no rows", "inactive unit writes403"],
+  "source_changes":"tests and MySQL workflow only; no new application fix in QA27",
+  "isolation":"SQLite memory; array cache/mail; synthetic data",
+  "not_proven":["true concurrency", "browser workflow", "new-source MySQL until hosted run", "SMTP delivery", "OSS restore"],
+  "production_changed":false
+}
