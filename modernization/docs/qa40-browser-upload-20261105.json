@@ -1,0 +1,42 @@
+{
+  "stage": "QA-40",
+  "command": "node ../frontend/node_modules/@playwright/test/cli.js test --config playwright.config.js tests/qa40-browser-upload.spec.js --workers=1",
+  "working_directory": "modernization/e2e",
+  "runtime": {
+    "node": "25.2.1",
+    "playwright": "1.61.1",
+    "browser": "Chromium",
+    "base_url": "http://127.0.0.1:18742",
+    "api_proxy": "127.0.0.1:18741",
+    "database": "isolated SQLite fixture"
+  },
+  "exit_code": 0,
+  "tests": 1,
+  "passed": 1,
+  "failed": 0,
+  "duration_seconds": 6.7,
+  "production_modified": false,
+  "synthetic_data_retained": true,
+  "project_id": 4,
+  "batch_id": 2,
+  "file": {
+    "id": 3,
+    "name": "QA40-20261105101429-245eb130.pdf",
+    "bytes": 39,
+    "sha256": "c062845eaf9035d9aef6621904be47759a6f390f1d5ffdabc60c920663e6a0f7"
+  },
+  "checks": {
+    "draft_created": 201,
+    "browser_upload_and_row_visible": "pass",
+    "owner_download_and_sha256": 200,
+    "business_admin_draft_detail": 403,
+    "anonymous_file_download": 401,
+    "both_logouts": 204
+  },
+  "limitations": [
+    "Fixture contains only one applicant unit; cross-unit authorization was not directly exercised.",
+    "No production account, database, file storage, SMTP or OSS was used.",
+    "Two failed locator attempts created incomplete synthetic drafts in the isolated SQLite fixture; retained intentionally."
+  ],
+  "playwright_results": "modernization/e2e/reports/runs/qa40-browser-upload-20261105-r3/results.json"
+}
