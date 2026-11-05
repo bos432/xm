@@ -2,7 +2,8 @@
 
 ## Current Status
 
-- QA41 locally fixed: stale draft edit/submit now re-fetches under transaction/row lock. Final isolated MySQL9/9 races and rollback7tests38assertions pass; backend262/1701. QA40 final valid630-byte PDF upload/access regression passes. Evidence `qa41-release-gates-20261105.json`, `qa40-browser-upload-final-20261105.json`. Candidate uncommitted/unpublished at this checkpoint; production unchanged.
+- QA42: b23d1ce CI failed only E2E inventory assertion after adding QA40 test (old10/1, actual11/2); all four Quality jobs and backend CI pass. Workflow assertion updated locally, explicit upload-title assertion added. Evidence `qa42-e2e-inventory-20261105.json`. Next validate inventory, push corrected candidate, check exact jobs; production unchanged.
+- QA41 fixed candidate `b23d1ceb9419045771700c2525761c42d954a97f` pushed and independently confirmed by GitHub API. Final isolated MySQL9/9 races and rollback7tests38assertions pass; backend262/1701. QA40 valid630-byte PDF upload/access regression passes. Exact CI42016210292/Quality42016210174 in_progress at delivery checkpoint, not yet approved. Evidence `qa41-release-gates-20261105.json`, `qa40-browser-upload-final-20261105.json`, `qa41-hosted-checkpoint-20261105.json`. Production unchanged.
 - Published production baseline: `cef21d38e6989cffc9cc5e516dbd14f4a445d6c5` (`20261105105750`), deployed 2026-11-05 with migrations and Seeder skipped. Previous rollback target: `20261018050541` / `59bbdec`.
 - Remote `main` and production match `cef21d3`; exact-revision hosted gates passed. Independent HTTPS login/logout, seven HTTP paths, and one site PHP worker on the new release verified. Anonymous browser E2E: 2 passed.
 - Formal operations readiness is not fully verified: isolated submission and acceptance/extension closure independently read back; super-admin score configuration save/reload/restoration verified QA20. Responsive UI, other feature paths, SMTP delivery and OSS restore remain open.
@@ -12,6 +13,10 @@
 - QA39/40: SMTP/OSS focused tests23/105, backup simulation4/4, Chromium browser upload/access smoke1/1. QA40 unit upload/download SHA matches; anonymous401 and business-admin draft403; isolated data retained. Frontend lint21 tests, typecheck, build and explicit E2E ESLint pass. Local commits `bb8ebf8`, `cc23c3d`, `5ffde60` are not hosted; remote `5c3930d` because GitHub:443 fails. Real SMTP/OSS restore, broader concurrency/soak and official production batch remain open. Evidence `qa39-operations-simulations.json`, `qa40-browser-upload-20261105.json`, `qa39-push-attempt-20261105.json`.
 
 ## Recent Increment
+
+2026-11-05, QA-42: hosted CI42016210292 frontend job failed at List E2E coverage; all preceding steps passed. Local npm e2e --list confirms11tests/2files vs hard-coded10/1. Updated CI assertion and required upload title. New-source gates not_run; production unchanged.
+
+2026-11-05, QA-41 delivery: ordinary isolated push exit0; remote receipt confirms b23d1ce. Exact CI42016210292/Quality42016210174 in_progress. Supersedes QA39 GitHub network blocker for this delivery only. Next poll these existing runs, not a new push; production unchanged.
 
 2026-11-05, QA-41 GREEN: final guarded MySQL runner exit0,9/9 races; acceptance rollback2/13, project rollback1/5, draft atomicity4/20. Full backend262/1701, explicit E2E ESLint0; absent credentials safely skips write test. QA40 r4 valid630-byte PDF supersedes r3 for final upload result. See latest appended QA41 GREEN entry and machine summaries. Production unchanged.
 
@@ -82,7 +87,7 @@ Superseded by the QA-33 repeat verification entry above: the rerun completed suc
 
 ## Next Step
 
-Commit QA41 transaction fix, regression/CI wiring and final evidence after diff checks; retry isolated-branch push and verify exact-SHA CI/Quality. Real SMTP/OSS restore, bounded soak and officially approved production batch remain open. Do not deploy until candidate-specific gates and operational evidence pass; do not change unrelated services.
+Validate QA42 corrected E2E inventory assertions, commit/push isolated candidate and check its exact CI/Quality; b23d1ce CI failed and must not deploy. Real SMTP/OSS restore, bounded soak and officially approved production batch remain open. Do not change unrelated services.
 
 ## Evidence and State
 
@@ -483,3 +488,20 @@ Commit QA41 transaction fix, regression/CI wiring and final evidence after diff 
 - Isolation/permissions: labeled MySQL container13371 and loopback SQLite browser fixture only, synthetic accounts/projects, array mail/cache. Stale edits/resubmits rejected422; injected audit failure restores entire row and leaves no audit/message. No production database/account/config/release, external SMTP/OSS, shared service, other site or sales/payment switch changed. No running shell test session remains.
 - Ledger: QA_REPORT marks QA41 fixed_local; final upload verified_local. Exact-source hosted gates, broader soak, real SMTP/OSS restoration and officially approved production batch remain open. Earlier78.51% coverage applies prior source, not this increment.
 - Next: stage exact QA41/QA40 source/evidence files, commit isolated candidate, push normally and verify exact remote SHA plus CI/Quality. Do not include untracked e2e/reports credentials or artifacts in Git; no production deployment before gates.
+
+## 2026-11-05 QA-41 Delivery: Remote Receipt and Live Hosted Gates
+
+- Scope: committed the QA41 fix/regressions/evidence as b23d1ce and delivered to isolated branch. Earlier GitHub:443 blocker no longer applies to this attempt. No production deployment or merge.
+- Files/evidence: `qa41-hosted-checkpoint-20261105.json`, QA_REPORT and this handbook; application candidate b23d1ceb9419045771700c2525761c42d954a97f.
+- Commands/results: `git -c http.sslBackend=schannel -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=20 push origin codex/composer-security-fix` exit0, remote5c3930d..b23d1ce. Public GitHub branch REST query exit0 confirms exact SHA. Actions REST query exit0 returns CI42016210292 and Quality42016210174 both in_progress. Those are live external handles, not passed checks.
+- Permissions/data: only isolated Git branch, no force push or credentials changes; no production DB/config/account/release, external SMTP/OSS, shared services, other sites or sales/payment switches touched. E2E raw reports remain untracked/excluded; no local shell test process remains.
+- Ledger: OPS-DELIVERY-01 network blocker resolved for b23d1ce delivery; hosted verdict pending. SMTP/OSS restoration, broader soak and official production batch remain open.
+- Next: query those exact workflow run IDs and jobs; preserve completion results/artifacts. Do not retry push just to restart existing jobs or deploy while pending.
+
+## 2026-11-05 QA-42: Hosted E2E Inventory Gate Correction
+
+- Scope: exact b23d1ce CI failed its E2E-list inventory gate because QA40 added one file/test. Existing grep requires10tests/1file; local list returns11tests/2files. Update count and explicitly require new upload test title, retaining homepage/API assertions. No business source change.
+- Files/evidence: `.github/workflows/modernization-ci.yml`, `qa42-e2e-inventory-20261105.json`, QA_REPORT, this handbook. GitHub REST job-step query confirms install/audit/lint/unit/typecheck/build passed, List E2E coverage failed. Unauthenticated log download403; that log is not claimed inspected. All four Quality jobs and backend CI passed.
+- Commands/runtime: Node25.2.1; from frontend `npm run e2e -- --list` exit0, exact11tests/2files and new upload title. Original count assertion cannot match that output. New exact-source hosted checks pending.
+- Permissions/data: listing only, no account login or business write; no production site/DB/config/credential, shared service, external SMTP/OSS or sales/payment change. Ledger adds pipeline blocker, no release approval.
+- Verification: corrected four workflow strings checked against captured `npm run e2e -- --list` output, all PASS; `git diff --check` exit0. No active test process remains. Next: commit/push and verify new SHA gates. Preserve b23d1ce failure as evidence, do not rerun unchanged source to hide failure.

@@ -1,0 +1,11 @@
+{
+  "stage": "QA-42",
+  "candidate_under_test": "b23d1ceb9419045771700c2525761c42d954a97f",
+  "hosted": {"ci": 42016210292, "ci_result": "failure", "failed_job": 127207266410, "failed_step": "List E2E coverage", "other_frontend_steps": "install/audit/lint/unit/typecheck/build success", "quality": 42016210174, "quality_jobs": "all four success"},
+  "log_access": {"endpoint": "GET /repos/bos432/xm/actions/jobs/127207266410/logs", "status": 403, "message": "Must have admin rights to Repository"},
+  "local_reproduction": {"cwd": "modernization/frontend", "command": "npm run e2e -- --list", "exit_code": 0, "output_summary": "Total: 11 tests in 2 files", "old_workflow_expected": "Total: 10 tests in 1 file", "old_assertion_matches": false},
+  "fix": "Update expected inventory to11tests/2files and explicitly require upload regression title; retain original homepage/API assertions",
+  "corrected_assertion_validation": {"command": "Capture npm run e2e -- --list; assert all four workflow strings with Contains; git diff --check", "exit_code": 0, "assertions_passed": 4},
+  "production_modified": false,
+  "new_source_hosted_verdict": "not_run"
+}

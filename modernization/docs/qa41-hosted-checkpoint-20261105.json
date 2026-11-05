@@ -1,0 +1,12 @@
+{
+  "stage": "QA-41-delivery",
+  "candidate_sha": "b23d1ceb9419045771700c2525761c42d954a97f",
+  "branch": "codex/composer-security-fix",
+  "push": {"command": "git -c http.sslBackend=schannel -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=20 push origin codex/composer-security-fix", "exit_code": 0, "output": "To https://github.com/bos432/xm.git\n   5c3930d..b23d1ce  codex/composer-security-fix -> codex/composer-security-fix"},
+  "remote_receipt": {"command": "Invoke-RestMethod https://api.github.com/repos/bos432/xm/branches/codex/composer-security-fix", "exit_code": 0, "sha": "b23d1ceb9419045771700c2525761c42d954a97f"},
+  "workflow_query": "GET https://api.github.com/repos/bos432/xm/actions/runs?head_sha=b23d1ceb9419045771700c2525761c42d954a97f",
+  "runs": [{"id": 42016210292, "name": "Modernization CI", "status": "in_progress", "conclusion": null}, {"id": 42016210174, "name": "Modernization Quality Gate", "status": "in_progress", "conclusion": null}],
+  "hosted_verdict": "superseded_by_QA42_failure_evidence",
+  "subsequent_observation": "CI frontend job failed E2E inventory step; four Quality jobs and backend CI passed. See qa42-e2e-inventory-20261105.json; in_progress above is historical initial receipt.",
+  "production_modified": false
+}
