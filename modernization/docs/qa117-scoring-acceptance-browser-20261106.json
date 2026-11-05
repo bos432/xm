@@ -1,0 +1,28 @@
+{
+  "phase": "QA113-117",
+  "production_changed": false,
+  "source_base": "ffba23856ea828aad7e8e5e663d47e3606d2f0e1",
+  "new_changes": "test-only continuation; no additional application fix",
+  "publication": {
+    "command": "git -c http.sslBackend=schannel -c http.version=HTTP/1.1 push origin HEAD:refs/heads/codex/composer-security-fix",
+    "exit_code": 1,
+    "output": "Failed to connect to github.com port 443 after 21056 ms: Could not connect to server",
+    "remote_ref_read": "b8c004a5b82f9ea3d52b6f1703a0ae758e2dd4b1",
+    "api_write_attempt": "Rejected by tool policy before execution; not retried or bypassed"
+  },
+  "runs": [
+    {"run":"qa114-acceptance-ui-20261106","exit_code":1,"result":"23.9s timeout clicking readonly select input intercepted by placeholder; final support13 and acceptance draft already saved"},
+    {"run":"qa115-acceptance-ui-resume-20261106","exit_code":1,"result":"48.0s timeout on admin select input; uploads, extension and county/department/expert approvals completed"},
+    {"run":"qa116-acceptance-final-ui-20261106","exit_code":0,"result":"1 passed10.5s; admin closes and unit views approved extension"},
+    {"run":"qa117-scoring-acceptance-ui-20261106","exit_code":0,"result":"2 passed59.8s; fresh fixture9 complete without resume"}
+  ],
+  "prepare_command": "NXM_QA_SANDBOX=<existing guarded report sandbox>; QA105_FIXTURE=qa117-project.json; php ../e2e/prepare-expert-browser.php",
+  "prepare_output": "status ready; project_id9; assigned_count3; production_changed false",
+  "test_command": "E2E_BASE_URL=http://127.0.0.1:18742 E2E_RUN_ID=qa117-scoring-acceptance-ui-20261106 QA113_CLOSURE=1 QA105_FIXTURE=qa117-project.json QA105_CREDENTIALS=<isolated manifest> node node_modules/@playwright/test/cli.js test --config ../e2e/playwright.config.js qa105-expert-scoring.spec.js --workers=1",
+  "terminal_output": "ok1 three assigned experts read full materials and score through the actual UI without early transition18.5s; ok2 isolated admin support and acceptance extension close through the rendered UI39.9s;2passed59.8s",
+  "independent_readback": {"environment":"testing","db":"sqlite","project_id":9,"project_status":"closed","expert_reviews":3,"support_total_wan":13,"acceptance_status":"closed","review_stages":["county","department","expert","admin"],"extension_status":"approved","expected_date_raw":"2027-03-30T16:00:00.000000Z","expected_date_ui":"2027-03-31"},
+  "lint": {"errors":0,"warnings":0,"php_syntax":"pass","e2e_inventory":"13 tests in 3 files"},
+  "screenshot": "e2e/reports/runs/qa117-scoring-acceptance-ui-20261106/unit-closed-stable.png",
+  "screenshot_framing": {"x":760,"y":0,"width":680,"height":1000},
+  "limitations": ["fixture begins at expert stage; creation/submission/county/department project UI not covered by this test","acceptance currently single expert-stage approval","no production business-write tests or new deployment","SMTP real delivery and load/endurance remain unverified"]
+}

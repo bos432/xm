@@ -17,7 +17,11 @@ $owner = User::findOrFail($manifest['accounts']['unit']['id']);
 if (! ($owner->metadata['e2e'] ?? false)) {
     throw new RuntimeException('An explicit synthetic owner is required.');
 }
-$receipt = $sandbox.'/qa105-project.json';
+$receiptName = getenv('QA105_FIXTURE') ?: 'qa105-project.json';
+if (! preg_match('/^qa[0-9]+-project\.json$/', $receiptName)) {
+    throw new RuntimeException('A QA project receipt basename is required.');
+}
+$receipt = $sandbox.'/'.$receiptName;
 if (file_exists($receipt)) {
     throw new RuntimeException('Refusing to overwrite an existing test receipt.');
 }
