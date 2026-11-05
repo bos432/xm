@@ -181,4 +181,25 @@ class ExpertAssignmentPoolBoundaryTest extends TestCase
         $this->expectException(ValidationException::class);
         $matcher->apply($project, 'expert');
     }
+
+    public function test_documented_legacy_dated_experts_cannot_enter_formal_pool(): void
+    {
+        RuntimeConfig::set('review.expert_assignment.random_enabled', 'false', 'review', false);
+        $ordinary = User::factory()->create(['role' => 'expert']);
+        User::factory()->create(['role' => 'expert', 'username' => 'e2e_20260630_103223_expert']);
+        User::factory()->create(['role' => 'expert', 'username' => 'e2e_20260630_103223_expert_2']);
+
+        $this->assertSame([$ordinary->id], app(ReviewDispatchMatcher::class)->apply($this->officialProject(), 'expert')['assigned_user_ids']);
+    }
+
+    public function test_documented_legacy_dated_owner_selects_test_pool(): void
+    {
+        RuntimeConfig::set('review.expert_assignment.count', '1', 'review', false);
+        User::factory()->create(['role' => 'expert']);
+        $test = User::factory()->create(['role' => 'expert', 'metadata' => ['e2e' => true]]);
+        $project = $this->officialProject();
+        $project->owner->update(['username' => 'e2e_20260630_103223_unit']);
+
+        $this->assertSame([$test->id], app(ReviewDispatchMatcher::class)->apply($project, 'expert')['assigned_user_ids']);
+    }
 }

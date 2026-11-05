@@ -163,7 +163,7 @@ class ReviewDispatchMatcher
     private function isTestUser(User $user): bool
     {
         return filter_var($user->metadata['e2e'] ?? false, FILTER_VALIDATE_BOOLEAN)
-            || preg_match('/^e2e_\d{8}ops_(unit|county|department|expert|admin|super_admin)$/i', (string) $user->username) === 1;
+            || preg_match('/^e2e_\d{8}(?:ops|_\d{6})_(unit|county|department|expert|admin|super_admin)(?:_\d+)?$/i', (string) $user->username) === 1;
     }
 
     private function match(Project $project, string $stage): ?ReviewDispatchRule
