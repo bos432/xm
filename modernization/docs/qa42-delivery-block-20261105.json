@@ -1,0 +1,14 @@
+{
+  "stage": "QA-42-delivery",
+  "local_sha": "9070fb310773d08eb1b93d9e4305891e75c6ec0b",
+  "observed_remote_sha": "b23d1ceb9419045771700c2525761c42d954a97f",
+  "attempts": [
+    {"command": "git -c http.sslBackend=schannel -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=20 push origin codex/composer-security-fix", "exit_code": 1, "output": "error: RPC failed; curl 28 Recv failure: Connection was reset\nsend-pack: unexpected disconnect while reading sideband packet\nfatal: the remote end hung up unexpectedly\nEverything up-to-date", "interpretation": "Failed; not delivered, independently confirmed by branch API"},
+    {"command": "git -c http.sslBackend=schannel -c http.version=HTTP/1.1 -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=15 push origin codex/composer-security-fix", "exit_code": 1, "output": "fatal: unable to access 'https://github.com/bos432/xm.git/': Failed to connect to github.com port 443 after 21064 ms: Could not connect to server"}
+  ],
+  "confirmed_prior_hosted": [{"id": 42016210292, "status": "completed", "conclusion": "failure"}, {"id": 42016210174, "status": "completed", "conclusion": "success"}],
+  "new_candidate_hosted": "not_run",
+  "production_modified": false,
+  "active_shell_sessions": [],
+  "next": "Retry ordinary isolated branch push when HTTPS connectivity returns; verify exact remote SHA and fresh CI/Quality; no production deploy yet"
+}

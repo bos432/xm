@@ -2,7 +2,7 @@
 
 ## Current Status
 
-- QA42: b23d1ce CI failed only E2E inventory assertion after adding QA40 test (old10/1, actual11/2); all four Quality jobs and backend CI pass. Workflow assertion updated locally, explicit upload-title assertion added. Evidence `qa42-e2e-inventory-20261105.json`. Next validate inventory, push corrected candidate, check exact jobs; production unchanged.
+- QA42 candidate9070fb3 corrects E2E inventory (old10/1, actual11/2); four local assertions pass. Both pushes failed/reset or GitHub443 unreachable; remote remains b23d1ce. b23d1ce CI completed failure at inventory, Quality completed success. New candidate hosted not_run. Evidence `qa42-e2e-inventory-20261105.json`, `qa42-delivery-block-20261105.json`. No running shell session; production unchanged.
 - QA41 fixed candidate `b23d1ceb9419045771700c2525761c42d954a97f` pushed and independently confirmed by GitHub API. Final isolated MySQL9/9 races and rollback7tests38assertions pass; backend262/1701. QA40 valid630-byte PDF upload/access regression passes. Exact CI42016210292/Quality42016210174 in_progress at delivery checkpoint, not yet approved. Evidence `qa41-release-gates-20261105.json`, `qa40-browser-upload-final-20261105.json`, `qa41-hosted-checkpoint-20261105.json`. Production unchanged.
 - Published production baseline: `cef21d38e6989cffc9cc5e516dbd14f4a445d6c5` (`20261105105750`), deployed 2026-11-05 with migrations and Seeder skipped. Previous rollback target: `20261018050541` / `59bbdec`.
 - Remote `main` and production match `cef21d3`; exact-revision hosted gates passed. Independent HTTPS login/logout, seven HTTP paths, and one site PHP worker on the new release verified. Anonymous browser E2E: 2 passed.
@@ -13,6 +13,8 @@
 - QA39/40: SMTP/OSS focused tests23/105, backup simulation4/4, Chromium browser upload/access smoke1/1. QA40 unit upload/download SHA matches; anonymous401 and business-admin draft403; isolated data retained. Frontend lint21 tests, typecheck, build and explicit E2E ESLint pass. Local commits `bb8ebf8`, `cc23c3d`, `5ffde60` are not hosted; remote `5c3930d` because GitHub:443 fails. Real SMTP/OSS restore, broader concurrency/soak and official production batch remain open. Evidence `qa39-operations-simulations.json`, `qa40-browser-upload-20261105.json`, `qa39-push-attempt-20261105.json`.
 
 ## Recent Increment
+
+2026-11-05, QA-42 delivery checkpoint: local9070fb3, two ordinary push attempts exit1, independently observed remote b23d1ce. Exact previous CI failure/Quality success terminal. New gates not_run. Resume by ordinary push and API receipt; no production changes.
 
 2026-11-05, QA-42: hosted CI42016210292 frontend job failed at List E2E coverage; all preceding steps passed. Local npm e2e --list confirms11tests/2files vs hard-coded10/1. Updated CI assertion and required upload title. New-source gates not_run; production unchanged.
 
@@ -87,7 +89,7 @@ Superseded by the QA-33 repeat verification entry above: the rerun completed suc
 
 ## Next Step
 
-Validate QA42 corrected E2E inventory assertions, commit/push isolated candidate and check its exact CI/Quality; b23d1ce CI failed and must not deploy. Real SMTP/OSS restore, bounded soak and officially approved production batch remain open. Do not change unrelated services.
+Retry ordinary isolated-branch push of9070fb3 when GitHub HTTPS returns, independently verify remote SHA and exact CI/Quality. Do not deploy failed b23d1ce. Real SMTP/OSS restore, bounded soak and officially approved production batch remain open. No active local command to resume; do not change unrelated services.
 
 ## Evidence and State
 
@@ -505,3 +507,11 @@ Validate QA42 corrected E2E inventory assertions, commit/push isolated candidate
 - Commands/runtime: Node25.2.1; from frontend `npm run e2e -- --list` exit0, exact11tests/2files and new upload title. Original count assertion cannot match that output. New exact-source hosted checks pending.
 - Permissions/data: listing only, no account login or business write; no production site/DB/config/credential, shared service, external SMTP/OSS or sales/payment change. Ledger adds pipeline blocker, no release approval.
 - Verification: corrected four workflow strings checked against captured `npm run e2e -- --list` output, all PASS; `git diff --check` exit0. No active test process remains. Next: commit/push and verify new SHA gates. Preserve b23d1ce failure as evidence, do not rerun unchanged source to hide failure.
+
+## 2026-11-05 QA-42 Delivery Checkpoint: Corrected Candidate Not Yet Remote
+
+- Scope: committed inventory correction9070fb310773d08eb1b93d9e4305891e75c6ec0b. First schannel push ended exit1 RPC reset; independent public API stillb23d1ce. HTTP/1.1 per-command retry exit1 GitHub443 unreachable after21064ms. No global Git/TLS/network setting changed; no force push.
+- Evidence/files: `qa42-delivery-block-20261105.json`, QA_REPORT, this handbook. Local inventory assertion4/4; original b23d1ce CI42016210292 completed/failure and Quality42016210174 completed/success, confirmed by REST. Full job logs403 remains a verification limitation; step summaries/local reproduction establish inventory mismatch. Handbook historical reference operations-readiness-verification-20261014.md not found in this worktree; restore runbook exists. That missing historical file is not treated as recovery proof.
+- Isolation/data: no production DB/config/account/release, mail/OSS, other site/shared service or sales/payment change. Both shell sessions42581/85098 terminal; no test process remains. Untracked e2e/reports intentionally not staged; credentials excluded.
+- Ledger: new candidate delivery/hosted gates blocked_external at current checkpoint; no release approval. QA41 local and MySQL evidence remains valid; formal SMTP/OSS restoration, broad soak and approved production batch still open.
+- Next: ordinary isolated push after connectivity returns, verify receipt/new exact-source gates. Resume these next actions, not already completed MySQL runs. Goal remains incomplete; production is stillcef21d3.
