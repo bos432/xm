@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="acceptance createAcceptance shows rejected API error, preserves form and permits retry" time="0.012712" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js" failure="Got unwanted rejection.Actual message: &amp;quot;验收材料未齐全，缺少：财务材料&amp;quot;">
+		<failure type="testCodeFailure" message="Got unwanted rejection.Actual message: &amp;quot;验收材料未齐全，缺少：财务材料&amp;quot;">
+[Error [ERR_TEST_FAILURE]: Got unwanted rejection.
+Actual message: "验收材料未齐全，缺少：财务材料"] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Got unwanted rejection.
+  Actual message: "验收材料未齐全，缺少：财务材料"
+      at async TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:33:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: 验收材料未齐全，缺少：财务材料
+        at api (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:18:35)
+        at createAcceptance (evalmachine.&lt;anonymous>:4:11)
+        at TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:33:32)
+        at Test.runInAsyncScope (node:async_hooks:213:14)
+        at Test.run (node:internal/test_runner/test:1106:25)
+        at Test.start (node:internal/test_runner/test:1003:17)
+        at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17),
+    expected: undefined,
+    operator: 'doesNotReject',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="acceptance submitAcceptance shows rejected API error, preserves form and permits retry" time="0.000582" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js" failure="Got unwanted rejection.Actual message: &amp;quot;验收材料未齐全，缺少：财务材料&amp;quot;">
+		<failure type="testCodeFailure" message="Got unwanted rejection.Actual message: &amp;quot;验收材料未齐全，缺少：财务材料&amp;quot;">
+[Error [ERR_TEST_FAILURE]: Got unwanted rejection.
+Actual message: "验收材料未齐全，缺少：财务材料"] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Got unwanted rejection.
+  Actual message: "验收材料未齐全，缺少：财务材料"
+      at async TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:33:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: 验收材料未齐全，缺少：财务材料
+        at api (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:18:35)
+        at submitAcceptance (evalmachine.&lt;anonymous>:4:11)
+        at TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:33:32)
+        at Test.runInAsyncScope (node:async_hooks:213:14)
+        at Test.run (node:internal/test_runner/test:1106:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+        at Test.postRun (node:internal/test_runner/test:1235:19)
+        at Test.run (node:internal/test_runner/test:1163:12)
+        at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3),
+    expected: undefined,
+    operator: 'doesNotReject',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="acceptance saveReview shows rejected API error, preserves form and permits retry" time="0.000519" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js" failure="Got unwanted rejection.Actual message: &amp;quot;验收材料未齐全，缺少：财务材料&amp;quot;">
+		<failure type="testCodeFailure" message="Got unwanted rejection.Actual message: &amp;quot;验收材料未齐全，缺少：财务材料&amp;quot;">
+[Error [ERR_TEST_FAILURE]: Got unwanted rejection.
+Actual message: "验收材料未齐全，缺少：财务材料"] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Got unwanted rejection.
+  Actual message: "验收材料未齐全，缺少：财务材料"
+      at async TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:33:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: 验收材料未齐全，缺少：财务材料
+        at api (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:18:35)
+        at saveReview (evalmachine.&lt;anonymous>:4:11)
+        at TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:33:32)
+        at Test.runInAsyncScope (node:async_hooks:213:14)
+        at Test.run (node:internal/test_runner/test:1106:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+        at Test.postRun (node:internal/test_runner/test:1235:19)
+        at Test.run (node:internal/test_runner/test:1163:12)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:788:7),
+    expected: undefined,
+    operator: 'doesNotReject',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="acceptance saveExtension shows rejected API error, preserves form and permits retry" time="0.000524" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js" failure="Got unwanted rejection.Actual message: &amp;quot;验收材料未齐全，缺少：财务材料&amp;quot;">
+		<failure type="testCodeFailure" message="Got unwanted rejection.Actual message: &amp;quot;验收材料未齐全，缺少：财务材料&amp;quot;">
+[Error [ERR_TEST_FAILURE]: Got unwanted rejection.
+Actual message: "验收材料未齐全，缺少：财务材料"] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Got unwanted rejection.
+  Actual message: "验收材料未齐全，缺少：财务材料"
+      at async TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:33:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: 验收材料未齐全，缺少：财务材料
+        at api (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:18:35)
+        at saveExtension (evalmachine.&lt;anonymous>:7:11)
+        at TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:33:32)
+        at Test.runInAsyncScope (node:async_hooks:213:14)
+        at Test.run (node:internal/test_runner/test:1106:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+        at Test.postRun (node:internal/test_runner/test:1235:19)
+        at Test.run (node:internal/test_runner/test:1163:12)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:788:7),
+    expected: undefined,
+    operator: 'doesNotReject',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="acceptance uploadFile shows rejected API error, preserves form and permits retry" time="0.000732" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js" failure="Got unwanted rejection.Actual message: &amp;quot;验收材料未齐全，缺少：财务材料&amp;quot;">
+		<failure type="testCodeFailure" message="Got unwanted rejection.Actual message: &amp;quot;验收材料未齐全，缺少：财务材料&amp;quot;">
+[Error [ERR_TEST_FAILURE]: Got unwanted rejection.
+Actual message: "验收材料未齐全，缺少：财务材料"] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Got unwanted rejection.
+  Actual message: "验收材料未齐全，缺少：财务材料"
+      at async TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:33:5)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: 验收材料未齐全，缺少：财务材料
+        at api (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:18:35)
+        at uploadFile (evalmachine.&lt;anonymous>:6:9)
+        at TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:33:32)
+        at Test.runInAsyncScope (node:async_hooks:213:14)
+        at Test.run (node:internal/test_runner/test:1106:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+        at Test.postRun (node:internal/test_runner/test:1235:19)
+        at Test.run (node:internal/test_runner/test:1163:12)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:788:7),
+    expected: undefined,
+    operator: 'doesNotReject',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 5 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 5 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 119.8072 -->
+</testsuites>

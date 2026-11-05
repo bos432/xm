@@ -1,0 +1,15 @@
+{
+  "phase": "QA-11",
+  "status": "http_upload_download_verified",
+  "command": "node modernization/e2e/verify-isolated-materials.mjs qa07-20261105-browser-fixed",
+  "first_exit_code": 1,
+  "first_failure": "Test expected logout200 but API correctly returned204; upload and hash checks passed. Preserved first attempt includes result pass plus logout_failed, so it is not an overall passing run.",
+  "final_exit_code": 0,
+  "evidence_root": "../e2e/reports/runs/qa07-20261105-browser-fixed",
+  "attempts": ["qa11-materials-http-first-attempt.json", "qa11-materials-http.json"],
+  "observed": ["Two630-byte synthetic PDF files uploaded via multipart HTTP201", "Owner and prior county reviewer downloads HTTP200 with matching SHA256", "Anonymous download denied HTTP401", "Temporary API tokens revoked HTTP204", "Rerun reuses files by category and hash"],
+  "browser_filechooser": "not_verified; two previous event timeouts and no native picker in current window inventory",
+  "acceptance_status": "returned",
+  "production_changed": false,
+  "next": "Use visible browser to submit retained acceptance with uploaded materials and finish staged reviews"
+}

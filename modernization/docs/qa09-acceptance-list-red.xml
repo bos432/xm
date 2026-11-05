@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="acceptance createAcceptance shows rejected API error, preserves form and permits retry" time="0.013562" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance submitAcceptance shows rejected API error, preserves form and permits retry" time="0.000705" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance saveReview shows rejected API error, preserves form and permits retry" time="0.000626" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance saveExtension shows rejected API error, preserves form and permits retry" time="0.000855" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance uploadFile shows rejected API error, preserves form and permits retry" time="0.001007" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance list failure reports an error and retains existing rows" time="0.001096" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js" failure="Got unwanted rejection.Actual message: &amp;quot;加载失败，请重试&amp;quot;">
+		<failure type="testCodeFailure" message="Got unwanted rejection.Actual message: &amp;quot;加载失败，请重试&amp;quot;">
+[Error [ERR_TEST_FAILURE]: Got unwanted rejection.
+Actual message: "加载失败，请重试"] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Got unwanted rejection.
+  Actual message: "加载失败，请重试"
+      at async TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:58:3)
+      at async Test.run (node:internal/test_runner/test:1113:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: Error: 加载失败，请重试
+        at api (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:52:30)
+        at loadAcceptances (evalmachine.&lt;anonymous>:10:26)
+        at TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:58:77)
+        at Test.runInAsyncScope (node:async_hooks:213:14)
+        at Test.run (node:internal/test_runner/test:1106:25)
+        at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+        at Test.postRun (node:internal/test_runner/test:1235:19)
+        at Test.run (node:internal/test_runner/test:1163:12)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:788:7),
+    expected: undefined,
+    operator: 'doesNotReject',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 6 -->
+	<!-- suites 0 -->
+	<!-- pass 5 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 123.658 -->
+</testsuites>

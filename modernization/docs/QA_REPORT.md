@@ -6,8 +6,13 @@ This increment uses the isolated worktree, SQLite in memory, array mail/cache an
 
 ## Defects
 
+QA-10 update: QA08-P1-DETAIL is fixed locally, not deployed. Reviewer drawer and processing view share complete submission sections; three SSR/source-contract tests and county browser detail evidence pass. Processing-dialog/mobile browser verification remains open. Evidence: `qa10-project-details-20261105.json`, `qa10-project-details-green.xml`, screenshot14 under QA-07 run root. New P2 QA10-P2-STATUS: review hint for acceptance project renders raw English status and generic next action; open.
+
 | ID | Severity | Module | Reproduction command | Actual vs expected | Recommendation/status |
 | --- | --- | --- | --- | --- | --- |
+| QA12-P1-DOWNLOAD | P1 | Acceptance materials | Targeted acceptance-errors test red JUnit + county browser acceptance detail | Two PDFs shown without download operation; expected authorized material access | Fixed locally, browser download hash verified; qa12-acceptance-download-20261105.json. Not deployed |
+| QA12-P2-TIMELINE | P2 | Acceptance resubmit timeline | Unit resubmit after county return, then county details | Old return appears as completed current stage despite current_reviewer_role county | Open; derive current-round timeline while preserving history |
+| QA12-P2-DATE | P2 | Extension date | Enter2026-12-31 then county acceptance detail | Raw2026-12-30T16:00:00Z displayed rather than date-only2026-12-31 | Open; preserve date semantics and normalize presentation |
 | QA-EXPERT-01 | P1 | Expert pending list / CSV | `php vendor/bin/phpunit tests/Feature/ExpertPendingTaskLifecycleTest.php` on pre-fix source | After first assigned expert scores, pending list still contains 1 project; expected 0 for this expert while peer retains task | Fixed locally; pending query excludes this expert's completed review. Not published |
 | QA-EXPERT-02 | P1 | Dashboard | Same test with dashboard assertion on pre-fix source | Unassigned expert dashboard says pending=1; task list empty. Expected both zero | Fixed locally; dashboard uses assignment-aware pending count. Not published |
 | QA-EXPERT-03 | P1 | Expert return/resubmit | `php vendor/bin/phpunit tests/Feature/ExpertPendingTaskLifecycleTest.php` before QA-05 fix | After expert return and resubmission, prior score hides task and prevents scoring again | Fixed in isolated candidate: latest return ID defines current review round; old history retained, only new scores count. Not deployed |
@@ -16,6 +21,8 @@ This increment uses the isolated worktree, SQLite in memory, array mail/cache an
 | QA-DELIVERY-01 | P0 release blocker (resolved transport) | Git transport | `git ls-remote origin refs/heads/codex/composer-security-fix` | Exit1 curl28 connection reset; initial REST branch was cef21d3 | Command-local schannel/HTTP1.1 pushes through ed4f5bf succeeded. Exact candidate CI/Quality gates passed. No production deployment |
 
 ## Executed verification
+
+- QA-11 HTTP materials: `node modernization/e2e/verify-isolated-materials.mjs qa07-20261105-browser-fixed`, final exit0; uploads201 (first attempt), owner/county downloads200 with exact SHA256, anonymous401, logout204. First exit1 was test expected200 vs actual204 on logout, retained separately. Evidence qa11-materials-20261105.json; browser filechooser remains unverified, acceptance closure pending. No production changes.
 
 - Red test output: `Failed to assert ... expected 0 ... actual size 1`, 1 test / 9 assertions / 1 failure; full failure metadata: `expert-pending-red-20261105.xml`.
 - Dashboard red output: `Failed asserting that 1 is identical to 0`, 1 test / 4 assertions / 1 failure; `expert-dashboard-red-20261105.xml`.
@@ -32,6 +39,17 @@ This increment uses the isolated worktree, SQLite in memory, array mail/cache an
 - Negative authorization: outside-assignment expert score POST403, repeated expert score422; included in green test.
 
 ## Not verified
+
+QA-08 browser update: seven accounts across five roles exercised real login/UI submission -> county -> department -> three independent experts -> admin approval. Evidence `qa08-browser-20261105.json` and nine screenshots in `e2e/reports/runs/qa07-20261105-browser-fixed/screenshots`. Acceptance/super-admin browser and actual attachments remain incomplete; prior blanket browser not_run below is superseded only for this verified path.
+
+QA-09: unit acceptance creation/submission and county return exercised in actual browser. Empty files accepted only with no required-material policy. After setting isolated batch requirements, backend rejects missing materials but original UI showed no error; console evidence confirms exception. Locally fixed AcceptanceView action catches; six failure/retry regression tests green, frontend11/11 plus lint/typecheck/build pass. Browser now visibly shows missing-material error. `qa09-acceptance-feedback-20261105.json`, red/list-red/green JUnit and screenshot13 retain proof. No production deployment. IAB filechooser timed out twice; upload/closure remain unverified.
+
+| ID | Severity | Module | Reproduction | Actual vs expected | Recommendation |
+| --- | --- | --- | --- | --- | --- |
+| QA08-P1-DETAIL | P1 | Review project details | Local UI create project with leader/contact -> submit -> county/department/expert details; `php modernization/e2e/inspect-isolated.php` with isolated sandbox env, exit0 | Saved leader/contact present in SQLite but omitted from review details/processing; reviewers need full submission | Reuse a complete shared read-only project submission component; verify metadata/attachments across reviewer roles |
+| QA09-P1-ERROR-FEEDBACK | P1 | Acceptance actions | In returned acceptance with required materials, click Submit without uploads; `node --test tests/acceptance-errors.test.js` red5/5 -> green6/6 | Original backend rejection only in console; now Chinese error toast, form preserved and retry available | Fixed locally across action/list/detail handlers; production release pending |
+
+Database output evidence: `post-final-review.json`, driver sqlite/status approved/budget125000.00, expert scores90/88/94 and support total6.5wan. This is local synthetic data, not production E2E. Fixture correction (E2E- batch intentionally hidden) is a harness issue, not a product defect.
 
 - Production account-specific cause of expert empty tasks: no current account/assignment snapshot inspected this increment.
 - Full six-role browser workflow, return/resubmit, extension and acceptance closure with actual login: not_run. Existing Feature tests alone are not equivalent.

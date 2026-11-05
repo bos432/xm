@@ -219,6 +219,13 @@
               <template #default="{ row }">{{ materialCategoryLabel(row.metadata?.material_category) }}</template>
             </el-table-column>
             <el-table-column prop="extension" label="类型" width="80" />
+            <el-table-column label="操作" width="80">
+              <template #default="{ row }">
+                <el-tooltip content="下载验收材料" placement="top">
+                  <el-button size="small" :icon="Download" circle aria-label="下载验收材料" @click="downloadFile(row)" />
+                </el-tooltip>
+              </template>
+            </el-table-column>
           </el-table>
         </section>
         <section>
@@ -268,9 +275,9 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Plus, Refresh, Upload, View } from '@element-plus/icons-vue'
+import { Download, Plus, Refresh, Upload, View } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
-import { api } from '../api.js'
+import { api, downloadApi } from '../api.js'
 import { useSessionStore } from '../store.js'
 import { useTextStore } from '../texts.js'
 import RichTextEditor from '../components/RichTextEditor.vue'
@@ -379,6 +386,8 @@ async function searchProjects(keyword = '', context = 'acceptance') {
     if (context) params.set('context', context)
     params.set('limit', '30')
     projectOptions.value = await api(`/projects/options?${params.toString()}`)
+  } catch (err) {
+    ElMessage.error(err?.message || '项目选项加载失败')
   } finally {
     projectOptionsLoading.value = false
   }
@@ -415,6 +424,8 @@ async function loadAcceptances() {
     if (showScopeTabs.value && scope.value) params.set('scope', scope.value)
     const result = await api(`/acceptance${params.toString() ? `?${params.toString()}` : ''}`)
     acceptances.value = result.data || result
+  } catch (err) {
+    ElMessage.error(err?.message || '验收列表加载失败')
   } finally {
     loading.value = false
   }
@@ -472,6 +483,8 @@ async function createAcceptance() {
     createVisible.value = false
     Object.assign(createForm, { project_id: '', summary: '' })
     await loadAcceptances()
+  } catch (err) {
+    ElMessage.error(err?.message || '验收草稿创建失败')
   } finally {
     saving.value = false
   }
@@ -490,6 +503,8 @@ async function submitAcceptance() {
     ElMessage.success('验收已提交')
     submitVisible.value = false
     await loadAcceptances()
+  } catch (err) {
+    ElMessage.error(err?.message || '验收提交失败')
   } finally {
     saving.value = false
   }
@@ -508,6 +523,8 @@ async function saveReview() {
     ElMessage.success('验收审核已提交')
     reviewVisible.value = false
     await loadAcceptances()
+  } catch (err) {
+    ElMessage.error(err?.message || '验收审核失败')
   } finally {
     saving.value = false
   }
@@ -515,9 +532,13 @@ async function saveReview() {
 
 async function openExtension(row) {
   currentAcceptance.value = row
-  detail.value = await api(`/acceptance/${row.id}`)
-  Object.assign(extensionForm, { reason: '', expected_date: '', extension_id: detail.value.extensions?.find((item) => item.status === 'pending')?.id || null, decision: 'approved', comment: '' })
-  extensionVisible.value = true
+  try {
+    detail.value = await api(`/acceptance/${row.id}`)
+    Object.assign(extensionForm, { reason: '', expected_date: '', extension_id: detail.value.extensions?.find((item) => item.status === 'pending')?.id || null, decision: 'approved', comment: '' })
+    extensionVisible.value = true
+  } catch (err) {
+    ElMessage.error(err?.message || '延期信息加载失败')
+  }
 }
 
 async function saveExtension() {
@@ -530,6 +551,8 @@ async function saveExtension() {
     ElMessage.success('延期记录已保存')
     extensionVisible.value = false
     await loadAcceptances()
+  } catch (err) {
+    ElMessage.error(err?.message || '延期处理失败')
   } finally {
     saving.value = false
   }
@@ -546,15 +569,31 @@ async function uploadFile({ file }) {
   body.append('file', file)
   body.append('purpose', 'acceptance')
   body.append('metadata[material_category]', uploadCategory.value)
-  await api(`/acceptance/${currentAcceptance.value.id}/files`, { method: 'POST', body })
-  ElMessage.success('验收材料已上传')
-  uploadVisible.value = false
+  try {
+    await api(`/acceptance/${currentAcceptance.value.id}/files`, { method: 'POST', body })
+    ElMessage.success('验收材料已上传')
+    uploadVisible.value = false
+  } catch (err) {
+    ElMessage.error(err?.message || '验收材料上传失败')
+  }
+}
+
+async function downloadFile(row) {
+  try {
+    await downloadApi(`/files/${row.id}/download`, row.original_name || 'download')
+  } catch (err) {
+    ElMessage.error(err?.message || '验收材料下载失败')
+  }
 }
 
 async function openDetail(row) {
-  detail.value = await api(`/acceptance/${row.id}`)
-  selectedTimelineKey.value = detail.value.timeline?.find((item) => item.status === 'current')?.key || detail.value.timeline?.find((item) => item.status === 'done')?.key || detail.value.timeline?.[0]?.key || ''
-  detailVisible.value = true
+  try {
+    detail.value = await api(`/acceptance/${row.id}`)
+    selectedTimelineKey.value = detail.value.timeline?.find((item) => item.status === 'current')?.key || detail.value.timeline?.find((item) => item.status === 'done')?.key || detail.value.timeline?.[0]?.key || ''
+    detailVisible.value = true
+  } catch (err) {
+    ElMessage.error(err?.message || '验收详情加载失败')
+  }
 }
 
 function timelineActiveIndex(items) {

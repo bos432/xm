@@ -163,10 +163,8 @@
             <el-descriptions-item label="所属领域">{{ currentProject.metadata?.field || '-' }}</el-descriptions-item>
             <el-descriptions-item label="研究方向">{{ currentProject.metadata?.research_direction || '-' }}</el-descriptions-item>
             <el-descriptions-item label="项目摘要" :span="2"><div class="rich-content detail-rich-content" v-html="currentProject.summary || '-'" /></el-descriptions-item>
-            <el-descriptions-item v-if="currentProject.metadata?.overview" label="项目概述" :span="2"><div class="rich-content detail-rich-content" v-html="currentProject.metadata.overview" /></el-descriptions-item>
-            <el-descriptions-item v-if="currentProject.metadata?.objectives" label="目标任务" :span="2"><div class="rich-content detail-rich-content" v-html="currentProject.metadata.objectives" /></el-descriptions-item>
-            <el-descriptions-item v-if="currentProject.metadata?.innovation" label="创新点" :span="2"><div class="rich-content detail-rich-content" v-html="currentProject.metadata.innovation" /></el-descriptions-item>
           </el-descriptions>
+          <ProjectSubmissionDetails :project="currentProject" v-if="currentProject" />
           <el-table :data="currentProject?.files || []" border size="small" class="dialog-files-table">
             <el-table-column prop="original_name" label="附件" min-width="220" />
             <el-table-column prop="extension" label="类型" width="80" />
@@ -282,10 +280,8 @@
           <el-descriptions-item label="支持资金">{{ finalSupportText(detail).supportAmount }}</el-descriptions-item>
           <el-descriptions-item label="推荐专家" :span="2">{{ finalSupportText(detail).recommendedExperts }}</el-descriptions-item>
           <el-descriptions-item label="摘要" :span="2"><div class="rich-content detail-rich-content" v-html="detail.summary || '-'" /></el-descriptions-item>
-          <el-descriptions-item v-if="detail.metadata?.overview" label="项目概述" :span="2"><div class="rich-content detail-rich-content" v-html="detail.metadata.overview" /></el-descriptions-item>
-          <el-descriptions-item v-if="detail.metadata?.objectives" label="目标任务" :span="2"><div class="rich-content detail-rich-content" v-html="detail.metadata.objectives" /></el-descriptions-item>
-          <el-descriptions-item v-if="detail.metadata?.innovation" label="创新点" :span="2"><div class="rich-content detail-rich-content" v-html="detail.metadata.innovation" /></el-descriptions-item>
         </el-descriptions>
+        <ProjectSubmissionDetails :project="detail" />
 
         <section v-if="detail.expert_review_summary">
           <div class="section-title">专家评分汇总</div>
@@ -368,6 +364,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { api, downloadApi } from '../api.js'
 import { useSessionStore } from '../store.js'
 import RichTextEditor from '../components/RichTextEditor.vue'
+import ProjectSubmissionDetails from '../components/ProjectSubmissionDetails.vue'
 
 const route = useRoute()
 const router = useRouter()

@@ -1,0 +1,49 @@
+{
+  "increment": "QA-08",
+  "date": "2026-11-05",
+  "environment": "http://127.0.0.1:18742",
+  "database": "isolated SQLite",
+  "production_changed": false,
+  "shared_services_changed": false,
+  "business_writes": "isolated sandbox only, preserved",
+  "evidence_root": "modernization/e2e/reports/runs/qa07-20261105-browser-fixed",
+  "browser_tab": "6",
+  "results": {
+    "unit_login_draft_richtext_budget_submit": "passed",
+    "forced_refresh_retains_session_and_project_list": "passed",
+    "county_detail_and_approve": "passed for summary, objectives, budget and batch; full metadata incomplete",
+    "department_detail_and_approve": "passed for summary, objectives, budget and batch; full metadata incomplete",
+    "expert_one_score": 90,
+    "expert_two_score": 88,
+    "expert_three_score": 94,
+    "expert_one_pending_removed_after_score": "passed",
+    "expert_two_sees_one_complete": "passed",
+    "expert_three_sees_two_complete_no_early_transition": "passed",
+    "admin_readonly_summary": "3/3, average 90.67",
+    "final_support_subsidy_interest_other_total_wan": [5, 1, 0.5, 6.5],
+    "post_review_database_status": "approved",
+    "acceptance_browser": "not_run",
+    "super_admin_browser": "not_run"
+  },
+  "commands": [
+    {
+      "command": "php modernization/e2e/inspect-isolated.php (NXM_QA_SANDBOX set to evidence_root/sandbox)",
+      "exit_code": 0,
+      "output_file": "post-final-review.json",
+      "runtime": "PHP 8.3.30 (server runtime from QA-07)"
+    }
+  ],
+  "findings": [
+    {
+      "id": "QA08-P1-DETAIL",
+      "status": "confirmed",
+      "actual": "Review detail and processing omit saved leader/contact metadata. Database confirms both present; ReviewTasksView templates omit them.",
+      "expected": "Reviewers can inspect complete submitted project materials within review flow.",
+      "source": "modernization/frontend/src/views/ReviewTasksView.vue",
+      "evidence": ["screenshots/03-county-project-details.png", "screenshots/05-department-review.png", "post-final-review.json"]
+    }
+  ],
+  "harness_correction": "E2E- batch intentionally excluded by availableForNewApplications; renamed local fixture batch to QA-ISOLATED-BROWSER without changing application logic.",
+  "tooling_limit": "Some immediate post-navigation clicks preceded settled UI; waited for current state and retried. One spinbutton wait and one guessed admin shortcut failed; no business duplicate submissions resulted.",
+  "secrets": "random synthetic credentials remain only in ignored sandbox manifest"
+}

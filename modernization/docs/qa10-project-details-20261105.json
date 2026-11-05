@@ -1,0 +1,27 @@
+{
+  "phase": "QA-10",
+  "date": "2026-11-05",
+  "defect": "QA08-P1-DETAIL",
+  "status": "fixed_local",
+  "production_changed": false,
+  "tests": {
+    "red": {"command": "node --test --test-reporter=junit --test-reporter-destination=../docs/qa10-project-details-red.xml tests/project-submission-details.test.js", "exit_code": 1},
+    "green": {"command": "node --test --test-reporter=junit --test-reporter-destination=../docs/qa10-project-details-green.xml tests/project-submission-details.test.js", "exit_code": 0, "passed": 3},
+    "frontend": {"commands": ["npm run lint", "npm test", "npm run typecheck", "npm run build"], "exit_codes": [0, 0, 0, 0], "tests_passed": 14, "typecheck_scope": "utilities only", "node": "25.2.1", "npm": "11.6.2"}
+  },
+  "browser": {
+    "base_url": "http://127.0.0.1:18742",
+    "role": "county",
+    "path": "/reviews?tab=tasks",
+    "action": "Open review results then project details",
+    "observed": ["Saved leader/contact and research objectives visible", "Empty members/budget/equipment have explicit placeholders", "Expert summary and existing attachment/review sections retained"],
+    "evidence_root": "../e2e/reports/runs/qa07-20261105-browser-fixed",
+    "screenshot": "14-county-complete-submission.png",
+    "dom": "qa10-county-details-dom.txt",
+    "processing_dialog": "not_run; shared component integration asserted by source contract, not a separate browser pass",
+    "responsive": "not_run"
+  },
+  "additional_observation": {"id": "QA10-P2-STATUS", "actual": "Review detail hint renders raw acceptance status and generic next action", "status": "open"},
+  "limitations": ["No production deployment", "Acceptance upload/closure still incomplete", "No new tenant/API authorization claim", "Rich text rendering relies on existing backend sanitization contract"],
+  "next": "Complete isolated acceptance upload and closure, investigate acceptance score configuration and status hints"
+}

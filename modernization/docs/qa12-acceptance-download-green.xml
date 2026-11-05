@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="acceptance createAcceptance shows rejected API error, preserves form and permits retry" time="0.012658" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance submitAcceptance shows rejected API error, preserves form and permits retry" time="0.000597" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance saveReview shows rejected API error, preserves form and permits retry" time="0.000557" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance saveExtension shows rejected API error, preserves form and permits retry" time="0.000858" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance uploadFile shows rejected API error, preserves form and permits retry" time="0.001245" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance list failure reports an error and retains existing rows" time="0.000642" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance materials expose authorized download and report failures" time="0.000677" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<!-- tests 7 -->
+	<!-- suites 0 -->
+	<!-- pass 7 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 125.9227 -->
+</testsuites>

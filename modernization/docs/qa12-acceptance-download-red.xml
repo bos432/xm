@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="acceptance createAcceptance shows rejected API error, preserves form and permits retry" time="0.014581" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance submitAcceptance shows rejected API error, preserves form and permits retry" time="0.000638" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance saveReview shows rejected API error, preserves form and permits retry" time="0.000575" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance saveExtension shows rejected API error, preserves form and permits retry" time="0.000645" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance uploadFile shows rejected API error, preserves form and permits retry" time="0.000813" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance list failure reports an error and retains existing rows" time="0.000620" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance materials expose authorized download and report failures" time="0.000494" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js" failure="Acceptance materials must have a download handler">
+		<failure type="testCodeFailure" message="Acceptance materials must have a download handler">
+[Error [ERR_TEST_FAILURE]: Acceptance materials must have a download handler] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Acceptance materials must have a download handler
+      at TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:66:10)
+      at Test.runInAsyncScope (node:async_hooks:213:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 7 -->
+	<!-- suites 0 -->
+	<!-- pass 6 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 138.9558 -->
+</testsuites>

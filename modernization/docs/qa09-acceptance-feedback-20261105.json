@@ -1,0 +1,33 @@
+{
+  "increment": "QA-09",
+  "date": "2026-11-05",
+  "production_changed": false,
+  "environment": "loopback SQLite sandbox qa07-20261105-browser-fixed",
+  "finding": {
+    "id": "QA09-P1-ERROR-FEEDBACK",
+    "severity": "P1",
+    "before": "Submit required-materials rejection only logged to console; form remained open with no error toast.",
+    "cause": "AcceptanceView async actions used try/finally without catch; API errors escaped to Vue error handler.",
+    "after": "Error toast names missing acceptance application and financial material; input and dialog preserved.",
+    "status": "fixed locally, browser confirmed, not deployed"
+  },
+  "commands": [
+    { "command": "node --test --test-reporter=junit --test-reporter-destination=../docs/qa09-acceptance-errors-red.xml tests/acceptance-errors.test.js", "exit_code": 1, "result": "5 rejected-API tests fail before fix" },
+    { "command": "node --test --test-reporter=junit --test-reporter-destination=../docs/qa09-acceptance-list-red.xml tests/acceptance-errors.test.js", "exit_code": 1, "result": "list failure still unhandled before list fix" },
+    { "command": "node --test --test-reporter=junit --test-reporter-destination=../docs/qa09-acceptance-errors-green.xml tests/acceptance-errors.test.js", "exit_code": 0, "result": "6 pass after fixes" },
+    { "command": "npm run lint; npm test; npm run typecheck; npm run build", "exit_code": 0, "result": "lint clean, tests11/pass11/fail0, utility typecheck succeeds, Vite8.3.5 build1628 modules succeeds" },
+    { "command": "node modernization/e2e/make-isolated-material.mjs qa07-20261105-browser-fixed", "exit_code": 0, "result": "2 synthetic PDF files,630 bytes each" }
+  ],
+  "evidence_root": "modernization/e2e/reports/runs/qa07-20261105-browser-fixed",
+  "browser_evidence": ["acceptance-console-errors.json", "screenshots/10-acceptance-without-required-policy.png", "screenshots/11-county-acceptance-return.png", "screenshots/12-required-material-no-feedback.png", "screenshots/13-required-material-error-fixed.png"],
+  "test_scope": "Actual action function bodies evaluated with injected rejected/successful API calls. Not mounted Vue component coverage. Missing-material rejection also retested in visible browser.",
+  "fixture_changes": "After initial no-policy submission, county returned acceptance via UI. Only local batch metadata set acceptance_required_materials=[acceptance_application,financial]; future fixture uses same policy. No lifecycle database state bypass.",
+  "open_items": [
+    "QA08-P1-DETAIL complete reviewer submission display",
+    "Acceptance county scoring shown despite project-stage scoring default disabled; applicability needs verification",
+    "No required-materials policy permits empty-file submission by design; operator configuration/default validation needed",
+    "IAB filechooser two attempts timed out, one reset30s and one timeout10s; no successful upload claimed",
+    "Acceptance remains returned awaiting actual uploads; closure/extension browser still incomplete",
+    "Super-admin UI, coverage artifact contents, true MySQL concurrency, SMTP delivery and OSS restore remain incomplete"
+  ]
+}

@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="review submission renders all submitted sections and safely escapes identity text" time="0.000691" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\project-submission-details.test.js" failure="ENOENT: no such file or directory, open 'C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\src\components\ProjectSubmissionDetails.vue'">
+		<failure type="testCodeFailure" message="ENOENT: no such file or directory, open 'C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\src\components\ProjectSubmissionDetails.vue'">
+[Error [ERR_TEST_FAILURE]: ENOENT: no such file or directory, open 'C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\src\components\ProjectSubmissionDetails.vue'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: ENOENT: no such file or directory, open 'C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\src\components\ProjectSubmissionDetails.vue'
+      at readFileSync (node:fs:435:20)
+      at render (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/project-submission-details.test.js:8:18)
+      at TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/project-submission-details.test.js:16:22)
+      at Test.runInAsyncScope (node:async_hooks:213:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'C:\\Users\\Administrator\\.codex\\worktrees\\composer-security-fix\\xm.zlck888.com_20260519_183454\\modernization\\frontend\\src\\components\\ProjectSubmissionDetails.vue'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="legacy projects with missing or malformed metadata still render" time="0.000194" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\project-submission-details.test.js" failure="ENOENT: no such file or directory, open 'C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\src\components\ProjectSubmissionDetails.vue'">
+		<failure type="testCodeFailure" message="ENOENT: no such file or directory, open 'C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\src\components\ProjectSubmissionDetails.vue'">
+[Error [ERR_TEST_FAILURE]: ENOENT: no such file or directory, open 'C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\src\components\ProjectSubmissionDetails.vue'] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: Error: ENOENT: no such file or directory, open 'C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\src\components\ProjectSubmissionDetails.vue'
+      at readFileSync (node:fs:435:20)
+      at render (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/project-submission-details.test.js:8:18)
+      at TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/project-submission-details.test.js:35:24)
+      at Test.runInAsyncScope (node:async_hooks:213:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3) {
+    errno: -4058,
+    code: 'ENOENT',
+    syscall: 'open',
+    path: 'C:\\Users\\Administrator\\.codex\\worktrees\\composer-security-fix\\xm.zlck888.com_20260519_183454\\modernization\\frontend\\src\\components\\ProjectSubmissionDetails.vue'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="both reviewer drawer and processing dialog include the shared complete submission" time="0.001057" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\project-submission-details.test.js" failure="The input did not match the regular expression /&lt;ProjectSubmissionDetails :project=&amp;quot;currentProject&amp;quot;/. Input:'&lt;template>\r\n' +  '  &lt;section class=&amp;quot;page-stack&amp;quot;>\r\n' +  '    &lt;el-tabs v-model=&amp;quot;activeTab&amp;quot; @tab-change=&amp;quot;handleTabChange&amp;quot;>\r\n' +  '      &lt;el-tab-pane label=&amp;quot;待审核&amp;quot; name=&amp;quot;tasks&amp;quot;>\r\n' +  '        &lt;div class=&amp;quot;page-stack&amp;quot;>\r\n' +  '          &lt;div class=&amp;quot;toolbar&amp;quot;>\r\n' +  '            &lt;el-input v-model=&amp;quot;keyword&amp;quot; clearable placeholder=&amp;quot;按项目、单位、账号搜索&amp;quot; @keyup.enter=&amp;quot;reloadTasks&amp;quot; />\r\n' +  '            &lt;div class=&amp;quot;toolbar-actions&amp;quot;>\r\n' +  '              &lt;el-select v-model=&amp;quot;category&amp;quot; clearable placeholder=&amp;quot;类别&amp;quot; @change=&amp;quot;reloadTasks&amp;quot;>\r\n' +  '                &lt;el-option v-for=&amp;quot;item in projectCategoryOptions&amp;quot; :key=&amp;quot;item.code&amp;quot; :label=&amp;quot;item.label&amp;quot; :value=&amp;quot;item.label&amp;quot; />\r\n' +  '              &lt;/el-select>\r\n' +  '              &lt;el-select v-model=&amp;quot;projectType&amp;quot; clearable placeholder=&amp;quot;类型&amp;quot; @change=&amp;quot;reloadTasks&amp;quot;>\r\n' +  '                &lt;el-option v-for=&amp;quot;item in projectTypeOptions&amp;quot; :key=&amp;quot;item.code&amp;quot; :label=&amp;quot;item.label&amp;quot; :value=&amp;quot;item.label&amp;quot; />\r\n' +  '              &lt;/el-select>\r\n' +  '              &lt;el-tooltip content=&amp;quot;查询审核任务&amp;quot; placement=&amp;quot;top&amp;quot;>\r\n' +  '                &lt;el-button type=&amp;quot;primary&amp;quot; :icon=&amp;quot;Search&amp;quot; circle @click=&amp;quot;reloadTasks&amp;quot; />\r\n' +  '              &lt;/el-tooltip>\r\n' +  '              &lt;el-button v-if=&amp;quot;route.query.project_id&amp;quot; :icon=&amp;quot;Close&amp;quot; @click=&amp;quot;clearRouteProjectFilter()&amp;quot;>清除项目筛选&lt;/el-button>\r\n' +  '              &lt;el-tooltip content=&amp;quot;导出当前审核任务&amp;quot; placement=&amp;quot;top&amp;quot;>\r\n' +  '                &lt;el-button :icon=&amp;quot;Download&amp;quot; @click=&amp;quot;exportTasks&amp;quot;>导出&lt;/el-button>\r\n' +  '              &lt;/el-tooltip>\r\n' +  '              &lt;el-tooltip content=&amp;quot;刷新审核任务&amp;quot; placement=&amp;quot;top&amp;quot;>\r\n' +  '                &lt;el-button :icon=&amp;quot;Refresh&amp;quot; circle @click=&amp;quot;loadTasks&amp;quot; />\r\n' +  '              &lt;/el-tooltip>\r\n' +  '            &lt;/div>\r\n' +  '          &lt;/div>\r\n' +  '\r\n' +  '          &lt;el-table :data=&amp;quot;tasks&amp;quot; border v-loading=&amp;quot;loading&amp;quot;>\r\n' +  '            &lt;el-table-column type=&amp;quot;index&amp;quot; label=&amp;quot;序号&amp;quot; width=&amp;quot;72&amp;quot; align=&amp;quot;center&amp;quot; :index=&amp;quot;tableIndex&amp;quot; fixed=&amp;quot;left&amp;quot; />\r\n' +  '            &lt;el-table-column prop=&amp;quot;title&amp;quot; label=&amp;quot;项目名称&amp;quot; min-width=&amp;quot;220&amp;quot; />\r\n' +  '            &lt;el-table-column prop=&amp;quot;unit.name&amp;quot; label=&amp;quot;申报单位&amp;quot; min-width=&amp;quot;180&amp;quot; />\r\n' +  '            &lt;el-table-column label=&amp;quot;当前阶段&amp;quot; width=&amp;quot;130&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>{{ roleLabel(row.current_reviewer_role) }}&lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '            &lt;el-table-column label=&amp;quot;派单提示&amp;quot; min-width=&amp;quot;220&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>\r\n' +  '                &lt;template v-if=&amp;quot;row.dispatch_assignment&amp;quot;>\r\n' +  `                  &lt;el-tag :type=&amp;quot;row.dispatch_assignment.auto_assign ? 'warning' : 'info'&amp;quot;>\r\n` +  &amp;quot;                    {{ row.dispatch_assignment.auto_assign ? '自动派单' : '推荐派单' }}\r\n&amp;quot; +  '                  &lt;/el-tag>\r\n' +  '                  &lt;span class=&amp;quot;dispatch-users&amp;quot;>{{ dispatchUserNames(row.dispatch_assignment) }}&lt;/span>\r\n' +  '                &lt;/template>\r\n' +  '                &lt;span v-else>-&lt;/span>\r\n' +  '              &lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '            &lt;el-table-column label=&amp;quot;状态&amp;quot; width=&amp;quot;120&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>\r\n' +  '                &lt;el-tag :type=&amp;quot;statusMeta(row.status).type&amp;quot;>{{ statusMeta(row.status).label }}&lt;/el-tag>\r\n' +  '              &lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '            &lt;el-table-column prop=&amp;quot;submitted_at&amp;quot; label=&amp;quot;提交时间&amp;quot; width=&amp;quot;180&amp;quot; />\r\n' +  '            &lt;el-table-column label=&amp;quot;操作&amp;quot; width=&amp;quot;190&amp;quot; fixed=&amp;quot;right&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>\r\n' +  '                &lt;div class=&amp;quot;table-action-row&amp;quot;>\r\n' +  '                  &lt;el-button size=&amp;quot;small&amp;quot; :icon=&amp;quot;View&amp;quot; @click=&amp;quot;openDetail(row)&amp;quot;>详情&lt;/el-button>\r\n' +  '                  &lt;el-button size=&amp;quot;small&amp;quot; type=&amp;quot;primary&amp;quot; :icon=&amp;quot;Checked&amp;quot; @click=&amp;quot;openReview(row)&amp;quot;>审核处理&lt;/el-button>\r\n' +  '                &lt;/div>\r\n' +  '              &lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '          &lt;/el-table>\r\n' +  '\r\n' +  '          &lt;el-pagination\r\n' +  '            v-if=&amp;quot;pagination.total > pagination.per_page&amp;quot;\r\n' +  '            background\r\n' +  '            layout=&amp;quot;prev, pager, next, total&amp;quot;\r\n' +  '            :current-page=&amp;quot;pagination.current_page&amp;quot;\r\n' +  '            :page-size=&amp;quot;pagination.per_page&amp;quot;\r\n' +  '            :total=&amp;quot;pagination.total&amp;quot;\r\n' +  '            @current-change=&amp;quot;changePage&amp;quot;\r\n' +  '          />\r\n' +  '        &lt;/div>\r\n' +  '      &lt;/el-tab-pane>\r\n' +  '\r\n' +  '      &lt;el-tab-pane label=&amp;quot;审核结果&amp;quot; name=&amp;quot;results&amp;quot;>\r\n' +  '        &lt;div class=&amp;quot;page-stack&amp;quot;>\r\n' +  '          &lt;div class=&amp;quot;toolbar&amp;quot;>\r\n' +  '            &lt;el-input v-model=&amp;quot;resultKeyword&amp;quot; clearable placeholder=&amp;quot;按项目、单位、账号、意见搜索&amp;quot; @keyup.enter=&amp;quot;reloadResults&amp;quot; />\r\n' +  '            &lt;div class=&amp;quot;toolbar-actions&amp;quot;>\r\n' +  '              &lt;el-select v-if=&amp;quot;isAdminRole&amp;quot; v-model=&amp;quot;resultStage&amp;quot; clearable placeholder=&amp;quot;阶段&amp;quot; @change=&amp;quot;reloadResults&amp;quot;>\r\n' +  '                &lt;el-option v-for=&amp;quot;item in stageOptions&amp;quot; :key=&amp;quot;item.value&amp;quot; :label=&amp;quot;item.label&amp;quot; :value=&amp;quot;item.value&amp;quot; />\r\n' +  '              &lt;/el-select>\r\n' +  '              &lt;el-select v-model=&amp;quot;resultDecision&amp;quot; clearable placeholder=&amp;quot;结果&amp;quot; @change=&amp;quot;reloadResults&amp;quot;>\r\n' +  '                &lt;el-option v-for=&amp;quot;item in allDecisionOptions&amp;quot; :key=&amp;quot;item.value&amp;quot; :label=&amp;quot;item.label&amp;quot; :value=&amp;quot;item.value&amp;quot; />\r\n' +  '              &lt;/el-select>\r\n' +  '              &lt;el-select v-model=&amp;quot;resultCategory&amp;quot; clearable placeholder=&amp;quot;类别&amp;quot; @change=&amp;quot;reloadResults&amp;quot;>\r\n' +  '                &lt;el-option v-for=&amp;quot;item in projectCategoryOptions&amp;quot; :key=&amp;quot;item.code&amp;quot; :label=&amp;quot;item.label&amp;quot; :value=&amp;quot;item.label&amp;quot; />\r\n' +  '              &lt;/el-select>\r\n' +  '              &lt;el-select v-model=&amp;quot;resultProjectType&amp;quot; clearable placeholder=&amp;quot;类型&amp;quot; @change=&amp;quot;reloadResults&amp;quot;>\r\n' +  '                &lt;el-option v-for=&amp;quot;item in projectTypeOptions&amp;quot; :key=&amp;quot;item.code&amp;quot; :label=&amp;quot;item.label&amp;quot; :value=&amp;quot;item.label&amp;quot; />\r\n' +  '              &lt;/el-select>\r\n' +  '              &lt;el-input-number v-model=&amp;quot;resultScoreMin&amp;quot; :min=&amp;quot;0&amp;quot; :max=&amp;quot;100&amp;quot; :precision=&amp;quot;1&amp;quot; controls-position=&amp;quot;right&amp;quot; placeholder=&amp;quot;最低分&amp;quot; class=&amp;quot;score-filter&amp;quot; @change=&amp;quot;reloadResults&amp;quot; />\r\n' +  '              &lt;el-input-number v-model=&amp;quot;resultScoreMax&amp;quot; :min=&amp;quot;0&amp;quot; :max=&amp;quot;100&amp;quot; :precision=&amp;quot;1&amp;quot; controls-position=&amp;quot;right&amp;quot; placeholder=&amp;quot;最高分&amp;quot; class=&amp;quot;score-filter&amp;quot; @change=&amp;quot;reloadResults&amp;quot; />\r\n' +  '              &lt;el-tooltip content=&amp;quot;查询审核结果&amp;quot; placement=&amp;quot;top&amp;quot;>\r\n' +  '                &lt;el-button type=&amp;quot;primary&amp;quot; :icon=&amp;quot;Search&amp;quot; circle @click=&amp;quot;reloadResults&amp;quot; />\r\n' +  '              &lt;/el-tooltip>\r\n' +  '              &lt;el-button v-if=&amp;quot;route.query.project_id&amp;quot; :icon=&amp;quot;Close&amp;quot; @click=&amp;quot;clearRouteProjectFilter()&amp;quot;>清除项目筛选&lt;/el-button>\r\n' +  '              &lt;el-tooltip content=&amp;quot;导出审核结果&amp;quot; placement=&amp;quot;top&amp;quot;>\r\n' +  '                &lt;el-button :icon=&amp;quot;Download&amp;quot; @click=&amp;quot;exportResults&amp;quot;>导出&lt;/el-button>\r\n' +  '              &lt;/el-tooltip>\r\n' +  '              &lt;el-tooltip content=&amp;quot;刷新审核结果&amp;quot; placement=&amp;quot;top&amp;quot;>\r\n' +  '                &lt;el-button :icon=&amp;quot;Refresh&amp;quot; circle @click=&amp;quot;loadResults&amp;quot; />\r\n' +  '              &lt;/el-tooltip>\r\n' +  '            &lt;/div>\r\n' +  '          &lt;/div>\r\n' +  '\r\n' +  '          &lt;el-table :data=&amp;quot;results&amp;quot; border v-loading=&amp;quot;resultsLoading&amp;quot;>\r\n' +  '            &lt;el-table-column type=&amp;quot;index&amp;quot; label=&amp;quot;序号&amp;quot; width=&amp;quot;72&amp;quot; align=&amp;quot;center&amp;quot; :index=&amp;quot;resultTableIndex&amp;quot; fixed=&amp;quot;left&amp;quot; />\r\n' +  '            &lt;el-table-column prop=&amp;quot;project.title&amp;quot; label=&amp;quot;项目名称&amp;quot; min-width=&amp;quot;220&amp;quot; />\r\n' +  '            &lt;el-table-column prop=&amp;quot;project.unit.name&amp;quot; label=&amp;quot;申报单位&amp;quot; min-width=&amp;quot;180&amp;quot; />\r\n' +  '            &lt;el-table-column label=&amp;quot;阶段&amp;quot; width=&amp;quot;120&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>{{ roleLabel(row.stage) }}&lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '            &lt;el-table-column label=&amp;quot;结果&amp;quot; width=&amp;quot;110&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>{{ decisionLabel(row.decision) }}&lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '            &lt;el-table-column prop=&amp;quot;reviewer.username&amp;quot; label=&amp;quot;审核人&amp;quot; width=&amp;quot;130&amp;quot; />\r\n' +  '            &lt;el-table-column prop=&amp;quot;score&amp;quot; label=&amp;quot;评分&amp;quot; width=&amp;quot;90&amp;quot; />\r\n' +  '            &lt;el-table-column label=&amp;quot;评分明细&amp;quot; min-width=&amp;quot;240&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>{{ formatCriteriaScores(row) }}&lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '            &lt;el-table-column prop=&amp;quot;comment&amp;quot; label=&amp;quot;意见&amp;quot; min-width=&amp;quot;220&amp;quot; />\r\n' +  '            &lt;el-table-column prop=&amp;quot;reviewed_at&amp;quot; label=&amp;quot;审核时间&amp;quot; width=&amp;quot;180&amp;quot; />\r\n' +  '            &lt;el-table-column label=&amp;quot;操作&amp;quot; width=&amp;quot;100&amp;quot; fixed=&amp;quot;right&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>\r\n' +  '                &lt;el-button size=&amp;quot;small&amp;quot; :icon=&amp;quot;View&amp;quot; @click=&amp;quot;openDetail(row.project)&amp;quot;>详情&lt;/el-button>\r\n' +  '              &lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '          &lt;/el-table>\r\n' +  '\r\n' +  '          &lt;el-pagination\r\n' +  '            v-if=&amp;quot;resultPagination.total > resultPagination.per_page&amp;quot;\r\n' +  '            background\r\n' +  '            layout=&amp;quot;prev, pager, next, total&amp;quot;\r\n' +  '            :current-page=&amp;quot;resultPagination.current_page&amp;quot;\r\n' +  '            :page-size=&amp;quot;resultPagination.per_page&amp;quot;\r\n' +  '            :total=&amp;quot;resultPagination.total&amp;quot;\r\n' +  '            @current-change=&amp;quot;changeResultPage&amp;quot;\r\n' +  '          />\r\n' +  '        &lt;/div>\r\n' +  '      &lt;/el-tab-pane>\r\n' +  '    &lt;/el-tabs>\r\n' +  '\r\n' +  `    &lt;el-dialog v-model=&amp;quot;reviewVisible&amp;quot; title=&amp;quot;审核处理&amp;quot; :width=&amp;quot;useCriteriaScoring ? '920px' : '720px'&amp;quot;>\r\n` +  '      &lt;el-alert\r\n' +  '        v-if=&amp;quot;currentProject?.next_step&amp;quot;\r\n' +  '        type=&amp;quot;info&amp;quot;\r\n' +  '        :closable=&amp;quot;false&amp;quot;\r\n' +  '        show-icon\r\n' +  '        :title=&amp;quot;currentProject.next_step.title&amp;quot;\r\n' +  '        :description=&amp;quot;currentProject.next_step.body&amp;quot;\r\n' +  '        class=&amp;quot;dialog-alert&amp;quot;\r\n' +  '      />\r\n' +  '      &lt;el-collapse class=&amp;quot;dialog-project-detail&amp;quot;>\r\n' +  '        &lt;el-collapse-item title=&amp;quot;项目详情和申报材料&amp;quot; name=&amp;quot;project&amp;quot;>\r\n' +  '          &lt;el-descriptions v-if=&amp;quot;currentProject&amp;quot; :column=&amp;quot;2&amp;quot; border size=&amp;quot;small&amp;quot;>\r\n' +  '            &lt;el-descriptions-item label=&amp;quot;项目名称&amp;quot; :span=&amp;quot;2&amp;quot;>{{ currentProject.title }}&lt;/el-descriptions-item>\r\n' +  `            &lt;el-descriptions-item label=&amp;quot;申报单位&amp;quot;>{{ currentProject.unit?.name || '-' }}&lt;/el-descriptions-item>\r\n` +  `            &lt;el-descriptions-item label=&amp;quot;申报批次&amp;quot;>{{ currentProject.application_batch?.name || '-' }}&lt;/el-descriptions-item>\r\n` +  `            &lt;el-descriptions-item label=&amp;quot;项目类别&amp;quot;>{{ currentProject.category || '-' }}&lt;/el-descriptions-item>\r\n` +  `            &lt;el-descriptions-item label=&amp;quot;项目类型&amp;quot;>{{ currentProject.project_type || '-' }}&lt;/el-descriptions-item>\r\n` +  '            &lt;el-descriptions-item label=&amp;quot;预算金额&amp;quot;>{{ formatCurrency(currentProject.budget_amount) }}&lt;/el-descriptions-item>\r\n' +  `            &lt;el-descriptions-item label=&amp;quot;归口管理单位&amp;quot;>{{ currentProject.metadata?.management_unit || '-' }}&lt;/el-descriptions-item>\r\n` +  `            &lt;el-descriptions-item label=&amp;quot;所属领域&amp;quot;>{{ currentProject.metadata?.field || '-' }}&lt;/el-descriptions-item>\r\n` +  `            &lt;el-descriptions-item label=&amp;quot;研究方向&amp;quot;>{{ currentProject.metadata?.research_direction || '-' }}&lt;/el-descriptions-item>\r\n` +  `            &lt;el-descriptions-item label=&amp;quot;项目摘要&amp;quot; :span=&amp;quot;2&amp;quot;>&lt;div class=&amp;quot;rich-content detail-rich-content&amp;quot; v-html=&amp;quot;currentProject.summary || '-'&amp;quot; />&lt;/el-descriptions-item>\r\n` +  '            &lt;el-descriptions-item v-if=&amp;quot;c'... 30407 more characters">
+		<failure type="testCodeFailure" message="The input did not match the regular expression /&lt;ProjectSubmissionDetails :project=&amp;quot;currentProject&amp;quot;/. Input:'&lt;template>\r\n' +  '  &lt;section class=&amp;quot;page-stack&amp;quot;>\r\n' +  '    &lt;el-tabs v-model=&amp;quot;activeTab&amp;quot; @tab-change=&amp;quot;handleTabChange&amp;quot;>\r\n' +  '      &lt;el-tab-pane label=&amp;quot;待审核&amp;quot; name=&amp;quot;tasks&amp;quot;>\r\n' +  '        &lt;div class=&amp;quot;page-stack&amp;quot;>\r\n' +  '          &lt;div class=&amp;quot;toolbar&amp;quot;>\r\n' +  '            &lt;el-input v-model=&amp;quot;keyword&amp;quot; clearable placeholder=&amp;quot;按项目、单位、账号搜索&amp;quot; @keyup.enter=&amp;quot;reloadTasks&amp;quot; />\r\n' +  '            &lt;div class=&amp;quot;toolbar-actions&amp;quot;>\r\n' +  '              &lt;el-select v-model=&amp;quot;category&amp;quot; clearable placeholder=&amp;quot;类别&amp;quot; @change=&amp;quot;reloadTasks&amp;quot;>\r\n' +  '                &lt;el-option v-for=&amp;quot;item in projectCategoryOptions&amp;quot; :key=&amp;quot;item.code&amp;quot; :label=&amp;quot;item.label&amp;quot; :value=&amp;quot;item.label&amp;quot; />\r\n' +  '              &lt;/el-select>\r\n' +  '              &lt;el-select v-model=&amp;quot;projectType&amp;quot; clearable placeholder=&amp;quot;类型&amp;quot; @change=&amp;quot;reloadTasks&amp;quot;>\r\n' +  '                &lt;el-option v-for=&amp;quot;item in projectTypeOptions&amp;quot; :key=&amp;quot;item.code&amp;quot; :label=&amp;quot;item.label&amp;quot; :value=&amp;quot;item.label&amp;quot; />\r\n' +  '              &lt;/el-select>\r\n' +  '              &lt;el-tooltip content=&amp;quot;查询审核任务&amp;quot; placement=&amp;quot;top&amp;quot;>\r\n' +  '                &lt;el-button type=&amp;quot;primary&amp;quot; :icon=&amp;quot;Search&amp;quot; circle @click=&amp;quot;reloadTasks&amp;quot; />\r\n' +  '              &lt;/el-tooltip>\r\n' +  '              &lt;el-button v-if=&amp;quot;route.query.project_id&amp;quot; :icon=&amp;quot;Close&amp;quot; @click=&amp;quot;clearRouteProjectFilter()&amp;quot;>清除项目筛选&lt;/el-button>\r\n' +  '              &lt;el-tooltip content=&amp;quot;导出当前审核任务&amp;quot; placement=&amp;quot;top&amp;quot;>\r\n' +  '                &lt;el-button :icon=&amp;quot;Download&amp;quot; @click=&amp;quot;exportTasks&amp;quot;>导出&lt;/el-button>\r\n' +  '              &lt;/el-tooltip>\r\n' +  '              &lt;el-tooltip content=&amp;quot;刷新审核任务&amp;quot; placement=&amp;quot;top&amp;quot;>\r\n' +  '                &lt;el-button :icon=&amp;quot;Refresh&amp;quot; circle @click=&amp;quot;loadTasks&amp;quot; />\r\n' +  '              &lt;/el-tooltip>\r\n' +  '            &lt;/div>\r\n' +  '          &lt;/div>\r\n' +  '\r\n' +  '          &lt;el-table :data=&amp;quot;tasks&amp;quot; border v-loading=&amp;quot;loading&amp;quot;>\r\n' +  '            &lt;el-table-column type=&amp;quot;index&amp;quot; label=&amp;quot;序号&amp;quot; width=&amp;quot;72&amp;quot; align=&amp;quot;center&amp;quot; :index=&amp;quot;tableIndex&amp;quot; fixed=&amp;quot;left&amp;quot; />\r\n' +  '            &lt;el-table-column prop=&amp;quot;title&amp;quot; label=&amp;quot;项目名称&amp;quot; min-width=&amp;quot;220&amp;quot; />\r\n' +  '            &lt;el-table-column prop=&amp;quot;unit.name&amp;quot; label=&amp;quot;申报单位&amp;quot; min-width=&amp;quot;180&amp;quot; />\r\n' +  '            &lt;el-table-column label=&amp;quot;当前阶段&amp;quot; width=&amp;quot;130&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>{{ roleLabel(row.current_reviewer_role) }}&lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '            &lt;el-table-column label=&amp;quot;派单提示&amp;quot; min-width=&amp;quot;220&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>\r\n' +  '                &lt;template v-if=&amp;quot;row.dispatch_assignment&amp;quot;>\r\n' +  `                  &lt;el-tag :type=&amp;quot;row.dispatch_assignment.auto_assign ? 'warning' : 'info'&amp;quot;>\r\n` +  &amp;quot;                    {{ row.dispatch_assignment.auto_assign ? '自动派单' : '推荐派单' }}\r\n&amp;quot; +  '                  &lt;/el-tag>\r\n' +  '                  &lt;span class=&amp;quot;dispatch-users&amp;quot;>{{ dispatchUserNames(row.dispatch_assignment) }}&lt;/span>\r\n' +  '                &lt;/template>\r\n' +  '                &lt;span v-else>-&lt;/span>\r\n' +  '              &lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '            &lt;el-table-column label=&amp;quot;状态&amp;quot; width=&amp;quot;120&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>\r\n' +  '                &lt;el-tag :type=&amp;quot;statusMeta(row.status).type&amp;quot;>{{ statusMeta(row.status).label }}&lt;/el-tag>\r\n' +  '              &lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '            &lt;el-table-column prop=&amp;quot;submitted_at&amp;quot; label=&amp;quot;提交时间&amp;quot; width=&amp;quot;180&amp;quot; />\r\n' +  '            &lt;el-table-column label=&amp;quot;操作&amp;quot; width=&amp;quot;190&amp;quot; fixed=&amp;quot;right&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>\r\n' +  '                &lt;div class=&amp;quot;table-action-row&amp;quot;>\r\n' +  '                  &lt;el-button size=&amp;quot;small&amp;quot; :icon=&amp;quot;View&amp;quot; @click=&amp;quot;openDetail(row)&amp;quot;>详情&lt;/el-button>\r\n' +  '                  &lt;el-button size=&amp;quot;small&amp;quot; type=&amp;quot;primary&amp;quot; :icon=&amp;quot;Checked&amp;quot; @click=&amp;quot;openReview(row)&amp;quot;>审核处理&lt;/el-button>\r\n' +  '                &lt;/div>\r\n' +  '              &lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '          &lt;/el-table>\r\n' +  '\r\n' +  '          &lt;el-pagination\r\n' +  '            v-if=&amp;quot;pagination.total > pagination.per_page&amp;quot;\r\n' +  '            background\r\n' +  '            layout=&amp;quot;prev, pager, next, total&amp;quot;\r\n' +  '            :current-page=&amp;quot;pagination.current_page&amp;quot;\r\n' +  '            :page-size=&amp;quot;pagination.per_page&amp;quot;\r\n' +  '            :total=&amp;quot;pagination.total&amp;quot;\r\n' +  '            @current-change=&amp;quot;changePage&amp;quot;\r\n' +  '          />\r\n' +  '        &lt;/div>\r\n' +  '      &lt;/el-tab-pane>\r\n' +  '\r\n' +  '      &lt;el-tab-pane label=&amp;quot;审核结果&amp;quot; name=&amp;quot;results&amp;quot;>\r\n' +  '        &lt;div class=&amp;quot;page-stack&amp;quot;>\r\n' +  '          &lt;div class=&amp;quot;toolbar&amp;quot;>\r\n' +  '            &lt;el-input v-model=&amp;quot;resultKeyword&amp;quot; clearable placeholder=&amp;quot;按项目、单位、账号、意见搜索&amp;quot; @keyup.enter=&amp;quot;reloadResults&amp;quot; />\r\n' +  '            &lt;div class=&amp;quot;toolbar-actions&amp;quot;>\r\n' +  '              &lt;el-select v-if=&amp;quot;isAdminRole&amp;quot; v-model=&amp;quot;resultStage&amp;quot; clearable placeholder=&amp;quot;阶段&amp;quot; @change=&amp;quot;reloadResults&amp;quot;>\r\n' +  '                &lt;el-option v-for=&amp;quot;item in stageOptions&amp;quot; :key=&amp;quot;item.value&amp;quot; :label=&amp;quot;item.label&amp;quot; :value=&amp;quot;item.value&amp;quot; />\r\n' +  '              &lt;/el-select>\r\n' +  '              &lt;el-select v-model=&amp;quot;resultDecision&amp;quot; clearable placeholder=&amp;quot;结果&amp;quot; @change=&amp;quot;reloadResults&amp;quot;>\r\n' +  '                &lt;el-option v-for=&amp;quot;item in allDecisionOptions&amp;quot; :key=&amp;quot;item.value&amp;quot; :label=&amp;quot;item.label&amp;quot; :value=&amp;quot;item.value&amp;quot; />\r\n' +  '              &lt;/el-select>\r\n' +  '              &lt;el-select v-model=&amp;quot;resultCategory&amp;quot; clearable placeholder=&amp;quot;类别&amp;quot; @change=&amp;quot;reloadResults&amp;quot;>\r\n' +  '                &lt;el-option v-for=&amp;quot;item in projectCategoryOptions&amp;quot; :key=&amp;quot;item.code&amp;quot; :label=&amp;quot;item.label&amp;quot; :value=&amp;quot;item.label&amp;quot; />\r\n' +  '              &lt;/el-select>\r\n' +  '              &lt;el-select v-model=&amp;quot;resultProjectType&amp;quot; clearable placeholder=&amp;quot;类型&amp;quot; @change=&amp;quot;reloadResults&amp;quot;>\r\n' +  '                &lt;el-option v-for=&amp;quot;item in projectTypeOptions&amp;quot; :key=&amp;quot;item.code&amp;quot; :label=&amp;quot;item.label&amp;quot; :value=&amp;quot;item.label&amp;quot; />\r\n' +  '              &lt;/el-select>\r\n' +  '              &lt;el-input-number v-model=&amp;quot;resultScoreMin&amp;quot; :min=&amp;quot;0&amp;quot; :max=&amp;quot;100&amp;quot; :precision=&amp;quot;1&amp;quot; controls-position=&amp;quot;right&amp;quot; placeholder=&amp;quot;最低分&amp;quot; class=&amp;quot;score-filter&amp;quot; @change=&amp;quot;reloadResults&amp;quot; />\r\n' +  '              &lt;el-input-number v-model=&amp;quot;resultScoreMax&amp;quot; :min=&amp;quot;0&amp;quot; :max=&amp;quot;100&amp;quot; :precision=&amp;quot;1&amp;quot; controls-position=&amp;quot;right&amp;quot; placeholder=&amp;quot;最高分&amp;quot; class=&amp;quot;score-filter&amp;quot; @change=&amp;quot;reloadResults&amp;quot; />\r\n' +  '              &lt;el-tooltip content=&amp;quot;查询审核结果&amp;quot; placement=&amp;quot;top&amp;quot;>\r\n' +  '                &lt;el-button type=&amp;quot;primary&amp;quot; :icon=&amp;quot;Search&amp;quot; circle @click=&amp;quot;reloadResults&amp;quot; />\r\n' +  '              &lt;/el-tooltip>\r\n' +  '              &lt;el-button v-if=&amp;quot;route.query.project_id&amp;quot; :icon=&amp;quot;Close&amp;quot; @click=&amp;quot;clearRouteProjectFilter()&amp;quot;>清除项目筛选&lt;/el-button>\r\n' +  '              &lt;el-tooltip content=&amp;quot;导出审核结果&amp;quot; placement=&amp;quot;top&amp;quot;>\r\n' +  '                &lt;el-button :icon=&amp;quot;Download&amp;quot; @click=&amp;quot;exportResults&amp;quot;>导出&lt;/el-button>\r\n' +  '              &lt;/el-tooltip>\r\n' +  '              &lt;el-tooltip content=&amp;quot;刷新审核结果&amp;quot; placement=&amp;quot;top&amp;quot;>\r\n' +  '                &lt;el-button :icon=&amp;quot;Refresh&amp;quot; circle @click=&amp;quot;loadResults&amp;quot; />\r\n' +  '              &lt;/el-tooltip>\r\n' +  '            &lt;/div>\r\n' +  '          &lt;/div>\r\n' +  '\r\n' +  '          &lt;el-table :data=&amp;quot;results&amp;quot; border v-loading=&amp;quot;resultsLoading&amp;quot;>\r\n' +  '            &lt;el-table-column type=&amp;quot;index&amp;quot; label=&amp;quot;序号&amp;quot; width=&amp;quot;72&amp;quot; align=&amp;quot;center&amp;quot; :index=&amp;quot;resultTableIndex&amp;quot; fixed=&amp;quot;left&amp;quot; />\r\n' +  '            &lt;el-table-column prop=&amp;quot;project.title&amp;quot; label=&amp;quot;项目名称&amp;quot; min-width=&amp;quot;220&amp;quot; />\r\n' +  '            &lt;el-table-column prop=&amp;quot;project.unit.name&amp;quot; label=&amp;quot;申报单位&amp;quot; min-width=&amp;quot;180&amp;quot; />\r\n' +  '            &lt;el-table-column label=&amp;quot;阶段&amp;quot; width=&amp;quot;120&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>{{ roleLabel(row.stage) }}&lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '            &lt;el-table-column label=&amp;quot;结果&amp;quot; width=&amp;quot;110&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>{{ decisionLabel(row.decision) }}&lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '            &lt;el-table-column prop=&amp;quot;reviewer.username&amp;quot; label=&amp;quot;审核人&amp;quot; width=&amp;quot;130&amp;quot; />\r\n' +  '            &lt;el-table-column prop=&amp;quot;score&amp;quot; label=&amp;quot;评分&amp;quot; width=&amp;quot;90&amp;quot; />\r\n' +  '            &lt;el-table-column label=&amp;quot;评分明细&amp;quot; min-width=&amp;quot;240&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>{{ formatCriteriaScores(row) }}&lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '            &lt;el-table-column prop=&amp;quot;comment&amp;quot; label=&amp;quot;意见&amp;quot; min-width=&amp;quot;220&amp;quot; />\r\n' +  '            &lt;el-table-column prop=&amp;quot;reviewed_at&amp;quot; label=&amp;quot;审核时间&amp;quot; width=&amp;quot;180&amp;quot; />\r\n' +  '            &lt;el-table-column label=&amp;quot;操作&amp;quot; width=&amp;quot;100&amp;quot; fixed=&amp;quot;right&amp;quot;>\r\n' +  '              &lt;template #default=&amp;quot;{ row }&amp;quot;>\r\n' +  '                &lt;el-button size=&amp;quot;small&amp;quot; :icon=&amp;quot;View&amp;quot; @click=&amp;quot;openDetail(row.project)&amp;quot;>详情&lt;/el-button>\r\n' +  '              &lt;/template>\r\n' +  '            &lt;/el-table-column>\r\n' +  '          &lt;/el-table>\r\n' +  '\r\n' +  '          &lt;el-pagination\r\n' +  '            v-if=&amp;quot;resultPagination.total > resultPagination.per_page&amp;quot;\r\n' +  '            background\r\n' +  '            layout=&amp;quot;prev, pager, next, total&amp;quot;\r\n' +  '            :current-page=&amp;quot;resultPagination.current_page&amp;quot;\r\n' +  '            :page-size=&amp;quot;resultPagination.per_page&amp;quot;\r\n' +  '            :total=&amp;quot;resultPagination.total&amp;quot;\r\n' +  '            @current-change=&amp;quot;changeResultPage&amp;quot;\r\n' +  '          />\r\n' +  '        &lt;/div>\r\n' +  '      &lt;/el-tab-pane>\r\n' +  '    &lt;/el-tabs>\r\n' +  '\r\n' +  `    &lt;el-dialog v-model=&amp;quot;reviewVisible&amp;quot; title=&amp;quot;审核处理&amp;quot; :width=&amp;quot;useCriteriaScoring ? '920px' : '720px'&amp;quot;>\r\n` +  '      &lt;el-alert\r\n' +  '        v-if=&amp;quot;currentProject?.next_step&amp;quot;\r\n' +  '        type=&amp;quot;info&amp;quot;\r\n' +  '        :closable=&amp;quot;false&amp;quot;\r\n' +  '        show-icon\r\n' +  '        :title=&amp;quot;currentProject.next_step.title&amp;quot;\r\n' +  '        :description=&amp;quot;currentProject.next_step.body&amp;quot;\r\n' +  '        class=&amp;quot;dialog-alert&amp;quot;\r\n' +  '      />\r\n' +  '      &lt;el-collapse class=&amp;quot;dialog-project-detail&amp;quot;>\r\n' +  '        &lt;el-collapse-item title=&amp;quot;项目详情和申报材料&amp;quot; name=&amp;quot;project&amp;quot;>\r\n' +  '          &lt;el-descriptions v-if=&amp;quot;currentProject&amp;quot; :column=&amp;quot;2&amp;quot; border size=&amp;quot;small&amp;quot;>\r\n' +  '            &lt;el-descriptions-item label=&amp;quot;项目名称&amp;quot; :span=&amp;quot;2&amp;quot;>{{ currentProject.title }}&lt;/el-descriptions-item>\r\n' +  `            &lt;el-descriptions-item label=&amp;quot;申报单位&amp;quot;>{{ currentProject.unit?.name || '-' }}&lt;/el-descriptions-item>\r\n` +  `            &lt;el-descriptions-item label=&amp;quot;申报批次&amp;quot;>{{ currentProject.application_batch?.name || '-' }}&lt;/el-descriptions-item>\r\n` +  `            &lt;el-descriptions-item label=&amp;quot;项目类别&amp;quot;>{{ currentProject.category || '-' }}&lt;/el-descriptions-item>\r\n` +  `            &lt;el-descriptions-item label=&amp;quot;项目类型&amp;quot;>{{ currentProject.project_type || '-' }}&lt;/el-descriptions-item>\r\n` +  '            &lt;el-descriptions-item label=&amp;quot;预算金额&amp;quot;>{{ formatCurrency(currentProject.budget_amount) }}&lt;/el-descriptions-item>\r\n' +  `            &lt;el-descriptions-item label=&amp;quot;归口管理单位&amp;quot;>{{ currentProject.metadata?.management_unit || '-' }}&lt;/el-descriptions-item>\r\n` +  `            &lt;el-descriptions-item label=&amp;quot;所属领域&amp;quot;>{{ currentProject.metadata?.field || '-' }}&lt;/el-descriptions-item>\r\n` +  `            &lt;el-descriptions-item label=&amp;quot;研究方向&amp;quot;>{{ currentProject.metadata?.research_direction || '-' }}&lt;/el-descriptions-item>\r\n` +  `            &lt;el-descriptions-item label=&amp;quot;项目摘要&amp;quot; :span=&amp;quot;2&amp;quot;>&lt;div class=&amp;quot;rich-content detail-rich-content&amp;quot; v-html=&amp;quot;currentProject.summary || '-'&amp;quot; />&lt;/el-descriptions-item>\r\n` +  '            &lt;el-descriptions-item v-if=&amp;quot;c'... 30407 more characters">
+[Error [ERR_TEST_FAILURE]: The input did not match the regular expression /&lt;ProjectSubmissionDetails :project="currentProject"/. Input:
+
+'&lt;template>\r\n' +
+  '  &lt;section class="page-stack">\r\n' +
+  '    &lt;el-tabs v-model="activeTab" @tab-change="handleTabChange">\r\n' +
+  '      &lt;el-tab-pane label="待审核" name="tasks">\r\n' +
+  '        &lt;div class="page-stack">\r\n' +
+  '          &lt;div class="toolbar">\r\n' +
+  '            &lt;el-input v-model="keyword" clearable placeholder="按项目、单位、账号搜索" @keyup.enter="reloadTasks" />\r\n' +
+  '            &lt;div class="toolbar-actions">\r\n' +
+  '              &lt;el-select v-model="category" clearable placeholder="类别" @change="reloadTasks">\r\n' +
+  '                &lt;el-option v-for="item in projectCategoryOptions" :key="item.code" :label="item.label" :value="item.label" />\r\n' +
+  '              &lt;/el-select>\r\n' +
+  '              &lt;el-select v-model="projectType" clearable placeholder="类型" @change="reloadTasks">\r\n' +
+  '                &lt;el-option v-for="item in projectTypeOptions" :key="item.code" :label="item.label" :value="item.label" />\r\n' +
+  '              &lt;/el-select>\r\n' +
+  '              &lt;el-tooltip content="查询审核任务" placement="top">\r\n' +
+  '                &lt;el-button type="primary" :icon="Search" circle @click="reloadTasks" />\r\n' +
+  '              &lt;/el-tooltip>\r\n' +
+  '              &lt;el-button v-if="route.query.project_id" :icon="Close" @click="clearRouteProjectFilter()">清除项目筛选&lt;/el-button>\r\n' +
+  '              &lt;el-tooltip content="导出当前审核任务" placement="top">\r\n' +
+  '                &lt;el-button :icon="Download" @click="exportTasks">导出&lt;/el-button>\r\n' +
+  '              &lt;/el-tooltip>\r\n' +
+  '              &lt;el-tooltip content="刷新审核任务" placement="top">\r\n' +
+  '                &lt;el-button :icon="Refresh" circle @click="loadTasks" />\r\n' +
+  '              &lt;/el-tooltip>\r\n' +
+  '            &lt;/div>\r\n' +
+  '          &lt;/div>\r\n' +
+  '\r\n' +
+  '          &lt;el-table :data="tasks" border v-loading="loading">\r\n' +
+  '            &lt;el-table-column type="index" label="序号" width="72" align="center" :index="tableIndex" fixed="left" />\r\n' +
+  '            &lt;el-table-column prop="title" label="项目名称" min-width="220" />\r\n' +
+  '            &lt;el-table-column prop="unit.name" label="申报单位" min-width="180" />\r\n' +
+  '            &lt;el-table-column label="当前阶段" width="130">\r\n' +
+  '              &lt;template #default="{ row }">{{ roleLabel(row.current_reviewer_role) }}&lt;/template>\r\n' +
+  '            &lt;/el-table-column>\r\n' +
+  '            &lt;el-table-column label="派单提示" min-width="220">\r\n' +
+  '              &lt;template #default="{ row }">\r\n' +
+  '                &lt;template v-if="row.dispatch_assignment">\r\n' +
+  `                  &lt;el-tag :type="row.dispatch_assignment.auto_assign ? 'warning' : 'info'">\r\n` +
+  "                    {{ row.dispatch_assignment.auto_assign ? '自动派单' : '推荐派单' }}\r\n" +
+  '                  &lt;/el-tag>\r\n' +
+  '                  &lt;span class="dispatch-users">{{ dispatchUserNames(row.dispatch_assignment) }}&lt;/span>\r\n' +
+  '                &lt;/template>\r\n' +
+  '                &lt;span v-else>-&lt;/span>\r\n' +
+  '              &lt;/template>\r\n' +
+  '            &lt;/el-table-column>\r\n' +
+  '            &lt;el-table-column label="状态" width="120">\r\n' +
+  '              &lt;template #default="{ row }">\r\n' +
+  '                &lt;el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}&lt;/el-tag>\r\n' +
+  '              &lt;/template>\r\n' +
+  '            &lt;/el-table-column>\r\n' +
+  '            &lt;el-table-column prop="submitted_at" label="提交时间" width="180" />\r\n' +
+  '            &lt;el-table-column label="操作" width="190" fixed="right">\r\n' +
+  '              &lt;template #default="{ row }">\r\n' +
+  '                &lt;div class="table-action-row">\r\n' +
+  '                  &lt;el-button size="small" :icon="View" @click="openDetail(row)">详情&lt;/el-button>\r\n' +
+  '                  &lt;el-button size="small" type="primary" :icon="Checked" @click="openReview(row)">审核处理&lt;/el-button>\r\n' +
+  '                &lt;/div>\r\n' +
+  '              &lt;/template>\r\n' +
+  '            &lt;/el-table-column>\r\n' +
+  '          &lt;/el-table>\r\n' +
+  '\r\n' +
+  '          &lt;el-pagination\r\n' +
+  '            v-if="pagination.total > pagination.per_page"\r\n' +
+  '            background\r\n' +
+  '            layout="prev, pager, next, total"\r\n' +
+  '            :current-page="pagination.current_page"\r\n' +
+  '            :page-size="pagination.per_page"\r\n' +
+  '            :total="pagination.total"\r\n' +
+  '            @current-change="changePage"\r\n' +
+  '          />\r\n' +
+  '        &lt;/div>\r\n' +
+  '      &lt;/el-tab-pane>\r\n' +
+  '\r\n' +
+  '      &lt;el-tab-pane label="审核结果" name="results">\r\n' +
+  '        &lt;div class="page-stack">\r\n' +
+  '          &lt;div class="toolbar">\r\n' +
+  '            &lt;el-input v-model="resultKeyword" clearable placeholder="按项目、单位、账号、意见搜索" @keyup.enter="reloadResults" />\r\n' +
+  '            &lt;div class="toolbar-actions">\r\n' +
+  '              &lt;el-select v-if="isAdminRole" v-model="resultStage" clearable placeholder="阶段" @change="reloadResults">\r\n' +
+  '                &lt;el-option v-for="item in stageOptions" :key="item.value" :label="item.label" :value="item.value" />\r\n' +
+  '              &lt;/el-select>\r\n' +
+  '              &lt;el-select v-model="resultDecision" clearable placeholder="结果" @change="reloadResults">\r\n' +
+  '                &lt;el-option v-for="item in allDecisionOptions" :key="item.value" :label="item.label" :value="item.value" />\r\n' +
+  '              &lt;/el-select>\r\n' +
+  '              &lt;el-select v-model="resultCategory" clearable placeholder="类别" @change="reloadResults">\r\n' +
+  '                &lt;el-option v-for="item in projectCategoryOptions" :key="item.code" :label="item.label" :value="item.label" />\r\n' +
+  '              &lt;/el-select>\r\n' +
+  '              &lt;el-select v-model="resultProjectType" clearable placeholder="类型" @change="reloadResults">\r\n' +
+  '                &lt;el-option v-for="item in projectTypeOptions" :key="item.code" :label="item.label" :value="item.label" />\r\n' +
+  '              &lt;/el-select>\r\n' +
+  '              &lt;el-input-number v-model="resultScoreMin" :min="0" :max="100" :precision="1" controls-position="right" placeholder="最低分" class="score-filter" @change="reloadResults" />\r\n' +
+  '              &lt;el-input-number v-model="resultScoreMax" :min="0" :max="100" :precision="1" controls-position="right" placeholder="最高分" class="score-filter" @change="reloadResults" />\r\n' +
+  '              &lt;el-tooltip content="查询审核结果" placement="top">\r\n' +
+  '                &lt;el-button type="primary" :icon="Search" circle @click="reloadResults" />\r\n' +
+  '              &lt;/el-tooltip>\r\n' +
+  '              &lt;el-button v-if="route.query.project_id" :icon="Close" @click="clearRouteProjectFilter()">清除项目筛选&lt;/el-button>\r\n' +
+  '              &lt;el-tooltip content="导出审核结果" placement="top">\r\n' +
+  '                &lt;el-button :icon="Download" @click="exportResults">导出&lt;/el-button>\r\n' +
+  '              &lt;/el-tooltip>\r\n' +
+  '              &lt;el-tooltip content="刷新审核结果" placement="top">\r\n' +
+  '                &lt;el-button :icon="Refresh" circle @click="loadResults" />\r\n' +
+  '              &lt;/el-tooltip>\r\n' +
+  '            &lt;/div>\r\n' +
+  '          &lt;/div>\r\n' +
+  '\r\n' +
+  '          &lt;el-table :data="results" border v-loading="resultsLoading">\r\n' +
+  '            &lt;el-table-column type="index" label="序号" width="72" align="center" :index="resultTableIndex" fixed="left" />\r\n' +
+  '            &lt;el-table-column prop="project.title" label="项目名称" min-width="220" />\r\n' +
+  '            &lt;el-table-column prop="project.unit.name" label="申报单位" min-width="180" />\r\n' +
+  '            &lt;el-table-column label="阶段" width="120">\r\n' +
+  '              &lt;template #default="{ row }">{{ roleLabel(row.stage) }}&lt;/template>\r\n' +
+  '            &lt;/el-table-column>\r\n' +
+  '            &lt;el-table-column label="结果" width="110">\r\n' +
+  '              &lt;template #default="{ row }">{{ decisionLabel(row.decision) }}&lt;/template>\r\n' +
+  '            &lt;/el-table-column>\r\n' +
+  '            &lt;el-table-column prop="reviewer.username" label="审核人" width="130" />\r\n' +
+  '            &lt;el-table-column prop="score" label="评分" width="90" />\r\n' +
+  '            &lt;el-table-column label="评分明细" min-width="240">\r\n' +
+  '              &lt;template #default="{ row }">{{ formatCriteriaScores(row) }}&lt;/template>\r\n' +
+  '            &lt;/el-table-column>\r\n' +
+  '            &lt;el-table-column prop="comment" label="意见" min-width="220" />\r\n' +
+  '            &lt;el-table-column prop="reviewed_at" label="审核时间" width="180" />\r\n' +
+  '            &lt;el-table-column label="操作" width="100" fixed="right">\r\n' +
+  '              &lt;template #default="{ row }">\r\n' +
+  '                &lt;el-button size="small" :icon="View" @click="openDetail(row.project)">详情&lt;/el-button>\r\n' +
+  '              &lt;/template>\r\n' +
+  '            &lt;/el-table-column>\r\n' +
+  '          &lt;/el-table>\r\n' +
+  '\r\n' +
+  '          &lt;el-pagination\r\n' +
+  '            v-if="resultPagination.total > resultPagination.per_page"\r\n' +
+  '            background\r\n' +
+  '            layout="prev, pager, next, total"\r\n' +
+  '            :current-page="resultPagination.current_page"\r\n' +
+  '            :page-size="resultPagination.per_page"\r\n' +
+  '            :total="resultPagination.total"\r\n' +
+  '            @current-change="changeResultPage"\r\n' +
+  '          />\r\n' +
+  '        &lt;/div>\r\n' +
+  '      &lt;/el-tab-pane>\r\n' +
+  '    &lt;/el-tabs>\r\n' +
+  '\r\n' +
+  `    &lt;el-dialog v-model="reviewVisible" title="审核处理" :width="useCriteriaScoring ? '920px' : '720px'">\r\n` +
+  '      &lt;el-alert\r\n' +
+  '        v-if="currentProject?.next_step"\r\n' +
+  '        type="info"\r\n' +
+  '        :closable="false"\r\n' +
+  '        show-icon\r\n' +
+  '        :title="currentProject.next_step.title"\r\n' +
+  '        :description="currentProject.next_step.body"\r\n' +
+  '        class="dialog-alert"\r\n' +
+  '      />\r\n' +
+  '      &lt;el-collapse class="dialog-project-detail">\r\n' +
+  '        &lt;el-collapse-item title="项目详情和申报材料" name="project">\r\n' +
+  '          &lt;el-descriptions v-if="currentProject" :column="2" border size="small">\r\n' +
+  '            &lt;el-descriptions-item label="项目名称" :span="2">{{ currentProject.title }}&lt;/el-descriptions-item>\r\n' +
+  `            &lt;el-descriptions-item label="申报单位">{{ currentProject.unit?.name || '-' }}&lt;/el-descriptions-item>\r\n` +
+  `            &lt;el-descriptions-item label="申报批次">{{ currentProject.application_batch?.name || '-' }}&lt;/el-descriptions-item>\r\n` +
+  `            &lt;el-descriptions-item label="项目类别">{{ currentProject.category || '-' }}&lt;/el-descriptions-item>\r\n` +
+  `            &lt;el-descriptions-item label="项目类型">{{ currentProject.project_type || '-' }}&lt;/el-descriptions-item>\r\n` +
+  '            &lt;el-descriptions-item label="预算金额">{{ formatCurrency(currentProject.budget_amount) }}&lt;/el-descriptions-item>\r\n' +
+  `            &lt;el-descriptions-item label="归口管理单位">{{ currentProject.metadata?.management_unit || '-' }}&lt;/el-descriptions-item>\r\n` +
+  `            &lt;el-descriptions-item label="所属领域">{{ currentProject.metadata?.field || '-' }}&lt;/el-descriptions-item>\r\n` +
+  `            &lt;el-descriptions-item label="研究方向">{{ currentProject.metadata?.research_direction || '-' }}&lt;/el-descriptions-item>\r\n` +
+  `            &lt;el-descriptions-item label="项目摘要" :span="2">&lt;div class="rich-content detail-rich-content" v-html="currentProject.summary || '-'" />&lt;/el-descriptions-item>\r\n` +
+  '            &lt;el-descriptions-item v-if="c'... 30407 more characters
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /&lt;ProjectSubmissionDetails :project="currentProject"/. Input:
+
+  '&lt;template>\r\n' +
+    '  &lt;section class="page-stack">\r\n' +
+    '    &lt;el-tabs v-model="activeTab" @tab-change="handleTabChange">\r\n' +
+    '      &lt;el-tab-pane label="待审核" name="tasks">\r\n' +
+    '        &lt;div class="page-stack">\r\n' +
+    '          &lt;div class="toolbar">\r\n' +
+    '            &lt;el-input v-model="keyword" clearable placeholder="按项目、单位、账号搜索" @keyup.enter="reloadTasks" />\r\n' +
+    '            &lt;div class="toolbar-actions">\r\n' +
+    '              &lt;el-select v-model="category" clearable placeholder="类别" @change="reloadTasks">\r\n' +
+    '                &lt;el-option v-for="item in projectCategoryOptions" :key="item.code" :label="item.label" :value="item.label" />\r\n' +
+    '              &lt;/el-select>\r\n' +
+    '              &lt;el-select v-model="projectType" clearable placeholder="类型" @change="reloadTasks">\r\n' +
+    '                &lt;el-option v-for="item in projectTypeOptions" :key="item.code" :label="item.label" :value="item.label" />\r\n' +
+    '              &lt;/el-select>\r\n' +
+    '              &lt;el-tooltip content="查询审核任务" placement="top">\r\n' +
+    '                &lt;el-button type="primary" :icon="Search" circle @click="reloadTasks" />\r\n' +
+    '              &lt;/el-tooltip>\r\n' +
+    '              &lt;el-button v-if="route.query.project_id" :icon="Close" @click="clearRouteProjectFilter()">清除项目筛选&lt;/el-button>\r\n' +
+    '              &lt;el-tooltip content="导出当前审核任务" placement="top">\r\n' +
+    '                &lt;el-button :icon="Download" @click="exportTasks">导出&lt;/el-button>\r\n' +
+    '              &lt;/el-tooltip>\r\n' +
+    '              &lt;el-tooltip content="刷新审核任务" placement="top">\r\n' +
+    '                &lt;el-button :icon="Refresh" circle @click="loadTasks" />\r\n' +
+    '              &lt;/el-tooltip>\r\n' +
+    '            &lt;/div>\r\n' +
+    '          &lt;/div>\r\n' +
+    '\r\n' +
+    '          &lt;el-table :data="tasks" border v-loading="loading">\r\n' +
+    '            &lt;el-table-column type="index" label="序号" width="72" align="center" :index="tableIndex" fixed="left" />\r\n' +
+    '            &lt;el-table-column prop="title" label="项目名称" min-width="220" />\r\n' +
+    '            &lt;el-table-column prop="unit.name" label="申报单位" min-width="180" />\r\n' +
+    '            &lt;el-table-column label="当前阶段" width="130">\r\n' +
+    '              &lt;template #default="{ row }">{{ roleLabel(row.current_reviewer_role) }}&lt;/template>\r\n' +
+    '            &lt;/el-table-column>\r\n' +
+    '            &lt;el-table-column label="派单提示" min-width="220">\r\n' +
+    '              &lt;template #default="{ row }">\r\n' +
+    '                &lt;template v-if="row.dispatch_assignment">\r\n' +
+    `                  &lt;el-tag :type="row.dispatch_assignment.auto_assign ? 'warning' : 'info'">\r\n` +
+    "                    {{ row.dispatch_assignment.auto_assign ? '自动派单' : '推荐派单' }}\r\n" +
+    '                  &lt;/el-tag>\r\n' +
+    '                  &lt;span class="dispatch-users">{{ dispatchUserNames(row.dispatch_assignment) }}&lt;/span>\r\n' +
+    '                &lt;/template>\r\n' +
+    '                &lt;span v-else>-&lt;/span>\r\n' +
+    '              &lt;/template>\r\n' +
+    '            &lt;/el-table-column>\r\n' +
+    '            &lt;el-table-column label="状态" width="120">\r\n' +
+    '              &lt;template #default="{ row }">\r\n' +
+    '                &lt;el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}&lt;/el-tag>\r\n' +
+    '              &lt;/template>\r\n' +
+    '            &lt;/el-table-column>\r\n' +
+    '            &lt;el-table-column prop="submitted_at" label="提交时间" width="180" />\r\n' +
+    '            &lt;el-table-column label="操作" width="190" fixed="right">\r\n' +
+    '              &lt;template #default="{ row }">\r\n' +
+    '                &lt;div class="table-action-row">\r\n' +
+    '                  &lt;el-button size="small" :icon="View" @click="openDetail(row)">详情&lt;/el-button>\r\n' +
+    '                  &lt;el-button size="small" type="primary" :icon="Checked" @click="openReview(row)">审核处理&lt;/el-button>\r\n' +
+    '                &lt;/div>\r\n' +
+    '              &lt;/template>\r\n' +
+    '            &lt;/el-table-column>\r\n' +
+    '          &lt;/el-table>\r\n' +
+    '\r\n' +
+    '          &lt;el-pagination\r\n' +
+    '            v-if="pagination.total > pagination.per_page"\r\n' +
+    '            background\r\n' +
+    '            layout="prev, pager, next, total"\r\n' +
+    '            :current-page="pagination.current_page"\r\n' +
+    '            :page-size="pagination.per_page"\r\n' +
+    '            :total="pagination.total"\r\n' +
+    '            @current-change="changePage"\r\n' +
+    '          />\r\n' +
+    '        &lt;/div>\r\n' +
+    '      &lt;/el-tab-pane>\r\n' +
+    '\r\n' +
+    '      &lt;el-tab-pane label="审核结果" name="results">\r\n' +
+    '        &lt;div class="page-stack">\r\n' +
+    '          &lt;div class="toolbar">\r\n' +
+    '            &lt;el-input v-model="resultKeyword" clearable placeholder="按项目、单位、账号、意见搜索" @keyup.enter="reloadResults" />\r\n' +
+    '            &lt;div class="toolbar-actions">\r\n' +
+    '              &lt;el-select v-if="isAdminRole" v-model="resultStage" clearable placeholder="阶段" @change="reloadResults">\r\n' +
+    '                &lt;el-option v-for="item in stageOptions" :key="item.value" :label="item.label" :value="item.value" />\r\n' +
+    '              &lt;/el-select>\r\n' +
+    '              &lt;el-select v-model="resultDecision" clearable placeholder="结果" @change="reloadResults">\r\n' +
+    '                &lt;el-option v-for="item in allDecisionOptions" :key="item.value" :label="item.label" :value="item.value" />\r\n' +
+    '              &lt;/el-select>\r\n' +
+    '              &lt;el-select v-model="resultCategory" clearable placeholder="类别" @change="reloadResults">\r\n' +
+    '                &lt;el-option v-for="item in projectCategoryOptions" :key="item.code" :label="item.label" :value="item.label" />\r\n' +
+    '              &lt;/el-select>\r\n' +
+    '              &lt;el-select v-model="resultProjectType" clearable placeholder="类型" @change="reloadResults">\r\n' +
+    '                &lt;el-option v-for="item in projectTypeOptions" :key="item.code" :label="item.label" :value="item.label" />\r\n' +
+    '              &lt;/el-select>\r\n' +
+    '              &lt;el-input-number v-model="resultScoreMin" :min="0" :max="100" :precision="1" controls-position="right" placeholder="最低分" class="score-filter" @change="reloadResults" />\r\n' +
+    '              &lt;el-input-number v-model="resultScoreMax" :min="0" :max="100" :precision="1" controls-position="right" placeholder="最高分" class="score-filter" @change="reloadResults" />\r\n' +
+    '              &lt;el-tooltip content="查询审核结果" placement="top">\r\n' +
+    '                &lt;el-button type="primary" :icon="Search" circle @click="reloadResults" />\r\n' +
+    '              &lt;/el-tooltip>\r\n' +
+    '              &lt;el-button v-if="route.query.project_id" :icon="Close" @click="clearRouteProjectFilter()">清除项目筛选&lt;/el-button>\r\n' +
+    '              &lt;el-tooltip content="导出审核结果" placement="top">\r\n' +
+    '                &lt;el-button :icon="Download" @click="exportResults">导出&lt;/el-button>\r\n' +
+    '              &lt;/el-tooltip>\r\n' +
+    '              &lt;el-tooltip content="刷新审核结果" placement="top">\r\n' +
+    '                &lt;el-button :icon="Refresh" circle @click="loadResults" />\r\n' +
+    '              &lt;/el-tooltip>\r\n' +
+    '            &lt;/div>\r\n' +
+    '          &lt;/div>\r\n' +
+    '\r\n' +
+    '          &lt;el-table :data="results" border v-loading="resultsLoading">\r\n' +
+    '            &lt;el-table-column type="index" label="序号" width="72" align="center" :index="resultTableIndex" fixed="left" />\r\n' +
+    '            &lt;el-table-column prop="project.title" label="项目名称" min-width="220" />\r\n' +
+    '            &lt;el-table-column prop="project.unit.name" label="申报单位" min-width="180" />\r\n' +
+    '            &lt;el-table-column label="阶段" width="120">\r\n' +
+    '              &lt;template #default="{ row }">{{ roleLabel(row.stage) }}&lt;/template>\r\n' +
+    '            &lt;/el-table-column>\r\n' +
+    '            &lt;el-table-column label="结果" width="110">\r\n' +
+    '              &lt;template #default="{ row }">{{ decisionLabel(row.decision) }}&lt;/template>\r\n' +
+    '            &lt;/el-table-column>\r\n' +
+    '            &lt;el-table-column prop="reviewer.username" label="审核人" width="130" />\r\n' +
+    '            &lt;el-table-column prop="score" label="评分" width="90" />\r\n' +
+    '            &lt;el-table-column label="评分明细" min-width="240">\r\n' +
+    '              &lt;template #default="{ row }">{{ formatCriteriaScores(row) }}&lt;/template>\r\n' +
+    '            &lt;/el-table-column>\r\n' +
+    '            &lt;el-table-column prop="comment" label="意见" min-width="220" />\r\n' +
+    '            &lt;el-table-column prop="reviewed_at" label="审核时间" width="180" />\r\n' +
+    '            &lt;el-table-column label="操作" width="100" fixed="right">\r\n' +
+    '              &lt;template #default="{ row }">\r\n' +
+    '                &lt;el-button size="small" :icon="View" @click="openDetail(row.project)">详情&lt;/el-button>\r\n' +
+    '              &lt;/template>\r\n' +
+    '            &lt;/el-table-column>\r\n' +
+    '          &lt;/el-table>\r\n' +
+    '\r\n' +
+    '          &lt;el-pagination\r\n' +
+    '            v-if="resultPagination.total > resultPagination.per_page"\r\n' +
+    '            background\r\n' +
+    '            layout="prev, pager, next, total"\r\n' +
+    '            :current-page="resultPagination.current_page"\r\n' +
+    '            :page-size="resultPagination.per_page"\r\n' +
+    '            :total="resultPagination.total"\r\n' +
+    '            @current-change="changeResultPage"\r\n' +
+    '          />\r\n' +
+    '        &lt;/div>\r\n' +
+    '      &lt;/el-tab-pane>\r\n' +
+    '    &lt;/el-tabs>\r\n' +
+    '\r\n' +
+    `    &lt;el-dialog v-model="reviewVisible" title="审核处理" :width="useCriteriaScoring ? '920px' : '720px'">\r\n` +
+    '      &lt;el-alert\r\n' +
+    '        v-if="currentProject?.next_step"\r\n' +
+    '        type="info"\r\n' +
+    '        :closable="false"\r\n' +
+    '        show-icon\r\n' +
+    '        :title="currentProject.next_step.title"\r\n' +
+    '        :description="currentProject.next_step.body"\r\n' +
+    '        class="dialog-alert"\r\n' +
+    '      />\r\n' +
+    '      &lt;el-collapse class="dialog-project-detail">\r\n' +
+    '        &lt;el-collapse-item title="项目详情和申报材料" name="project">\r\n' +
+    '          &lt;el-descriptions v-if="currentProject" :column="2" border size="small">\r\n' +
+    '            &lt;el-descriptions-item label="项目名称" :span="2">{{ currentProject.title }}&lt;/el-descriptions-item>\r\n' +
+    `            &lt;el-descriptions-item label="申报单位">{{ currentProject.unit?.name || '-' }}&lt;/el-descriptions-item>\r\n` +
+    `            &lt;el-descriptions-item label="申报批次">{{ currentProject.application_batch?.name || '-' }}&lt;/el-descriptions-item>\r\n` +
+    `            &lt;el-descriptions-item label="项目类别">{{ currentProject.category || '-' }}&lt;/el-descriptions-item>\r\n` +
+    `            &lt;el-descriptions-item label="项目类型">{{ currentProject.project_type || '-' }}&lt;/el-descriptions-item>\r\n` +
+    '            &lt;el-descriptions-item label="预算金额">{{ formatCurrency(currentProject.budget_amount) }}&lt;/el-descriptions-item>\r\n' +
+    `            &lt;el-descriptions-item label="归口管理单位">{{ currentProject.metadata?.management_unit || '-' }}&lt;/el-descriptions-item>\r\n` +
+    `            &lt;el-descriptions-item label="所属领域">{{ currentProject.metadata?.field || '-' }}&lt;/el-descriptions-item>\r\n` +
+    `            &lt;el-descriptions-item label="研究方向">{{ currentProject.metadata?.research_direction || '-' }}&lt;/el-descriptions-item>\r\n` +
+    `            &lt;el-descriptions-item label="项目摘要" :span="2">&lt;div class="rich-content detail-rich-content" v-html="currentProject.summary || '-'" />&lt;/el-descriptions-item>\r\n` +
+    '            &lt;el-descriptions-item v-if="c'... 30407 more characters
+
+      at TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/project-submission-details.test.js:43:10)
+      at Test.runInAsyncScope (node:async_hooks:213:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: `&lt;template>\r\n  &lt;section class="page-stack">\r\n    &lt;el-tabs v-model="activeTab" @tab-change="handleTabChange">\r\n      &lt;el-tab-pane label="待审核" name="tasks">\r\n        &lt;div class="page-stack">\r\n          &lt;div class="toolbar">\r\n            &lt;el-input v-model="keyword" clearable placeholder="按项目、单位、账号搜索" @keyup.enter="reloadTasks" />\r\n            &lt;div class="toolbar-actions">\r\n              &lt;el-select v-model="category" clearable placeholder="类别" @change="reloadTasks">\r\n                &lt;el-option v-for="item in projectCategoryOptions" :key="item.code" :label="item.label" :value="item.label" />\r\n              &lt;/el-select>\r\n              &lt;el-select v-model="projectType" clearable placeholder="类型" @change="reloadTasks">\r\n                &lt;el-option v-for="item in projectTypeOptions" :key="item.code" :label="item.label" :value="item.label" />\r\n              &lt;/el-select>\r\n              &lt;el-tooltip content="查询审核任务" placement="top">\r\n                &lt;el-button type="primary" :icon="Search" circle @click="reloadTasks" />\r\n              &lt;/el-tooltip>\r\n              &lt;el-button v-if="route.query.project_id" :icon="Close" @click="clearRouteProjectFilter()">清除项目筛选&lt;/el-button>\r\n              &lt;el-tooltip content="导出当前审核任务" placement="top">\r\n                &lt;el-button :icon="Download" @click="exportTasks">导出&lt;/el-button>\r\n              &lt;/el-tooltip>\r\n              &lt;el-tooltip content="刷新审核任务" placement="top">\r\n                &lt;el-button :icon="Refresh" circle @click="loadTasks" />\r\n              &lt;/el-tooltip>\r\n            &lt;/div>\r\n          &lt;/div>\r\n\r\n          &lt;el-table :data="tasks" border v-loading="loading">\r\n            &lt;el-table-column type="index" label="序号" width="72" align="center" :index="tableIndex" fixed="left" />\r\n            &lt;el-table-column prop="title" label="项目名称" min-width="220" />\r\n            &lt;el-table-column prop="unit.name" label="申报单位" min-width="180" />\r\n            &lt;el-table-column label="当前阶段" width="130">\r\n              &lt;template #default="{ row }">{{ roleLabel(row.current_reviewer_role) }}&lt;/template>\r\n            &lt;/el-table-column>\r\n            &lt;el-table-column label="派单提示" min-width="220">\r\n              &lt;template #default="{ row }">\r\n                &lt;template v-if="row.dispatch_assignment">\r\n                  &lt;el-tag :type="row.dispatch_assignment.auto_assign ? 'warning' : 'info'">\r\n                    {{ row.dispatch_assignment.auto_assign ? '自动派单' : '推荐派单' }}\r\n                  &lt;/el-tag>\r\n                  &lt;span class="dispatch-users">{{ dispatchUserNames(row.dispatch_assignment) }}&lt;/span>\r\n                &lt;/template>\r\n                &lt;span v-else>-&lt;/span>\r\n              &lt;/template>\r\n            &lt;/el-table-column>\r\n            &lt;el-table-column label="状态" width="120">\r\n              &lt;template #default="{ row }">\r\n                &lt;el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}&lt;/el-tag>\r\n              &lt;/template>\r\n            &lt;/el-table-column>\r\n            &lt;el-table-column prop="submitted_at" label="提交时间" width="180" />\r\n            &lt;el-table-column label="操作" width="190" fixed="right">\r\n              &lt;template #default="{ row }">\r\n                &lt;div class="table-action-row">\r\n                  &lt;el-button size="small" :icon="View" @click="openDetail(row)">详情&lt;/el-button>\r\n                  &lt;el-button size="small" type="primary" :icon="Checked" @click="openReview(row)">审核处理&lt;/el-button>\r\n                &lt;/div>\r\n              &lt;/template>\r\n            &lt;/el-table-column>\r\n          &lt;/el-table>\r\n\r\n          &lt;el-pagination\r\n            v-if="pagination.total > pagination.per_page"\r\n            background\r\n            layout="prev, pager, next, total"\r\n            :current-page="pagination.current_page"\r\n            :page-size="pagination.per_page"\r\n            :total="pagination.total"\r\n            @current-change="changePage"\r\n          />\r\n        &lt;/div>\r\n      &lt;/el-tab-pane>\r\n\r\n      &lt;el-tab-pane label="审核结果" name="results">\r\n        &lt;div class="page-stack">\r\n          &lt;div class="toolbar">\r\n            &lt;el-input v-model="resultKeyword" clearable placeholder="按项目、单位、账号、意见搜索" @keyup.enter="reloadResults" />\r\n            &lt;div class="toolbar-actions">\r\n              &lt;el-select v-if="isAdminRole" v-model="resultStage" clearable placeholder="阶段" @change="reloadResults">\r\n                &lt;el-option v-for="item in stageOptions" :key="item.value" :label="item.label" :value="item.value" />\r\n              &lt;/el-select>\r\n              &lt;el-select v-model="resultDecision" clearable placeholder="结果" @change="reloadResults">\r\n                &lt;el-option v-for="item in allDecisionOptions" :key="item.value" :label="item.label" :value="item.value" />\r\n              &lt;/el-select>\r\n              &lt;el-select v-model="resultCategory" clearable placeholder="类别" @change="reloadResults">\r\n                &lt;el-option v-for="item in projectCategoryOptions" :key="item.code" :label="item.label" :value="item.label" />\r\n              &lt;/el-select>\r\n              &lt;el-select v-model="resultProjectType" clearable placeholder="类型" @change="reloadResults">\r\n                &lt;el-option v-for="item in projectTypeOptions" :key="item.code" :label="item.label" :value="item.label" />\r\n              &lt;/el-select>\r\n              &lt;el-input-number v-model="resultScoreMin" :min="0" :max="100" :precision="1" controls-position="right" placeholder="最低分" class="score-filter" @change="reloadResults" />\r\n              &lt;el-input-number v-model="resultScoreMax" :min="0" :max="100" :precision="1" controls-position="right" placeholder="最高分" class="score-filter" @change="reloadResults" />\r\n              &lt;el-tooltip content="查询审核结果" placement="top">\r\n                &lt;el-button type="primary" :icon="Search" circle @click="reloadResults" />\r\n              &lt;/el-tooltip>\r\n              &lt;el-button v-if="route.query.project_id" :icon="Close" @click="clearRouteProjectFilter()">清除项目筛选&lt;/el-button>\r\n              &lt;el-tooltip content="导出审核结果" placement="top">\r\n                &lt;el-button :icon="Download" @click="exportResults">导出&lt;/el-button>\r\n              &lt;/el-tooltip>\r\n              &lt;el-tooltip content="刷新审核结果" placement="top">\r\n                &lt;el-button :icon="Refresh" circle @click="loadResults" />\r\n              &lt;/el-tooltip>\r\n            &lt;/div>\r\n          &lt;/div>\r\n\r\n          &lt;el-table :data="results" border v-loading="resultsLoading">\r\n            &lt;el-table-column type="index" label="序号" width="72" align="center" :index="resultTableIndex" fixed="left" />\r\n            &lt;el-table-column prop="project.title" label="项目名称" min-width="220" />\r\n            &lt;el-table-column prop="project.unit.name" label="申报单位" min-width="180" />\r\n            &lt;el-table-column label="阶段" width="120">\r\n              &lt;template #default="{ row }">{{ roleLabel(row.stage) }}&lt;/template>\r\n            &lt;/el-table-column>\r\n            &lt;el-table-column label="结果" width="110">\r\n              &lt;template #default="{ row }">{{ decisionLabel(row.decision) }}&lt;/template>\r\n            &lt;/el-table-column>\r\n            &lt;el-table-column prop="reviewer.username" label="审核人" width="130" />\r\n            &lt;el-table-column prop="score" label="评分" width="90" />\r\n            &lt;el-table-column label="评分明细" min-width="240">\r\n              &lt;template #default="{ row }">{{ formatCriteriaScores(row) }}&lt;/template>\r\n            &lt;/el-table-column>\r\n            &lt;el-table-column prop="comment" label="意见" min-width="220" />\r\n            &lt;el-table-column prop="reviewed_at" label="审核时间" width="180" />\r\n            &lt;el-table-column label="操作" width="100" fixed="right">\r\n              &lt;template #default="{ row }">\r\n                &lt;el-button size="small" :icon="View" @click="openDetail(row.project)">详情&lt;/el-button>\r\n              &lt;/template>\r\n            &lt;/el-table-column>\r\n          &lt;/el-table>\r\n\r\n          &lt;el-pagination\r\n            v-if="resultPagination.total > resultPagination.per_page"\r\n            background\r\n            layout="prev, pager, next, total"\r\n            :current-page="resultPagination.current_page"\r\n            :page-size="resultPagination.per_page"\r\n            :total="resultPagination.total"\r\n            @current-change="changeResultPage"\r\n          />\r\n        &lt;/div>\r\n      &lt;/el-tab-pane>\r\n    &lt;/el-tabs>\r\n\r\n    &lt;el-dialog v-model="reviewVisible" title="审核处理" :width="useCriteriaScoring ? '920px' : '720px'">\r\n      &lt;el-alert\r\n        v-if="currentProject?.next_step"\r\n        type="info"\r\n        :closable="false"\r\n        show-icon\r\n        :title="currentProject.next_step.title"\r\n        :description="currentProject.next_step.body"\r\n        class="dialog-alert"\r\n      />\r\n      &lt;el-collapse class="dialog-project-detail">\r\n        &lt;el-collapse-item title="项目详情和申报材料" name="project">\r\n          &lt;el-descriptions v-if="currentProject" :column="2" border size="small">\r\n            &lt;el-descriptions-item label="项目名称" :span="2">{{ currentProject.title }}&lt;/el-descriptions-item>\r\n            &lt;el-descriptions-item label="申报单位">{{ currentProject.unit?.name || '-' }}&lt;/el-descriptions-item>\r\n            &lt;el-descriptions-item label="申报批次">{{ currentProject.application_batch?.name || '-' }}&lt;/el-descriptions-item>\r\n            &lt;el-descriptions-item label="项目类别">{{ currentProject.category || '-' }}&lt;/el-descriptions-item>\r\n            &lt;el-descriptions-item label="项目类型">{{ currentProject.project_type || '-' }}&lt;/el-descriptions-item>\r\n            &lt;el-descriptions-item label="预算金额">{{ formatCurrency(currentProject.budget_amount) }}&lt;/el-descriptions-item>\r\n            &lt;el-descriptions-item label="归口管理单位">{{ currentProject.metadata?.management_unit || '-' }}&lt;/el-descriptions-item>\r\n            &lt;el-descriptions-item label="所属领域">{{ currentProject.metadata?.field || '-' }}&lt;/el-descriptions-item>\r\n            &lt;el-descriptions-item label="研究方向">{{ currentProject.metadata?.research_direction || '-' }}&lt;/el-descriptions-item>\r\n            &lt;el-descriptions-item label="项目摘要" :span="2">&lt;div class="rich-content detail-rich-content" v-html="currentProject.summary || '-'" />&lt;/el-descriptions-item>\r\n            &lt;el-descriptions-item v-if="c`... 30407 more characters,
+    expected: /&lt;ProjectSubmissionDetails :project="currentProject"/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 3 -->
+	<!-- suites 0 -->
+	<!-- pass 0 -->
+	<!-- fail 3 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 175.0879 -->
+</testsuites>

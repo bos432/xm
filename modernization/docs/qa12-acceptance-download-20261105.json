@@ -1,0 +1,26 @@
+{
+  "phase": "QA-12",
+  "defect": "QA12-P1-DOWNLOAD",
+  "status": "fixed_local_browser_verified",
+  "red": {"command": "node --test --test-reporter=junit --test-reporter-destination=../docs/qa12-acceptance-download-red.xml tests/acceptance-errors.test.js", "exit_code": 1, "reason": "Acceptance download handler missing"},
+  "green": {"command": "node --test --test-reporter=junit --test-reporter-destination=../docs/qa12-acceptance-download-green.xml tests/acceptance-errors.test.js", "exit_code": 0, "passed": 7},
+  "frontend_commands": ["npm run lint", "npm test", "npm run typecheck", "npm run build"],
+  "frontend_exit_codes": [0, 0, 0, 0],
+  "frontend_tests_passed": 15,
+  "browser": {
+    "base_url": "http://127.0.0.1:18742",
+    "observed": ["Unit extension request submitted, pending1 visible", "Unit resubmitted acceptance with two uploaded PDFs, moved to county", "County sees both material categories and newly added download controls", "Click download produced real630-byte PDF with matching SHA256"],
+    "download_sha256": "134034819f8f55df695204c4bb5475882e2d955b08eb40c53ba1d259482861a4",
+    "evidence_root": "../e2e/reports/runs/qa07-20261105-browser-fixed",
+    "screenshots": ["15-unit-extension-pending.png", "16-unit-acceptance-resubmitted.png", "17-county-acceptance-no-download.png", "18-county-acceptance-download-fixed.png"],
+    "detail_dom": "qa12-acceptance-detail-dom.txt",
+    "download_result": "qa12-download-ui.json"
+  },
+  "new_open_observations": [
+    {"id": "QA12-P2-TIMELINE", "actual": "Resubmitted acceptance at county stage still shows previous county return as completed stage"},
+    {"id": "QA12-P2-DATE", "actual": "Expected date entered2026-12-31 displays raw2026-12-30T16:00:00Z"},
+    {"id": "QA12-SCORE-SCOPE", "status": "investigate", "actual": "Acceptance numeric score unconditional; project stage score config not consulted"}
+  ],
+  "production_changed": false,
+  "remaining": ["No browser filechooser upload proof", "Acceptance still county stage; not closed", "Extension pending; not processed", "Coverage/concurrency/SMTP/OSS gates remain open"]
+}
