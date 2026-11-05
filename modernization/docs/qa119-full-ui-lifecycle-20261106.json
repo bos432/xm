@@ -1,0 +1,13 @@
+{
+  "phase": "QA118/119",
+  "production_changed": false,
+  "environment": "loopback isolated SQLite testing",
+  "command": "E2E_BASE_URL=http://127.0.0.1:18742 E2E_RUN_ID=qa119-full-ui-lifecycle-20261106 QA118_SUBMISSION=1 QA113_CLOSURE=1 QA105_FIXTURE=qa119-project.json QA105_CREDENTIALS=<isolated manifest> node node_modules/@playwright/test/cli.js test --config ../e2e/playwright.config.js qa105-expert-scoring.spec.js --workers=1",
+  "initial_failure": {"run":"qa118-full-ui-lifecycle-20261106","exit_code":1,"cause":"Harness selected Chinese confirm name but rendered button was OK; no submit request. Dependent fixture missing errors followed. Serial dependency mode and bilingual exact confirm locator corrected."},
+  "terminal": {"exit_code":0,"expected":3,"unexpected":0,"skipped":0,"flaky":0,"duration_ms":85347.614,"output":"ok1 applicant creation/return/resubmit24.7s;ok2 three experts18.5s;ok3 final support/extension/acceptance40.4s;3passed1.4m"},
+  "checks": ["empty title validation","UI draft save201","12.5wan stored125000yuan","county draft detail403","unit submit","county full materials and hidden numeric score","county return","unit summary edit and resubmit","county and department approve","3expert assignment snapshot","3independent UI scores100each","last expert triggers admin","support10+2+1=13wan","acceptance draft and2PDFcategories","unit extension andadminapproval","fourstageacceptanceclosure","unit seesclosed andextensionresult","pageerrors0"],
+  "independent_readback": {"exit_code":0,"project_id":11,"status":"closed","budget_amount":"125000.00","summary":"QA118 revised research summary after county return","project_reviews":["county:return","county:approve","department:approve","expert:recommend:100","expert:recommend:100","expert:recommend:100","admin:accept"],"support_total_wan":13,"acceptance_status":"closed","acceptance_review_stages":["county","department","expert","admin"],"extension_status":"approved"},
+  "lint": {"explicit_eslint_errors":0,"warnings":0,"inventory":"14tests3files"},
+  "publication": {"command":"git -c http.sslBackend=schannel -c http.version=HTTP/1.1 push origin HEAD:refs/heads/codex/composer-security-fix","exit_code":0,"output":"b8c004a..36c3da0 HEAD -> codex/composer-security-fix","hosted_sha":"36c3da0cbf25c9f5206ae821fb9ec59bea08f285","quality_run":42112633213,"ci_run":42112633265,"status_at_query":"in_progress"},
+  "limitations": ["current test additions not yet committed at receipt creation","not production business-write acceptance","no formal batch/staffing approval or SMTP real delivery","not load/endurance testing"]
+}
