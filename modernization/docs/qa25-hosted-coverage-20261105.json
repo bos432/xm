@@ -1,0 +1,26 @@
+{
+  "stage": "QA-25",
+  "source": "4fb9f019c7073dfe9af3c8ccbf3d0dc4e43a1bf8",
+  "commands": ["Invoke-RestMethod https://api.github.com/repos/bos432/xm/actions/runs/{id}", "Invoke-WebRequest authenticated artifact ZIP; Expand-Archive; parse Clover project metrics and root JUnit testsuite"],
+  "exit_code": 0,
+  "CI_41986146773": "completed/success; online write E2E skipped",
+  "Quality_41986146817": "completed/success; mysql57-migrations/frontend/backend/deployment-safety all success",
+  "artifact_id": 13396575056,
+  "artifact_sha256": "d68e14ab17a2a60f73082e5981d9b19676ee0b9b415c77681e17c5060eda9135",
+  "raw_directory": "e2e/reports/runs/qa07-20261105-browser-fixed/coverage-4fb9f01",
+  "statements": {"covered": 5282, "total": 6728, "percent": 78.51},
+  "methods": {"covered": 314, "total": 547},
+  "files": 89,
+  "branch_coverage": "unavailable: PCOV reports zero conditionals",
+  "junit": {"tests":247,"assertions":1517,"errors":0,"failures":0,"skipped":0},
+  "uncovered_top5": [
+    {"file":"ProjectLifecycleController.php","uncovered":200,"total":295},
+    {"file":"ProjectController.php","uncovered":127,"total":686},
+    {"file":"ImportLegacyRecords.php","uncovered":117,"total":117},
+    {"file":"MigrationReadinessController.php","uncovered":110,"total":472},
+    {"file":"ReviewDispatchRuleController.php","uncovered":98,"total":98}
+  ],
+  "parsing_correction": "First exploratory query used coverage node instead of project/metrics and summed nested JUnit suites; discarded zero metrics and duplicate755 tests. Correct counts above use project metrics and root suite only.",
+  "production_changed":false,
+  "true_concurrency_proven":false
+}
