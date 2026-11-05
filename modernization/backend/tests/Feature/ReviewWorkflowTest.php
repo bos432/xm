@@ -8,6 +8,7 @@ use App\Models\ProjectReview;
 use App\Models\Unit;
 use App\Models\User;
 use App\Support\Role;
+use App\Support\RuntimeConfig;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -47,6 +48,7 @@ class ReviewWorkflowTest extends TestCase
 
     public function test_project_can_move_through_full_review_chain(): void
     {
+        RuntimeConfig::set('review.expert_assignment.count', '1', 'review', false);
         $unit = Unit::factory()->create();
         $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => 'unit']);
         $county = User::factory()->create(['role' => 'county']);

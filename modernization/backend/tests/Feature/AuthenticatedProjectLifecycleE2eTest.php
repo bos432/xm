@@ -40,7 +40,7 @@ class AuthenticatedProjectLifecycleE2eTest extends TestCase
         $department = User::factory()->create(['role' => 'department', 'username' => 'qa_department']);
         $experts = User::factory()->count(3)->sequence(
             ['username' => 'qa_expert_1'], ['username' => 'qa_expert_2'], ['username' => 'qa_expert_3']
-        )->create(['role' => 'expert']);
+        )->create(['role' => 'expert', 'metadata' => ['e2e' => true]]);
         $admin = User::factory()->create(['role' => 'admin', 'username' => 'qa_admin']);
         $superAdmin = User::factory()->create(['role' => 'super_admin', 'username' => 'qa_super_admin']);
         $batch = ApplicationBatch::create([

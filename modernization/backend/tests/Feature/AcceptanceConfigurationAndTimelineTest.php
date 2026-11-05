@@ -39,6 +39,7 @@ class AcceptanceConfigurationAndTimelineTest extends TestCase
 
     public function test_all_acceptance_stages_obey_score_switch_without_losing_unscored_review(): void
     {
+        RuntimeConfig::set('review.expert_assignment.count', '1', 'review', false);
         foreach (['county', 'department', 'expert', 'admin'] as $stage) {
             $acceptance = $this->acceptance($stage);
             Sanctum::actingAs(User::factory()->create(['role' => $stage]));

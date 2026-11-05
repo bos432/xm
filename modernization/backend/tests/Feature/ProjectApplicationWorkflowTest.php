@@ -9,6 +9,7 @@ use App\Models\ProjectFile;
 use App\Models\ProjectReview;
 use App\Models\Unit;
 use App\Models\User;
+use App\Support\RuntimeConfig;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -328,6 +329,7 @@ class ProjectApplicationWorkflowTest extends TestCase
 
     public function test_expert_review_uses_configured_score_criteria(): void
     {
+        RuntimeConfig::set('review.expert_assignment.count', '1', 'review', false);
         DictionaryItem::query()
             ->where('group', 'expert_review_criterion')
             ->update(['is_active' => false]);

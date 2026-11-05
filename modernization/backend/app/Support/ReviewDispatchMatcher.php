@@ -40,19 +40,13 @@ class ReviewDispatchMatcher
             return null;
         }
 
-        $users = $rule ? $this->activeTargetUsers($rule) : $this->activeExperts();
-        if ($stage === Role::EXPERT && RuntimeConfig::boolValue('review.expert_assignment.random_enabled', true)) {
-            $count = max(1, (int) ($rule?->expert_count ?: RuntimeConfig::intValue('review.expert_assignment.count', 3)));
-            $users = $users
-                ->sortBy(fn (User $user): string => hash('sha256', $project->id.':'.$stage.':'.$user->id))
-                ->take($count)
-                ->values();
-        }
-
-        if ($stage === Role::EXPERT && $users->isEmpty()) {
-            throw ValidationException::withMessages([
-                'expert_assignment' => '没有可用专家账号，无法进入专家评审阶段，请先启用专家账号或调整派单规则。',
-            ]);
+        if ($stage === Role::EXPERT) {
+            [$users, $error] = $this->selectExperts($project, $rule);
+            if ($error !== null) {
+                throw ValidationException::withMessages(['expert_assignment' => $error]);
+            }
+        } else {
+            $users = $this->activeTargetUsers($rule);
         }
 
         $assignment = [
@@ -83,8 +77,9 @@ class ReviewDispatchMatcher
     {
         $assignment = $this->assignment($project, $stage);
         if ($stage === Role::EXPERT && ! $assignment) {
-            return $this->previewAssignment($project, $stage)['assigned_user_ids'] !== []
-                && in_array((int) $user->id, $this->previewAssignment($project, $stage)['assigned_user_ids'], true);
+            $ids = $this->previewAssignment($project, $stage)['assigned_user_ids'];
+
+            return $ids !== [] && in_array((int) $user->id, $ids, true);
         }
         if ($stage !== Role::EXPERT && ! ($assignment['auto_assign'] ?? false)) {
             return true;
@@ -117,12 +112,7 @@ class ReviewDispatchMatcher
         }
 
         $rule = $this->match($project, $stage);
-        $users = $rule ? $this->activeTargetUsers($rule) : $this->activeExperts();
-        $users = $users->sortBy(fn (User $user): string => hash('sha256', $project->id.':'.$stage.':'.$user->id))->values();
-        if (RuntimeConfig::boolValue('review.expert_assignment.random_enabled', true)) {
-            $count = max(1, (int) ($rule?->expert_count ?: RuntimeConfig::intValue('review.expert_assignment.count', 3)));
-            $users = $users->take($count)->values();
-        }
+        [$users, $error] = $this->selectExperts($project, $rule);
 
         return [
             'stage' => $stage,
@@ -140,7 +130,40 @@ class ReviewDispatchMatcher
             'assigned_user_ids' => $users->pluck('id')->all(),
             'matched_at' => null,
             'preview' => true,
+            'assignment_error' => $error,
         ];
+    }
+
+    private function selectExperts(Project $project, ?ReviewDispatchRule $rule): array
+    {
+        $testProject = $project->applicationBatch?->isE2e()
+            || ($project->owner && $this->isTestUser($project->owner));
+        $users = ($rule ? $this->activeTargetUsers($rule) : $this->activeExperts())
+            ->filter(fn (User $user): bool => $this->isTestUser($user) === (bool) $testProject)
+            ->values();
+        $random = RuntimeConfig::boolValue('review.expert_assignment.random_enabled', true);
+        $count = $random
+            ? max(1, (int) ($rule?->expert_count ?: RuntimeConfig::intValue('review.expert_assignment.count', 3)))
+            : 1;
+
+        if ($users->count() < $count) {
+            $pool = $testProject ? '测试专家池' : '正式专家池';
+
+            return [collect(), $pool.'可用专家人数不足：需要'.$count.'人，当前'.$users->count().'人。请联系管理员补充启用专家或调整派单规则，审核尚未提交。'];
+        }
+
+        if ($random) {
+            $users = $users->sortBy(fn (User $user): string => hash('sha256', $project->id.':expert:'.$user->id))
+                ->take($count)->values();
+        }
+
+        return [$users, null];
+    }
+
+    private function isTestUser(User $user): bool
+    {
+        return filter_var($user->metadata['e2e'] ?? false, FILTER_VALIDATE_BOOLEAN)
+            || preg_match('/^e2e_\d{8}ops_(unit|county|department|expert|admin|super_admin)$/i', (string) $user->username) === 1;
     }
 
     private function match(Project $project, string $stage): ?ReviewDispatchRule
