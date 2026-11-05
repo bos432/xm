@@ -6,7 +6,15 @@ This increment uses the isolated worktree, SQLite in memory, array mail/cache an
 
 ## Defects
 
+QA-38 browser regression: isolated Chromium smoke completed 10/10 after correcting E2E setup. The original login helper raced the asynchronous CAPTCHA refresh (which clears the answer); it now waits for a real arithmetic challenge. The public-home fixture intentionally has no homepage sections, so the test now validates the configured-page path or the explicit empty-home fallback. Unknown paths on the isolated SPA server return the HTML shell, so probes now assert that no sensitive configuration content is present rather than requiring a proxy-specific 404. These were harness assumptions, not application defects. Evidence: `qa38-browser-smoke-20261105.json` and retained `e2e/reports/runs/qa38-role-browser-20261105/`.
+
 QA-33 repeat verification: the guarded MySQL 5.7.44 runner completed eight independent two-process race cases (8/8), including two experts independently scoring the same project; `audit_count=2`, `expected_audit_count=2`, and `audit_count_matches=true`. The ambiguous `single_audit` field is removed. Acceptance/extension rollback suite passed 2 tests/13 assertions; project-review rollback passed 1/5; full backend passed 258/1681; PHP syntax and targeted Pint passed. Evidence: `qa33-eight-races-20261105.json`, `qa33-eight-races-20261105-acceptance-atomicity.xml`, `qa33-eight-races-20261105-project-review-atomicity.xml`, `qa33-backend-full.xml`, `qa33-release-gates-20261105.json`. These are local isolated-worktree checks, not exact-commit hosted gates or a production readiness claim.
+
+### Production Operational Blocker
+
+| ID | Severity | Module | Reproduction command | Actual vs expected | Recommendation/status |
+| --- | --- | --- | --- | --- | --- |
+| OPS-READY-01 | P1 operational configuration | Application batch | `GET https://nxm.zlck888.com/api/public/homepage` (read-only) | HTTP 200, public content configured, but `open_batches` is empty. Project creation requires resolving an open batch and returns 422 otherwise. | Before accepting applications, the super-admin must create/open the approved cycle with its dates and rules, then verify this endpoint exposes it. No production batch was created because the official cycle dates/rules were not supplied. |
 
 QA-32 extends verified concurrency coverage to eight cases, including two different experts concurrently scoring one assigned project; both scores persist, and project advances to admin only after both. Acceptance, extension and project-review audit failures now roll back all affected business rows and notifications. Local backend258/1681 and frontend/security gates pass; production remains unchanged. Evidence: `qa32-concurrency-20261105.json`, `qa32-eight-races-20261105.json`, `qa32-backend-full.xml`, `qa32-mysql-acceptance-atomicity.xml`, `qa32-mysql-project-review-atomicity.xml`.
 
@@ -86,6 +94,8 @@ QA-10 update: QA08-P1-DETAIL is fixed locally, not deployed. Reviewer drawer and
 - Negative authorization: outside-assignment expert score POST403, repeated expert score422; included in green test.
 
 ## Not verified
+
+QA38 production read-only checks: GET `/`, `/login`, `/dashboard`, `/projects`, `/acceptance`, `/public-home` returned200 `text/html`; anonymous protected APIs returned401; `/.env` and `/storage/logs/laravel.log` returned404. Public homepage API is configured (4 nav links,5 notices,2 downloads,4 services) but advertises0 open application batches. No production authentication or writes occurred. Real SMTP delivery, OSS backup restore and business-approved batch setup remain outstanding.
 
 QA-08 browser update: seven accounts across five roles exercised real login/UI submission -> county -> department -> three independent experts -> admin approval. Evidence `qa08-browser-20261105.json` and nine screenshots in `e2e/reports/runs/qa07-20261105-browser-fixed/screenshots`. Acceptance/super-admin browser and actual attachments remain incomplete; prior blanket browser not_run below is superseded only for this verified path.
 

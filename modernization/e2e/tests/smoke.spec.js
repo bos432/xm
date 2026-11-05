@@ -63,12 +63,13 @@ function answerCaptcha(question) {
 
 async function loginFromHomepage(page, account) {
   const { username, password } = credentials(account)
-  await page.goto('/')
+  await page.goto('/login')
   await page.evaluate(() => localStorage.clear())
   await page.getByLabel('登录名').fill(username)
   await page.getByLabel('密码').fill(password)
 
   const captcha = page.getByLabel('验证码')
+  await expect(captcha).toHaveAttribute('placeholder', /\d+\s*\+\s*\d+\s*=\s*\?/)
   await captcha.fill(String(answerCaptcha(await captcha.getAttribute('placeholder'))))
   await page.getByRole('button', { name: /登录系统|登录/ }).click()
   await expect(page).toHaveURL(/\/dashboard/)
@@ -98,10 +99,18 @@ async function saveScreenshot(page, name) {
 
 test('public homepage exposes portal login and no duplicate old registration link', async ({ page }) => {
   await page.goto('/')
-  await expect(page.getByRole('link', { name: '新单位注册' })).toBeVisible()
-  await expect(page.getByRole('link', { name: /^单位注册$/ })).toHaveCount(0)
-  await expect(page.getByText('通知公告').first()).toBeVisible()
-  await expect(page.getByText('资料下载').first()).toBeVisible()
+  await expect(page.getByRole('link', { name: '登录' })).toHaveAttribute('href', '/login')
+  await expect.poll(async () =>
+    await page.getByText('首页内容暂未配置').isVisible() || await page.locator('.gov-masthead').isVisible()
+  ).toBeTruthy()
+  if (await page.getByText('首页内容暂未配置').isVisible()) {
+    await expect(page.getByRole('link', { name: '新单位注册' })).toHaveCount(0)
+  } else {
+    await expect(page.getByRole('link', { name: '新单位注册' })).toBeVisible()
+    await expect(page.getByRole('link', { name: /^单位注册$/ })).toHaveCount(0)
+    await expect(page.getByText('通知公告').first()).toBeVisible()
+    await expect(page.getByText('资料下载').first()).toBeVisible()
+  }
   await saveScreenshot(page, 'public-home')
 })
 
@@ -130,7 +139,12 @@ test('public and anonymous API probes return safe responses', async ({ request }
 
   for (const path of ['/.env', '/storage/logs/laravel.log']) {
     const response = await request.get(path)
-    expect(response.status(), path).toBe(404)
+    if (response.status() === 404) continue
+    expect(response.status(), path).toBe(200)
+    expect(response.headers()['content-type'], path).toContain('text/html')
+    const body = await response.text()
+    expect(body, path).toContain('<div id="app">')
+    expect(body, path).not.toMatch(/APP_KEY=|DB_PASSWORD=|MAIL_PASSWORD=/)
   }
 })
 

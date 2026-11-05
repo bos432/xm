@@ -1,0 +1,80 @@
+{
+  "stage": "QA-38",
+  "source_revision_before_commit": "55555f22139e8d42c7f4853be90b30059b833090 plus E2E-only worktree changes",
+  "environment": {
+    "node": "25.2.1",
+    "playwright": "1.61.1",
+    "browser": "Chromium",
+    "base_url": "http://127.0.0.1:18742",
+    "api_proxy": "127.0.0.1:18741",
+    "sandbox": "modernization/e2e/reports/runs/qa07-20261105-browser-fixed/sandbox",
+    "database": "isolated SQLite QA sandbox",
+    "accounts": "eight synthetic accounts; six roles exercised",
+    "production_writes": false
+  },
+  "browser_command": {
+    "command": "node ../frontend/node_modules/@playwright/test/cli.js test --config playwright.config.js --workers=1",
+    "working_directory": "modernization/e2e",
+    "environment_setup": "E2E_BASE_URL, E2E_RUN_ID, E2E_STAMP, E2E_PROJECT_ID and six role credentials loaded from isolated sandbox manifest; credentials are not copied into this report",
+    "exit_code": 0,
+    "summary": "10 passed, 0 failed, 0 skipped, 0 unexpected; 43.6 seconds",
+    "playwright_json": "modernization/e2e/reports/runs/qa38-role-browser-20261105/results.json",
+    "html_report": "modernization/e2e/reports/runs/qa38-role-browser-20261105/html/index.html"
+  },
+  "coverage": [
+    "public home and login/empty-home state",
+    "anonymous API authorization and sensitive-path content",
+    "unit, county, department, expert, admin and super-admin login and project/lifecycle/acceptance views",
+    "expert certification authorization (expert200; unit/county/department403)",
+    "super-admin homepage management and security center"
+  ],
+  "local_frontend_gates": {
+    "npm run lint": 0,
+    "npm test": 0,
+    "unit_tests": 21
+  },
+  "production_read_only": {
+    "command": "GET /, /login, /dashboard, /projects, /acceptance, /public-home; GET /api/public/homepage; anonymous GET protected APIs and sensitive paths",
+    "html_routes": "all 6 returned 200 text/html",
+    "homepage_api": {
+      "status": 200,
+      "title_configured": true,
+      "hero_configured": true,
+      "nav_links": 4,
+      "notices": 5,
+      "downloads": 2,
+      "services": 4,
+      "open_batches": 0
+    },
+    "protected_api_paths": {
+      "paths": ["/api/auth/me", "/api/projects", "/api/reviews/tasks", "/api/settings/groups", "/api/users", "/api/security/events"],
+      "status": 401
+    },
+    "sensitive_paths": {
+      "paths": ["/.env", "/storage/logs/laravel.log"],
+      "status": 404
+    },
+    "production_authentication_or_writes": false
+  },
+  "harness_corrections": [
+    "wait for asynchronous CAPTCHA initialization before entering the answer",
+    "assert configured or explicit empty-home fixture state",
+    "accept SPA HTML fallback only when sensitive configuration-shaped content is absent"
+  ],
+  "operational_gates_not_run": [
+    "business-approved production application batch setup",
+    "real SMTP delivery",
+    "isolated OSS backup restore",
+    "browser file chooser upload",
+    "edit-submit and broader concurrency",
+    "load/soak",
+    "hosted CI/Quality for the QA38 commit"
+  ],
+  "service_safety": {
+    "production_deployed": false,
+    "production_database_modified": false,
+    "other_sites_modified": false,
+    "shared_services_restarted": false,
+    "external_email_or_oss_used": false
+  }
+}
