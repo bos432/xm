@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="acceptance createAcceptance shows rejected API error, preserves form and permits retry" time="0.014156" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance submitAcceptance shows rejected API error, preserves form and permits retry" time="0.001030" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance saveReview shows rejected API error, preserves form and permits retry" time="0.000681" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance saveExtension shows rejected API error, preserves form and permits retry" time="0.000626" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance uploadFile shows rejected API error, preserves form and permits retry" time="0.000831" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance list failure reports an error and retains existing rows" time="0.000653" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance materials expose authorized download and report failures" time="0.000815" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance scoring follows server stage configuration and strips hidden scores" time="0.001048" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js" failure="The input did not match the regular expression /&lt;el-form-item v-if=&amp;quot;showReviewScore&amp;quot; label=&amp;quot;评分&amp;quot;/. Input:'&lt;template>\r\n' +  '  &lt;section class=&amp;quot;page-stack&amp;quot;>\r\n' +  '    &lt;div class=&amp;quot;toolbar&amp;quot;>\r\n' +  '      &lt;div>\r\n' +  '        &lt;h2>验收管理&lt;/h2>\r\n' +  '        &lt;span class=&amp;quot;muted&amp;quot;>单位提交验收材料，区县、部门、专家和管理员分阶段处理&lt;/span>\r\n' +  '      &lt;/div>\r\n' +  '      &lt;div class=&amp;quot;toolbar-actions&amp;quot;>\r\n' +  '        &lt;el-input v-model=&amp;quot;keyword&amp;quot; clearable placeholder=&amp;quot;项目/单位&amp;quot; @keyup.enter=&amp;quot;reloadAcceptances&amp;quot; @clear=&amp;quot;reloadAcceptances&amp;quot; />\r\n' +  '        &lt;el-select v-model=&amp;quot;status&amp;quot; clearable placeholder=&amp;quot;状态&amp;quot; @change=&amp;quot;reloadAcceptances&amp;quot; @clear=&amp;quot;reloadAcceptances&amp;quot;>\r\n' +  '          &lt;el-option label=&amp;quot;草稿&amp;quot; value=&amp;quot;draft&amp;quot; />\r\n' +  '          &lt;el-option label=&amp;quot;已提交&amp;quot; value=&amp;quot;submitted&amp;quot; />\r\n' +  '          &lt;el-option label=&amp;quot;审核中&amp;quot; value=&amp;quot;reviewing&amp;quot; />\r\n' +  '          &lt;el-option label=&amp;quot;退回修改&amp;quot; value=&amp;quot;returned&amp;quot; />\r\n' +  '          &lt;el-option label=&amp;quot;已驳回&amp;quot; value=&amp;quot;rejected&amp;quot; />\r\n' +  '          &lt;el-option label=&amp;quot;已通过&amp;quot; value=&amp;quot;approved&amp;quot; />\r\n' +  '          &lt;el-option label=&amp;quot;已关闭&amp;quot; value=&amp;quot;closed&amp;quot; />\r\n' +  '        &lt;/el-select>\r\n' +  '        &lt;el-select v-if=&amp;quot;canFilterE2e&amp;quot; v-model=&amp;quot;e2eFilter&amp;quot; clearable placeholder=&amp;quot;测试数据&amp;quot; @change=&amp;quot;reloadAcceptances&amp;quot; @clear=&amp;quot;reloadAcceptances&amp;quot;>\r\n' +  '          &lt;el-option label=&amp;quot;只看测试数据&amp;quot; value=&amp;quot;1&amp;quot; />\r\n' +  '          &lt;el-option label=&amp;quot;排除测试数据&amp;quot; value=&amp;quot;0&amp;quot; />\r\n' +  '        &lt;/el-select>\r\n' +  '        &lt;el-button :icon=&amp;quot;Refresh&amp;quot; :loading=&amp;quot;loading&amp;quot; @click=&amp;quot;loadAcceptances&amp;quot;>刷新&lt;/el-button>\r\n' +  `        &lt;el-button v-if=&amp;quot;session.can('submit_acceptance')&amp;quot; type=&amp;quot;primary&amp;quot; :icon=&amp;quot;Plus&amp;quot; @click=&amp;quot;createVisible = true&amp;quot;>发起验收&lt;/el-button>\r\n` +  '      &lt;/div>\r\n' +  '    &lt;/div>\r\n' +  '\r\n' +  '    &lt;el-tabs v-if=&amp;quot;showScopeTabs&amp;quot; v-model=&amp;quot;scope&amp;quot; @tab-change=&amp;quot;handleScopeChange&amp;quot;>\r\n' +  `      &lt;el-tab-pane :label=&amp;quot;texts.t('acceptance.tab.pending', '待处理')&amp;quot; name=&amp;quot;pending&amp;quot; />\r\n` +  `      &lt;el-tab-pane :label=&amp;quot;texts.t('acceptance.tab.reviewed', '已处理')&amp;quot; name=&amp;quot;reviewed&amp;quot; />\r\n` +  `      &lt;el-tab-pane :label=&amp;quot;texts.t('acceptance.tab.visible', '全部可见')&amp;quot; name=&amp;quot;visible&amp;quot; />\r\n` +  '    &lt;/el-tabs>\r\n' +  '\r\n' +  '    &lt;el-table :data=&amp;quot;acceptances&amp;quot; border v-loading=&amp;quot;loading&amp;quot;>\r\n' +  '      &lt;el-table-column label=&amp;quot;项目&amp;quot; min-width=&amp;quot;240&amp;quot;>\r\n' +  '        &lt;template #default=&amp;quot;{ row }&amp;quot;>\r\n' +  &amp;quot;          &lt;strong>{{ row.project?.title || '-' }}&lt;/strong>\r\n&amp;quot; +  `          &lt;div class=&amp;quot;muted&amp;quot;>{{ row.unit?.name || row.project?.unit?.name || '-' }}&lt;/div>\r\n` +  '        &lt;/template>\r\n' +  '      &lt;/el-table-column>\r\n' +  '      &lt;el-table-column label=&amp;quot;状态&amp;quot; width=&amp;quot;110&amp;quot;>\r\n' +  '        &lt;template #default=&amp;quot;{ row }&amp;quot;>&lt;el-tag :type=&amp;quot;statusMeta(row.status).type&amp;quot;>{{ statusMeta(row.status).label }}&lt;/el-tag>&lt;/template>\r\n' +  '      &lt;/el-table-column>\r\n' +  '      &lt;el-table-column label=&amp;quot;当前阶段&amp;quot; width=&amp;quot;130&amp;quot;>\r\n' +  '        &lt;template #default=&amp;quot;{ row }&amp;quot;>{{ roleLabel(row.current_reviewer_role) }}&lt;/template>\r\n' +  '      &lt;/el-table-column>\r\n' +  '      &lt;el-table-column label=&amp;quot;延期状态&amp;quot; width=&amp;quot;130&amp;quot;>\r\n' +  '        &lt;template #default=&amp;quot;{ row }&amp;quot;>\r\n' +  '          &lt;el-tag v-if=&amp;quot;row.pending_extension_count&amp;quot; type=&amp;quot;warning&amp;quot;>待处理 {{ row.pending_extension_count }}&lt;/el-tag>\r\n' +  '          &lt;span v-else>{{ extensionStatusLabel(row.latest_extension?.status) }}&lt;/span>\r\n' +  '        &lt;/template>\r\n' +  '      &lt;/el-table-column>\r\n' +  '      &lt;el-table-column label=&amp;quot;最近延期&amp;quot; width=&amp;quot;170&amp;quot;>\r\n' +  `        &lt;template #default=&amp;quot;{ row }&amp;quot;>{{ row.latest_extension?.created_at || '-' }}&lt;/template>\r\n` +  '      &lt;/el-table-column>\r\n' +  '      &lt;el-table-column prop=&amp;quot;submitted_at&amp;quot; label=&amp;quot;提交时间&amp;quot; width=&amp;quot;170&amp;quot; />\r\n' +  '      &lt;el-table-column prop=&amp;quot;summary&amp;quot; label=&amp;quot;验收说明&amp;quot; min-width=&amp;quot;220&amp;quot; show-overflow-tooltip />\r\n' +  '      &lt;el-table-column label=&amp;quot;操作&amp;quot; width=&amp;quot;310&amp;quot; fixed=&amp;quot;right&amp;quot;>\r\n' +  '        &lt;template #default=&amp;quot;{ row }&amp;quot;>\r\n' +  '          &lt;div class=&amp;quot;table-action-row&amp;quot;>\r\n' +  '            &lt;el-button size=&amp;quot;small&amp;quot; :icon=&amp;quot;View&amp;quot; @click=&amp;quot;openDetail(row)&amp;quot;>详情&lt;/el-button>\r\n' +  '            &lt;el-button v-if=&amp;quot;canSubmit(row)&amp;quot; size=&amp;quot;small&amp;quot; type=&amp;quot;primary&amp;quot; @click=&amp;quot;openSubmit(row)&amp;quot;>提交&lt;/el-button>\r\n' +  '            &lt;el-button v-if=&amp;quot;canUpload(row)&amp;quot; size=&amp;quot;small&amp;quot; :icon=&amp;quot;Upload&amp;quot; @click=&amp;quot;openUpload(row)&amp;quot;>材料&lt;/el-button>\r\n' +  '            &lt;el-button v-if=&amp;quot;canReview(row)&amp;quot; size=&amp;quot;small&amp;quot; type=&amp;quot;success&amp;quot; @click=&amp;quot;openReview(row)&amp;quot;>审核&lt;/el-button>\r\n' +  '            &lt;el-button v-if=&amp;quot;canExtend(row)&amp;quot; size=&amp;quot;small&amp;quot; @click=&amp;quot;openExtension(row)&amp;quot;>延期&lt;/el-button>\r\n' +  '          &lt;/div>\r\n' +  '        &lt;/template>\r\n' +  '      &lt;/el-table-column>\r\n' +  '    &lt;/el-table>\r\n' +  '\r\n' +  '    &lt;el-dialog v-model=&amp;quot;createVisible&amp;quot; title=&amp;quot;发起验收&amp;quot; width=&amp;quot;520px&amp;quot;>\r\n' +  '      &lt;el-form :model=&amp;quot;createForm&amp;quot; label-position=&amp;quot;top&amp;quot;>\r\n' +  '        &lt;el-form-item label=&amp;quot;项目&amp;quot;>\r\n' +  '          &lt;el-select\r\n' +  '            v-model=&amp;quot;createForm.project_id&amp;quot;\r\n' +  '            clearable\r\n' +  '            filterable\r\n' +  '            remote\r\n' +  '            reserve-keyword\r\n' +  `            :remote-method=&amp;quot;(keyword) => searchProjects(keyword, 'acceptance')&amp;quot;\r\n` +  '            :loading=&amp;quot;projectOptionsLoading&amp;quot;\r\n' +  '            placeholder=&amp;quot;搜索已通过或验收中项目&amp;quot;\r\n' +  '          >\r\n' +  '            &lt;el-option v-for=&amp;quot;item in projectOptions&amp;quot; :key=&amp;quot;item.id&amp;quot; :label=&amp;quot;projectOptionLabel(item)&amp;quot; :value=&amp;quot;item.id&amp;quot; />\r\n' +  '          &lt;/el-select>\r\n' +  '        &lt;/el-form-item>\r\n' +  '        &lt;el-form-item label=&amp;quot;验收说明&amp;quot;>&lt;RichTextEditor v-model=&amp;quot;createForm.summary&amp;quot; min-height=&amp;quot;150px&amp;quot; placeholder=&amp;quot;填写验收背景、完成情况和申请说明&amp;quot; />&lt;/el-form-item>\r\n' +  '      &lt;/el-form>\r\n' +  '      &lt;template #footer>\r\n' +  '        &lt;el-button @click=&amp;quot;createVisible = false&amp;quot;>取消&lt;/el-button>\r\n' +  '        &lt;el-button type=&amp;quot;primary&amp;quot; :loading=&amp;quot;saving&amp;quot; @click=&amp;quot;createAcceptance&amp;quot;>保存草稿&lt;/el-button>\r\n' +  '      &lt;/template>\r\n' +  '    &lt;/el-dialog>\r\n' +  '\r\n' +  '    &lt;el-dialog v-model=&amp;quot;submitVisible&amp;quot; title=&amp;quot;提交验收&amp;quot; width=&amp;quot;560px&amp;quot;>\r\n' +  '      &lt;el-form :model=&amp;quot;submitForm&amp;quot; label-position=&amp;quot;top&amp;quot;>\r\n' +  '        &lt;el-alert\r\n' +  '          v-if=&amp;quot;submitRequiredMaterialLabels.length&amp;quot;\r\n' +  '          class=&amp;quot;mb-12&amp;quot;\r\n' +  '          type=&amp;quot;warning&amp;quot;\r\n' +  '          show-icon\r\n' +  '          :closable=&amp;quot;false&amp;quot;\r\n' +  '          :title=&amp;quot;`提交前需上传：${submitRequiredMaterialLabels.join(\'、\')}`&amp;quot;\r\n' +  '        />\r\n' +  '        &lt;el-form-item label=&amp;quot;验收说明&amp;quot;>&lt;RichTextEditor v-model=&amp;quot;submitForm.summary&amp;quot; min-height=&amp;quot;170px&amp;quot; placeholder=&amp;quot;补充验收说明，可插入图片、列表和链接&amp;quot; />&lt;/el-form-item>\r\n' +  '      &lt;/el-form>\r\n' +  '      &lt;template #footer>\r\n' +  '        &lt;el-button @click=&amp;quot;submitVisible = false&amp;quot;>取消&lt;/el-button>\r\n' +  '        &lt;el-button type=&amp;quot;primary&amp;quot; :loading=&amp;quot;saving&amp;quot; @click=&amp;quot;submitAcceptance&amp;quot;>提交&lt;/el-button>\r\n' +  '      &lt;/template>\r\n' +  '    &lt;/el-dialog>\r\n' +  '\r\n' +  '    &lt;el-dialog v-model=&amp;quot;reviewVisible&amp;quot; title=&amp;quot;验收审核&amp;quot; width=&amp;quot;560px&amp;quot;>\r\n' +  '      &lt;el-form :model=&amp;quot;reviewForm&amp;quot; label-position=&amp;quot;top&amp;quot;>\r\n' +  '        &lt;el-form-item label=&amp;quot;处理结果&amp;quot;>\r\n' +  '          &lt;el-select v-model=&amp;quot;reviewForm.decision&amp;quot;>\r\n' +  '            &lt;el-option label=&amp;quot;通过&amp;quot; value=&amp;quot;approve&amp;quot; />\r\n' +  '            &lt;el-option label=&amp;quot;退回修改&amp;quot; value=&amp;quot;return&amp;quot; />\r\n' +  '            &lt;el-option label=&amp;quot;驳回&amp;quot; value=&amp;quot;reject&amp;quot; />\r\n' +  `            &lt;el-option v-if=&amp;quot;currentAcceptance?.current_reviewer_role === 'admin'&amp;quot; label=&amp;quot;终审关闭&amp;quot; value=&amp;quot;close&amp;quot; />\r\n` +  '          &lt;/el-select>\r\n' +  '        &lt;/el-form-item>\r\n' +  '        &lt;el-form-item label=&amp;quot;评分&amp;quot;>&lt;el-input-number v-model=&amp;quot;reviewForm.score&amp;quot; :min=&amp;quot;0&amp;quot; :max=&amp;quot;100&amp;quot; />&lt;/el-form-item>\r\n' +  '        &lt;el-form-item label=&amp;quot;审核意见&amp;quot;>&lt;RichTextEditor v-model=&amp;quot;reviewForm.comment&amp;quot; min-height=&amp;quot;150px&amp;quot; placeholder=&amp;quot;填写验收审核意见&amp;quot; />&lt;/el-form-item>\r\n' +  '      &lt;/el-form>\r\n' +  '      &lt;template #footer>\r\n' +  '        &lt;el-button @click=&amp;quot;reviewVisible = false&amp;quot;>取消&lt;/el-button>\r\n' +  '        &lt;el-button type=&amp;quot;primary&amp;quot; :loading=&amp;quot;saving&amp;quot; @click=&amp;quot;saveReview&amp;quot;>提交审核&lt;/el-button>\r\n' +  '      &lt;/template>\r\n' +  '    &lt;/el-dialog>\r\n' +  '\r\n' +  '    &lt;el-dialog v-model=&amp;quot;extensionVisible&amp;quot; title=&amp;quot;验收延期&amp;quot; width=&amp;quot;560px&amp;quot;>\r\n' +  '      &lt;el-form :model=&amp;quot;extensionForm&amp;quot; label-position=&amp;quot;top&amp;quot;>\r\n' +  `        &lt;template v-if=&amp;quot;session.role === 'unit'&amp;quot;>\r\n` +  '          &lt;el-form-item label=&amp;quot;延期原因&amp;quot;>&lt;RichTextEditor v-model=&amp;quot;extensionForm.reason&amp;quot; min-height=&amp;quot;150px&amp;quot; placeholder=&amp;quot;填写延期原因和后续计划&amp;quot; />&lt;/el-form-item>\r\n' +  '          &lt;el-form-item label=&amp;quot;计划完成日期&amp;quot;>&lt;el-date-picker v-model=&amp;quot;extensionForm.expected_date&amp;quot; type=&amp;quot;date&amp;quot; value-format=&amp;quot;YYYY-MM-DD&amp;quot; />&lt;/el-form-item>\r\n' +  '        &lt;/template>\r\n' +  '        &lt;template v-else>\r\n' +  '          &lt;el-form-item label=&amp;quot;延期记录&amp;quot;>\r\n' +  '            &lt;el-select v-model=&amp;quot;extensionForm.extension_id&amp;quot;>\r\n' +  '              &lt;el-option v-for=&amp;quot;item in detail?.extensions || []&amp;quot; :key=&amp;quot;item.id&amp;quot; :label=&amp;quot;`${item.reason}（${item.status}）`&amp;quot; :value=&amp;quot;item.id&amp;quot; />\r\n' +  '            &lt;/el-select>\r\n' +  '          &lt;/el-form-item>\r\n' +  '          &lt;el-form-item label=&amp;quot;处理结果&amp;quot;>\r\n' +  '            &lt;el-select v-model=&amp;quot;extensionForm.decision&amp;quot;>\r\n' +  '              &lt;el-option label=&amp;quot;通过&amp;quot; value=&amp;quot;approved&amp;quot; />\r\n' +  '              &lt;el-option label=&amp;quot;驳回&amp;quot; value=&amp;quot;rejected&amp;quot; />\r\n' +  '            &lt;/el-select>\r\n' +  '          &lt;/el-form-item>\r\n' +  '          &lt;el-form-item label=&amp;quot;处理意见&amp;quot;>&lt;RichTextEditor v-model=&amp;quot;extensionForm.comment&amp;quot; min-height=&amp;quot;150px&amp;quot; placeholder=&amp;quot;填写延期处理意见&amp;quot; />&lt;/el-form-item>\r\n' +  '        &lt;/template>\r\n' +  '      &lt;/el-form>\r\n' +  '      &lt;template #footer>\r\n' +  '        &lt;el-button @click=&amp;quot;extensionVisible = false&amp;quot;>取消&lt;/el-button>\r\n' +  '        &lt;el-button type=&amp;quot;primary&amp;quot; :loading=&amp;quot;saving&amp;quot; @click=&amp;quot;saveExtension&amp;quot;>保存&lt;/el-button>\r\n' +  '      &lt;/template>\r\n' +  '    &lt;/el-dialog>\r\n' +  '\r\n' +  '    &lt;el-dialog v-model=&amp;quot;uploadVisible&amp;quot; title=&amp;quot;上传验收材料&amp;quot; width=&amp;quot;520px&amp;quot;>\r\n' +  '      &lt;el-form label-position=&amp;quot;top&amp;quot;>\r\n' +  '        &lt;el-form-item label=&amp;quot;材料分类&amp;quot;>\r\n' +  '          &lt;el-select v-model=&amp;quot;uploadCategory&amp;quot; placeholder=&amp;quot;请选择材料分类&amp;quot;>\r\n' +  '            &lt;el-option v-for=&amp;quot;item in materialCategories&amp;quot; :key=&amp;quot;item.value&amp;quot; :label=&amp;quot;item.label&amp;quot; :value=&amp;quot;item.value&amp;quot; />\r\n' +  '          &lt;/el-select>\r\n' +  '        &lt;/el-form-item>\r\n' +  '      &lt;/el-form>\r\n' +  '      &lt;el-upload drag :show-file-list=&amp;quot;false&amp;quot; :http-request=&amp;quot;uploadFile&amp;quot;>\r\n' +  '        &lt;el-icon>&lt;Upload />&lt;/el-icon>\r\n' +  '        &lt;div>拖拽文件到这里或点击选择&lt;/div>\r\n' +  '      &lt;/el-upload>\r\n' +  '    &lt;/el-dialog>\r\n' +  '\r\n' +  '    &lt;el-drawer v-model=&amp;quot;detailVisible&amp;quot; title=&amp;quot;验收详情&amp;quot; size=&amp;quot;680px&amp;quot;>\r\n' +  '      &lt;div v-if=&amp;quot;detail&amp;quot; class=&amp;quot;detail-stack&amp;quot;>\r\n' +  '        &lt;el-alert\r\n' +  '          v-if=&amp;quot;detail.next_step&amp;quot;\r\n' +  '          type=&amp;quot;info&amp;quot;\r\n' +  '          :closable=&amp;quot;false&amp;quot;\r\n' +  '          show-icon\r\n' +  '          :title=&amp;quot;detail.next_step.title&amp;quot;\r\n' +  '          :description=&amp;quot;detail.next_step.body&amp;quot;\r\n' +  '        />\r\n' +  '        &lt;el-descriptions :column=&amp;quot;2&amp;quot; border>\r\n' +  '          &lt;el-descriptions-item label=&amp;quot;项目&amp;quot; :span=&amp;quot;2&amp;quot;>{{ detail.project?.title }}&lt;/el-descriptions-item>\r\n' +  '          &lt;el-descriptions-item label=&amp;quot;单位&amp;quot;>{{ detail.unit?.name }}&lt;/el-descriptions-item>\r\n' +  '          &lt;el-descriptions-item label=&amp;quot;状态&amp;quot;>{{ statusMeta(detail.status).label }}&lt;/el-descriptions-item>\r\n' +  `          &lt;el-descriptions-item label=&amp;quot;说明&amp;quot; :span=&amp;quot;2&amp;quot;>&lt;div class=&amp;quot;rich-content detail-rich-content&amp;quot; v-html=&amp;quot;detail.summary || '-'&amp;quot; />&lt;/el-descriptions-item>\r\n` +  '        &lt;/el-descriptions>\r\n' +  '        &lt;section v-if=&amp;quot;detail.timeline?.length&amp;quot;>\r\n' +  '          &lt;div class=&amp;quot;section-title&amp;quot;>验收阶段&lt;/div>\r\n' +  '          &lt;el-steps :active=&amp;quot;timelineActiveIndex(detail.timeline)&amp;quot; finish-status=&amp;quot;success&amp;quot; process-status=&amp;quot;process&amp;quot; alig'... 17473 more characters">
+		<failure type="testCodeFailure" message="The input did not match the regular expression /&lt;el-form-item v-if=&amp;quot;showReviewScore&amp;quot; label=&amp;quot;评分&amp;quot;/. Input:'&lt;template>\r\n' +  '  &lt;section class=&amp;quot;page-stack&amp;quot;>\r\n' +  '    &lt;div class=&amp;quot;toolbar&amp;quot;>\r\n' +  '      &lt;div>\r\n' +  '        &lt;h2>验收管理&lt;/h2>\r\n' +  '        &lt;span class=&amp;quot;muted&amp;quot;>单位提交验收材料，区县、部门、专家和管理员分阶段处理&lt;/span>\r\n' +  '      &lt;/div>\r\n' +  '      &lt;div class=&amp;quot;toolbar-actions&amp;quot;>\r\n' +  '        &lt;el-input v-model=&amp;quot;keyword&amp;quot; clearable placeholder=&amp;quot;项目/单位&amp;quot; @keyup.enter=&amp;quot;reloadAcceptances&amp;quot; @clear=&amp;quot;reloadAcceptances&amp;quot; />\r\n' +  '        &lt;el-select v-model=&amp;quot;status&amp;quot; clearable placeholder=&amp;quot;状态&amp;quot; @change=&amp;quot;reloadAcceptances&amp;quot; @clear=&amp;quot;reloadAcceptances&amp;quot;>\r\n' +  '          &lt;el-option label=&amp;quot;草稿&amp;quot; value=&amp;quot;draft&amp;quot; />\r\n' +  '          &lt;el-option label=&amp;quot;已提交&amp;quot; value=&amp;quot;submitted&amp;quot; />\r\n' +  '          &lt;el-option label=&amp;quot;审核中&amp;quot; value=&amp;quot;reviewing&amp;quot; />\r\n' +  '          &lt;el-option label=&amp;quot;退回修改&amp;quot; value=&amp;quot;returned&amp;quot; />\r\n' +  '          &lt;el-option label=&amp;quot;已驳回&amp;quot; value=&amp;quot;rejected&amp;quot; />\r\n' +  '          &lt;el-option label=&amp;quot;已通过&amp;quot; value=&amp;quot;approved&amp;quot; />\r\n' +  '          &lt;el-option label=&amp;quot;已关闭&amp;quot; value=&amp;quot;closed&amp;quot; />\r\n' +  '        &lt;/el-select>\r\n' +  '        &lt;el-select v-if=&amp;quot;canFilterE2e&amp;quot; v-model=&amp;quot;e2eFilter&amp;quot; clearable placeholder=&amp;quot;测试数据&amp;quot; @change=&amp;quot;reloadAcceptances&amp;quot; @clear=&amp;quot;reloadAcceptances&amp;quot;>\r\n' +  '          &lt;el-option label=&amp;quot;只看测试数据&amp;quot; value=&amp;quot;1&amp;quot; />\r\n' +  '          &lt;el-option label=&amp;quot;排除测试数据&amp;quot; value=&amp;quot;0&amp;quot; />\r\n' +  '        &lt;/el-select>\r\n' +  '        &lt;el-button :icon=&amp;quot;Refresh&amp;quot; :loading=&amp;quot;loading&amp;quot; @click=&amp;quot;loadAcceptances&amp;quot;>刷新&lt;/el-button>\r\n' +  `        &lt;el-button v-if=&amp;quot;session.can('submit_acceptance')&amp;quot; type=&amp;quot;primary&amp;quot; :icon=&amp;quot;Plus&amp;quot; @click=&amp;quot;createVisible = true&amp;quot;>发起验收&lt;/el-button>\r\n` +  '      &lt;/div>\r\n' +  '    &lt;/div>\r\n' +  '\r\n' +  '    &lt;el-tabs v-if=&amp;quot;showScopeTabs&amp;quot; v-model=&amp;quot;scope&amp;quot; @tab-change=&amp;quot;handleScopeChange&amp;quot;>\r\n' +  `      &lt;el-tab-pane :label=&amp;quot;texts.t('acceptance.tab.pending', '待处理')&amp;quot; name=&amp;quot;pending&amp;quot; />\r\n` +  `      &lt;el-tab-pane :label=&amp;quot;texts.t('acceptance.tab.reviewed', '已处理')&amp;quot; name=&amp;quot;reviewed&amp;quot; />\r\n` +  `      &lt;el-tab-pane :label=&amp;quot;texts.t('acceptance.tab.visible', '全部可见')&amp;quot; name=&amp;quot;visible&amp;quot; />\r\n` +  '    &lt;/el-tabs>\r\n' +  '\r\n' +  '    &lt;el-table :data=&amp;quot;acceptances&amp;quot; border v-loading=&amp;quot;loading&amp;quot;>\r\n' +  '      &lt;el-table-column label=&amp;quot;项目&amp;quot; min-width=&amp;quot;240&amp;quot;>\r\n' +  '        &lt;template #default=&amp;quot;{ row }&amp;quot;>\r\n' +  &amp;quot;          &lt;strong>{{ row.project?.title || '-' }}&lt;/strong>\r\n&amp;quot; +  `          &lt;div class=&amp;quot;muted&amp;quot;>{{ row.unit?.name || row.project?.unit?.name || '-' }}&lt;/div>\r\n` +  '        &lt;/template>\r\n' +  '      &lt;/el-table-column>\r\n' +  '      &lt;el-table-column label=&amp;quot;状态&amp;quot; width=&amp;quot;110&amp;quot;>\r\n' +  '        &lt;template #default=&amp;quot;{ row }&amp;quot;>&lt;el-tag :type=&amp;quot;statusMeta(row.status).type&amp;quot;>{{ statusMeta(row.status).label }}&lt;/el-tag>&lt;/template>\r\n' +  '      &lt;/el-table-column>\r\n' +  '      &lt;el-table-column label=&amp;quot;当前阶段&amp;quot; width=&amp;quot;130&amp;quot;>\r\n' +  '        &lt;template #default=&amp;quot;{ row }&amp;quot;>{{ roleLabel(row.current_reviewer_role) }}&lt;/template>\r\n' +  '      &lt;/el-table-column>\r\n' +  '      &lt;el-table-column label=&amp;quot;延期状态&amp;quot; width=&amp;quot;130&amp;quot;>\r\n' +  '        &lt;template #default=&amp;quot;{ row }&amp;quot;>\r\n' +  '          &lt;el-tag v-if=&amp;quot;row.pending_extension_count&amp;quot; type=&amp;quot;warning&amp;quot;>待处理 {{ row.pending_extension_count }}&lt;/el-tag>\r\n' +  '          &lt;span v-else>{{ extensionStatusLabel(row.latest_extension?.status) }}&lt;/span>\r\n' +  '        &lt;/template>\r\n' +  '      &lt;/el-table-column>\r\n' +  '      &lt;el-table-column label=&amp;quot;最近延期&amp;quot; width=&amp;quot;170&amp;quot;>\r\n' +  `        &lt;template #default=&amp;quot;{ row }&amp;quot;>{{ row.latest_extension?.created_at || '-' }}&lt;/template>\r\n` +  '      &lt;/el-table-column>\r\n' +  '      &lt;el-table-column prop=&amp;quot;submitted_at&amp;quot; label=&amp;quot;提交时间&amp;quot; width=&amp;quot;170&amp;quot; />\r\n' +  '      &lt;el-table-column prop=&amp;quot;summary&amp;quot; label=&amp;quot;验收说明&amp;quot; min-width=&amp;quot;220&amp;quot; show-overflow-tooltip />\r\n' +  '      &lt;el-table-column label=&amp;quot;操作&amp;quot; width=&amp;quot;310&amp;quot; fixed=&amp;quot;right&amp;quot;>\r\n' +  '        &lt;template #default=&amp;quot;{ row }&amp;quot;>\r\n' +  '          &lt;div class=&amp;quot;table-action-row&amp;quot;>\r\n' +  '            &lt;el-button size=&amp;quot;small&amp;quot; :icon=&amp;quot;View&amp;quot; @click=&amp;quot;openDetail(row)&amp;quot;>详情&lt;/el-button>\r\n' +  '            &lt;el-button v-if=&amp;quot;canSubmit(row)&amp;quot; size=&amp;quot;small&amp;quot; type=&amp;quot;primary&amp;quot; @click=&amp;quot;openSubmit(row)&amp;quot;>提交&lt;/el-button>\r\n' +  '            &lt;el-button v-if=&amp;quot;canUpload(row)&amp;quot; size=&amp;quot;small&amp;quot; :icon=&amp;quot;Upload&amp;quot; @click=&amp;quot;openUpload(row)&amp;quot;>材料&lt;/el-button>\r\n' +  '            &lt;el-button v-if=&amp;quot;canReview(row)&amp;quot; size=&amp;quot;small&amp;quot; type=&amp;quot;success&amp;quot; @click=&amp;quot;openReview(row)&amp;quot;>审核&lt;/el-button>\r\n' +  '            &lt;el-button v-if=&amp;quot;canExtend(row)&amp;quot; size=&amp;quot;small&amp;quot; @click=&amp;quot;openExtension(row)&amp;quot;>延期&lt;/el-button>\r\n' +  '          &lt;/div>\r\n' +  '        &lt;/template>\r\n' +  '      &lt;/el-table-column>\r\n' +  '    &lt;/el-table>\r\n' +  '\r\n' +  '    &lt;el-dialog v-model=&amp;quot;createVisible&amp;quot; title=&amp;quot;发起验收&amp;quot; width=&amp;quot;520px&amp;quot;>\r\n' +  '      &lt;el-form :model=&amp;quot;createForm&amp;quot; label-position=&amp;quot;top&amp;quot;>\r\n' +  '        &lt;el-form-item label=&amp;quot;项目&amp;quot;>\r\n' +  '          &lt;el-select\r\n' +  '            v-model=&amp;quot;createForm.project_id&amp;quot;\r\n' +  '            clearable\r\n' +  '            filterable\r\n' +  '            remote\r\n' +  '            reserve-keyword\r\n' +  `            :remote-method=&amp;quot;(keyword) => searchProjects(keyword, 'acceptance')&amp;quot;\r\n` +  '            :loading=&amp;quot;projectOptionsLoading&amp;quot;\r\n' +  '            placeholder=&amp;quot;搜索已通过或验收中项目&amp;quot;\r\n' +  '          >\r\n' +  '            &lt;el-option v-for=&amp;quot;item in projectOptions&amp;quot; :key=&amp;quot;item.id&amp;quot; :label=&amp;quot;projectOptionLabel(item)&amp;quot; :value=&amp;quot;item.id&amp;quot; />\r\n' +  '          &lt;/el-select>\r\n' +  '        &lt;/el-form-item>\r\n' +  '        &lt;el-form-item label=&amp;quot;验收说明&amp;quot;>&lt;RichTextEditor v-model=&amp;quot;createForm.summary&amp;quot; min-height=&amp;quot;150px&amp;quot; placeholder=&amp;quot;填写验收背景、完成情况和申请说明&amp;quot; />&lt;/el-form-item>\r\n' +  '      &lt;/el-form>\r\n' +  '      &lt;template #footer>\r\n' +  '        &lt;el-button @click=&amp;quot;createVisible = false&amp;quot;>取消&lt;/el-button>\r\n' +  '        &lt;el-button type=&amp;quot;primary&amp;quot; :loading=&amp;quot;saving&amp;quot; @click=&amp;quot;createAcceptance&amp;quot;>保存草稿&lt;/el-button>\r\n' +  '      &lt;/template>\r\n' +  '    &lt;/el-dialog>\r\n' +  '\r\n' +  '    &lt;el-dialog v-model=&amp;quot;submitVisible&amp;quot; title=&amp;quot;提交验收&amp;quot; width=&amp;quot;560px&amp;quot;>\r\n' +  '      &lt;el-form :model=&amp;quot;submitForm&amp;quot; label-position=&amp;quot;top&amp;quot;>\r\n' +  '        &lt;el-alert\r\n' +  '          v-if=&amp;quot;submitRequiredMaterialLabels.length&amp;quot;\r\n' +  '          class=&amp;quot;mb-12&amp;quot;\r\n' +  '          type=&amp;quot;warning&amp;quot;\r\n' +  '          show-icon\r\n' +  '          :closable=&amp;quot;false&amp;quot;\r\n' +  '          :title=&amp;quot;`提交前需上传：${submitRequiredMaterialLabels.join(\'、\')}`&amp;quot;\r\n' +  '        />\r\n' +  '        &lt;el-form-item label=&amp;quot;验收说明&amp;quot;>&lt;RichTextEditor v-model=&amp;quot;submitForm.summary&amp;quot; min-height=&amp;quot;170px&amp;quot; placeholder=&amp;quot;补充验收说明，可插入图片、列表和链接&amp;quot; />&lt;/el-form-item>\r\n' +  '      &lt;/el-form>\r\n' +  '      &lt;template #footer>\r\n' +  '        &lt;el-button @click=&amp;quot;submitVisible = false&amp;quot;>取消&lt;/el-button>\r\n' +  '        &lt;el-button type=&amp;quot;primary&amp;quot; :loading=&amp;quot;saving&amp;quot; @click=&amp;quot;submitAcceptance&amp;quot;>提交&lt;/el-button>\r\n' +  '      &lt;/template>\r\n' +  '    &lt;/el-dialog>\r\n' +  '\r\n' +  '    &lt;el-dialog v-model=&amp;quot;reviewVisible&amp;quot; title=&amp;quot;验收审核&amp;quot; width=&amp;quot;560px&amp;quot;>\r\n' +  '      &lt;el-form :model=&amp;quot;reviewForm&amp;quot; label-position=&amp;quot;top&amp;quot;>\r\n' +  '        &lt;el-form-item label=&amp;quot;处理结果&amp;quot;>\r\n' +  '          &lt;el-select v-model=&amp;quot;reviewForm.decision&amp;quot;>\r\n' +  '            &lt;el-option label=&amp;quot;通过&amp;quot; value=&amp;quot;approve&amp;quot; />\r\n' +  '            &lt;el-option label=&amp;quot;退回修改&amp;quot; value=&amp;quot;return&amp;quot; />\r\n' +  '            &lt;el-option label=&amp;quot;驳回&amp;quot; value=&amp;quot;reject&amp;quot; />\r\n' +  `            &lt;el-option v-if=&amp;quot;currentAcceptance?.current_reviewer_role === 'admin'&amp;quot; label=&amp;quot;终审关闭&amp;quot; value=&amp;quot;close&amp;quot; />\r\n` +  '          &lt;/el-select>\r\n' +  '        &lt;/el-form-item>\r\n' +  '        &lt;el-form-item label=&amp;quot;评分&amp;quot;>&lt;el-input-number v-model=&amp;quot;reviewForm.score&amp;quot; :min=&amp;quot;0&amp;quot; :max=&amp;quot;100&amp;quot; />&lt;/el-form-item>\r\n' +  '        &lt;el-form-item label=&amp;quot;审核意见&amp;quot;>&lt;RichTextEditor v-model=&amp;quot;reviewForm.comment&amp;quot; min-height=&amp;quot;150px&amp;quot; placeholder=&amp;quot;填写验收审核意见&amp;quot; />&lt;/el-form-item>\r\n' +  '      &lt;/el-form>\r\n' +  '      &lt;template #footer>\r\n' +  '        &lt;el-button @click=&amp;quot;reviewVisible = false&amp;quot;>取消&lt;/el-button>\r\n' +  '        &lt;el-button type=&amp;quot;primary&amp;quot; :loading=&amp;quot;saving&amp;quot; @click=&amp;quot;saveReview&amp;quot;>提交审核&lt;/el-button>\r\n' +  '      &lt;/template>\r\n' +  '    &lt;/el-dialog>\r\n' +  '\r\n' +  '    &lt;el-dialog v-model=&amp;quot;extensionVisible&amp;quot; title=&amp;quot;验收延期&amp;quot; width=&amp;quot;560px&amp;quot;>\r\n' +  '      &lt;el-form :model=&amp;quot;extensionForm&amp;quot; label-position=&amp;quot;top&amp;quot;>\r\n' +  `        &lt;template v-if=&amp;quot;session.role === 'unit'&amp;quot;>\r\n` +  '          &lt;el-form-item label=&amp;quot;延期原因&amp;quot;>&lt;RichTextEditor v-model=&amp;quot;extensionForm.reason&amp;quot; min-height=&amp;quot;150px&amp;quot; placeholder=&amp;quot;填写延期原因和后续计划&amp;quot; />&lt;/el-form-item>\r\n' +  '          &lt;el-form-item label=&amp;quot;计划完成日期&amp;quot;>&lt;el-date-picker v-model=&amp;quot;extensionForm.expected_date&amp;quot; type=&amp;quot;date&amp;quot; value-format=&amp;quot;YYYY-MM-DD&amp;quot; />&lt;/el-form-item>\r\n' +  '        &lt;/template>\r\n' +  '        &lt;template v-else>\r\n' +  '          &lt;el-form-item label=&amp;quot;延期记录&amp;quot;>\r\n' +  '            &lt;el-select v-model=&amp;quot;extensionForm.extension_id&amp;quot;>\r\n' +  '              &lt;el-option v-for=&amp;quot;item in detail?.extensions || []&amp;quot; :key=&amp;quot;item.id&amp;quot; :label=&amp;quot;`${item.reason}（${item.status}）`&amp;quot; :value=&amp;quot;item.id&amp;quot; />\r\n' +  '            &lt;/el-select>\r\n' +  '          &lt;/el-form-item>\r\n' +  '          &lt;el-form-item label=&amp;quot;处理结果&amp;quot;>\r\n' +  '            &lt;el-select v-model=&amp;quot;extensionForm.decision&amp;quot;>\r\n' +  '              &lt;el-option label=&amp;quot;通过&amp;quot; value=&amp;quot;approved&amp;quot; />\r\n' +  '              &lt;el-option label=&amp;quot;驳回&amp;quot; value=&amp;quot;rejected&amp;quot; />\r\n' +  '            &lt;/el-select>\r\n' +  '          &lt;/el-form-item>\r\n' +  '          &lt;el-form-item label=&amp;quot;处理意见&amp;quot;>&lt;RichTextEditor v-model=&amp;quot;extensionForm.comment&amp;quot; min-height=&amp;quot;150px&amp;quot; placeholder=&amp;quot;填写延期处理意见&amp;quot; />&lt;/el-form-item>\r\n' +  '        &lt;/template>\r\n' +  '      &lt;/el-form>\r\n' +  '      &lt;template #footer>\r\n' +  '        &lt;el-button @click=&amp;quot;extensionVisible = false&amp;quot;>取消&lt;/el-button>\r\n' +  '        &lt;el-button type=&amp;quot;primary&amp;quot; :loading=&amp;quot;saving&amp;quot; @click=&amp;quot;saveExtension&amp;quot;>保存&lt;/el-button>\r\n' +  '      &lt;/template>\r\n' +  '    &lt;/el-dialog>\r\n' +  '\r\n' +  '    &lt;el-dialog v-model=&amp;quot;uploadVisible&amp;quot; title=&amp;quot;上传验收材料&amp;quot; width=&amp;quot;520px&amp;quot;>\r\n' +  '      &lt;el-form label-position=&amp;quot;top&amp;quot;>\r\n' +  '        &lt;el-form-item label=&amp;quot;材料分类&amp;quot;>\r\n' +  '          &lt;el-select v-model=&amp;quot;uploadCategory&amp;quot; placeholder=&amp;quot;请选择材料分类&amp;quot;>\r\n' +  '            &lt;el-option v-for=&amp;quot;item in materialCategories&amp;quot; :key=&amp;quot;item.value&amp;quot; :label=&amp;quot;item.label&amp;quot; :value=&amp;quot;item.value&amp;quot; />\r\n' +  '          &lt;/el-select>\r\n' +  '        &lt;/el-form-item>\r\n' +  '      &lt;/el-form>\r\n' +  '      &lt;el-upload drag :show-file-list=&amp;quot;false&amp;quot; :http-request=&amp;quot;uploadFile&amp;quot;>\r\n' +  '        &lt;el-icon>&lt;Upload />&lt;/el-icon>\r\n' +  '        &lt;div>拖拽文件到这里或点击选择&lt;/div>\r\n' +  '      &lt;/el-upload>\r\n' +  '    &lt;/el-dialog>\r\n' +  '\r\n' +  '    &lt;el-drawer v-model=&amp;quot;detailVisible&amp;quot; title=&amp;quot;验收详情&amp;quot; size=&amp;quot;680px&amp;quot;>\r\n' +  '      &lt;div v-if=&amp;quot;detail&amp;quot; class=&amp;quot;detail-stack&amp;quot;>\r\n' +  '        &lt;el-alert\r\n' +  '          v-if=&amp;quot;detail.next_step&amp;quot;\r\n' +  '          type=&amp;quot;info&amp;quot;\r\n' +  '          :closable=&amp;quot;false&amp;quot;\r\n' +  '          show-icon\r\n' +  '          :title=&amp;quot;detail.next_step.title&amp;quot;\r\n' +  '          :description=&amp;quot;detail.next_step.body&amp;quot;\r\n' +  '        />\r\n' +  '        &lt;el-descriptions :column=&amp;quot;2&amp;quot; border>\r\n' +  '          &lt;el-descriptions-item label=&amp;quot;项目&amp;quot; :span=&amp;quot;2&amp;quot;>{{ detail.project?.title }}&lt;/el-descriptions-item>\r\n' +  '          &lt;el-descriptions-item label=&amp;quot;单位&amp;quot;>{{ detail.unit?.name }}&lt;/el-descriptions-item>\r\n' +  '          &lt;el-descriptions-item label=&amp;quot;状态&amp;quot;>{{ statusMeta(detail.status).label }}&lt;/el-descriptions-item>\r\n' +  `          &lt;el-descriptions-item label=&amp;quot;说明&amp;quot; :span=&amp;quot;2&amp;quot;>&lt;div class=&amp;quot;rich-content detail-rich-content&amp;quot; v-html=&amp;quot;detail.summary || '-'&amp;quot; />&lt;/el-descriptions-item>\r\n` +  '        &lt;/el-descriptions>\r\n' +  '        &lt;section v-if=&amp;quot;detail.timeline?.length&amp;quot;>\r\n' +  '          &lt;div class=&amp;quot;section-title&amp;quot;>验收阶段&lt;/div>\r\n' +  '          &lt;el-steps :active=&amp;quot;timelineActiveIndex(detail.timeline)&amp;quot; finish-status=&amp;quot;success&amp;quot; process-status=&amp;quot;process&amp;quot; alig'... 17473 more characters">
+[Error [ERR_TEST_FAILURE]: The input did not match the regular expression /&lt;el-form-item v-if="showReviewScore" label="评分"/. Input:
+
+'&lt;template>\r\n' +
+  '  &lt;section class="page-stack">\r\n' +
+  '    &lt;div class="toolbar">\r\n' +
+  '      &lt;div>\r\n' +
+  '        &lt;h2>验收管理&lt;/h2>\r\n' +
+  '        &lt;span class="muted">单位提交验收材料，区县、部门、专家和管理员分阶段处理&lt;/span>\r\n' +
+  '      &lt;/div>\r\n' +
+  '      &lt;div class="toolbar-actions">\r\n' +
+  '        &lt;el-input v-model="keyword" clearable placeholder="项目/单位" @keyup.enter="reloadAcceptances" @clear="reloadAcceptances" />\r\n' +
+  '        &lt;el-select v-model="status" clearable placeholder="状态" @change="reloadAcceptances" @clear="reloadAcceptances">\r\n' +
+  '          &lt;el-option label="草稿" value="draft" />\r\n' +
+  '          &lt;el-option label="已提交" value="submitted" />\r\n' +
+  '          &lt;el-option label="审核中" value="reviewing" />\r\n' +
+  '          &lt;el-option label="退回修改" value="returned" />\r\n' +
+  '          &lt;el-option label="已驳回" value="rejected" />\r\n' +
+  '          &lt;el-option label="已通过" value="approved" />\r\n' +
+  '          &lt;el-option label="已关闭" value="closed" />\r\n' +
+  '        &lt;/el-select>\r\n' +
+  '        &lt;el-select v-if="canFilterE2e" v-model="e2eFilter" clearable placeholder="测试数据" @change="reloadAcceptances" @clear="reloadAcceptances">\r\n' +
+  '          &lt;el-option label="只看测试数据" value="1" />\r\n' +
+  '          &lt;el-option label="排除测试数据" value="0" />\r\n' +
+  '        &lt;/el-select>\r\n' +
+  '        &lt;el-button :icon="Refresh" :loading="loading" @click="loadAcceptances">刷新&lt;/el-button>\r\n' +
+  `        &lt;el-button v-if="session.can('submit_acceptance')" type="primary" :icon="Plus" @click="createVisible = true">发起验收&lt;/el-button>\r\n` +
+  '      &lt;/div>\r\n' +
+  '    &lt;/div>\r\n' +
+  '\r\n' +
+  '    &lt;el-tabs v-if="showScopeTabs" v-model="scope" @tab-change="handleScopeChange">\r\n' +
+  `      &lt;el-tab-pane :label="texts.t('acceptance.tab.pending', '待处理')" name="pending" />\r\n` +
+  `      &lt;el-tab-pane :label="texts.t('acceptance.tab.reviewed', '已处理')" name="reviewed" />\r\n` +
+  `      &lt;el-tab-pane :label="texts.t('acceptance.tab.visible', '全部可见')" name="visible" />\r\n` +
+  '    &lt;/el-tabs>\r\n' +
+  '\r\n' +
+  '    &lt;el-table :data="acceptances" border v-loading="loading">\r\n' +
+  '      &lt;el-table-column label="项目" min-width="240">\r\n' +
+  '        &lt;template #default="{ row }">\r\n' +
+  "          &lt;strong>{{ row.project?.title || '-' }}&lt;/strong>\r\n" +
+  `          &lt;div class="muted">{{ row.unit?.name || row.project?.unit?.name || '-' }}&lt;/div>\r\n` +
+  '        &lt;/template>\r\n' +
+  '      &lt;/el-table-column>\r\n' +
+  '      &lt;el-table-column label="状态" width="110">\r\n' +
+  '        &lt;template #default="{ row }">&lt;el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}&lt;/el-tag>&lt;/template>\r\n' +
+  '      &lt;/el-table-column>\r\n' +
+  '      &lt;el-table-column label="当前阶段" width="130">\r\n' +
+  '        &lt;template #default="{ row }">{{ roleLabel(row.current_reviewer_role) }}&lt;/template>\r\n' +
+  '      &lt;/el-table-column>\r\n' +
+  '      &lt;el-table-column label="延期状态" width="130">\r\n' +
+  '        &lt;template #default="{ row }">\r\n' +
+  '          &lt;el-tag v-if="row.pending_extension_count" type="warning">待处理 {{ row.pending_extension_count }}&lt;/el-tag>\r\n' +
+  '          &lt;span v-else>{{ extensionStatusLabel(row.latest_extension?.status) }}&lt;/span>\r\n' +
+  '        &lt;/template>\r\n' +
+  '      &lt;/el-table-column>\r\n' +
+  '      &lt;el-table-column label="最近延期" width="170">\r\n' +
+  `        &lt;template #default="{ row }">{{ row.latest_extension?.created_at || '-' }}&lt;/template>\r\n` +
+  '      &lt;/el-table-column>\r\n' +
+  '      &lt;el-table-column prop="submitted_at" label="提交时间" width="170" />\r\n' +
+  '      &lt;el-table-column prop="summary" label="验收说明" min-width="220" show-overflow-tooltip />\r\n' +
+  '      &lt;el-table-column label="操作" width="310" fixed="right">\r\n' +
+  '        &lt;template #default="{ row }">\r\n' +
+  '          &lt;div class="table-action-row">\r\n' +
+  '            &lt;el-button size="small" :icon="View" @click="openDetail(row)">详情&lt;/el-button>\r\n' +
+  '            &lt;el-button v-if="canSubmit(row)" size="small" type="primary" @click="openSubmit(row)">提交&lt;/el-button>\r\n' +
+  '            &lt;el-button v-if="canUpload(row)" size="small" :icon="Upload" @click="openUpload(row)">材料&lt;/el-button>\r\n' +
+  '            &lt;el-button v-if="canReview(row)" size="small" type="success" @click="openReview(row)">审核&lt;/el-button>\r\n' +
+  '            &lt;el-button v-if="canExtend(row)" size="small" @click="openExtension(row)">延期&lt;/el-button>\r\n' +
+  '          &lt;/div>\r\n' +
+  '        &lt;/template>\r\n' +
+  '      &lt;/el-table-column>\r\n' +
+  '    &lt;/el-table>\r\n' +
+  '\r\n' +
+  '    &lt;el-dialog v-model="createVisible" title="发起验收" width="520px">\r\n' +
+  '      &lt;el-form :model="createForm" label-position="top">\r\n' +
+  '        &lt;el-form-item label="项目">\r\n' +
+  '          &lt;el-select\r\n' +
+  '            v-model="createForm.project_id"\r\n' +
+  '            clearable\r\n' +
+  '            filterable\r\n' +
+  '            remote\r\n' +
+  '            reserve-keyword\r\n' +
+  `            :remote-method="(keyword) => searchProjects(keyword, 'acceptance')"\r\n` +
+  '            :loading="projectOptionsLoading"\r\n' +
+  '            placeholder="搜索已通过或验收中项目"\r\n' +
+  '          >\r\n' +
+  '            &lt;el-option v-for="item in projectOptions" :key="item.id" :label="projectOptionLabel(item)" :value="item.id" />\r\n' +
+  '          &lt;/el-select>\r\n' +
+  '        &lt;/el-form-item>\r\n' +
+  '        &lt;el-form-item label="验收说明">&lt;RichTextEditor v-model="createForm.summary" min-height="150px" placeholder="填写验收背景、完成情况和申请说明" />&lt;/el-form-item>\r\n' +
+  '      &lt;/el-form>\r\n' +
+  '      &lt;template #footer>\r\n' +
+  '        &lt;el-button @click="createVisible = false">取消&lt;/el-button>\r\n' +
+  '        &lt;el-button type="primary" :loading="saving" @click="createAcceptance">保存草稿&lt;/el-button>\r\n' +
+  '      &lt;/template>\r\n' +
+  '    &lt;/el-dialog>\r\n' +
+  '\r\n' +
+  '    &lt;el-dialog v-model="submitVisible" title="提交验收" width="560px">\r\n' +
+  '      &lt;el-form :model="submitForm" label-position="top">\r\n' +
+  '        &lt;el-alert\r\n' +
+  '          v-if="submitRequiredMaterialLabels.length"\r\n' +
+  '          class="mb-12"\r\n' +
+  '          type="warning"\r\n' +
+  '          show-icon\r\n' +
+  '          :closable="false"\r\n' +
+  '          :title="`提交前需上传：${submitRequiredMaterialLabels.join(\'、\')}`"\r\n' +
+  '        />\r\n' +
+  '        &lt;el-form-item label="验收说明">&lt;RichTextEditor v-model="submitForm.summary" min-height="170px" placeholder="补充验收说明，可插入图片、列表和链接" />&lt;/el-form-item>\r\n' +
+  '      &lt;/el-form>\r\n' +
+  '      &lt;template #footer>\r\n' +
+  '        &lt;el-button @click="submitVisible = false">取消&lt;/el-button>\r\n' +
+  '        &lt;el-button type="primary" :loading="saving" @click="submitAcceptance">提交&lt;/el-button>\r\n' +
+  '      &lt;/template>\r\n' +
+  '    &lt;/el-dialog>\r\n' +
+  '\r\n' +
+  '    &lt;el-dialog v-model="reviewVisible" title="验收审核" width="560px">\r\n' +
+  '      &lt;el-form :model="reviewForm" label-position="top">\r\n' +
+  '        &lt;el-form-item label="处理结果">\r\n' +
+  '          &lt;el-select v-model="reviewForm.decision">\r\n' +
+  '            &lt;el-option label="通过" value="approve" />\r\n' +
+  '            &lt;el-option label="退回修改" value="return" />\r\n' +
+  '            &lt;el-option label="驳回" value="reject" />\r\n' +
+  `            &lt;el-option v-if="currentAcceptance?.current_reviewer_role === 'admin'" label="终审关闭" value="close" />\r\n` +
+  '          &lt;/el-select>\r\n' +
+  '        &lt;/el-form-item>\r\n' +
+  '        &lt;el-form-item label="评分">&lt;el-input-number v-model="reviewForm.score" :min="0" :max="100" />&lt;/el-form-item>\r\n' +
+  '        &lt;el-form-item label="审核意见">&lt;RichTextEditor v-model="reviewForm.comment" min-height="150px" placeholder="填写验收审核意见" />&lt;/el-form-item>\r\n' +
+  '      &lt;/el-form>\r\n' +
+  '      &lt;template #footer>\r\n' +
+  '        &lt;el-button @click="reviewVisible = false">取消&lt;/el-button>\r\n' +
+  '        &lt;el-button type="primary" :loading="saving" @click="saveReview">提交审核&lt;/el-button>\r\n' +
+  '      &lt;/template>\r\n' +
+  '    &lt;/el-dialog>\r\n' +
+  '\r\n' +
+  '    &lt;el-dialog v-model="extensionVisible" title="验收延期" width="560px">\r\n' +
+  '      &lt;el-form :model="extensionForm" label-position="top">\r\n' +
+  `        &lt;template v-if="session.role === 'unit'">\r\n` +
+  '          &lt;el-form-item label="延期原因">&lt;RichTextEditor v-model="extensionForm.reason" min-height="150px" placeholder="填写延期原因和后续计划" />&lt;/el-form-item>\r\n' +
+  '          &lt;el-form-item label="计划完成日期">&lt;el-date-picker v-model="extensionForm.expected_date" type="date" value-format="YYYY-MM-DD" />&lt;/el-form-item>\r\n' +
+  '        &lt;/template>\r\n' +
+  '        &lt;template v-else>\r\n' +
+  '          &lt;el-form-item label="延期记录">\r\n' +
+  '            &lt;el-select v-model="extensionForm.extension_id">\r\n' +
+  '              &lt;el-option v-for="item in detail?.extensions || []" :key="item.id" :label="`${item.reason}（${item.status}）`" :value="item.id" />\r\n' +
+  '            &lt;/el-select>\r\n' +
+  '          &lt;/el-form-item>\r\n' +
+  '          &lt;el-form-item label="处理结果">\r\n' +
+  '            &lt;el-select v-model="extensionForm.decision">\r\n' +
+  '              &lt;el-option label="通过" value="approved" />\r\n' +
+  '              &lt;el-option label="驳回" value="rejected" />\r\n' +
+  '            &lt;/el-select>\r\n' +
+  '          &lt;/el-form-item>\r\n' +
+  '          &lt;el-form-item label="处理意见">&lt;RichTextEditor v-model="extensionForm.comment" min-height="150px" placeholder="填写延期处理意见" />&lt;/el-form-item>\r\n' +
+  '        &lt;/template>\r\n' +
+  '      &lt;/el-form>\r\n' +
+  '      &lt;template #footer>\r\n' +
+  '        &lt;el-button @click="extensionVisible = false">取消&lt;/el-button>\r\n' +
+  '        &lt;el-button type="primary" :loading="saving" @click="saveExtension">保存&lt;/el-button>\r\n' +
+  '      &lt;/template>\r\n' +
+  '    &lt;/el-dialog>\r\n' +
+  '\r\n' +
+  '    &lt;el-dialog v-model="uploadVisible" title="上传验收材料" width="520px">\r\n' +
+  '      &lt;el-form label-position="top">\r\n' +
+  '        &lt;el-form-item label="材料分类">\r\n' +
+  '          &lt;el-select v-model="uploadCategory" placeholder="请选择材料分类">\r\n' +
+  '            &lt;el-option v-for="item in materialCategories" :key="item.value" :label="item.label" :value="item.value" />\r\n' +
+  '          &lt;/el-select>\r\n' +
+  '        &lt;/el-form-item>\r\n' +
+  '      &lt;/el-form>\r\n' +
+  '      &lt;el-upload drag :show-file-list="false" :http-request="uploadFile">\r\n' +
+  '        &lt;el-icon>&lt;Upload />&lt;/el-icon>\r\n' +
+  '        &lt;div>拖拽文件到这里或点击选择&lt;/div>\r\n' +
+  '      &lt;/el-upload>\r\n' +
+  '    &lt;/el-dialog>\r\n' +
+  '\r\n' +
+  '    &lt;el-drawer v-model="detailVisible" title="验收详情" size="680px">\r\n' +
+  '      &lt;div v-if="detail" class="detail-stack">\r\n' +
+  '        &lt;el-alert\r\n' +
+  '          v-if="detail.next_step"\r\n' +
+  '          type="info"\r\n' +
+  '          :closable="false"\r\n' +
+  '          show-icon\r\n' +
+  '          :title="detail.next_step.title"\r\n' +
+  '          :description="detail.next_step.body"\r\n' +
+  '        />\r\n' +
+  '        &lt;el-descriptions :column="2" border>\r\n' +
+  '          &lt;el-descriptions-item label="项目" :span="2">{{ detail.project?.title }}&lt;/el-descriptions-item>\r\n' +
+  '          &lt;el-descriptions-item label="单位">{{ detail.unit?.name }}&lt;/el-descriptions-item>\r\n' +
+  '          &lt;el-descriptions-item label="状态">{{ statusMeta(detail.status).label }}&lt;/el-descriptions-item>\r\n' +
+  `          &lt;el-descriptions-item label="说明" :span="2">&lt;div class="rich-content detail-rich-content" v-html="detail.summary || '-'" />&lt;/el-descriptions-item>\r\n` +
+  '        &lt;/el-descriptions>\r\n' +
+  '        &lt;section v-if="detail.timeline?.length">\r\n' +
+  '          &lt;div class="section-title">验收阶段&lt;/div>\r\n' +
+  '          &lt;el-steps :active="timelineActiveIndex(detail.timeline)" finish-status="success" process-status="process" alig'... 17473 more characters
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /&lt;el-form-item v-if="showReviewScore" label="评分"/. Input:
+
+  '&lt;template>\r\n' +
+    '  &lt;section class="page-stack">\r\n' +
+    '    &lt;div class="toolbar">\r\n' +
+    '      &lt;div>\r\n' +
+    '        &lt;h2>验收管理&lt;/h2>\r\n' +
+    '        &lt;span class="muted">单位提交验收材料，区县、部门、专家和管理员分阶段处理&lt;/span>\r\n' +
+    '      &lt;/div>\r\n' +
+    '      &lt;div class="toolbar-actions">\r\n' +
+    '        &lt;el-input v-model="keyword" clearable placeholder="项目/单位" @keyup.enter="reloadAcceptances" @clear="reloadAcceptances" />\r\n' +
+    '        &lt;el-select v-model="status" clearable placeholder="状态" @change="reloadAcceptances" @clear="reloadAcceptances">\r\n' +
+    '          &lt;el-option label="草稿" value="draft" />\r\n' +
+    '          &lt;el-option label="已提交" value="submitted" />\r\n' +
+    '          &lt;el-option label="审核中" value="reviewing" />\r\n' +
+    '          &lt;el-option label="退回修改" value="returned" />\r\n' +
+    '          &lt;el-option label="已驳回" value="rejected" />\r\n' +
+    '          &lt;el-option label="已通过" value="approved" />\r\n' +
+    '          &lt;el-option label="已关闭" value="closed" />\r\n' +
+    '        &lt;/el-select>\r\n' +
+    '        &lt;el-select v-if="canFilterE2e" v-model="e2eFilter" clearable placeholder="测试数据" @change="reloadAcceptances" @clear="reloadAcceptances">\r\n' +
+    '          &lt;el-option label="只看测试数据" value="1" />\r\n' +
+    '          &lt;el-option label="排除测试数据" value="0" />\r\n' +
+    '        &lt;/el-select>\r\n' +
+    '        &lt;el-button :icon="Refresh" :loading="loading" @click="loadAcceptances">刷新&lt;/el-button>\r\n' +
+    `        &lt;el-button v-if="session.can('submit_acceptance')" type="primary" :icon="Plus" @click="createVisible = true">发起验收&lt;/el-button>\r\n` +
+    '      &lt;/div>\r\n' +
+    '    &lt;/div>\r\n' +
+    '\r\n' +
+    '    &lt;el-tabs v-if="showScopeTabs" v-model="scope" @tab-change="handleScopeChange">\r\n' +
+    `      &lt;el-tab-pane :label="texts.t('acceptance.tab.pending', '待处理')" name="pending" />\r\n` +
+    `      &lt;el-tab-pane :label="texts.t('acceptance.tab.reviewed', '已处理')" name="reviewed" />\r\n` +
+    `      &lt;el-tab-pane :label="texts.t('acceptance.tab.visible', '全部可见')" name="visible" />\r\n` +
+    '    &lt;/el-tabs>\r\n' +
+    '\r\n' +
+    '    &lt;el-table :data="acceptances" border v-loading="loading">\r\n' +
+    '      &lt;el-table-column label="项目" min-width="240">\r\n' +
+    '        &lt;template #default="{ row }">\r\n' +
+    "          &lt;strong>{{ row.project?.title || '-' }}&lt;/strong>\r\n" +
+    `          &lt;div class="muted">{{ row.unit?.name || row.project?.unit?.name || '-' }}&lt;/div>\r\n` +
+    '        &lt;/template>\r\n' +
+    '      &lt;/el-table-column>\r\n' +
+    '      &lt;el-table-column label="状态" width="110">\r\n' +
+    '        &lt;template #default="{ row }">&lt;el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}&lt;/el-tag>&lt;/template>\r\n' +
+    '      &lt;/el-table-column>\r\n' +
+    '      &lt;el-table-column label="当前阶段" width="130">\r\n' +
+    '        &lt;template #default="{ row }">{{ roleLabel(row.current_reviewer_role) }}&lt;/template>\r\n' +
+    '      &lt;/el-table-column>\r\n' +
+    '      &lt;el-table-column label="延期状态" width="130">\r\n' +
+    '        &lt;template #default="{ row }">\r\n' +
+    '          &lt;el-tag v-if="row.pending_extension_count" type="warning">待处理 {{ row.pending_extension_count }}&lt;/el-tag>\r\n' +
+    '          &lt;span v-else>{{ extensionStatusLabel(row.latest_extension?.status) }}&lt;/span>\r\n' +
+    '        &lt;/template>\r\n' +
+    '      &lt;/el-table-column>\r\n' +
+    '      &lt;el-table-column label="最近延期" width="170">\r\n' +
+    `        &lt;template #default="{ row }">{{ row.latest_extension?.created_at || '-' }}&lt;/template>\r\n` +
+    '      &lt;/el-table-column>\r\n' +
+    '      &lt;el-table-column prop="submitted_at" label="提交时间" width="170" />\r\n' +
+    '      &lt;el-table-column prop="summary" label="验收说明" min-width="220" show-overflow-tooltip />\r\n' +
+    '      &lt;el-table-column label="操作" width="310" fixed="right">\r\n' +
+    '        &lt;template #default="{ row }">\r\n' +
+    '          &lt;div class="table-action-row">\r\n' +
+    '            &lt;el-button size="small" :icon="View" @click="openDetail(row)">详情&lt;/el-button>\r\n' +
+    '            &lt;el-button v-if="canSubmit(row)" size="small" type="primary" @click="openSubmit(row)">提交&lt;/el-button>\r\n' +
+    '            &lt;el-button v-if="canUpload(row)" size="small" :icon="Upload" @click="openUpload(row)">材料&lt;/el-button>\r\n' +
+    '            &lt;el-button v-if="canReview(row)" size="small" type="success" @click="openReview(row)">审核&lt;/el-button>\r\n' +
+    '            &lt;el-button v-if="canExtend(row)" size="small" @click="openExtension(row)">延期&lt;/el-button>\r\n' +
+    '          &lt;/div>\r\n' +
+    '        &lt;/template>\r\n' +
+    '      &lt;/el-table-column>\r\n' +
+    '    &lt;/el-table>\r\n' +
+    '\r\n' +
+    '    &lt;el-dialog v-model="createVisible" title="发起验收" width="520px">\r\n' +
+    '      &lt;el-form :model="createForm" label-position="top">\r\n' +
+    '        &lt;el-form-item label="项目">\r\n' +
+    '          &lt;el-select\r\n' +
+    '            v-model="createForm.project_id"\r\n' +
+    '            clearable\r\n' +
+    '            filterable\r\n' +
+    '            remote\r\n' +
+    '            reserve-keyword\r\n' +
+    `            :remote-method="(keyword) => searchProjects(keyword, 'acceptance')"\r\n` +
+    '            :loading="projectOptionsLoading"\r\n' +
+    '            placeholder="搜索已通过或验收中项目"\r\n' +
+    '          >\r\n' +
+    '            &lt;el-option v-for="item in projectOptions" :key="item.id" :label="projectOptionLabel(item)" :value="item.id" />\r\n' +
+    '          &lt;/el-select>\r\n' +
+    '        &lt;/el-form-item>\r\n' +
+    '        &lt;el-form-item label="验收说明">&lt;RichTextEditor v-model="createForm.summary" min-height="150px" placeholder="填写验收背景、完成情况和申请说明" />&lt;/el-form-item>\r\n' +
+    '      &lt;/el-form>\r\n' +
+    '      &lt;template #footer>\r\n' +
+    '        &lt;el-button @click="createVisible = false">取消&lt;/el-button>\r\n' +
+    '        &lt;el-button type="primary" :loading="saving" @click="createAcceptance">保存草稿&lt;/el-button>\r\n' +
+    '      &lt;/template>\r\n' +
+    '    &lt;/el-dialog>\r\n' +
+    '\r\n' +
+    '    &lt;el-dialog v-model="submitVisible" title="提交验收" width="560px">\r\n' +
+    '      &lt;el-form :model="submitForm" label-position="top">\r\n' +
+    '        &lt;el-alert\r\n' +
+    '          v-if="submitRequiredMaterialLabels.length"\r\n' +
+    '          class="mb-12"\r\n' +
+    '          type="warning"\r\n' +
+    '          show-icon\r\n' +
+    '          :closable="false"\r\n' +
+    '          :title="`提交前需上传：${submitRequiredMaterialLabels.join(\'、\')}`"\r\n' +
+    '        />\r\n' +
+    '        &lt;el-form-item label="验收说明">&lt;RichTextEditor v-model="submitForm.summary" min-height="170px" placeholder="补充验收说明，可插入图片、列表和链接" />&lt;/el-form-item>\r\n' +
+    '      &lt;/el-form>\r\n' +
+    '      &lt;template #footer>\r\n' +
+    '        &lt;el-button @click="submitVisible = false">取消&lt;/el-button>\r\n' +
+    '        &lt;el-button type="primary" :loading="saving" @click="submitAcceptance">提交&lt;/el-button>\r\n' +
+    '      &lt;/template>\r\n' +
+    '    &lt;/el-dialog>\r\n' +
+    '\r\n' +
+    '    &lt;el-dialog v-model="reviewVisible" title="验收审核" width="560px">\r\n' +
+    '      &lt;el-form :model="reviewForm" label-position="top">\r\n' +
+    '        &lt;el-form-item label="处理结果">\r\n' +
+    '          &lt;el-select v-model="reviewForm.decision">\r\n' +
+    '            &lt;el-option label="通过" value="approve" />\r\n' +
+    '            &lt;el-option label="退回修改" value="return" />\r\n' +
+    '            &lt;el-option label="驳回" value="reject" />\r\n' +
+    `            &lt;el-option v-if="currentAcceptance?.current_reviewer_role === 'admin'" label="终审关闭" value="close" />\r\n` +
+    '          &lt;/el-select>\r\n' +
+    '        &lt;/el-form-item>\r\n' +
+    '        &lt;el-form-item label="评分">&lt;el-input-number v-model="reviewForm.score" :min="0" :max="100" />&lt;/el-form-item>\r\n' +
+    '        &lt;el-form-item label="审核意见">&lt;RichTextEditor v-model="reviewForm.comment" min-height="150px" placeholder="填写验收审核意见" />&lt;/el-form-item>\r\n' +
+    '      &lt;/el-form>\r\n' +
+    '      &lt;template #footer>\r\n' +
+    '        &lt;el-button @click="reviewVisible = false">取消&lt;/el-button>\r\n' +
+    '        &lt;el-button type="primary" :loading="saving" @click="saveReview">提交审核&lt;/el-button>\r\n' +
+    '      &lt;/template>\r\n' +
+    '    &lt;/el-dialog>\r\n' +
+    '\r\n' +
+    '    &lt;el-dialog v-model="extensionVisible" title="验收延期" width="560px">\r\n' +
+    '      &lt;el-form :model="extensionForm" label-position="top">\r\n' +
+    `        &lt;template v-if="session.role === 'unit'">\r\n` +
+    '          &lt;el-form-item label="延期原因">&lt;RichTextEditor v-model="extensionForm.reason" min-height="150px" placeholder="填写延期原因和后续计划" />&lt;/el-form-item>\r\n' +
+    '          &lt;el-form-item label="计划完成日期">&lt;el-date-picker v-model="extensionForm.expected_date" type="date" value-format="YYYY-MM-DD" />&lt;/el-form-item>\r\n' +
+    '        &lt;/template>\r\n' +
+    '        &lt;template v-else>\r\n' +
+    '          &lt;el-form-item label="延期记录">\r\n' +
+    '            &lt;el-select v-model="extensionForm.extension_id">\r\n' +
+    '              &lt;el-option v-for="item in detail?.extensions || []" :key="item.id" :label="`${item.reason}（${item.status}）`" :value="item.id" />\r\n' +
+    '            &lt;/el-select>\r\n' +
+    '          &lt;/el-form-item>\r\n' +
+    '          &lt;el-form-item label="处理结果">\r\n' +
+    '            &lt;el-select v-model="extensionForm.decision">\r\n' +
+    '              &lt;el-option label="通过" value="approved" />\r\n' +
+    '              &lt;el-option label="驳回" value="rejected" />\r\n' +
+    '            &lt;/el-select>\r\n' +
+    '          &lt;/el-form-item>\r\n' +
+    '          &lt;el-form-item label="处理意见">&lt;RichTextEditor v-model="extensionForm.comment" min-height="150px" placeholder="填写延期处理意见" />&lt;/el-form-item>\r\n' +
+    '        &lt;/template>\r\n' +
+    '      &lt;/el-form>\r\n' +
+    '      &lt;template #footer>\r\n' +
+    '        &lt;el-button @click="extensionVisible = false">取消&lt;/el-button>\r\n' +
+    '        &lt;el-button type="primary" :loading="saving" @click="saveExtension">保存&lt;/el-button>\r\n' +
+    '      &lt;/template>\r\n' +
+    '    &lt;/el-dialog>\r\n' +
+    '\r\n' +
+    '    &lt;el-dialog v-model="uploadVisible" title="上传验收材料" width="520px">\r\n' +
+    '      &lt;el-form label-position="top">\r\n' +
+    '        &lt;el-form-item label="材料分类">\r\n' +
+    '          &lt;el-select v-model="uploadCategory" placeholder="请选择材料分类">\r\n' +
+    '            &lt;el-option v-for="item in materialCategories" :key="item.value" :label="item.label" :value="item.value" />\r\n' +
+    '          &lt;/el-select>\r\n' +
+    '        &lt;/el-form-item>\r\n' +
+    '      &lt;/el-form>\r\n' +
+    '      &lt;el-upload drag :show-file-list="false" :http-request="uploadFile">\r\n' +
+    '        &lt;el-icon>&lt;Upload />&lt;/el-icon>\r\n' +
+    '        &lt;div>拖拽文件到这里或点击选择&lt;/div>\r\n' +
+    '      &lt;/el-upload>\r\n' +
+    '    &lt;/el-dialog>\r\n' +
+    '\r\n' +
+    '    &lt;el-drawer v-model="detailVisible" title="验收详情" size="680px">\r\n' +
+    '      &lt;div v-if="detail" class="detail-stack">\r\n' +
+    '        &lt;el-alert\r\n' +
+    '          v-if="detail.next_step"\r\n' +
+    '          type="info"\r\n' +
+    '          :closable="false"\r\n' +
+    '          show-icon\r\n' +
+    '          :title="detail.next_step.title"\r\n' +
+    '          :description="detail.next_step.body"\r\n' +
+    '        />\r\n' +
+    '        &lt;el-descriptions :column="2" border>\r\n' +
+    '          &lt;el-descriptions-item label="项目" :span="2">{{ detail.project?.title }}&lt;/el-descriptions-item>\r\n' +
+    '          &lt;el-descriptions-item label="单位">{{ detail.unit?.name }}&lt;/el-descriptions-item>\r\n' +
+    '          &lt;el-descriptions-item label="状态">{{ statusMeta(detail.status).label }}&lt;/el-descriptions-item>\r\n' +
+    `          &lt;el-descriptions-item label="说明" :span="2">&lt;div class="rich-content detail-rich-content" v-html="detail.summary || '-'" />&lt;/el-descriptions-item>\r\n` +
+    '        &lt;/el-descriptions>\r\n' +
+    '        &lt;section v-if="detail.timeline?.length">\r\n' +
+    '          &lt;div class="section-title">验收阶段&lt;/div>\r\n' +
+    '          &lt;el-steps :active="timelineActiveIndex(detail.timeline)" finish-status="success" process-status="process" alig'... 17473 more characters
+
+      at TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:84:10)
+      at Test.runInAsyncScope (node:async_hooks:213:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '&lt;template>\r\n  &lt;section class="page-stack">\r\n    &lt;div class="toolbar">\r\n      &lt;div>\r\n        &lt;h2>验收管理&lt;/h2>\r\n        &lt;span class="muted">单位提交验收材料，区县、部门、专家和管理员分阶段处理&lt;/span>\r\n      &lt;/div>\r\n      &lt;div class="toolbar-actions">\r\n        &lt;el-input v-model="keyword" clearable placeholder="项目/单位" @keyup.enter="reloadAcceptances" @clear="reloadAcceptances" />\r\n        &lt;el-select v-model="status" clearable placeholder="状态" @change="reloadAcceptances" @clear="reloadAcceptances">\r\n          &lt;el-option label="草稿" value="draft" />\r\n          &lt;el-option label="已提交" value="submitted" />\r\n          &lt;el-option label="审核中" value="reviewing" />\r\n          &lt;el-option label="退回修改" value="returned" />\r\n          &lt;el-option label="已驳回" value="rejected" />\r\n          &lt;el-option label="已通过" value="approved" />\r\n          &lt;el-option label="已关闭" value="closed" />\r\n        &lt;/el-select>\r\n        &lt;el-select v-if="canFilterE2e" v-model="e2eFilter" clearable placeholder="测试数据" @change="reloadAcceptances" @clear="reloadAcceptances">\r\n          &lt;el-option label="只看测试数据" value="1" />\r\n          &lt;el-option label="排除测试数据" value="0" />\r\n        &lt;/el-select>\r\n        &lt;el-button :icon="Refresh" :loading="loading" @click="loadAcceptances">刷新&lt;/el-button>\r\n        &lt;el-button v-if="session.can(\'submit_acceptance\')" type="primary" :icon="Plus" @click="createVisible = true">发起验收&lt;/el-button>\r\n      &lt;/div>\r\n    &lt;/div>\r\n\r\n    &lt;el-tabs v-if="showScopeTabs" v-model="scope" @tab-change="handleScopeChange">\r\n      &lt;el-tab-pane :label="texts.t(\'acceptance.tab.pending\', \'待处理\')" name="pending" />\r\n      &lt;el-tab-pane :label="texts.t(\'acceptance.tab.reviewed\', \'已处理\')" name="reviewed" />\r\n      &lt;el-tab-pane :label="texts.t(\'acceptance.tab.visible\', \'全部可见\')" name="visible" />\r\n    &lt;/el-tabs>\r\n\r\n    &lt;el-table :data="acceptances" border v-loading="loading">\r\n      &lt;el-table-column label="项目" min-width="240">\r\n        &lt;template #default="{ row }">\r\n          &lt;strong>{{ row.project?.title || \'-\' }}&lt;/strong>\r\n          &lt;div class="muted">{{ row.unit?.name || row.project?.unit?.name || \'-\' }}&lt;/div>\r\n        &lt;/template>\r\n      &lt;/el-table-column>\r\n      &lt;el-table-column label="状态" width="110">\r\n        &lt;template #default="{ row }">&lt;el-tag :type="statusMeta(row.status).type">{{ statusMeta(row.status).label }}&lt;/el-tag>&lt;/template>\r\n      &lt;/el-table-column>\r\n      &lt;el-table-column label="当前阶段" width="130">\r\n        &lt;template #default="{ row }">{{ roleLabel(row.current_reviewer_role) }}&lt;/template>\r\n      &lt;/el-table-column>\r\n      &lt;el-table-column label="延期状态" width="130">\r\n        &lt;template #default="{ row }">\r\n          &lt;el-tag v-if="row.pending_extension_count" type="warning">待处理 {{ row.pending_extension_count }}&lt;/el-tag>\r\n          &lt;span v-else>{{ extensionStatusLabel(row.latest_extension?.status) }}&lt;/span>\r\n        &lt;/template>\r\n      &lt;/el-table-column>\r\n      &lt;el-table-column label="最近延期" width="170">\r\n        &lt;template #default="{ row }">{{ row.latest_extension?.created_at || \'-\' }}&lt;/template>\r\n      &lt;/el-table-column>\r\n      &lt;el-table-column prop="submitted_at" label="提交时间" width="170" />\r\n      &lt;el-table-column prop="summary" label="验收说明" min-width="220" show-overflow-tooltip />\r\n      &lt;el-table-column label="操作" width="310" fixed="right">\r\n        &lt;template #default="{ row }">\r\n          &lt;div class="table-action-row">\r\n            &lt;el-button size="small" :icon="View" @click="openDetail(row)">详情&lt;/el-button>\r\n            &lt;el-button v-if="canSubmit(row)" size="small" type="primary" @click="openSubmit(row)">提交&lt;/el-button>\r\n            &lt;el-button v-if="canUpload(row)" size="small" :icon="Upload" @click="openUpload(row)">材料&lt;/el-button>\r\n            &lt;el-button v-if="canReview(row)" size="small" type="success" @click="openReview(row)">审核&lt;/el-button>\r\n            &lt;el-button v-if="canExtend(row)" size="small" @click="openExtension(row)">延期&lt;/el-button>\r\n          &lt;/div>\r\n        &lt;/template>\r\n      &lt;/el-table-column>\r\n    &lt;/el-table>\r\n\r\n    &lt;el-dialog v-model="createVisible" title="发起验收" width="520px">\r\n      &lt;el-form :model="createForm" label-position="top">\r\n        &lt;el-form-item label="项目">\r\n          &lt;el-select\r\n            v-model="createForm.project_id"\r\n            clearable\r\n            filterable\r\n            remote\r\n            reserve-keyword\r\n            :remote-method="(keyword) => searchProjects(keyword, \'acceptance\')"\r\n            :loading="projectOptionsLoading"\r\n            placeholder="搜索已通过或验收中项目"\r\n          >\r\n            &lt;el-option v-for="item in projectOptions" :key="item.id" :label="projectOptionLabel(item)" :value="item.id" />\r\n          &lt;/el-select>\r\n        &lt;/el-form-item>\r\n        &lt;el-form-item label="验收说明">&lt;RichTextEditor v-model="createForm.summary" min-height="150px" placeholder="填写验收背景、完成情况和申请说明" />&lt;/el-form-item>\r\n      &lt;/el-form>\r\n      &lt;template #footer>\r\n        &lt;el-button @click="createVisible = false">取消&lt;/el-button>\r\n        &lt;el-button type="primary" :loading="saving" @click="createAcceptance">保存草稿&lt;/el-button>\r\n      &lt;/template>\r\n    &lt;/el-dialog>\r\n\r\n    &lt;el-dialog v-model="submitVisible" title="提交验收" width="560px">\r\n      &lt;el-form :model="submitForm" label-position="top">\r\n        &lt;el-alert\r\n          v-if="submitRequiredMaterialLabels.length"\r\n          class="mb-12"\r\n          type="warning"\r\n          show-icon\r\n          :closable="false"\r\n          :title="`提交前需上传：${submitRequiredMaterialLabels.join(\'、\')}`"\r\n        />\r\n        &lt;el-form-item label="验收说明">&lt;RichTextEditor v-model="submitForm.summary" min-height="170px" placeholder="补充验收说明，可插入图片、列表和链接" />&lt;/el-form-item>\r\n      &lt;/el-form>\r\n      &lt;template #footer>\r\n        &lt;el-button @click="submitVisible = false">取消&lt;/el-button>\r\n        &lt;el-button type="primary" :loading="saving" @click="submitAcceptance">提交&lt;/el-button>\r\n      &lt;/template>\r\n    &lt;/el-dialog>\r\n\r\n    &lt;el-dialog v-model="reviewVisible" title="验收审核" width="560px">\r\n      &lt;el-form :model="reviewForm" label-position="top">\r\n        &lt;el-form-item label="处理结果">\r\n          &lt;el-select v-model="reviewForm.decision">\r\n            &lt;el-option label="通过" value="approve" />\r\n            &lt;el-option label="退回修改" value="return" />\r\n            &lt;el-option label="驳回" value="reject" />\r\n            &lt;el-option v-if="currentAcceptance?.current_reviewer_role === \'admin\'" label="终审关闭" value="close" />\r\n          &lt;/el-select>\r\n        &lt;/el-form-item>\r\n        &lt;el-form-item label="评分">&lt;el-input-number v-model="reviewForm.score" :min="0" :max="100" />&lt;/el-form-item>\r\n        &lt;el-form-item label="审核意见">&lt;RichTextEditor v-model="reviewForm.comment" min-height="150px" placeholder="填写验收审核意见" />&lt;/el-form-item>\r\n      &lt;/el-form>\r\n      &lt;template #footer>\r\n        &lt;el-button @click="reviewVisible = false">取消&lt;/el-button>\r\n        &lt;el-button type="primary" :loading="saving" @click="saveReview">提交审核&lt;/el-button>\r\n      &lt;/template>\r\n    &lt;/el-dialog>\r\n\r\n    &lt;el-dialog v-model="extensionVisible" title="验收延期" width="560px">\r\n      &lt;el-form :model="extensionForm" label-position="top">\r\n        &lt;template v-if="session.role === \'unit\'">\r\n          &lt;el-form-item label="延期原因">&lt;RichTextEditor v-model="extensionForm.reason" min-height="150px" placeholder="填写延期原因和后续计划" />&lt;/el-form-item>\r\n          &lt;el-form-item label="计划完成日期">&lt;el-date-picker v-model="extensionForm.expected_date" type="date" value-format="YYYY-MM-DD" />&lt;/el-form-item>\r\n        &lt;/template>\r\n        &lt;template v-else>\r\n          &lt;el-form-item label="延期记录">\r\n            &lt;el-select v-model="extensionForm.extension_id">\r\n              &lt;el-option v-for="item in detail?.extensions || []" :key="item.id" :label="`${item.reason}（${item.status}）`" :value="item.id" />\r\n            &lt;/el-select>\r\n          &lt;/el-form-item>\r\n          &lt;el-form-item label="处理结果">\r\n            &lt;el-select v-model="extensionForm.decision">\r\n              &lt;el-option label="通过" value="approved" />\r\n              &lt;el-option label="驳回" value="rejected" />\r\n            &lt;/el-select>\r\n          &lt;/el-form-item>\r\n          &lt;el-form-item label="处理意见">&lt;RichTextEditor v-model="extensionForm.comment" min-height="150px" placeholder="填写延期处理意见" />&lt;/el-form-item>\r\n        &lt;/template>\r\n      &lt;/el-form>\r\n      &lt;template #footer>\r\n        &lt;el-button @click="extensionVisible = false">取消&lt;/el-button>\r\n        &lt;el-button type="primary" :loading="saving" @click="saveExtension">保存&lt;/el-button>\r\n      &lt;/template>\r\n    &lt;/el-dialog>\r\n\r\n    &lt;el-dialog v-model="uploadVisible" title="上传验收材料" width="520px">\r\n      &lt;el-form label-position="top">\r\n        &lt;el-form-item label="材料分类">\r\n          &lt;el-select v-model="uploadCategory" placeholder="请选择材料分类">\r\n            &lt;el-option v-for="item in materialCategories" :key="item.value" :label="item.label" :value="item.value" />\r\n          &lt;/el-select>\r\n        &lt;/el-form-item>\r\n      &lt;/el-form>\r\n      &lt;el-upload drag :show-file-list="false" :http-request="uploadFile">\r\n        &lt;el-icon>&lt;Upload />&lt;/el-icon>\r\n        &lt;div>拖拽文件到这里或点击选择&lt;/div>\r\n      &lt;/el-upload>\r\n    &lt;/el-dialog>\r\n\r\n    &lt;el-drawer v-model="detailVisible" title="验收详情" size="680px">\r\n      &lt;div v-if="detail" class="detail-stack">\r\n        &lt;el-alert\r\n          v-if="detail.next_step"\r\n          type="info"\r\n          :closable="false"\r\n          show-icon\r\n          :title="detail.next_step.title"\r\n          :description="detail.next_step.body"\r\n        />\r\n        &lt;el-descriptions :column="2" border>\r\n          &lt;el-descriptions-item label="项目" :span="2">{{ detail.project?.title }}&lt;/el-descriptions-item>\r\n          &lt;el-descriptions-item label="单位">{{ detail.unit?.name }}&lt;/el-descriptions-item>\r\n          &lt;el-descriptions-item label="状态">{{ statusMeta(detail.status).label }}&lt;/el-descriptions-item>\r\n          &lt;el-descriptions-item label="说明" :span="2">&lt;div class="rich-content detail-rich-content" v-html="detail.summary || \'-\'" />&lt;/el-descriptions-item>\r\n        &lt;/el-descriptions>\r\n        &lt;section v-if="detail.timeline?.length">\r\n          &lt;div class="section-title">验收阶段&lt;/div>\r\n          &lt;el-steps :active="timelineActiveIndex(detail.timeline)" finish-status="success" process-status="process" alig'... 17473 more characters,
+    expected: /&lt;el-form-item v-if="showReviewScore" label="评分"/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<!-- tests 8 -->
+	<!-- suites 0 -->
+	<!-- pass 7 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 152.5551 -->
+</testsuites>

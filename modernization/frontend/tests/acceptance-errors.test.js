@@ -5,6 +5,17 @@ import { runInNewContext } from 'node:vm'
 
 const source = readFileSync(new URL('../src/views/AcceptanceView.vue', import.meta.url), 'utf8')
 
+test('completed acceptance hides new unit extension action while admin can resolve historical requests', () => {
+  const declaration = source.match(/function canExtend\([^)]*\) \{[\s\S]*?\n\}/)
+  for (const [role, expected] of [['unit', false], ['admin', true], ['county', false]]) {
+    const handler = runInNewContext(`(${declaration[0]})`, {
+      session: { can: permission => role === 'unit' ? permission === 'submit_acceptance' : role === 'admin' && permission === 'manage_acceptance' }
+    })
+    for (const status of ['approved', 'closed', 'rejected']) assert.equal(handler({ status }), expected)
+    if (role === 'unit') for (const status of ['draft', 'submitted', 'reviewing', 'returned']) assert.equal(handler({ status }), true)
+  }
+})
+
 for (const action of ['createAcceptance', 'submitAcceptance', 'saveReview', 'saveExtension', 'uploadFile']) {
   test(`acceptance ${action} shows rejected API error, preserves form and permits retry`, async () => {
     const declaration = source.match(new RegExp(`async function ${action}\\([^)]*\\) \\{[\\s\\S]*?\\n\\}`))
@@ -26,6 +37,7 @@ for (const action of ['createAcceptance', 'submitAcceptance', 'saveReview', 'sav
       submitForm: { summary: 'Retain submission text' }, reviewForm: { decision: 'approve', comment: 'Retain opinion' },
       extensionForm: { reason: 'Retain reason', expected_date: '2026-12-01' },
       currentAcceptance: { value: { id: 1 } }, uploadCategory: { value: 'financial' },
+      showReviewScore: { value: false },
       session: { role: 'unit' }, loadAcceptances: async () => {}, FormData, JSON, Object
     }
     const handler = runInNewContext(`(${declaration[0]})`, context)
@@ -77,4 +89,26 @@ test('acceptance materials expose authorized download and report failures', asyn
   fail = true
   await assert.doesNotReject(handler({ id: 42, original_name: 'qa-financial.pdf' }))
   assert.deepEqual(errors, ['无权下载该附件'])
+})
+
+test('acceptance scoring follows server stage configuration and strips hidden scores', async () => {
+  assert.match(source, /<el-form-item v-if="showReviewScore" label="评分"/)
+  const declaration = source.match(/async function saveReview\([^)]*\) \{[\s\S]*?\n\}/)
+  const computedDeclaration = source.match(/const showReviewScore = computed\([^\n]+/)
+  assert.ok(computedDeclaration)
+  const currentAcceptance = { value: { id: 1 } }
+  const payloads = []
+  const showReviewScore = runInNewContext(`${computedDeclaration[0]}; showReviewScore`, {
+    currentAcceptance, computed: fn => ({ get value() { return fn() } })
+  })
+  const handler = runInNewContext(`(${declaration[0]})`, {
+    currentAcceptance, showReviewScore, reviewForm: { decision: 'approve', score: 85, comment: 'QA' },
+    saving: { value: false }, reviewVisible: { value: true }, ElMessage: { success() {}, error() {} },
+    loadAcceptances: async () => {}, api: async (_path, options) => payloads.push(JSON.parse(options.body))
+  })
+  for (const config of [undefined, { score_enabled: false }, { score_enabled: true }]) {
+    currentAcceptance.value.review_config = config
+    await handler()
+    assert.equal(payloads.at(-1).score, config?.score_enabled === true ? 85 : null)
+  }
 })

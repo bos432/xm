@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\ProjectAcceptanceHintTest" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectAcceptanceHintTest.php" tests="1" assertions="4" errors="0" failures="1" skipped="0" time="0.681805">
+    <testcase name="test_all_authorized_roles_get_actionable_acceptance_hints_without_reopening_submission_review" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectAcceptanceHintTest.php" line="18" class="Tests\Feature\ProjectAcceptanceHintTest" classname="Tests.Feature.ProjectAcceptanceHintTest" assertions="4" time="0.681805">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ProjectAcceptanceHintTest::test_all_authorized_roles_get_actionable_acceptance_hints_without_reopening_submission_review&#13;
+Failed asserting that '下一步：进入“验收管理”，发起验收、上传材料并提交验收审核。' [UTF-8](length: 90) contains "部门审核" [UTF-8](length: 12).
+&#13;
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectAcceptanceHintTest.php:44</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

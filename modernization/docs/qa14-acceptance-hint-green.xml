@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\ProjectAcceptanceHintTest" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectAcceptanceHintTest.php" tests="1" assertions="34" errors="0" failures="0" skipped="0" time="0.623866">
+    <testcase name="test_all_authorized_roles_get_actionable_acceptance_hints_without_reopening_submission_review" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectAcceptanceHintTest.php" line="18" class="Tests\Feature\ProjectAcceptanceHintTest" classname="Tests.Feature.ProjectAcceptanceHintTest" assertions="34" time="0.623866"/>
+  </testsuite>
+</testsuites>

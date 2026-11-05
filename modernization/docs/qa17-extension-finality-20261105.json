@@ -1,0 +1,11 @@
+{
+  "phase": "QA-17", "defect": "QA17-P1-EXTENSION-OVERWRITE", "status": "fixed_local_not_deployed",
+  "red": {"command": "php vendor/bin/phpunit tests/Feature/AcceptanceConfigurationAndTimelineTest.php --filter decision_is_final --log-junit ../docs/qa17-extension-finality-red.xml", "exit_code": 1, "tests": 1, "assertions": 3, "actual": 200, "expected": 422},
+  "green": {"command": "php vendor/bin/phpunit tests/Feature/AcceptanceConfigurationAndTimelineTest.php --log-junit ../docs/qa17-extension-finality-green.xml", "exit_code": 0, "tests": 5, "assertions": 99},
+  "regression": {"command": "php vendor/bin/phpunit --log-junit ../docs/qa17-backend-regression.xml", "exit_code": 0, "tests": 240, "assertions": 1376, "runtime": "PHP8.3.30/PHPUnit11.5.57/SQLite"},
+  "targeted_pint_exit": 0,
+  "fix": "Atomic conditional update where status pending; no state mutation or notification on stale decision",
+  "proof_limit": "Sequential duplicate/conflicting admin integration test, not true concurrent MySQL test",
+  "production_changed": false,
+  "remaining": ["Raw decision/time display", "Super-admin/responsive checks", "Exact-revision hosted/MySQL gates", "Coverage/concurrency/SMTP/OSS restore"]
+}

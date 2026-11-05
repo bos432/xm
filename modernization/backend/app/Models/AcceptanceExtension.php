@@ -25,7 +25,7 @@ class AcceptanceExtension extends Model
     protected function casts(): array
     {
         return [
-            'expected_date' => 'date',
+            'expected_date' => 'date:Y-m-d',
             'reviewed_at' => 'datetime',
             'metadata' => 'array',
         ];

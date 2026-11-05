@@ -1,0 +1,10 @@
+{
+  "phase": "QA-16", "defect": "QA16-P1-TERMINAL-EXTENSION", "status": "fixed_local_not_deployed",
+  "red": {"command": "php vendor/bin/phpunit tests/Feature/AcceptanceConfigurationAndTimelineTest.php --filter terminal --log-junit ../docs/qa16-terminal-extension-red.xml", "php_exit_code": 1, "shell_exit_code": 0, "shell_limit": "Subsequent file read masked PHP exit, JUnit confirms failure", "actual": 201, "expected": 422},
+  "green": {"command": "php vendor/bin/phpunit tests/Feature/AcceptanceConfigurationAndTimelineTest.php --log-junit ../docs/qa16-terminal-extension-green.xml", "exit_code": 0, "tests": 4, "assertions": 95},
+  "full_backend": {"command": "php vendor/bin/phpunit --log-junit ../docs/qa16-backend-regression.xml", "exit_code": 0, "tests": 239, "assertions": 1372, "runtime": "PHP8.3.30/PHPUnit11.5.57/SQLite"},
+  "frontend": {"red_junit": "qa16-terminal-extension-ui-red.xml", "red_exit": 1, "red_failure": "true !== false", "green_junit": "qa16-terminal-extension-ui-green.xml", "green_exit": 0, "commands": ["npm run lint", "npm test", "npm run typecheck", "npm run build"], "exit_codes": [0,0,0,0], "tests": 17, "node": "25.2.1", "typecheck_scope": "utilities only"},
+  "targeted_pint": "passed for AcceptanceController and AcceptanceConfigurationAndTimelineTest; full baseline remains open",
+  "browser": {"role": "unit", "screenshot": "../e2e/reports/runs/qa07-20261105-browser-fixed/27-unit-terminal-extension-hidden.png", "observed": "Completed acceptance has only Detail action, no new extension button"},
+  "production_changed": false, "remaining": ["Raw decision/time display", "Admin request reprocessing safety", "Super-admin/responsive UI", "Exact candidate hosted gates", "Numerical coverage/concurrency/SMTP/OSS restore"]
+}

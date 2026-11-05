@@ -1,0 +1,14 @@
+{
+  "phase": "QA-13",
+  "status": "fixed_local",
+  "defects": ["QA12-P2-TIMELINE", "QA12-P2-DATE", "QA13-P1-SCORE"],
+  "red": {"command": "php vendor/bin/phpunit tests/Feature/AcceptanceConfigurationAndTimelineTest.php --log-junit ../docs/qa13-acceptance-consistency-red.xml", "exit_code": 1, "tests": 3, "assertions": 10, "failures": 3},
+  "green": {"command": "php vendor/bin/phpunit tests/Feature/AcceptanceConfigurationAndTimelineTest.php --log-junit ../docs/qa13-acceptance-consistency-green.xml", "exit_code": 0, "tests": 3, "assertions": 80},
+  "backend": {"command": "php vendor/bin/phpunit --log-junit ../docs/qa13-backend-regression.xml", "exit_code": 0, "tests": 237, "assertions": 1323, "driver": "sqlite", "php": "8.3.30"},
+  "frontend": {"commands": ["npm run lint", "npm test", "npm run typecheck", "npm run build"], "exit_codes": [0, 0, 0, 0], "tests": 16, "node": "25.2.1", "typecheck_scope": "utilities only"},
+  "pint": {"initial": "failed on preexisting formatting of two modified files", "scope": ["app/Http/Controllers/AcceptanceController.php", "app/Models/AcceptanceExtension.php", "tests/Feature/AcceptanceConfigurationAndTimelineTest.php"], "after_targeted_format": "passed", "full_repository": "not_repeated; prior known baseline failure remains"},
+  "browser": {"base_url": "http://127.0.0.1:18742", "role": "county", "observed": ["Date displayed2026-12-31", "After resubmit county current, no stale return in current timeline", "County review form has no score input with default-disabled switch", "County approved via UI, pending list empty, reviewed list shows department stage; old return retained in history"], "tab": "8", "evidence_root": "../e2e/reports/runs/qa07-20261105-browser-fixed", "screenshot": "19-acceptance-current-round-fixed.png", "dom": "qa13-county-after-review-dom.txt"},
+  "prior_candidate_hosted": {"sha": "43d6c16041e0d28481129595cd5250f2fa09e589", "runs": [{"id": 41974720298, "status": "completed", "conclusion": "success"}, {"id": 41974720285, "status": "completed", "conclusion": "success"}], "includes_this_fix": false},
+  "production_changed": false,
+  "remaining": ["Other acceptance stages and extension processing", "New candidate hosted/MySQL gates", "Coverage/concurrency/SMTP/OSS restore", "Raw project status hints", "Browser upload chooser"]
+}

@@ -116,6 +116,8 @@ jobs:
           tests/Feature/ReviewWorkflowTest.php
           tests/Feature/ReviewExportTest.php
           tests/Feature/ProjectAcceptanceWorkflowTest.php
+          tests/Feature/AcceptanceConfigurationAndTimelineTest.php
+          tests/Feature/ProjectAcceptanceHintTest.php
           --log-junit /tmp/nxm-mysql-business-results.xml
 
       - name: Preserve isolated MySQL business regression evidence

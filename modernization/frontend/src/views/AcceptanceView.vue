@@ -120,7 +120,7 @@
             <el-option v-if="currentAcceptance?.current_reviewer_role === 'admin'" label="终审关闭" value="close" />
           </el-select>
         </el-form-item>
-        <el-form-item label="评分"><el-input-number v-model="reviewForm.score" :min="0" :max="100" /></el-form-item>
+        <el-form-item v-if="showReviewScore" label="评分"><el-input-number v-model="reviewForm.score" :min="0" :max="100" /></el-form-item>
         <el-form-item label="审核意见"><RichTextEditor v-model="reviewForm.comment" min-height="150px" placeholder="填写验收审核意见" /></el-form-item>
       </el-form>
       <template #footer>
@@ -288,6 +288,7 @@ const session = useSessionStore()
 const texts = useTextStore()
 const loading = ref(false)
 const saving = ref(false)
+const showReviewScore = computed(() => currentAcceptance.value?.review_config?.score_enabled === true)
 const projectOptionsLoading = ref(false)
 const acceptances = ref([])
 const projectOptions = ref([])
@@ -410,7 +411,7 @@ function canReview(row) {
 }
 
 function canExtend(row) {
-  return session.can('submit_acceptance') || session.can('manage_acceptance')
+  return session.can('manage_acceptance') || (session.can('submit_acceptance') && !['approved', 'closed', 'rejected'].includes(row.status))
 }
 
 async function loadAcceptances() {
@@ -519,7 +520,8 @@ function openReview(row) {
 async function saveReview() {
   saving.value = true
   try {
-    await api(`/acceptance/${currentAcceptance.value.id}/reviews`, { method: 'POST', body: JSON.stringify(reviewForm) })
+    const payload = { ...reviewForm, score: showReviewScore.value ? reviewForm.score : null }
+    await api(`/acceptance/${currentAcceptance.value.id}/reviews`, { method: 'POST', body: JSON.stringify(payload) })
     ElMessage.success('验收审核已提交')
     reviewVisible.value = false
     await loadAcceptances()

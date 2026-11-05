@@ -1,0 +1,23 @@
+{
+  "phase": "QA-15",
+  "transport": "Visible in-app browser, tab9, loopback sandbox",
+  "base_url": "http://127.0.0.1:18742",
+  "acceptance_id": 1,
+  "extension_id": 1,
+  "observations": [
+    "Department account dashboard acceptance pending1; approval with disabled score field absent; reviewed list moves to expert",
+    "Expert account sees acceptance detail, two PDF material download actions, prior county/department approvals and extension2026-12-31",
+    "Expert submits numeric score92 and rich text comment; pending list empty",
+    "Admin sees current admin stage and pending extension1; approves extension with comment; status becomes approved",
+    "Admin submits final approval; detail says acceptance complete with all four stage approvals, expert92, approved extension and reviewer/time",
+    "Unit logs in and sees completed acceptance detail and approved extension with admin comment/date"
+  ],
+  "evidence_root": "../e2e/reports/runs/qa07-20261105-browser-fixed",
+  "screenshots": ["20-department-acceptance-approved.png", "21-expert-acceptance-materials.png", "22-expert-acceptance-score.png", "23-admin-extension-approved.png", "24-admin-acceptance-close.png", "25-admin-closed-acceptance-detail.png", "26-unit-acceptance-result.png"],
+  "dom": ["qa15-admin-closed-dom.txt", "qa15-unit-result-dom.txt"],
+  "limitations": ["Acceptance currently advances after one assigned expert, not verified as all-expert acceptance", "Project database final status not yet independently read this increment", "Browser upload chooser remains unverified", "All screenshots local synthetic data, not production"],
+  "new_findings": ["Review history renders approve/return raw codes", "Some list/history times render raw UTC strings", "Unit still sees extension action on completed acceptance; server guard must be checked"],
+  "tooling_notes": ["First department login interrupted by premature navigation while pending; retried and verified dashboard before proceeding", "Close-dialog transitions consumed adjacent click; inspected state and retargeted", "Cancel click after saved extension timed out because dialog already closed; no duplicate write"],
+  "production_changed": false,
+  "synthetic_data_retained": true
+}

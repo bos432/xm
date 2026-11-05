@@ -1,0 +1,15 @@
+{
+  "phase": "QA-14",
+  "status": "fixed_local_not_deployed",
+  "defect": "QA10-P2-STATUS",
+  "red": {"command": "php vendor/bin/phpunit tests/Feature/ProjectAcceptanceHintTest.php --log-junit ../docs/qa14-acceptance-hint-red.xml", "exit_code": 1, "tests": 1, "assertions": 4, "reason": "Submitted acceptance still instructs unit to create acceptance instead of current department stage"},
+  "intermediate": {"path": "qa14-acceptance-hint-attempt2.xml", "exit_code": 1, "reason": "Missing AcceptanceApplication import in new code, corrected before green"},
+  "green": {"command": "php vendor/bin/phpunit tests/Feature/ProjectAcceptanceHintTest.php --log-junit ../docs/qa14-acceptance-hint-green.xml", "exit_code": 0, "tests": 1, "assertions": 34},
+  "regression": {"command": "php vendor/bin/phpunit --log-junit ../docs/qa14-backend-regression.xml", "exit_code": 0, "tests": 238, "assertions": 1357, "runtime": "PHP 8.3.30 / PHPUnit 11.5.57 / SQLite"},
+  "style": {"command": "php vendor/bin/pint --test tests/Feature/ProjectAcceptanceHintTest.php", "exit_code": 0, "full_repository": "Known baseline failure remains, not rerun"},
+  "coverage": "not_measured",
+  "browser": {"live_loopback_pids": [95304, 87464], "old_tab_binding": "unavailable", "new_tab": "9, isolated login page only", "workflow": "not_run_this_increment"},
+  "production_changed": false,
+  "credentials": "Synthetic sandbox credentials accidentally appeared in local tool output; no production credentials, no external transmission or Git inclusion",
+  "remaining": ["Acceptance downstream and extension closure", "Browser processing/mobile/configuration checks", "Hosted exact-revision gates", "Coverage/concurrency/SMTP/OSS restore"]
+}

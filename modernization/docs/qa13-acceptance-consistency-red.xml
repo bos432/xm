@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\AcceptanceConfigurationAndTimelineTest" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AcceptanceConfigurationAndTimelineTest.php" tests="3" assertions="10" errors="0" failures="3" skipped="0" time="0.913426">
+    <testcase name="test_all_acceptance_stages_obey_score_switch_without_losing_unscored_review" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AcceptanceConfigurationAndTimelineTest.php" line="39" class="Tests\Feature\AcceptanceConfigurationAndTimelineTest" classname="Tests.Feature.AcceptanceConfigurationAndTimelineTest" assertions="2" time="0.837078">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\AcceptanceConfigurationAndTimelineTest::test_all_acceptance_stages_obey_score_switch_without_losing_unscored_review&#13;
+Failed asserting that null is identical to false.
+&#13;
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\AssertableJsonString.php:243
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:880
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AcceptanceConfigurationAndTimelineTest.php:47</failure>
+    </testcase>
+    <testcase name="test_resubmission_timeline_uses_current_round_and_preserves_history" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AcceptanceConfigurationAndTimelineTest.php" line="71" class="Tests\Feature\AcceptanceConfigurationAndTimelineTest" classname="Tests.Feature.AcceptanceConfigurationAndTimelineTest" assertions="6" time="0.054328">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\AcceptanceConfigurationAndTimelineTest::test_resubmission_timeline_uses_current_round_and_preserves_history&#13;
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'current'
++'done'
+&#13;
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AcceptanceConfigurationAndTimelineTest.php:84</failure>
+    </testcase>
+    <testcase name="test_extension_plan_serializes_as_calendar_date_instead_of_utc_timestamp" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AcceptanceConfigurationAndTimelineTest.php" line="100" class="Tests\Feature\AcceptanceConfigurationAndTimelineTest" classname="Tests.Feature.AcceptanceConfigurationAndTimelineTest" assertions="2" time="0.022020">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\AcceptanceConfigurationAndTimelineTest::test_extension_plan_serializes_as_calendar_date_instead_of_utc_timestamp&#13;
+Failed asserting that two strings are identical.
+--- Expected
++++ Actual
+@@ @@
+-'2026-12-31'
++'2026-12-30T16:00:00.000000Z'
+&#13;
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\AssertableJsonString.php:243
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:880
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AcceptanceConfigurationAndTimelineTest.php:107</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -14,8 +14,10 @@ use App\Support\AuditLogger;
 use App\Support\ReviewDispatchMatcher;
 use App\Support\RichTextSanitizer;
 use App\Support\Role;
+use App\Support\RuntimeConfig;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Validation\ValidationException;
 
 class AcceptanceController extends Controller
 {
@@ -91,6 +93,7 @@ class AcceptanceController extends Controller
         }
 
         return $query->paginate(20)->through(function (AcceptanceApplication $acceptance) {
+            $acceptance->setAttribute('review_config', $this->reviewConfig($acceptance));
             $acceptance->latest_extension = AcceptanceExtension::query()
                 ->where('acceptance_application_id', $acceptance->id)
                 ->latest()
@@ -122,6 +125,7 @@ class AcceptanceController extends Controller
 
         $acceptance->setAttribute('timeline', $this->acceptanceTimeline($acceptance));
         $acceptance->setAttribute('next_step', $this->nextStep($acceptance, $request));
+        $acceptance->setAttribute('review_config', $this->reviewConfig($acceptance));
 
         return $acceptance;
     }
@@ -207,6 +211,11 @@ class AcceptanceController extends Controller
         $data['comment'] = RichTextSanitizer::clean($data['comment'] ?? null);
 
         $stage = Role::reviewerStageFor($request->user()->role);
+        if (! $this->reviewConfig($acceptance)['score_enabled'] && ($request->filled('score') || data_get($data, 'metadata.score_criteria'))) {
+            throw ValidationException::withMessages([
+                'score' => $this->roleLabel($stage).'未开启评分，不能提交评分。',
+            ]);
+        }
         $review = AcceptanceReview::create($data + [
             'acceptance_application_id' => $acceptance->id,
             'reviewer_id' => $request->user()->id,
@@ -265,6 +274,10 @@ class AcceptanceController extends Controller
         if ($request->user()->role === Role::UNIT) {
             $this->authorizeUnitAcceptance($request, $acceptance);
 
+            if (in_array($acceptance->status, [AcceptanceApplication::STATUS_APPROVED, AcceptanceApplication::STATUS_CLOSED, AcceptanceApplication::STATUS_REJECTED], true)) {
+                return response()->json(['message' => '验收已结束，不能再申请延期'], 422);
+            }
+
             $data = $request->validate([
                 'reason' => ['required', 'string', 'max:3000'],
                 'expected_date' => ['nullable', 'date'],
@@ -299,12 +312,17 @@ class AcceptanceController extends Controller
             ->where('acceptance_application_id', $acceptance->id)
             ->findOrFail($data['extension_id']);
 
-        $extension->update([
+        $updated = AcceptanceExtension::query()->whereKey($extension->id)->where('status', 'pending')->update([
             'status' => $data['decision'],
             'review_comment' => $data['comment'] ?? null,
             'reviewed_by' => $request->user()->id,
             'reviewed_at' => now(),
         ]);
+
+        if ($updated !== 1) {
+            return response()->json(['message' => '该延期申请已处理，请刷新后查看结果'], 422);
+        }
+        $extension->refresh();
 
         $this->auditLogger->record($request, 'acceptance.extension_reviewed', $extension, ['decision' => $data['decision']]);
         $this->notifyOwner($acceptance, '验收延期申请已处理', '处理结果：'.$data['decision'].'。'.($data['comment'] ?? ''));
@@ -319,10 +337,24 @@ class AcceptanceController extends Controller
             || Role::userCan($request->user(), 'review_acceptance');
     }
 
+    private function reviewConfig(AcceptanceApplication $acceptance): array
+    {
+        $stage = $acceptance->current_reviewer_role;
+
+        return ['score_enabled' => $stage
+            ? RuntimeConfig::boolValue('review.score_enabled.'.$stage, $stage === Role::EXPERT)
+            : false];
+    }
+
     private function acceptanceTimeline(AcceptanceApplication $acceptance): array
     {
         $acceptance->loadMissing(['submitter', 'reviews.reviewer']);
-        $reviews = $acceptance->reviews->keyBy('stage');
+        $roundReviews = $acceptance->reviews->sortBy('id');
+        if ($acceptance->status !== AcceptanceApplication::STATUS_RETURNED) {
+            $lastReturnId = $roundReviews->where('decision', 'return')->max('id') ?? 0;
+            $roundReviews = $roundReviews->where('id', '>', $lastReturnId);
+        }
+        $reviews = $roundReviews->keyBy('stage');
 
         $stages = [
             ['key' => 'submitted', 'label' => '单位提交', 'role' => Role::UNIT],

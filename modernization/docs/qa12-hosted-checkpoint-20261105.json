@@ -1,0 +1,15 @@
+{
+  "source_commit": "43d6c16041e0d28481129595cd5250f2fa09e589",
+  "branch": "codex/composer-security-fix",
+  "push_exit_code": 0,
+  "remote_ref_verified": true,
+  "hosted_runs": [
+    {"id": 41974720298, "name": "Modernization CI", "status": "in_progress", "conclusion": null},
+    {"id": 41974720285, "name": "Modernization Quality Gate", "status": "in_progress", "conclusion": null}
+  ],
+  "production_deployed": false,
+  "production_baseline": "cef21d3",
+  "formatting_note": "git diff --cached --check initially exited2 on two generated JUnit trailing-whitespace lines. Original preserved as qa10-project-details-red-raw.xml in ignored QA07 run directory; committed XML trims only those spaces. Recheck exit0.",
+  "syntax_checks": {"php_lint_files": 4, "node_check_files": 3, "exit_codes": [0, 0, 0, 0, 0, 0, 0]},
+  "next": "Poll these exact hosted run IDs; continue local acceptance stages and extension resolution. Do not deploy until all remaining gates pass."
+}

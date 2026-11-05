@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProjectRequest;
+use App\Models\AcceptanceApplication;
 use App\Models\ApplicationBatch;
 use App\Models\DictionaryItem;
 use App\Models\Message;
@@ -835,10 +836,27 @@ class ProjectController extends Controller
     {
         $role = $request->user()->role;
 
-        if ($project->status === Project::STATUS_ACCEPTANCE && $role === Role::UNIT) {
+        if ($project->status === Project::STATUS_ACCEPTANCE) {
+            $acceptance = $project->acceptanceApplications->first();
+            $body = '下一步：等待申报单位在“验收管理”中发起验收、上传材料并提交审核。';
+
+            if ($acceptance?->current_reviewer_role) {
+                $body = '下一步：等待'.$this->roleLabel($acceptance->current_reviewer_role).'处理验收，管理员终审关闭后项目完成；可在“验收管理”查看进度。';
+            } elseif ($acceptance?->status === AcceptanceApplication::STATUS_RETURNED) {
+                $body = $role === Role::UNIT
+                    ? '下一步：进入“验收管理”，按退回意见补充材料后重新提交验收。'
+                    : '下一步：等待申报单位按退回意见补充材料并重新提交验收。';
+            } elseif ($acceptance?->status === AcceptanceApplication::STATUS_DRAFT) {
+                $body = $role === Role::UNIT
+                    ? '下一步：进入“验收管理”，上传材料并提交已有的验收草稿。'
+                    : '下一步：等待申报单位补齐验收草稿材料并提交审核。';
+            } elseif ($role === Role::UNIT) {
+                $body = '下一步：进入“验收管理”，发起验收、上传材料并提交验收审核。';
+            }
+
             return [
                 'title' => '当前：项目验收中',
-                'body' => '下一步：进入“验收管理”，发起验收、上传材料并提交验收审核。',
+                'body' => $body,
                 'path' => '/acceptance',
             ];
         }
