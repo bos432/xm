@@ -6,6 +6,12 @@ This increment uses the isolated worktree, SQLite in memory, array mail/cache an
 
 ## Defects
 
+QA-28: real MySQL5.7.44 two-process barrier test supersedes blanket concurrency not_run only for task/progress/rectification/certification review and county main-project review. Command from repo root: `powershell -NoProfile -ExecutionPolicy Bypass -File modernization/backend/tests/Concurrency/run-mysql-race.ps1 -EvidencePath ../docs/qa28-concurrency-green-20261105.json`. Red exit1: four lifecycle routes200/200, duplicate audits and conflicting final decisions. Fixed atomic submitted-state update plus audit transaction; green exit0 five cases, lifecycle200/422 and project201/409, distinct PIDs/single audit/winner preserved. Raw output: qa28-concurrency-red/green-20261105.json; summary qa28-concurrency-20261105.json. Full backend255tests1663assertions; audit-failure rollback preserves whole row. Not deployed; expert/acceptance/extension/soak still unproven.
+
+| ID | Severity | Module | Reproduction command | Actual vs expected | Recommendation/status |
+| --- | --- | --- | --- | --- | --- |
+| QA28-P1-LIFECYCLE-RACE | P1 | Task book/progress/rectification/expert certification review | Guarded MySQL launcher above; exact route cases/PIDs in red JSON | Two opposite reviews both200 and duplicate audits; expected one200, one422 and original winning result preserved | Fixed locally with conditional write and audit transaction; five-case real concurrency green, production pending |
+
 QA-10 update: QA08-P1-DETAIL is fixed locally, not deployed. Reviewer drawer and processing view share complete submission sections; three SSR/source-contract tests and county browser detail evidence pass. Processing-dialog/mobile browser verification remains open. Evidence: `qa10-project-details-20261105.json`, `qa10-project-details-green.xml`, screenshot14 under QA-07 run root. QA10-P2-STATUS fixed locally in QA14; six-role API hint regression and draft/returned cases pass, browser still pending.
 
 | ID | Severity | Module | Reproduction command | Actual vs expected | Recommendation/status |

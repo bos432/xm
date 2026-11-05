@@ -11,7 +11,9 @@ use App\Support\AuditLogger;
 use App\Support\RichTextSanitizer;
 use App\Support\Role;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProjectLifecycleController extends Controller
 {
@@ -96,8 +98,7 @@ class ProjectLifecycleController extends Controller
             'comment' => ['nullable', 'string', 'max:3000'],
         ]);
 
-        $taskBook->update($this->reviewPayload($request, $data));
-        $this->auditLogger->record($request, 'task_book.reviewed', $taskBook, [
+        $this->persistReview($request, $taskBook, $data, 'task_book.reviewed', [
             'project_id' => $taskBook->project_id,
             'decision' => $data['decision'],
         ]);
@@ -190,8 +191,7 @@ class ProjectLifecycleController extends Controller
             'comment' => ['nullable', 'string', 'max:3000'],
         ]);
 
-        $progress->update($this->reviewPayload($request, $data));
-        $this->auditLogger->record($request, 'project_progress.reviewed', $progress, [
+        $this->persistReview($request, $progress, $data, 'project_progress.reviewed', [
             'project_id' => $progress->project_id,
             'decision' => $data['decision'],
         ]);
@@ -267,8 +267,7 @@ class ProjectLifecycleController extends Controller
             'comment' => ['nullable', 'string', 'max:3000'],
         ]);
 
-        $rectification->update($this->reviewPayload($request, $data));
-        $this->auditLogger->record($request, 'rectification.reviewed', $rectification, [
+        $this->persistReview($request, $rectification, $data, 'rectification.reviewed', [
             'project_id' => $rectification->project_id,
             'decision' => $data['decision'],
         ]);
@@ -343,8 +342,7 @@ class ProjectLifecycleController extends Controller
             'comment' => ['nullable', 'string', 'max:3000'],
         ]);
 
-        $certification->update($this->reviewPayload($request, $data));
-        $this->auditLogger->record($request, 'expert_certification.reviewed', $certification, [
+        $this->persistReview($request, $certification, $data, 'expert_certification.reviewed', [
             'decision' => $data['decision'],
         ]);
 
@@ -421,6 +419,19 @@ class ProjectLifecycleController extends Controller
         }
 
         return $query;
+    }
+
+    private function persistReview(Request $request, Model $record, array $data, string $action, array $auditPayload): void
+    {
+        DB::transaction(function () use ($request, $record, $data, $action, $auditPayload): void {
+            // The route-bound model may predate another review; claim the pending state atomically.
+            $updated = $record->newQuery()->whereKey($record->getKey())
+                ->where('status', 'submitted')
+                ->update($this->reviewPayload($request, $data));
+            abort_unless($updated === 1, 422, '当前状态不允许审核，请刷新后重试');
+
+            $this->auditLogger->record($request, $action, $record, $auditPayload);
+        });
     }
 
     private function reviewPayload(Request $request, array $data): array

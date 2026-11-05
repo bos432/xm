@@ -1,0 +1,15 @@
+{
+  "stage": "QA-28",
+  "runtime": "PHP 8.3.30 / PHPUnit 11.5.57 / MySQL 5.7.44",
+  "command": "powershell -NoProfile -ExecutionPolicy Bypass -File modernization/backend/tests/Concurrency/run-mysql-race.ps1 -EvidencePath ../docs/qa28-concurrency-green-20261105.json",
+  "red": {"exit_code":1,"evidence":"qa28-concurrency-red-20261105.json","failed_cases":["task_book","progress","rectification","certification"],"actual_statuses":[200,200]},
+  "green": {"exit_code":0,"evidence":"qa28-concurrency-green-20261105.json","passed_cases":5,"lifecycle_statuses":[200,422],"project_statuses":[201,409],"distinct_processes":true,"single_audit":true,"winner_preserved":true},
+  "regression": {"command":"php vendor/bin/phpunit --log-junit ../docs/qa28-backend-full.xml","exit_code":0,"tests":255,"assertions":1663},
+  "targeted": {"exit_code":0,"tests":4,"assertions":85,"evidence":"qa28-lifecycle-targeted.xml","includes_audit_failure_rollback":true},
+  "format": {"command":"php vendor/bin/pint --test app/Http/Controllers/ProjectLifecycleController.php tests/Feature/LifecycleActionRegressionTest.php tests/Concurrency/lifecycle-race.php","exit_code":0},
+  "safety_guard": {"command":"php tests/Concurrency/lifecycle-race.php without testing variables","message":"Refusing concurrency test outside explicit isolated MySQL testing database.","expected_exit_code":2,"outer_powershell_exit_code":1},
+  "harness_corrections": ["Initial evidence path traversed one parent too many; corrected to ../docs.","Rollback assertion initially compared an unrefreshed model lacking SQL default columns; refreshed before snapshot, then passed.","Two documentation reads used wrong working directory/path; corrected with rg discovery to modernization/docs/QA_REPORT.md."],
+  "isolation": "nxm-qa-mysql57-20261105 only; label isolated-concurrency; 127.0.0.1:13371; 512MiB/0.5CPU; synthetic fixtures; array mail/cache and sync queue",
+  "not_proven": ["multi-expert simultaneous scores","acceptance and extension simultaneous decisions","edit versus submit races","resource soak","hosted gates on new candidate","new-source coverage","SMTP delivery","OSS restore"],
+  "production_changed":false
+}

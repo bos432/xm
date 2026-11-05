@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\OperationLog;
 use App\Models\Project;
+use App\Models\ProjectTaskBook;
 use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,6 +25,31 @@ class LifecycleActionRegressionTest extends TestCase
         $project = Project::factory()->create(['unit_id' => $unit->id, 'owner_id' => $owner->id, 'status' => Project::STATUS_APPROVED]);
 
         return [$owner, $other, $admin, $project];
+    }
+
+    public function test_review_state_rolls_back_when_audit_write_fails(): void
+    {
+        [$owner, , $admin, $project] = $this->actors();
+        $record = ProjectTaskBook::create([
+            'project_id' => $project->id, 'unit_id' => $owner->unit_id,
+            'submitted_by' => $owner->id, 'title' => 'QA audit rollback', 'status' => 'submitted',
+        ]);
+        $before = $record->refresh()->getRawOriginal();
+        OperationLog::creating(function (): void {
+            throw new \RuntimeException('QA audit persistence failure');
+        });
+        Sanctum::actingAs($admin);
+        $this->withoutExceptionHandling();
+        try {
+            $this->postJson('/api/lifecycle/task-books/'.$record->id.'/review', ['decision' => 'approve']);
+            $this->fail('Audit failure must not commit an approval');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('QA audit persistence failure', $exception->getMessage());
+        } finally {
+            OperationLog::flushEventListeners();
+        }
+        $this->assertSame($before, $record->refresh()->getRawOriginal());
+        $this->assertDatabaseCount('operation_logs', 0);
     }
 
     public function test_task_book_and_progress_return_edit_resubmit_approve_and_finality(): void

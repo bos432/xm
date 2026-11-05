@@ -123,12 +123,32 @@ jobs:
           tests/Feature/LifecycleActionRegressionTest.php
           --log-junit /tmp/nxm-mysql-business-results.xml
 
+      - name: Verify simultaneous review decisions with independent PHP processes
+        env:
+          QA_EXPECTED_DB_DRIVER: mysql
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: modernization_migration_test
+          DB_USERNAME: root
+          DB_PASSWORD: isolated-ci-root-password
+          CACHE_STORE: array
+          SESSION_DRIVER: array
+          QUEUE_CONNECTION: sync
+          MAIL_MAILER: array
+          BCRYPT_ROUNDS: '4'
+        run: php tests/Concurrency/lifecycle-race.php | tee /tmp/nxm-mysql-concurrency-results.json
+
       - name: Preserve isolated MySQL business regression evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: mysql-business-regression-${{ github.sha }}
-          path: /tmp/nxm-mysql-business-results.xml
+          path: |
+            /tmp/nxm-mysql-business-results.xml
+            /tmp/nxm-mysql-concurrency-results.json
           if-no-files-found: warn
           retention-days: 14
 

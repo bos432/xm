@@ -5,9 +5,11 @@
 - Published production baseline: `cef21d38e6989cffc9cc5e516dbd14f4a445d6c5` (`20261105105750`), deployed 2026-11-05 with migrations and Seeder skipped. Previous rollback target: `20261018050541` / `59bbdec`.
 - Remote `main` and production match `cef21d3`; exact-revision hosted gates passed. Independent HTTPS login/logout, seven HTTP paths, and one site PHP worker on the new release verified. Anonymous browser E2E: 2 passed.
 - Formal operations readiness is not fully verified: isolated submission and acceptance/extension closure independently read back; super-admin score configuration save/reload/restoration verified QA20. Responsive UI, other feature paths, SMTP delivery and OSS restore remain open.
-- QA27 lifecycle action regressions pass3tests82assertions; full backend254tests1660assertions. Pending source/tests remain isolated; remote last4fb9f01 after terminal5ee1de0 push failures. Prior4fb9f01 gates/coverage78.51% apply prior source only. Full-repo formatting/concurrency/operations remain open; not deployed.
+- QA28 true MySQL5.7 two-process race reproduced four double approvals/overwrites in lifecycle reviews; atomic submitted-state update plus audit transaction now passes all five cases. Backend255tests1663assertions and changed-file Pint pass. New candidate remains isolated/not deployed; exact hosted gates and new-source coverage pending. Broader concurrency/operations remain open.
 
 ## Recent Increment
+
+2026-11-05, QA-28 lifecycle/credential review atomicity fixed after real MySQL5.7 two-process reproduction: four200/200 failures now200/422, project201/409 remains correct; single audit/winner preserved. Audit failure rolls back unchanged row. Full255/1663; evidence qa28-concurrency-20261105.json. Production unchanged.
 
 2026-11-05, QA-27 task book/progress/rectification action, cross-unit/disabled-unit/invalid-input/terminal tests passed without app source changes. Full254tests1660assertions, test Pint0. Evidence qa27-lifecycle-20261105.json; MySQL workflow includes file, new hosted run pending. Production unchanged.
 
@@ -57,7 +59,7 @@
 
 ## Next Step
 
-Commit QA27 tests and retry candidate synchronization; inspect exact remote/gates. Next build true MySQL concurrent-write test with separate processes/isolated DB. Tab12 unit handoff retained, no reseed. Broader UI, SMTP/OSS restore and browser upload remain open. Production unchanged.
+Commit/push QA28 candidate and verify exact remote/gates; extend same isolated runner to expert scores and acceptance/extension races. QA27 already committed3fa6957. Tab12 unit handoff retained, no reseed. Broader UI, SMTP/OSS restore and browser upload remain open. Production unchanged.
 
 ## Evidence and State
 
@@ -377,3 +379,12 @@ Commit QA27 tests and retry candidate synchronization; inspect exact remote/gate
 - Files: backend/tests/Feature/LifecycleActionRegressionTest.php, .github/workflows/modernization-quality.yml adds file to isolated MySQL run, docs/qa27-lifecycle-20261105.json and two JUnit outputs, QA_REPORT, handbook. PHP8.3.30/PHPUnit11.5.57; targeted exit0, full php vendor/bin/phpunit --log-junit ../docs/qa27-backend-full.xml exit0,254tests1660assertions; test Pint exit0/no formatting changes. New-source coverage/hosted/browser not_run. Mistyped ProjectReviewController path read failed; use rg file discovery before next concurrency inspection.
 - Permissions/data: SQLite memory, synthetic own/other units/admin, array cache/mail; no production business data/config/account/DB writes, external SMTP/OSS, sales/payment or shared-service/other-site changes. Acceptance ledger adds verified sequential coverage only; fullrepo Pint remains open. Production lastcef21d3.
 - Next: commit/push QA27 and exact remote receipt/gates; inspect real review transaction/locking before multi-process MySQL test. No current running command session.
+
+## 2026-11-05 QA-28: True MySQL Concurrent Review Decisions
+
+- Scope: two independent PHP processes authenticate through HTTP kernel, both read same submitted row behind a barrier, then approve/reject simultaneously. Four lifecycle reviews returned200/200 with overwritten state and duplicate audits; main project correctly201/409. Conditional submitted-state update plus transaction shared by task/progress/rectification/certification now yields200/422, one audit and winning decision preserved. No schema/dependency change.
+- Files: ProjectLifecycleController.php, LifecycleActionRegressionTest.php, tests/Concurrency/lifecycle-race.php and guarded Windows launcher; modernization-quality.yml runs PHP runner in isolated MySQL job and retains JSON; qa28-concurrency-20261105.json, red/green JSON and targeted/full JUnit. QA_REPORT updated.
+- Commands/runtime/results: PHP8.3.30/PHPUnit11.5.57/MySQL5.7.44; launcher red exit1 four failures, green exit0 five passes, rerun after Pint exit0 five passes. Targeted4tests85assertions and full255tests1663assertions exit0; changed-file Pint --test0 and git diff --check0. Audit write exception preserves entire pre-review row/no audit. Initial evidence-path error and unrefreshed-model assertion corrected, not application findings. Wrong report paths resolved with rg. Guard refuses absent testing env; outer PowerShell exit1, PHP contract2. Multi-file documentation patch failed closed on wrong title; re-read and corrected.
+- Isolation/permissions/data: existing labeled loopback-only local container13371,512MiB/0.5CPU; synthetic units/reviewers, ephemeral tokens deleted; only isolated database migrated (nothing pending). Array mail/cache, sync queue. No production release/config/DB/account/business change, external mail/OSS, sales/payment or other-site/shared-service change. Worker processes exited; no running shell session.
+- Acceptance status: four P1 race defects fixed_local; project race verified existing behavior; new coverage/hosted gates not_run. Expert/acceptance/extension concurrent decisions, edit-submit races, soak, browser upload, SMTP and OSS restoration remain unproven. Prior78.51% applies prior source only.
+- Next: commit/push exact candidate and hosted gates, then extend isolated concurrency coverage to experts and acceptance/extension. No release approval yet.
