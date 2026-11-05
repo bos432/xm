@@ -228,7 +228,7 @@ foreach ($cases as $kind => [$model, $route, $auditAction]) {
         $auditCountMatches = $auditCount === $expectedAudits;
         $passed = $statuses === $expected && $preserved && $auditCountMatches && $ready[0]['pid'] !== $ready[1]['pid'];
         $results[] = ['kind' => $kind, 'statuses' => $statuses, 'expected' => $expected,
-            'worker_reads' => $ready, 'final_status' => $record->status, 'single_audit' => $auditCount === 1,
+            'worker_reads' => $ready, 'final_status' => $record->status,
             'audit_count' => $auditCount, 'expected_audit_count' => $expectedAudits,
             'audit_count_matches' => $auditCountMatches, 'winner_preserved' => $preserved, 'passed' => $passed];
         $failed = $failed || ! $passed;

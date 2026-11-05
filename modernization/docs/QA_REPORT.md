@@ -6,6 +6,8 @@ This increment uses the isolated worktree, SQLite in memory, array mail/cache an
 
 ## Defects
 
+QA-33 repeat verification: the guarded MySQL 5.7.44 runner completed eight independent two-process race cases (8/8), including two experts independently scoring the same project; `audit_count=2`, `expected_audit_count=2`, and `audit_count_matches=true`. The ambiguous `single_audit` field is removed. Acceptance/extension rollback suite passed 2 tests/13 assertions; project-review rollback passed 1/5; full backend passed 258/1681; PHP syntax and targeted Pint passed. Evidence: `qa33-eight-races-20261105.json`, `qa33-eight-races-20261105-acceptance-atomicity.xml`, `qa33-eight-races-20261105-project-review-atomicity.xml`, `qa33-backend-full.xml`, `qa33-release-gates-20261105.json`. These are local isolated-worktree checks, not exact-commit hosted gates or a production readiness claim.
+
 QA-32 extends verified concurrency coverage to eight cases, including two different experts concurrently scoring one assigned project; both scores persist, and project advances to admin only after both. Acceptance, extension and project-review audit failures now roll back all affected business rows and notifications. Local backend258/1681 and frontend/security gates pass; production remains unchanged. Evidence: `qa32-concurrency-20261105.json`, `qa32-eight-races-20261105.json`, `qa32-backend-full.xml`, `qa32-mysql-acceptance-atomicity.xml`, `qa32-mysql-project-review-atomicity.xml`.
 
 Exact command/exit-code ledger and remaining release gates: `qa32-release-gates-20261105.json`. Local gates do not substitute for candidate-specific hosted checks or the unrun production integrations listed there.

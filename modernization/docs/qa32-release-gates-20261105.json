@@ -1,6 +1,6 @@
 {
   "stage": "QA-32",
-  "commit": "not_committed_at_evidence_capture",
+  "commit_under_test": "bbf7c61",
   "backend": {"runtime":"PHP8.3.30/PHPUnit11.5.57","command":"php vendor/bin/phpunit --log-junit ../docs/qa32-backend-full.xml","exit_code":0,"tests":258,"assertions":1681,"failures":0},
   "mysql57": {"runtime":"MySQL5.7.44","command":"powershell -NoProfile -ExecutionPolicy Bypass -File tests/Concurrency/run-mysql-race.ps1 -EvidencePath ../docs/qa32-eight-races-20261105.json","exit_code":0,"race_cases":8,"failed_cases":0,"acceptance_rollback_tests":2,"acceptance_rollback_assertions":13,"project_rollback_tests":1,"project_rollback_assertions":5},
   "frontend": {"runtime":"Node/npm from locked workspace runtime; Vite8.3.5","commands":{"npm audit --audit-level=moderate":0,"npm run lint":0,"npm test":0,"npm run typecheck":0,"npm run build":0},"unit_tests":21,"audit_vulnerabilities":0,"typecheck_scope":"repository utility typecheck script; not a full Vue SFC type system"},

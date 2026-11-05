@@ -6,10 +6,16 @@
 - Remote `main` and production match `cef21d3`; exact-revision hosted gates passed. Independent HTTPS login/logout, seven HTTP paths, and one site PHP worker on the new release verified. Anonymous browser E2E: 2 passed.
 - Formal operations readiness is not fully verified: isolated submission and acceptance/extension closure independently read back; super-admin score configuration save/reload/restoration verified QA20. Responsive UI, other feature paths, SMTP delivery and OSS restore remain open.
 - QA32: eight actual MySQL5.7 two-process races pass: four lifecycle review types, acceptance, extension, two independently scoring experts, and county project review. Project/acceptance/lifecycle state, review rows, audit and messages roll back on injected audit failure. Full backend258/1681; frontend gates and npm audit pass. Candidate isolated/not deployed; exact hosted gates and production readiness remain open.
+- QA33: repeat run on isolated MySQL5.7 confirms 8/8 races; rollback tests acceptance2/13 and project1/5; full backend258/1681; PHP lint, targeted Pint, JSON parse and no-BOM check pass. Expert race reports audit_count=2/2 without ambiguous boolean. Evidence `qa33-release-gates-20261105.json`; hosted exact-source gates, browser completion, real SMTP, OSS restore and soak remain open. Production unchanged.
 
 ## Recent Increment
 
-2026-11-05, QA-32 transaction/concurrency increment: acceptance two-process conflict, expert independent scores, and extension/audit failure validated. Eight MySQL races and full backend258/1681 pass; project/acceptance/extension rollback tests pass on MySQL. Frontend audit/lint/test21/typecheck/build and deployment simulation tests pass. Evidence qa32-release-gates-20261105.json, qa32-eight-races-20261105.json and JUnit. Production unchanged.
+2026-11-05, QA-33 evidence correction and repeat: eight isolated MySQL races, three rollback tests, and full backend258/1681 pass; race JSON is BOM-free and expert audit count is explicitly2/2. Exact candidate hosted gates and operational SMTP/OSS/browser/soak checks remain open. Evidence `qa33-release-gates-20261105.json`. Production unchanged.
+
+2026-11-05, QA-33 repeatable evidence output: guarded runner writes BOM-free UTF-8 JSON and names JUnit by evidence stem. Exact `qa33-eight-races-20261105.json` parses via UTF-8,8/8 pass; rollback JUnit qa33-* and backend258/1681 pass. Remote branch observed4fb9f01, main/prod cef21d3. No production changes. Next push isolated candidate and check exact hosted gates.
+
+2026-11-05, QA-33 artifact encoding: updated guarded launcher to write race JSON UTF-8 no BOM and parse the exact serialized evidence before accepting. Re-run in progress; no business code or production changes.
+Superseded by the QA-33 repeat verification entry above: the rerun completed successfully and its exact output is recorded in `qa33-release-gates-20261105.json`.
 
 2026-11-05, QA-28 lifecycle/credential review atomicity fixed after real MySQL5.7 two-process reproduction: four200/200 failures now200/422, project201/409 remains correct; single audit/winner preserved. Audit failure rolls back unchanged row. Full255/1663; evidence qa28-concurrency-20261105.json. Production unchanged.
 
@@ -61,7 +67,7 @@
 
 ## Next Step
 
-Commit/push QA32 candidate and verify exact remote plus hosted CI/Quality results. Then continue actual browser role workflow and unresolved edit-submit races; SMTP real delivery, OSS isolated restore, uploads and soak remain open. No production deployment until exact-source hosted gates pass and readiness evidence is reviewed. Production unchanged.
+Commit/push the QA33 evidence-field correction and documentation on the isolated candidate; verify the exact remote SHA and that SHA's CI/Quality gates. Then continue browser role workflow, edit-submit race coverage, SMTP delivery, OSS isolated restore, upload and soak evidence. No production deployment until exact-source gates pass and remaining operational readiness evidence is reviewed. Production unchanged.
 
 ## Evidence and State
 
@@ -398,4 +404,13 @@ Commit/push QA32 candidate and verify exact remote plus hosted CI/Quality result
 - Commands/environment: PHP8.3.30, PHPUnit11.5.57, MySQL5.7.44; `powershell -NoProfile -ExecutionPolicy Bypass -File tests/Concurrency/run-mysql-race.ps1 -EvidencePath ../docs/qa32-eight-races-20261105.json` from modernization/backend exit0, 8/8 cases, then acceptance rollback2tests13 assertions and project review rollback1test5 assertions exit0. Full `php vendor/bin/phpunit --log-junit ../docs/qa32-backend-full.xml` exit0,258tests1681assertions. Targeted Pint pass; frontend lint21 tests, utility typecheck, build and npm audit pass; see evidence files for exact outputs. Previous harness failures were addressed: random unique users, correct criteria codes, parse runner JSON (not CLI exit alone), deactivated QA criteria before repeat, repaired incorrect CWD/path. Not application findings.
 - Isolation/data: labeled container `nxm-qa-mysql57-20261105`, loopback 127.0.0.1:13371, 512MiB/0.5CPU; database only `modernization_migration_test`; synthetic users/projects/criteria. Ephemeral access tokens deleted. No production/app shared database, external SMTP/OSS, server services, other sites, sales/payment or deployment changed.
 - Acceptance status: eight listed race paths and injected project/acceptance/extension audit rollback verified locally. Three-plus simultaneous experts, edit/submit races, broader load/soak, browser upload, real SMTP, OSS restore, exact hosted gates and production operations are still `not_run`. Existing 78.51% coverage applies the prior 4fb9f01 commit only.
-- Next: commit and retry push; verify branch SHA exactly then hosted required jobs and coverage for candidate. Do not deploy before those gates and remaining readiness evidence.
+- Next: push QA32/33 candidate `bbf7c61` plus artifact-writer follow-up; verify exact remote SHA then hosted gates/coverage. Do not deploy before those gates and remaining readiness evidence.
+
+## 2026-11-05 QA-33: Evidence Semantics and Isolated Repeat
+
+- Scope: remove the ambiguous `single_audit` field from the MySQL race output; retain actual and expected audit counts and their equality check. Restore two tracked QA32 JUnit files to their prior recorded contents after a QA33 run had overwritten their duration metadata. No business application behavior changed.
+- Files: `backend/tests/Concurrency/lifecycle-race.php`, guarded launcher `backend/tests/Concurrency/run-mysql-race.ps1`, `docs/qa32-release-gates-20261105.json`, `docs/qa33-release-gates-20261105.json`, race/rollback/full-backend evidence `docs/qa33-*.json` and `docs/qa33-*.xml`, `docs/QA_REPORT.md`, this handbook. QA32 historical JUnit files are restored to committed content.
+- Commands/runtime/results: PHP8.3.30, PHPUnit11.5.57, MySQL5.7.44. `php -l tests/Concurrency/lifecycle-race.php` exit0; guarded PowerShell MySQL runner exit0 with 8/8 races, acceptance rollback2tests/13assertions, project-review rollback1test/5assertions; `php vendor/bin/phpunit --log-junit ../docs/qa33-backend-full.xml` exit0,258tests/1681assertions; `php vendor/bin/pint --test tests/Concurrency/lifecycle-race.php` exit0. PowerShell JSON/XML check exit0: no BOM, eight race results, zero failures/mismatches, expert audit count2/2, ambiguous field absent, both JUnit files parse. Evidence commands/results are summarized in `qa33-release-gates-20261105.json`.
+- Permissions/data: only synthetic users/projects/reviews in labeled loopback-only MySQL QA container `nxm-qa-mysql57-20261105`, database `modernization_migration_test`; race worker tokens are deleted in cleanup. No production account, tenant, application data, database, configuration, mail, or OSS was touched. No external channel, shared service, other site, sales/payment switch, migration, Seeder, or deployment changed.
+- Acceptance ledger: QA_REPORT records QA33 verification; candidate hosted gates, candidate coverage, full role browser journey, upload UI, edit-submit and larger concurrency, SMTP delivery, OSS restore, and soak remain `not_run`.
+- Next: commit and push the isolated candidate/evidence, verify the exact remote SHA and its CI/Quality jobs; no production deployment until exact-source gates and remaining operational readiness evidence are reviewed.

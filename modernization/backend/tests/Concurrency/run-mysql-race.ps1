@@ -41,20 +41,26 @@ foreach ($key in $settings.Keys) {
     [Environment]::SetEnvironmentVariable($key, $settings[$key], 'Process')
 }
 $result = 1
+$evidenceBase = [IO.Path]::GetFileNameWithoutExtension($EvidencePath)
 Push-Location $backend
 try {
     php artisan migrate --force --no-interaction
     if ($LASTEXITCODE -ne 0) { throw 'Isolated migrations failed' }
-    php tests/Concurrency/lifecycle-race.php | Tee-Object -FilePath $EvidencePath
+    $raceOutput = & php tests/Concurrency/lifecycle-race.php 2>&1
     $result = $LASTEXITCODE
-    $report = Get-Content -LiteralPath $EvidencePath -Raw | ConvertFrom-Json
+    $raceText = $raceOutput -join [Environment]::NewLine
+    $evidenceFullPath = [IO.Path]::GetFullPath($EvidencePath)
+    [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($evidenceFullPath)) | Out-Null
+    [IO.File]::WriteAllText($evidenceFullPath, $raceText, [Text.UTF8Encoding]::new($false))
+    $raceOutput | Write-Output
+    $report = $raceText | ConvertFrom-Json
     if ($report.driver -ne 'mysql' -or -not $report.results -or
         @($report.results | Where-Object { -not $_.passed }).Count -ne 0) {
         $result = 1
     }
-    php vendor/bin/phpunit tests/Feature/AcceptanceReviewAtomicityTest.php --log-junit ../docs/qa32-mysql-acceptance-atomicity.xml
+    php vendor/bin/phpunit tests/Feature/AcceptanceReviewAtomicityTest.php --log-junit ("../docs/$evidenceBase-acceptance-atomicity.xml")
     if ($LASTEXITCODE -ne 0) { $result = $LASTEXITCODE }
-    php vendor/bin/phpunit tests/Feature/ReviewWorkflowTest.php --filter=test_project_review_rolls_back_when_audit_write_fails --log-junit ../docs/qa32-mysql-project-review-atomicity.xml
+    php vendor/bin/phpunit tests/Feature/ReviewWorkflowTest.php --filter=test_project_review_rolls_back_when_audit_write_fails --log-junit ("../docs/$evidenceBase-project-review-atomicity.xml")
     if ($LASTEXITCODE -ne 0) { $result = $LASTEXITCODE }
 } finally {
     Pop-Location

@@ -1,0 +1,65 @@
+{
+  "stage": "QA-33",
+  "base_commit": "bbf7c61",
+  "source_revision_under_test_before_commit": "bbf7c61 plus QA-33 worktree changes",
+  "production_commit": "cef21d38e6989cffc9cc5e516dbd14f4a445d6c5",
+  "runtime": {
+    "php": "8.3.30",
+    "phpunit": "11.5.57",
+    "mysql": "5.7.44"
+  },
+  "isolation": {
+    "container": "nxm-qa-mysql57-20261105",
+    "binding": "127.0.0.1:13371",
+    "label": "isolated-concurrency",
+    "database": "modernization_migration_test",
+    "production_or_other_site_modified": false
+  },
+  "commands": [
+    {
+      "command": "php -l tests/Concurrency/lifecycle-race.php",
+      "exit_code": 0,
+      "result": "No syntax errors detected"
+    },
+    {
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File tests/Concurrency/run-mysql-race.ps1 -EvidencePath ../docs/qa33-eight-races-20261105.json",
+      "working_directory": "modernization/backend",
+      "exit_code": 0,
+      "result": "MySQL 5.7.44; 8/8 race cases passed; acceptance rollback 2 tests/13 assertions; project-review rollback 1 test/5 assertions"
+    },
+    {
+      "command": "php vendor/bin/phpunit --log-junit ../docs/qa33-backend-full.xml",
+      "working_directory": "modernization/backend",
+      "exit_code": 0,
+      "result": "258 tests, 1681 assertions"
+    },
+    {
+      "command": "php vendor/bin/pint --test tests/Concurrency/lifecycle-race.php",
+      "working_directory": "modernization/backend",
+      "exit_code": 0,
+      "result": "passed"
+    },
+    {
+      "command": "PowerShell JSON/XML verification of qa33 evidence",
+      "exit_code": 0,
+      "result": "UTF-8 without BOM; 8 races; zero failed or audit-count mismatch; expert audit_count=2 and expected_audit_count=2; ambiguous single_audit absent; JUnit parsed"
+    }
+  ],
+  "hosted_gates": "not_run_for_candidate",
+  "coverage_for_candidate": "not_run",
+  "remaining_operational_gates": [
+    "exact candidate GitHub CI and Quality Gate",
+    "complete role-based browser workflow on isolated data",
+    "edit-submit and broader multi-expert concurrency",
+    "upload path through actual browser file chooser",
+    "real SMTP delivery after credentials are configured",
+    "isolated OSS backup restore",
+    "load/soak and resource monitoring"
+  ],
+  "deployment": {
+    "performed": false,
+    "migrations_or_seeders": false,
+    "shared_services_restarted": false,
+    "other_sites_modified": false
+  }
+}
