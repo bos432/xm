@@ -1,0 +1,68 @@
+{
+  "phase": "QA107-110",
+  "production_changed": false,
+  "source_fix": "Register ElCollapse and ElCollapseItem in frontend/src/main.js",
+  "red": {
+    "unit_command": "node --test tests/project-submission-details.test.js",
+    "exit_code": 1,
+    "output": "3 passed / 1 failed: Missing import: ElCollapse",
+    "browser_command": "node node_modules/@playwright/test/cli.js test --config ../e2e/playwright.config.js qa105-expert-scoring.spec.js --workers=1",
+    "run": "qa108-expert-scoring-red-20261106",
+    "error": "locator.click Timeout15000ms: .el-collapse-item__header missing"
+  },
+  "green": {
+    "run": "qa109-expert-scoring-green-20261106",
+    "exit_code": 0,
+    "output": "1 passed (20.3s)",
+    "checks": [
+      "full submission details",
+      "three independent 100-point UI scores",
+      "pending task cleared after own review",
+      "reviewed/pending counts 1/2 then 2/1 then 3/0",
+      "expert/expert/admin stage sequence",
+      "no pageerror"
+    ]
+  },
+  "gates": {
+    "command": "npm ci --ignore-scripts; npm test; npm run lint; npm run typecheck; npm run build; npm audit --json (exit checked after every command)",
+    "initial": {
+      "chunk_id": "671f32",
+      "wall_time_seconds": 10.0009634,
+      "session_id": 17463,
+      "original_token_count": 0,
+      "output": ""
+    },
+    "terminal": {
+      "chunk_id": "ec7693",
+      "wall_time_seconds": 0.0000077,
+      "exit_code": 0,
+      "original_token_count": 1567,
+      "output": "\nadded 167 packages, and audited 168 packages in 22s\n\n45 packages are looking for funding\n  run `npm fund` for details\n\nfound 0 vulnerabilities\n\n> project-application-modern-frontend@0.1.0 test\n> node --test tests/timeline.test.js tests/settings-navigation.test.js tests/acceptance-errors.test.js tests/project-submission-details.test.js\n\n✔ acceptance renders Chinese decisions and business timezone timestamps in history and lists (12.7666ms)\n✔ completed acceptance hides new unit extension action while admin can resolve historical requests (1.3486ms)\n✔ acceptance createAcceptance shows rejected API error, preserves form and permits retry (15.3872ms)\n✔ acceptance submitAcceptance shows rejected API error, preserves form and permits retry (0.8898ms)\n✔ acceptance saveReview shows rejected API error, preserves form and permits retry (0.6689ms)\n✔ acceptance saveExtension shows rejected API error, preserves form and permits retry (0.618ms)\n✔ acceptance uploadFile shows rejected API error, preserves form and permits retry (0.8393ms)\n✔ acceptance list failure reports an error and retains existing rows (0.7011ms)\n✔ acceptance materials expose authorized download and report failures (1.2487ms)\n✔ acceptance scoring follows server stage configuration and strips hidden scores (1.0953ms)\n✔ review submission renders all submitted sections and safely escapes identity text (27.6012ms)\n✔ legacy projects with missing or malformed metadata still render (2.4581ms)\n✔ both reviewer drawer and processing dialog include the shared complete submission (0.9677ms)\n✔ review materials collapse components are registered at application bootstrap (0.7543ms)\n✔ system settings navigation exposes the OSS backup group (2.3972ms)\n✔ system settings constrain nested grids on narrow screens (0.8484ms)\n✔ mobile navigation exposes only the current role menu groups and routes (0.3193ms)\n✔ mobile navigation rejects items and children outside the authorized group (1.2977ms)\n✔ application batches explain why open records are not currently applicable (2.2171ms)\n✔ uses the explicitly current stage (0.6048ms)\n✔ chooses the stage after the last completed stage when none is current (0.1543ms)\n✔ returns zero for missing, malformed, and pending-only timelines (0.1393ms)\nℹ tests 22\nℹ suites 0\nℹ pass 22\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 306.5789\n\n> project-application-modern-frontend@0.1.0 lint\n> eslint src tests --ext .js,.vue\n\n\n> project-application-modern-frontend@0.1.0 typecheck\n> node scripts/typecheck-utilities.mjs\n\n\n> project-application-modern-frontend@0.1.0 build\n> vite build\n\nvite v8.3.5 building client environment for production...\ntransforming...\n✓ 1630 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                                      1.08 kB │ gzip:   0.45 kB\ndist/assets/OperationLogsView-DAhWfPJE.css           0.04 kB │ gzip:   0.06 kB\ndist/assets/ReviewDispatchRulesView-t1Ba1evQ.css     0.05 kB │ gzip:   0.07 kB\ndist/assets/SettingsView-C602pDu8.css                0.35 kB │ gzip:   0.20 kB\ndist/assets/DictionaryItemsView-ua_SExE2.css         0.44 kB │ gzip:   0.19 kB\ndist/assets/ReviewTasksView-BATIozEg.css             2.06 kB │ gzip:   0.69 kB\ndist/assets/ProjectsView-BMGaLnNK.css                2.35 kB │ gzip:   0.73 kB\ndist/assets/DashboardView-Ld-Ep5Wq.css               3.93 kB │ gzip:   1.04 kB\ndist/assets/index-ByfgiY36.css                      23.80 kB │ gzip:   5.51 kB\ndist/assets/vendor-element-plus-BslXLrM4.css       356.20 kB │ gzip:  47.58 kB\ndist/assets/_plugin-vue_export-helper-BDNMzG2s.js    0.08 kB │ gzip:   0.09 kB\ndist/assets/rolldown-runtime-WkwZ5CU-.js             0.59 kB │ gzip:   0.36 kB\ndist/assets/RichTextEditor-B960_7p9.js               4.31 kB │ gzip:   1.65 kB\ndist/assets/MessagesView-CL4a0tdr.js                 4.99 kB │ gzip:   2.21 kB\ndist/assets/SettingsView-LCV5zOPJ.js                 6.12 kB │ gzip:   2.61 kB\ndist/assets/MailCenterView-CDrfb4Ip.js               6.31 kB │ gzip:   2.44 kB\ndist/assets/RolesView-KSUUoW-D.js                    6.81 kB │ gzip:   2.55 kB\ndist/assets/SystemTextsView-o21RMJ3K.js              7.63 kB │ gzip:   2.99 kB\ndist/assets/DictionaryItemsView-BIGf4zPu.js          8.60 kB │ gzip:   3.43 kB\ndist/assets/UnitsView-CM6zA8W0.js                    8.72 kB │ gzip:   3.03 kB\ndist/assets/vendor-vueuse-DQe86G_n.js                9.09 kB │ gzip:   3.87 kB\ndist/assets/OperationLogsView-DuhdmP_M.js            9.52 kB │ gzip:   3.33 kB\ndist/assets/SecurityCenterView-7xNKIEsI.js          10.54 kB │ gzip:   3.51 kB\ndist/assets/ReviewDispatchRulesView-ZxDM1kp8.js     11.17 kB │ gzip:   3.89 kB\ndist/assets/UsersView-CD0rnMS5.js                   11.78 kB │ gzip:   4.02 kB\ndist/assets/ApplicationBatchesView-MzmUs1of.js      13.85 kB │ gzip:   4.75 kB\ndist/assets/PublicHomeManageView-sUmU_4dC.js        19.31 kB │ gzip:   5.73 kB\ndist/assets/vendor-popper-DXWocFAt.js               19.67 kB │ gzip:   7.29 kB\ndist/assets/AcceptanceView-CKBh0p6s.js              22.77 kB │ gzip:   6.65 kB\ndist/assets/DashboardView-CQ7uKLzp.js               24.53 kB │ gzip:   7.94 kB\ndist/assets/LifecycleView-Baqj4tbe.js               28.88 kB │ gzip:   6.54 kB\ndist/assets/ReviewTasksView-B-kyhf0R.js             32.26 kB │ gzip:   9.08 kB\ndist/assets/vendor-element-utils-BgbQ0VZd.js        35.67 kB │ gzip:  11.86 kB\ndist/assets/ProjectsView-B-qindLB.js                60.38 kB │ gzip:  14.81 kB\ndist/assets/index-BrB5hAnv.js                       60.68 kB │ gzip:  17.79 kB\ndist/assets/vendor-vue-BxRQ_9-z.js                  95.99 kB │ gzip:  37.05 kB\ndist/assets/MigrationView-CtSTzWUX.js              180.15 kB │ gzip:  21.27 kB\ndist/assets/vendor-element-plus-CwtANYBg.js        489.87 kB │ gzip: 154.24 kB\n\n✓ built in 645ms\n{\n  \"auditReportVersion\": 2,\n  \"vulnerabilities\": {},\n  \"metadata\": {\n    \"vulnerabilities\": {\n      \"info\": 0,\n      \"low\": 0,\n      \"moderate\": 0,\n      \"high\": 0,\n      \"critical\": 0,\n      \"total\": 0\n    },\n    \"dependencies\": {\n      \"prod\": 45,\n      \"dev\": 145,\n      \"optional\": 28,\n      \"peer\": 8,\n      \"peerOptional\": 0,\n      \"total\": 193\n    }\n  }\n}\n"
+    },
+    "inventory": {
+      "chunk_id": "bb8268",
+      "wall_time_seconds": 1.6423284,
+      "exit_code": 0,
+      "original_token_count": 458,
+      "output": "\n> project-application-modern-frontend@0.1.0 e2e\n> node scripts/run-e2e.mjs --list\n\nE2E run: 20261106-050524\nE2E reports: C:\\Users\\Administrator\\.codex\\worktrees\\composer-security-fix\\xm.zlck888.com_20260519_183454\\modernization\\e2e\\reports\\runs\\20261106-050524\nListing tests:\n  [chromium] › qa105-expert-scoring.spec.js:5:5 › three assigned experts read full materials and score through the actual UI without early transition\n  [chromium] › qa40-browser-upload.spec.js:11:5 › unit uploads a PDF in Chromium and file access remains role-scoped\n  [chromium] › smoke.spec.js:100:5 › public homepage exposes portal login and no duplicate old registration link\n  [chromium] › smoke.spec.js:117:5 › public and anonymous API probes return safe responses\n  [chromium] › smoke.spec.js:152:7 › unit can log in and open project lifecycle and acceptance history\n  [chromium] › smoke.spec.js:152:7 › county can log in and open project lifecycle and acceptance history\n  [chromium] › smoke.spec.js:152:7 › department can log in and open project lifecycle and acceptance history\n  [chromium] › smoke.spec.js:152:7 › expert can log in and open project lifecycle and acceptance history\n  [chromium] › smoke.spec.js:152:7 › admin can log in and open project lifecycle and acceptance history\n  [chromium] › smoke.spec.js:152:7 › super_admin can log in and open project lifecycle and acceptance history\n  [chromium] › smoke.spec.js:184:5 › lifecycle expert certification permissions match role configuration\n  [chromium] › smoke.spec.js:199:5 › super admin can inspect homepage assets and security center\nTotal: 12 tests in 3 files\nv25.2.1\r\n11.6.2\nPHP 8.3.30 (cli) (built: Jan 13 2026 22:50:40) (ZTS Visual C++ 2019 x64)\nCopyright (c) The PHP Group\nZend Engine v4.3.30, Copyright (c) Zend Technologies\n"
+    }
+  },
+  "backend": {
+    "command": "APP_ENV=testing DB_CONNECTION=sqlite DB_DATABASE=:memory: php artisan test --no-ansi",
+    "exit_code": 0,
+    "output": "275 passed (1728 assertions), Duration7.91s"
+  },
+  "lint": {
+    "command": "ESLint.lintText explicit flat configuration; process and browser localStorage readonly globals",
+    "exit_code": 0,
+    "error_count": 0,
+    "warning_count": 0
+  },
+  "limitations": [
+    "isolated fixture starts at expert stage; not submission/county/department UI",
+    "production source still b8c004a",
+    "utility-only typecheck",
+    "hosted candidate gates not yet run",
+    "trace reports can contain synthetic credentials; do not commit raw traces"
+  ]
+}

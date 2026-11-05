@@ -46,3 +46,13 @@ test('both reviewer drawer and processing dialog include the shared complete sub
   assert.match(source, /<ProjectSubmissionDetails :project="currentProject"/)
   assert.match(source, /<ProjectSubmissionDetails :project="detail"/)
 })
+
+test('review materials collapse components are registered at application bootstrap', () => {
+  const source = readFileSync(new URL('../src/main.js', import.meta.url), 'utf8')
+  const imports = source.match(/import\s*\{([\s\S]*?)\}\s*from 'element-plus'/)?.[1] || ''
+  const registered = source.match(/const elementComponents = \[([\s\S]*?)\]/)?.[1] || ''
+  for (const name of ['ElCollapse', 'ElCollapseItem']) {
+    assert.ok(imports.split(',').map(value => value.trim()).includes(name), `Missing import: ${name}`)
+    assert.ok(registered.split(',').map(value => value.trim()).includes(name), `Missing registration: ${name}`)
+  }
+})
