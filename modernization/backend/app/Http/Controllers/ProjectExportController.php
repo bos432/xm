@@ -5,15 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Support\AuditLogger;
 use App\Support\CsvExport;
+use App\Support\ProjectVisibility;
 use App\Support\Role;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProjectExportController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
-    }
+    public function __construct(private readonly AuditLogger $auditLogger, private readonly ProjectVisibility $visibility) {}
 
     public function csv(Request $request): StreamedResponse
     {
@@ -21,16 +20,10 @@ class ProjectExportController extends Controller
             abort(403, '无权导出项目');
         }
 
-        $query = Project::query()
+        $query = $this->visibility->query($request->user())
             ->with(['unit', 'owner', 'applicationBatch', 'reviews.reviewer'])
             ->orderByRaw('COALESCE(submitted_at, updated_at, created_at) desc')
             ->orderByDesc('id');
-
-        if ($request->user()->role === Role::UNIT) {
-            $query->where('unit_id', $request->user()->unit_id);
-        } elseif ($request->user()->role !== Role::SUPER_ADMIN) {
-            $query->where('status', '<>', Project::STATUS_DRAFT);
-        }
 
         if ($status = $request->query('status')) {
             $query->where('status', $status);
@@ -81,7 +74,7 @@ class ProjectExportController extends Controller
             });
         }
 
-        $projects = $query->get();
+        $projects = $this->visibility->collect($query, $request->user());
 
         $this->auditLogger->record($request, 'project.exported', null, [
             'format' => 'csv',

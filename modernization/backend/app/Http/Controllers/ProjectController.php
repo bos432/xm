@@ -12,11 +12,13 @@ use App\Models\ProjectReview;
 use App\Models\User;
 use App\Support\AuditLogger;
 use App\Support\ProjectFileStorage;
+use App\Support\ProjectVisibility;
 use App\Support\ReviewDispatchMatcher;
 use App\Support\RichTextSanitizer;
 use App\Support\Role;
 use App\Support\RuntimeConfig;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -25,6 +27,7 @@ class ProjectController extends Controller
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly ReviewDispatchMatcher $dispatchMatcher,
+        private readonly ProjectVisibility $visibility,
     ) {}
 
     public function index(Request $request)
@@ -88,14 +91,24 @@ class ProjectController extends Controller
             });
         }
 
-        return $this->orderByBusinessTime($query)
-            ->paginate(20)
-            ->through(function (Project $project) {
-                $project->pending_extension_requests_count = $project->pendingExtensionRequestsCount();
-                $project->latest_extension_at = $this->latestExtensionAt($project);
+        $query = $this->orderByBusinessTime($query);
+        if ($this->visibility->isReviewer($request->user())) {
+            $visible = $this->visibility->collect($query, $request->user());
+            $page = max((int) $request->query('page', 1), 1);
+            $projects = new LengthAwarePaginator(
+                $visible->forPage($page, 20)->values(), $visible->count(), 20, $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+        } else {
+            $projects = $query->paginate(20);
+        }
 
-                return $project;
-            });
+        return $projects->through(function (Project $project) {
+            $project->pending_extension_requests_count = $project->pendingExtensionRequestsCount();
+            $project->latest_extension_at = $this->latestExtensionAt($project);
+
+            return $project;
+        });
     }
 
     public function options(Request $request)
@@ -105,18 +118,7 @@ class ProjectController extends Controller
         }
 
         $query = $this->visibleProjectsQuery($request)
-            ->with(['unit:id,name', 'applicationBatch:id,name,code'])
-            ->select([
-                'id',
-                'unit_id',
-                'application_batch_id',
-                'legacy_id',
-                'title',
-                'status',
-                'metadata',
-                'submitted_at',
-                'updated_at',
-            ]);
+            ->with(['unit:id,name', 'owner', 'applicationBatch']);
 
         if ($request->filled('keyword')) {
             $keyword = $request->query('keyword');
@@ -157,9 +159,7 @@ class ProjectController extends Controller
 
         $limit = min(max((int) $request->query('limit', 20), 1), 50);
 
-        return $this->orderByBusinessTime($query)
-            ->limit($limit)
-            ->get()
+        return $this->visibility->collect($this->orderByBusinessTime($query), $request->user(), $limit)
             ->map(fn (Project $project) => [
                 'id' => $project->id,
                 'title' => $project->title,
@@ -580,34 +580,7 @@ class ProjectController extends Controller
 
     private function visibleProjectsQuery(Request $request)
     {
-        $user = $request->user();
-        $query = Project::query();
-
-        if ($user->role === Role::UNIT) {
-            return $query->where('unit_id', $user->unit_id);
-        }
-
-        if ($user->role === Role::SUPER_ADMIN) {
-            return $query;
-        }
-
-        if ($user->role === Role::ADMIN) {
-            return $query->where('status', '<>', Project::STATUS_DRAFT);
-        }
-
-        if (in_array($user->role, [Role::COUNTY, Role::DEPARTMENT, Role::EXPERT], true)) {
-            $stage = Role::reviewerStageFor($user->role);
-
-            return $query->where('status', '<>', Project::STATUS_DRAFT)
-                ->where(function ($query) use ($stage, $user): void {
-                    $query->where('current_reviewer_role', $stage)
-                        ->orWhereHas('reviews', fn ($query) => $query
-                            ->where('stage', $stage)
-                            ->where('reviewer_id', $user->id));
-                });
-        }
-
-        return $query->where('status', '<>', Project::STATUS_DRAFT);
+        return $this->visibility->query($request->user());
     }
 
     private function projectTimeline(Project $project): array
@@ -678,35 +651,9 @@ class ProjectController extends Controller
             abort(403, '无权访问项目');
         }
 
-        if ($user->role === Role::UNIT && $project->unit_id !== $user->unit_id) {
-            abort(403, '无权访问该项目');
-        }
-
-        if ($user->role === Role::SUPER_ADMIN) {
-            return;
-        }
-
-        if ($user->role === Role::ADMIN) {
-            if ($project->status === Project::STATUS_DRAFT) {
-                abort(403, '业务管理员不能查看单位草稿');
-            }
-
-            return;
-        }
-
-        if (in_array($user->role, [Role::COUNTY, Role::DEPARTMENT, Role::EXPERT], true)) {
-            $stage = Role::reviewerStageFor($user->role);
-            $hasReviewed = $project->reviews()
-                ->where('stage', $stage)
-                ->where('reviewer_id', $user->id)
-                ->exists();
-
-            if ($project->status !== Project::STATUS_DRAFT
-                && (($project->current_reviewer_role === $stage && $this->dispatchMatcher->userCanReview($project, $user, $stage)) || $hasReviewed)) {
-                return;
-            }
-
-            abort(403, '无权访问该项目');
+        if (! $this->visibility->allows($project, $user)) {
+            abort(403, $user->role === Role::ADMIN && $project->status === Project::STATUS_DRAFT
+                ? '业务管理员不能查看单位草稿' : '无权访问该项目');
         }
     }
 
