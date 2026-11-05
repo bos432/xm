@@ -1,0 +1,21 @@
+{
+  "stage": "QA-40-final",
+  "supersedes_for_final_upload_result": "qa40-browser-upload-20261105.json",
+  "command": "node ../frontend/node_modules/@playwright/test/cli.js test --config playwright.config.js tests/qa40-browser-upload.spec.js --workers=1",
+  "cwd": "modernization/e2e",
+  "environment": "Explicit QA40_CREDENTIALS and QA40_EVIDENCE_DIR; NODE_PATH frontend/node_modules; E2E_BASE_URL http://127.0.0.1:18742",
+  "runtime": {"node": "25.2.1", "playwright": "1.61.1", "browser": "Chromium"},
+  "exit_code": 0,
+  "tests": 1,
+  "passed": 1,
+  "test_duration_seconds": 6.1,
+  "project_id": 6,
+  "batch_id": 2,
+  "file": {"id": 5, "name": "QA40-20261105110430-d1bb0bdc.pdf", "bytes": 630, "sha256": "134034819f8f55df695204c4bb5475882e2d955b08eb40c53ba1d259482861a4"},
+  "checks": {"upload": 201, "visible_row": true, "owner_download_hash_matches": true, "owner_download": 200, "business_admin_draft_detail": 403, "anonymous_download": 401, "logouts": [204, 204]},
+  "raw_evidence": "modernization/e2e/reports/runs/qa40-browser-upload-20261105-r4/qa40-browser-upload.json",
+  "results": "modernization/e2e/reports/runs/qa40-browser-upload-20261105-r4/results.json",
+  "production_modified": false,
+  "synthetic_data_retained": true,
+  "limitations": ["Chromium DOM file input, not native operating system chooser", "One applicant unit only; cross-unit browser access not covered", "Not a visible in-app production browser journey", "Final confirmation reused the r4 output directory: earlier project5/file4 retained in sandbox; latest raw evidence describes project6/file5"]
+}

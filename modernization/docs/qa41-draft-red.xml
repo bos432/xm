@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\ProjectDraftAtomicityTest" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectDraftAtomicityTest.php" tests="4" assertions="6" errors="0" failures="4" skipped="0" time="0.668442">
+    <testsuite name="Tests\Feature\ProjectDraftAtomicityTest::test_stale_route_binding_cannot_edit_or_resubmit_after_submission" tests="2" assertions="2" errors="0" failures="2" skipped="0" time="0.626725">
+      <testcase name="test_stale_route_binding_cannot_edit_or_resubmit_after_submission with data set #0" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectDraftAtomicityTest.php" line="42" class="Tests\Feature\ProjectDraftAtomicityTest" classname="Tests.Feature.ProjectDraftAtomicityTest" assertions="1" time="0.602173">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ProjectDraftAtomicityTest::test_stale_route_binding_cannot_edit_or_resubmit_after_submission with data set #0&#13;
+Expected response status code [422] but received 200.
+Failed asserting that 200 is identical to 422.
+&#13;
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectDraftAtomicityTest.php:59</failure>
+      </testcase>
+      <testcase name="test_stale_route_binding_cannot_edit_or_resubmit_after_submission with data set #1" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectDraftAtomicityTest.php" line="42" class="Tests\Feature\ProjectDraftAtomicityTest" classname="Tests.Feature.ProjectDraftAtomicityTest" assertions="1" time="0.024552">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ProjectDraftAtomicityTest::test_stale_route_binding_cannot_edit_or_resubmit_after_submission with data set #1&#13;
+Expected response status code [422] but received 200.
+Failed asserting that 200 is identical to 422.
+&#13;
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectDraftAtomicityTest.php:59</failure>
+      </testcase>
+    </testsuite>
+    <testsuite name="Tests\Feature\ProjectDraftAtomicityTest::test_audit_failure_rolls_back_draft_edit_or_submission" tests="2" assertions="4" errors="0" failures="2" skipped="0" time="0.041717">
+      <testcase name="test_audit_failure_rolls_back_draft_edit_or_submission with data set #0" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectDraftAtomicityTest.php" line="71" class="Tests\Feature\ProjectDraftAtomicityTest" classname="Tests.Feature.ProjectDraftAtomicityTest" assertions="2" time="0.022682">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ProjectDraftAtomicityTest::test_audit_failure_rolls_back_draft_edit_or_submission with data set #0&#13;
+Failed asserting that two arrays are identical.
+--- Expected
++++ Actual
+@@ @@
+     'legacy_id' =&gt; null,
+     'unit_id' =&gt; 1,
+     'owner_id' =&gt; 1,
+-    'title' =&gt; 'Original applicant contents',
++    'title' =&gt; 'Must roll back',
+     'category' =&gt; '科技项目',
+     'project_type' =&gt; '重点扶持',
+     'status' =&gt; 'draft',
+&#13;
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectDraftAtomicityTest.php:91</failure>
+      </testcase>
+      <testcase name="test_audit_failure_rolls_back_draft_edit_or_submission with data set #1" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectDraftAtomicityTest.php" line="71" class="Tests\Feature\ProjectDraftAtomicityTest" classname="Tests.Feature.ProjectDraftAtomicityTest" assertions="2" time="0.019035">
+        <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ProjectDraftAtomicityTest::test_audit_failure_rolls_back_draft_edit_or_submission with data set #1&#13;
+Failed asserting that two arrays are identical.
+--- Expected
++++ Actual
+@@ @@
+     'title' =&gt; 'Original applicant contents',
+     'category' =&gt; '科技项目',
+     'project_type' =&gt; '重点扶持',
+-    'status' =&gt; 'draft',
++    'status' =&gt; 'submitted',
+     'summary' =&gt; 'Magni suscipit esse ut nostrum ea rerum officiis. Magni doloremque voluptatem illo fuga magni alias. Magni sed quo et et qui consequatur sed.',
+     'budget_amount' =&gt; 231304.11,
+-    'submitted_at' =&gt; null,
+-    'current_reviewer_role' =&gt; null,
++    'submitted_at' =&gt; '2026-11-05 18:51:33',
++    'current_reviewer_role' =&gt; 'county',
+     'metadata' =&gt; null,
+     'created_at' =&gt; '2026-11-05 18:51:33',
+     'updated_at' =&gt; '2026-11-05 18:51:33',
+     'application_batch_id' =&gt; 2,
+ ]
+&#13;
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectDraftAtomicityTest.php:91</failure>
+      </testcase>
+    </testsuite>
+  </testsuite>
+</testsuites>

@@ -9,9 +9,11 @@ const credentialsPath = process.env.QA40_CREDENTIALS
 const stamp = `QA40-${new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14)}-${randomUUID().slice(0, 8)}`
 
 test('unit uploads a PDF in Chromium and file access remains role-scoped', async ({ page, request }) => {
+  test.skip(!credentialsPath, 'Explicit local QA credential manifest required; never run writes in normal online smoke')
   expect(baseURL).toMatch(/^http:\/\/127\.0\.0\.1:18742$/)
   expect(credentialsPath, 'Set QA40_CREDENTIALS to the isolated QA manifest').toBeTruthy()
   const manifest = JSON.parse(await readFile(credentialsPath, 'utf8'))
+  expect(manifest.base_url).toBe(baseURL)
   const unit = manifest.accounts.unit
   const admin = manifest.accounts.admin
   expect(unit?.username).toBeTruthy()
@@ -81,11 +83,17 @@ test('unit uploads a PDF in Chromium and file access remains role-scoped', async
     await expect(page.locator('.material-upload-panel .el-select')).toBeVisible()
     await expect(page.locator('.material-upload-panel')).toContainText('项目申报书（选传；pdf、doc、docx）')
 
-    const pdf = Buffer.from('%PDF-1.4\n% synthetic QA40 upload\n%%EOF\n')
+    const pdf = await readFile(path.resolve(path.dirname(credentialsPath), '../materials/qa-acceptance-application.pdf'))
+    expect(pdf.subarray(0, 5).toString()).toBe('%PDF-')
     const pdfPath = path.join(evidenceDir, `${stamp}.pdf`)
     await mkdir(evidenceDir, { recursive: true })
     await writeFile(pdfPath, pdf, { flag: 'wx' })
+    const uploadResponsePromise = page.waitForResponse(response =>
+      response.url().endsWith(`/api/projects/${project.id}/files`) && response.request().method() === 'POST'
+    )
     await page.locator('.compact-upload input[type="file"]').setInputFiles(pdfPath)
+    const uploadResponse = await uploadResponsePromise
+    expect(uploadResponse.status()).toBe(201)
 
     await expect(page.getByText(`${stamp}.pdf`)).toBeVisible({ timeout: 20_000 })
     const detailResponse = await request.get(`/api/projects/${project.id}`, { headers: auth })
@@ -97,7 +105,7 @@ test('unit uploads a PDF in Chromium and file access remains role-scoped', async
     expect(uploaded.sha256).toBe(expectedHash)
     expect(uploaded.purpose).toBe('application')
     evidence.file = { id: uploaded.id, name: uploaded.original_name, bytes: uploaded.size_bytes, sha256: uploaded.sha256 }
-    evidence.actions.push({ action: 'chromium_filechooser_upload_and_project_list', status: 'pass' })
+    evidence.actions.push({ action: 'chromium_file_input_upload_and_project_list', status: uploadResponse.status() })
 
     const ownerDownload = await request.get(`/api/files/${uploaded.id}/download`, { headers: auth })
     expect(ownerDownload.status()).toBe(200)
@@ -125,7 +133,10 @@ test('unit uploads a PDF in Chromium and file access remains role-scoped', async
       const response = await request.post('/api/auth/logout', { headers: { Authorization: `Bearer ${token}` } }).catch(() => null)
       evidence.actions.push({ action: 'logout', status: response?.status() ?? 'failed' })
     }
+    const logoutsSucceeded = evidence.actions.filter(action => action.action === 'logout').every(action => action.status === 204)
+    if (!logoutsSucceeded) evidence.result = 'fail'
     await mkdir(evidenceDir, { recursive: true })
     await writeFile(path.join(evidenceDir, 'qa40-browser-upload.json'), `${JSON.stringify(evidence, null, 2)}\n`)
+    expect(logoutsSucceeded, 'Every created session must log out').toBeTruthy()
   }
 })

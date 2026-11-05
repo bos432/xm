@@ -17,6 +17,7 @@ use App\Support\RichTextSanitizer;
 use App\Support\Role;
 use App\Support\RuntimeConfig;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class ProjectController extends Controller
@@ -231,26 +232,29 @@ class ProjectController extends Controller
 
     public function update(StoreProjectRequest $request, Project $project)
     {
-        $this->authorizeProjectWrite($request, $project);
+        return DB::transaction(function () use ($request, $project) {
+            $project = Project::query()->lockForUpdate()->findOrFail($project->id);
+            $this->authorizeProjectWrite($request, $project);
 
-        if (! in_array($project->status, [Project::STATUS_DRAFT, Project::STATUS_RETURNED], true)) {
-            return response()->json(['message' => '当前状态不允许修改'], 422);
-        }
+            if (! in_array($project->status, [Project::STATUS_DRAFT, Project::STATUS_RETURNED], true)) {
+                return response()->json(['message' => '当前状态不允许修改'], 422);
+            }
 
-        $data = $request->validated();
-        if (array_key_exists('application_batch_id', $data) && $data['application_batch_id']) {
-            $batch = $this->resolveOpenBatch($data['application_batch_id']);
-            $this->ensureBatchAllowsProject($batch, $data + $project->only(['category', 'project_type']));
-        } elseif (array_key_exists('application_batch_id', $data)) {
-            unset($data['application_batch_id']);
-        }
-        $data = $this->normalizeProjectDictionaryFields($this->sanitizeProjectRichText($data));
+            $data = $request->validated();
+            if (array_key_exists('application_batch_id', $data) && $data['application_batch_id']) {
+                $batch = $this->resolveOpenBatch($data['application_batch_id']);
+                $this->ensureBatchAllowsProject($batch, $data + $project->only(['category', 'project_type']));
+            } elseif (array_key_exists('application_batch_id', $data)) {
+                unset($data['application_batch_id']);
+            }
+            $data = $this->normalizeProjectDictionaryFields($this->sanitizeProjectRichText($data));
 
-        $project->update($data);
+            $project->update($data);
 
-        $this->auditLogger->record($request, 'project.updated', $project);
+            $this->auditLogger->record($request, 'project.updated', $project);
 
-        return $project->refresh()->load(['unit', 'owner', 'applicationBatch']);
+            return $project->refresh()->load(['unit', 'owner', 'applicationBatch']);
+        });
     }
 
     public function destroy(Request $request, Project $project)
@@ -301,41 +305,44 @@ class ProjectController extends Controller
 
     public function submit(Request $request, Project $project)
     {
-        $this->authorizeProjectWrite($request, $project);
+        return DB::transaction(function () use ($request, $project) {
+            $project = Project::query()->lockForUpdate()->findOrFail($project->id);
+            $this->authorizeProjectWrite($request, $project);
 
-        if (! in_array($project->status, [Project::STATUS_DRAFT, Project::STATUS_RETURNED], true)) {
-            return response()->json(['message' => '当前状态不允许提交'], 422);
-        }
+            if (! in_array($project->status, [Project::STATUS_DRAFT, Project::STATUS_RETURNED], true)) {
+                return response()->json(['message' => '当前状态不允许提交'], 422);
+            }
 
-        $project->loadMissing(['applicationBatch', 'files']);
-        $batch = $project->applicationBatch ?: $this->resolveOpenBatch($project->application_batch_id);
-        if (! $this->batchIsOpenForApplicant($batch, $request->user())) {
-            return response()->json(['message' => '申报批次未开放，不能提交'], 422);
-        }
-        $this->ensureBatchAllowsProject($batch, $project->only(['category', 'project_type']));
-        $missingMaterials = $this->missingRequiredProjectMaterials($project);
-        if ($missingMaterials !== []) {
-            return response()->json([
-                'message' => '请先补齐必传申报材料：'.implode('、', array_column($missingMaterials, 'label')),
-                'missing_materials' => $missingMaterials,
-            ], 422);
-        }
+            $project->loadMissing(['applicationBatch', 'files']);
+            $batch = $project->applicationBatch ?: $this->resolveOpenBatch($project->application_batch_id);
+            if (! $this->batchIsOpenForApplicant($batch, $request->user())) {
+                return response()->json(['message' => '申报批次未开放，不能提交'], 422);
+            }
+            $this->ensureBatchAllowsProject($batch, $project->only(['category', 'project_type']));
+            $missingMaterials = $this->missingRequiredProjectMaterials($project);
+            if ($missingMaterials !== []) {
+                return response()->json([
+                    'message' => '请先补齐必传申报材料：'.implode('、', array_column($missingMaterials, 'label')),
+                    'missing_materials' => $missingMaterials,
+                ], 422);
+            }
 
-        $project->update([
-            'status' => Project::STATUS_SUBMITTED,
-            'submitted_at' => now(),
-            'current_reviewer_role' => Role::COUNTY,
-        ]);
+            $project->update([
+                'status' => Project::STATUS_SUBMITTED,
+                'submitted_at' => now(),
+                'current_reviewer_role' => Role::COUNTY,
+            ]);
 
-        $this->auditLogger->record($request, 'project.submitted', $project);
-        $this->notifyOwner($project, '项目已提交', '项目已进入区县审核阶段。');
-        $this->notifyRole($project, Role::COUNTY, '收到待审项目', '项目“'.$project->title.'”已提交，请及时审核。');
+            $this->auditLogger->record($request, 'project.submitted', $project);
+            $this->notifyOwner($project, '项目已提交', '项目已进入区县审核阶段。');
+            $this->notifyRole($project, Role::COUNTY, '收到待审项目', '项目“'.$project->title.'”已提交，请及时审核。');
 
-        return $project->refresh()->setAttribute('next_step', [
-            'title' => '项目已提交，等待区县审核',
-            'body' => '请关注站内消息和项目状态。如被退回，可在“项目申报 -> 退回修改”中补充材料后再次提交。',
-            'path' => '/projects?status=submitted',
-        ]);
+            return $project->refresh()->setAttribute('next_step', [
+                'title' => '项目已提交，等待区县审核',
+                'body' => '请关注站内消息和项目状态。如被退回，可在“项目申报 -> 退回修改”中补充材料后再次提交。',
+                'path' => '/projects?status=submitted',
+            ]);
+        });
     }
 
     public function withdraw(Request $request, Project $project)

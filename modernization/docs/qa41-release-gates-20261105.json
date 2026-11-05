@@ -1,0 +1,14 @@
+{
+  "stage": "QA-41",
+  "state": "fixed_local_not_deployed",
+  "runtime": {"php": "8.3.30", "phpunit": "11.5.57", "mysql": "5.7.44"},
+  "checks": [
+    {"cwd": "modernization/backend", "command": "powershell -NoProfile -ExecutionPolicy Bypass -File tests/Concurrency/run-mysql-race.ps1 -EvidencePath ../docs/qa41-final-races-20261105.json", "exit_code": 0, "races_passed": 9, "races_total": 9, "rollback_tests": 7, "rollback_assertions": 38, "evidence": ["qa41-final-races-20261105.json", "qa41-final-races-20261105-acceptance-atomicity.xml", "qa41-final-races-20261105-project-review-atomicity.xml", "qa41-final-races-20261105-draft-atomicity.xml"]},
+    {"cwd": "modernization/backend", "command": "php vendor/bin/phpunit --log-junit ../docs/qa41-backend-final-20261105.xml", "exit_code": 0, "tests": 262, "assertions": 1701, "failures": 0, "errors": 0},
+    {"cwd": "modernization/e2e", "command": "../frontend/node_modules/.bin/eslint --no-config-lookup --no-ignore --global Buffer --global process --global localStorage --rule no-undef:error tests/qa40-browser-upload.spec.js", "exit_code": 0},
+    {"cwd": "modernization/e2e", "command": "node ../frontend/node_modules/@playwright/test/cli.js test --config playwright.config.js tests/qa40-browser-upload.spec.js --workers=1", "environment": "QA40_CREDENTIALS absent; loopback base URL; NODE_PATH frontend/node_modules", "exit_code": 0, "skipped": 1, "meaning": "Write regression safely skips without explicit isolated manifest; not a business-path pass"}
+  ],
+  "red_evidence": ["qa41-nine-races-red-20261105.json", "qa41-draft-red.xml"],
+  "isolation": {"container": "nxm-qa-mysql57-20261105", "port": "127.0.0.1:13371", "database": "modernization_migration_test", "production_modified": false, "external_mail_or_oss": false},
+  "remaining": ["exact-source hosted gates", "production deployment", "real SMTP delivery", "real OSS upload/download and isolated restore", "broader concurrency and soak", "official production application batch"]
+}

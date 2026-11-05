@@ -62,6 +62,8 @@ try {
     if ($LASTEXITCODE -ne 0) { $result = $LASTEXITCODE }
     php vendor/bin/phpunit tests/Feature/ReviewWorkflowTest.php --filter=test_project_review_rolls_back_when_audit_write_fails --log-junit ("../docs/$evidenceBase-project-review-atomicity.xml")
     if ($LASTEXITCODE -ne 0) { $result = $LASTEXITCODE }
+    php vendor/bin/phpunit tests/Feature/ProjectDraftAtomicityTest.php --log-junit ("../docs/$evidenceBase-draft-atomicity.xml")
+    if ($LASTEXITCODE -ne 0) { $result = $LASTEXITCODE }
 } finally {
     Pop-Location
     foreach ($key in $settings.Keys) {

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\ProjectDraftAtomicityTest" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectDraftAtomicityTest.php" tests="4" assertions="20" errors="0" failures="0" skipped="0" time="45.495761">
+    <testsuite name="Tests\Feature\ProjectDraftAtomicityTest::test_stale_route_binding_cannot_edit_or_resubmit_after_submission" tests="2" assertions="12" errors="0" failures="0" skipped="0" time="45.386944">
+      <testcase name="test_stale_route_binding_cannot_edit_or_resubmit_after_submission with data set #0" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectDraftAtomicityTest.php" line="42" class="Tests\Feature\ProjectDraftAtomicityTest" classname="Tests.Feature.ProjectDraftAtomicityTest" assertions="6" time="45.298865"/>
+      <testcase name="test_stale_route_binding_cannot_edit_or_resubmit_after_submission with data set #1" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectDraftAtomicityTest.php" line="42" class="Tests\Feature\ProjectDraftAtomicityTest" classname="Tests.Feature.ProjectDraftAtomicityTest" assertions="6" time="0.088079"/>
+    </testsuite>
+    <testsuite name="Tests\Feature\ProjectDraftAtomicityTest::test_audit_failure_rolls_back_draft_edit_or_submission" tests="2" assertions="8" errors="0" failures="0" skipped="0" time="0.108816">
+      <testcase name="test_audit_failure_rolls_back_draft_edit_or_submission with data set #0" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectDraftAtomicityTest.php" line="71" class="Tests\Feature\ProjectDraftAtomicityTest" classname="Tests.Feature.ProjectDraftAtomicityTest" assertions="4" time="0.058456"/>
+      <testcase name="test_audit_failure_rolls_back_draft_edit_or_submission with data set #1" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ProjectDraftAtomicityTest.php" line="71" class="Tests\Feature\ProjectDraftAtomicityTest" classname="Tests.Feature.ProjectDraftAtomicityTest" assertions="4" time="0.050360"/>
+    </testsuite>
+  </testsuite>
+</testsuites>

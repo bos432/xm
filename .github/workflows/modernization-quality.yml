@@ -122,6 +122,7 @@ jobs:
           tests/Feature/AdministrativeSurfaceRegressionTest.php
           tests/Feature/LifecycleActionRegressionTest.php
           tests/Feature/AcceptanceReviewAtomicityTest.php
+          tests/Feature/ProjectDraftAtomicityTest.php
           --log-junit /tmp/nxm-mysql-business-results.xml
 
       - name: Verify simultaneous review decisions with independent PHP processes

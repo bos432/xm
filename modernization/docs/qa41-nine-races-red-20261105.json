@@ -1,0 +1,268 @@
+{
+    "driver": "mysql",
+    "mysql": "5.7.44",
+    "environment": "testing",
+    "results": [
+        {
+            "kind": "task_book",
+            "statuses": [
+                200,
+                422
+            ],
+            "expected": [
+                200,
+                422
+            ],
+            "worker_reads": [
+                {
+                    "pid": 102628,
+                    "status": "submitted",
+                    "id": 1
+                },
+                {
+                    "pid": 60508,
+                    "status": "submitted",
+                    "id": 1
+                }
+            ],
+            "final_status": "rejected",
+            "audit_count": 1,
+            "expected_audit_count": 1,
+            "audit_count_matches": true,
+            "winner_preserved": true,
+            "passed": true
+        },
+        {
+            "kind": "progress",
+            "statuses": [
+                200,
+                422
+            ],
+            "expected": [
+                200,
+                422
+            ],
+            "worker_reads": [
+                {
+                    "pid": 70708,
+                    "status": "submitted",
+                    "id": 1
+                },
+                {
+                    "pid": 103912,
+                    "status": "submitted",
+                    "id": 1
+                }
+            ],
+            "final_status": "approved",
+            "audit_count": 1,
+            "expected_audit_count": 1,
+            "audit_count_matches": true,
+            "winner_preserved": true,
+            "passed": true
+        },
+        {
+            "kind": "rectification",
+            "statuses": [
+                200,
+                422
+            ],
+            "expected": [
+                200,
+                422
+            ],
+            "worker_reads": [
+                {
+                    "pid": 61220,
+                    "status": "submitted",
+                    "id": 1
+                },
+                {
+                    "pid": 103272,
+                    "status": "submitted",
+                    "id": 1
+                }
+            ],
+            "final_status": "rejected",
+            "audit_count": 1,
+            "expected_audit_count": 1,
+            "audit_count_matches": true,
+            "winner_preserved": true,
+            "passed": true
+        },
+        {
+            "kind": "certification",
+            "statuses": [
+                200,
+                422
+            ],
+            "expected": [
+                200,
+                422
+            ],
+            "worker_reads": [
+                {
+                    "pid": 98596,
+                    "status": "submitted",
+                    "id": 1
+                },
+                {
+                    "pid": 73344,
+                    "status": "submitted",
+                    "id": 1
+                }
+            ],
+            "final_status": "rejected",
+            "audit_count": 1,
+            "expected_audit_count": 1,
+            "audit_count_matches": true,
+            "winner_preserved": true,
+            "passed": true
+        },
+        {
+            "kind": "acceptance",
+            "statuses": [
+                201,
+                422
+            ],
+            "expected": [
+                201,
+                422
+            ],
+            "worker_reads": [
+                {
+                    "pid": 70164,
+                    "status": "submitted",
+                    "id": 1
+                },
+                {
+                    "pid": 37988,
+                    "status": "submitted",
+                    "id": 1
+                }
+            ],
+            "final_status": "reviewing",
+            "audit_count": 1,
+            "expected_audit_count": 1,
+            "audit_count_matches": true,
+            "winner_preserved": true,
+            "passed": true
+        },
+        {
+            "kind": "acceptance_extension",
+            "statuses": [
+                200,
+                422
+            ],
+            "expected": [
+                200,
+                422
+            ],
+            "worker_reads": [
+                {
+                    "pid": 64672,
+                    "status": "pending",
+                    "id": 1
+                },
+                {
+                    "pid": 73644,
+                    "status": "pending",
+                    "id": 1
+                }
+            ],
+            "final_status": "approved",
+            "audit_count": 1,
+            "expected_audit_count": 1,
+            "audit_count_matches": true,
+            "winner_preserved": true,
+            "passed": true
+        },
+        {
+            "kind": "expert_project_reviews",
+            "statuses": [
+                201,
+                201
+            ],
+            "expected": [
+                201,
+                201
+            ],
+            "worker_reads": [
+                {
+                    "pid": 11040,
+                    "status": "reviewing",
+                    "id": 8
+                },
+                {
+                    "pid": 72580,
+                    "status": "reviewing",
+                    "id": 8
+                }
+            ],
+            "final_status": "reviewing",
+            "audit_count": 2,
+            "expected_audit_count": 2,
+            "audit_count_matches": true,
+            "winner_preserved": true,
+            "passed": true
+        },
+        {
+            "kind": "project",
+            "statuses": [
+                201,
+                409
+            ],
+            "expected": [
+                201,
+                409
+            ],
+            "worker_reads": [
+                {
+                    "pid": 102716,
+                    "status": "submitted",
+                    "id": 9
+                },
+                {
+                    "pid": 68168,
+                    "status": "submitted",
+                    "id": 9
+                }
+            ],
+            "final_status": "reviewing",
+            "audit_count": 1,
+            "expected_audit_count": 1,
+            "audit_count_matches": true,
+            "winner_preserved": true,
+            "passed": true
+        },
+        {
+            "kind": "project_update_submit",
+            "statuses": [
+                200,
+                200
+            ],
+            "expected": [
+                200,
+                422
+            ],
+            "worker_reads": [
+                {
+                    "pid": 100984,
+                    "status": "draft",
+                    "id": 10
+                },
+                {
+                    "pid": 70688,
+                    "status": "draft",
+                    "id": 10
+                }
+            ],
+            "final_status": "submitted",
+            "audit_count": 2,
+            "expected_audit_count": 1,
+            "audit_count_matches": false,
+            "winner_preserved": false,
+            "passed": false
+        }
+    ]
+}

@@ -2,6 +2,7 @@
 
 use App\Models\AcceptanceApplication;
 use App\Models\AcceptanceExtension;
+use App\Models\ApplicationBatch;
 use App\Models\DictionaryItem;
 use App\Models\ExpertCertification;
 use App\Models\OperationLog;
@@ -45,7 +46,8 @@ if (($argv[1] ?? '') === 'worker') {
             'pid' => getmypid(), 'status' => $record->status, 'id' => $record->id,
         ], JSON_THROW_ON_ERROR));
         $deadline = microtime(true) + 12;
-        while (! is_file($input['barrier'].'/release')) {
+        $releaseFile = $input['barrier'].'/release'.($input['ordered'] ?? false ? '-'.$input['slot'] : '');
+        while (! is_file($releaseFile)) {
             if (microtime(true) > $deadline) {
                 throw new RuntimeException('Worker barrier timed out');
             }
@@ -53,7 +55,7 @@ if (($argv[1] ?? '') === 'worker') {
             clearstatcache();
         }
     });
-    $request = Request::create($input['url'], 'POST', server: [
+    $request = Request::create($input['url'], $input['method'] ?? 'POST', server: [
         'HTTP_ACCEPT' => 'application/json', 'CONTENT_TYPE' => 'application/json',
         'HTTP_AUTHORIZATION' => 'Bearer '.$input['token'], 'REMOTE_ADDR' => '127.0.0.1',
     ], content: json_encode($input['payload'], JSON_THROW_ON_ERROR));
@@ -87,6 +89,7 @@ $cases = [
     'acceptance_extension' => [AcceptanceExtension::class, null, 'acceptance.extension_reviewed'],
     'expert_project_reviews' => [Project::class, null, 'project.reviewed'],
     'project' => [Project::class, null, 'project.reviewed'],
+    'project_update_submit' => [Project::class, null, null],
 ];
 foreach ($cases as $kind => [$model, $route, $auditAction]) {
     $unit = Unit::factory()->create();
@@ -94,6 +97,7 @@ foreach ($cases as $kind => [$model, $route, $auditAction]) {
     $reviewRole = match ($kind) {
         'project', 'acceptance' => 'county',
         'expert_project_reviews' => 'expert',
+        'project_update_submit' => 'unit',
         default => 'admin',
     };
     $stage = match ($kind) {
@@ -102,10 +106,25 @@ foreach ($cases as $kind => [$model, $route, $auditAction]) {
         default => null,
     };
     $project = Project::factory()->create(['unit_id' => $unit->id, 'owner_id' => $owner->id,
-        'status' => $kind === 'project' ? 'submitted' : (in_array($kind, ['acceptance', 'expert_project_reviews'], true)
-            ? ($kind === 'acceptance' ? 'acceptance' : 'reviewing') : 'approved'),
+        'status' => $kind === 'project' ? 'submitted' : ($kind === 'project_update_submit' ? 'draft'
+            : (in_array($kind, ['acceptance', 'expert_project_reviews'], true)
+                ? ($kind === 'acceptance' ? 'acceptance' : 'reviewing') : 'approved')),
         'current_reviewer_role' => $stage]);
-    $reviewers = [$qaUser(['role' => $reviewRole]), $qaUser(['role' => $reviewRole])];
+    $originalTitle = $project->title;
+    $reviewers = $kind === 'project_update_submit'
+        ? [$owner, $owner]
+        : [$qaUser(['role' => $reviewRole]), $qaUser(['role' => $reviewRole])];
+    if ($kind === 'project_update_submit') {
+        $batch = ApplicationBatch::create([
+            'name' => 'QA concurrent applicant batch',
+            'code' => 'QA-RACE-'.bin2hex(random_bytes(6)),
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDay(),
+            'status' => 'open',
+            'metadata' => [],
+        ]);
+        $project->update(['application_batch_id' => $batch->id]);
+    }
     $criterionCodes = [];
     if ($kind === 'expert_project_reviews') {
         foreach (range(1, 4) as $index) {
@@ -132,7 +151,7 @@ foreach ($cases as $kind => [$model, $route, $auditAction]) {
             'submitted_by' => $owner->id, 'status' => 'submitted', 'current_reviewer_role' => 'county']),
         'acceptance_extension' => AcceptanceExtension::create(['project_id' => $project->id, 'requested_by' => $owner->id,
             'status' => 'pending', 'reason' => 'QA concurrency extension']),
-        'expert_project_reviews' => $project,
+        'expert_project_reviews', 'project_update_submit' => $project,
         'project' => $project,
     };
     if ($kind === 'acceptance_extension') {
@@ -152,14 +171,20 @@ foreach ($cases as $kind => [$model, $route, $auditAction]) {
             $worker->setTimeout(25);
             $worker->setInput(json_encode([
                 'slot' => $slot, 'model' => $model, 'record_id' => $record->id, 'barrier' => $barrier,
+                'ordered' => $kind === 'project_update_submit',
                 'token' => $token->plainTextToken,
+                'method' => $kind === 'project_update_submit' && $slot === 0 ? 'PUT' : 'POST',
                 'url' => match ($kind) {
+                    'project_update_submit' => $slot === 0 ? '/api/projects/'.$project->id : '/api/projects/'.$project->id.'/submit',
                     'project', 'expert_project_reviews' => '/api/projects/'.$project->id.'/reviews',
                     'acceptance' => '/api/acceptance/'.$record->id.'/reviews',
                     'acceptance_extension' => '/api/acceptance/'.$project->acceptanceApplications()->first()->id.'/extensions',
                     default => '/api/lifecycle/'.$route.'/'.$record->id.'/review',
                 },
                 'payload' => match ($kind) {
+                    'project_update_submit' => $slot === 0
+                        ? ['title' => 'QA concurrent edited title', 'summary' => 'Edited concurrently before submit.']
+                        : [],
                     'acceptance_extension' => ['extension_id' => $record->id, 'decision' => $slot === 0 ? 'approved' : 'rejected', 'comment' => 'QA race slot '.$slot],
                     'expert_project_reviews' => ['decision' => 'recommend', 'metadata' => ['score_criteria' => $slot === 0
                         ? array_combine($criterionCodes, [25, 25, 20, 20])
@@ -185,7 +210,13 @@ foreach ($cases as $kind => [$model, $route, $auditAction]) {
         }
         $ready = [json_decode(file_get_contents($barrier.'/ready-0'), true, flags: JSON_THROW_ON_ERROR),
             json_decode(file_get_contents($barrier.'/ready-1'), true, flags: JSON_THROW_ON_ERROR)];
-        file_put_contents($barrier.'/release', 'go');
+        if ($kind === 'project_update_submit') {
+            file_put_contents($barrier.'/release-1', 'go');
+            $workers[1]->wait();
+            file_put_contents($barrier.'/release-0', 'go');
+        } else {
+            file_put_contents($barrier.'/release', 'go');
+        }
         $responses = [];
         foreach ($workers as $slot => $worker) {
             $worker->wait();
@@ -196,14 +227,21 @@ foreach ($cases as $kind => [$model, $route, $auditAction]) {
         }
         $statuses = array_column($responses, 'status');
         sort($statuses);
-        $expected = $kind === 'project' ? [201, 409] : ($kind === 'expert_project_reviews' ? [201, 201]
-            : (in_array($kind, ['acceptance', 'acceptance_extension'], true)
-                ? ($kind === 'acceptance' ? [201, 422] : [200, 422]) : [200, 422]));
+        $expected = $kind === 'project' ? [201, 409] : ($kind === 'project_update_submit' ? [200, 422]
+            : ($kind === 'expert_project_reviews' ? [201, 201]
+                : (in_array($kind, ['acceptance', 'acceptance_extension'], true)
+                    ? ($kind === 'acceptance' ? [201, 422] : [200, 422]) : [200, 422])));
         $successStatus = in_array($kind, ['project', 'acceptance', 'expert_project_reviews'], true) ? 201 : 200;
         $winner = array_search($successStatus, array_column($responses, 'status'), true);
         $record->refresh();
         $auditCount = OperationLog::query()->where('action', $auditAction)->where('payload->project_id', $project->id)->count();
-        if ($kind === 'acceptance') {
+        if ($kind === 'project_update_submit') {
+            $updateAuditCount = OperationLog::query()->where('action', 'project.updated')
+                ->where('target_type', Project::class)->where('target_id', $project->id)->count();
+            $submitAuditCount = OperationLog::query()->where('action', 'project.submitted')
+                ->where('target_type', Project::class)->where('target_id', $project->id)->count();
+            $auditCount = $updateAuditCount + $submitAuditCount;
+        } elseif ($kind === 'acceptance') {
             $auditCount = OperationLog::query()->where('action', $auditAction)
                 ->where('payload->acceptance_id', $record->id)->count();
         } elseif ($kind === 'acceptance_extension') {
@@ -224,6 +262,12 @@ foreach ($cases as $kind => [$model, $route, $auditAction]) {
                 ? $record->reviews()->count() === 1 && $winner !== false && $record->reviews()->first()->reviewer_id === $reviewers[$winner]->id
                 : ($winner !== false && $record->reviewed_by === $reviewers[$winner]->id
                     && $record->review_comment === 'QA race slot '.$winner)));
+        if ($kind === 'project_update_submit') {
+            $preserved = $project->fresh()->status === 'submitted'
+                && $project->fresh()->title === $originalTitle
+                && $project->fresh()->current_reviewer_role === 'county'
+                && $updateAuditCount === 0 && $submitAuditCount === 1;
+        }
         $expectedAudits = $kind === 'expert_project_reviews' ? 2 : 1;
         $auditCountMatches = $auditCount === $expectedAudits;
         $passed = $statuses === $expected && $preserved && $auditCountMatches && $ready[0]['pid'] !== $ready[1]['pid'];
@@ -241,7 +285,7 @@ foreach ($cases as $kind => [$model, $route, $auditAction]) {
         foreach ($tokens as $token) {
             $token->delete();
         }
-        foreach (['ready-0', 'ready-1', 'release'] as $file) {
+        foreach (['ready-0', 'ready-1', 'release', 'release-0', 'release-1'] as $file) {
             if (is_file($barrier.'/'.$file)) {
                 unlink($barrier.'/'.$file);
             }
