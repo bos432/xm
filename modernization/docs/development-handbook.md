@@ -2,6 +2,8 @@
 
 ## Current Status
 
+- QA44 live OSS read-only integrity: latest pair20261105-021002 each HEAD/GET200, byte lengths and SHA-256 match local, gzip reads complete; temps closed. Cloud task t-hk0726wovvrehog exit0. No DB import. Snapshot production preflight QA43: SMTP absent/log, OSS enabled, failed_jobs0. QA41 CI repair9070fb3 still only local due GitHub443. Evidence QA44 below; production app release/data unchanged.
+- QA43 production read-only Cloud Assistant task t-hk0726w54m39dz4 exit0: current20261105105750,PHP8.3.36,failed_jobs0,mail transport log with SMTP unset; OSS enabled/all five fields present, local archive metadata exists. Real remote read/hash/restore not yet verified. Evidence `qa43-operations-preflight-20261105.json`. Reattempt GitHub443 failed; production unchanged.
 - QA42 candidate9070fb3 corrects E2E inventory (old10/1, actual11/2); four local assertions pass. Both pushes failed/reset or GitHub443 unreachable; remote remains b23d1ce. b23d1ce CI completed failure at inventory, Quality completed success. New candidate hosted not_run. Evidence `qa42-e2e-inventory-20261105.json`, `qa42-delivery-block-20261105.json`. No running shell session; production unchanged.
 - QA41 fixed candidate `b23d1ceb9419045771700c2525761c42d954a97f` pushed and independently confirmed by GitHub API. Final isolated MySQL9/9 races and rollback7tests38assertions pass; backend262/1701. QA40 valid630-byte PDF upload/access regression passes. Exact CI42016210292/Quality42016210174 in_progress at delivery checkpoint, not yet approved. Evidence `qa41-release-gates-20261105.json`, `qa40-browser-upload-final-20261105.json`, `qa41-hosted-checkpoint-20261105.json`. Production unchanged.
 - Published production baseline: `cef21d38e6989cffc9cc5e516dbd14f4a445d6c5` (`20261105105750`), deployed 2026-11-05 with migrations and Seeder skipped. Previous rollback target: `20261018050541` / `59bbdec`.
@@ -13,6 +15,10 @@
 - QA39/40: SMTP/OSS focused tests23/105, backup simulation4/4, Chromium browser upload/access smoke1/1. QA40 unit upload/download SHA matches; anonymous401 and business-admin draft403; isolated data retained. Frontend lint21 tests, typecheck, build and explicit E2E ESLint pass. Local commits `bb8ebf8`, `cc23c3d`, `5ffde60` are not hosted; remote `5c3930d` because GitHub:443 fails. Real SMTP/OSS restore, broader concurrency/soak and official production batch remain open. Evidence `qa39-operations-simulations.json`, `qa40-browser-upload-20261105.json`, `qa39-push-attempt-20261105.json`.
 
 ## Recent Increment
+
+2026-11-05, QA-44: real production OSS GET/HEAD verification of latest matching archive pair succeeded with SHA/gzip checks; read-only and bounded. Database recovery import still not_run. Candidate push remains blocked on GitHub443; see QA42 delivery record.
+
+2026-11-05, QA-43 read-only operations preflight: authenticated cloud session available, command exit0; OSS configured, SMTP deliberately not configured,failed jobs0. No production business/config writes. Next check existing OSS objects with read-only requests and bounded integrity validation; restore still separate.
 
 2026-11-05, QA-42 delivery checkpoint: local9070fb3, two ordinary push attempts exit1, independently observed remote b23d1ce. Exact previous CI failure/Quality success terminal. New gates not_run. Resume by ordinary push and API receipt; no production changes.
 
@@ -89,7 +95,7 @@ Superseded by the QA-33 repeat verification entry above: the rerun completed suc
 
 ## Next Step
 
-Retry ordinary isolated-branch push of9070fb3 when GitHub HTTPS returns, independently verify remote SHA and exact CI/Quality. Do not deploy failed b23d1ce. Real SMTP/OSS restore, bounded soak and officially approved production batch remain open. No active local command to resume; do not change unrelated services.
+Prepare and run a restore against an isolated temporary MySQL instance on this host, never production; confirm CPU/disk headroom and loopback-only DB binding first. Separately retry GitHub push when HTTPS returns and verify exact-source gates. Do not deploy failed b23d1ce. SMTP awaits owner configuration; soak/official batch remain open. No local shell process running.
 
 ## Evidence and State
 
@@ -515,3 +521,21 @@ Retry ordinary isolated-branch push of9070fb3 when GitHub HTTPS returns, indepen
 - Isolation/data: no production DB/config/account/release, mail/OSS, other site/shared service or sales/payment change. Both shell sessions42581/85098 terminal; no test process remains. Untracked e2e/reports intentionally not staged; credentials excluded.
 - Ledger: new candidate delivery/hosted gates blocked_external at current checkpoint; no release approval. QA41 local and MySQL evidence remains valid; formal SMTP/OSS restoration, broad soak and approved production batch still open.
 - Next: ordinary isolated push after connectivity returns, verify receipt/new exact-source gates. Resume these next actions, not already completed MySQL runs. Goal remains incomplete; production is stillcef21d3.
+
+## 2026-11-05 QA-43: Live Production Read-only Operations Preflight
+
+- Scope: revalidated live Cloud Assistant session and executed a site-scoped read-only preflight, invoke t-hk0726w54m39dz4, instance i-j6c2byx7kjyfueoxpwzc. No business/config/service write. Command queries only current symlink, PHP runtime, RuntimeConfig presence booleans, failed_jobs count and local archive metadata.
+- Evidence/files: `qa43-operations-preflight-20261105.json`; original command and output visible in cloud task. Exit0,PHP8.3.36,current20261105105750,failed_jobs0,SMTP log/unset,OSS enabled/configured fields present. Archive metadata includes1639960-byte private archive dated20261105. Unsorted tail6 is not proof of the latest database backup. Incorrect PHP namespace escaping in initial UI draft was corrected and visually checked before execution; no malformed script executed.
+- Delivery: retry schannel push exit1, GitHub443 unreachable21023ms; no active local push handle. New-source CI not_run. Missing Setting.php lookup corrected by actual RuntimeConfig's SystemSetting implementation; no source changed.
+- Permissions/data: server-held secrets not printed/transferred, booleans only. No real SMTP/OSS request, backup content export/import, production account/config/database/release, shared-service/other-site or sales/payment changes. Cloud task terminal exit0.
+- Ledger: production runtime/settings presence verified_readonly; actual OSS object retrieval, backup integrity and restoration remain not_run. SMTP intentionally absent per user choice; cannot claim real delivery. No overall release readiness claim.
+- Next: bounded read-only OSS HEAD/GET and streamed hash comparison against latest local pair, respecting endpoint/prefix scope and no archive contents in logs. Then separate disposable-target restore; retry corrected candidate push when connectivity returns.
+
+## 2026-11-05 QA-44: Live OSS Backup Pair Integrity
+
+- Scope: execute candidate-independent, read-only existing-object verification on the same site's current production release via Cloud Assistant task `t-hk0726wovvrehog`, one approved instance only. It selects the lexicographically latest local database archive, requires a same-timestamp private archive, enforces32MiB per object and256MiB decompressed gzip limits, sends signed HEAD+GET, streams SHA256, verifies byte length/full gzip read, writes only to ephemeral tmpfile and closes it. No OSS PUT, archive extraction, or database import.
+- Files/evidence: `backend/tests/Operations/oss-backup-readonly.php` (local tool; syntax validated), `qa43-operations-preflight-20261105.json`, this handbook, report screenshot at `e2e/reports/runs/qa44-oss-readonly-integrity.png`. Cloud output is authoritative; local script standalone invocation exited2 by its deliberate guard because local machine is not the production release.
+- Commands/runtime/results: PHP8.3.36 production, task exit0. Database archive `nxm-database-20261105-021002.sql.gz`:87537 bytes local/remote, HEAD200,GET200,SHA matches,gzip complete. Private archive same timestamp:1639960 bytes, HEAD200,GET200,SHA matches,gzip complete. Both temporary downloads closed; output says passed=true, database_import_performed=false, production_business_data_or_config_modified=false.
+- Isolation/data: existing server-held OSS credentials used only for scoped object reads; never printed or transferred. Bounded object/scratch/decompression/time limits; no file residue, DB mutation, production config/account/release change, mail, other site/shared service/sales/payment change. No server service restarted.
+- Ledger: real OSS object availability and byte integrity now verified. Does not prove DB import/recovery, archive semantic safety, app startup against restore, or retention cleanup. SMTP remains intentionally unconfigured, batch is not opened, soak not run. Release not yet approved.
+- Next: on this same instance, inspect cgroup CPU/memory, disk availability and existing MySQL listeners; only if capacity permits, launch a private loopback-only disposable MySQL restore target bounded to conservative resources. Never use production DB/user or dump any data outward. Then repeat recovery with a non-secret random sentinel/structural checks and destroy only temporary target. Push/candidate gate remains separate.

@@ -1,0 +1,23 @@
+{
+  "stage": "QA-43",
+  "source": "Authenticated Aliyun Cloud Assistant visible UI",
+  "invoke_id": "t-hk0726w54m39dz4",
+  "command_name": "nxm-qa43-readonly-operations-preflight",
+  "instance": "i-j6c2byx7kjyfueoxpwzc",
+  "exit_code": 0,
+  "command_summary": "Resolve only this site's current symlink; bootstrap its PHP app; read RuntimeConfig presence booleans and failed_jobs count; list six backup archive metadata entries. No values/secrets exported.",
+  "output": {
+    "current_release": "/www/wwwroot/nxm.zlck888.com/releases/20261105105750",
+    "php": "8.3.36",
+    "production": true,
+    "mail_transport": "log",
+    "oss_enabled": true,
+    "configured": {"mail.host": false, "mail.username": false, "mail.password": false, "mail.from_address": false, "backup.oss_endpoint": true, "backup.oss_bucket": true, "backup.oss_prefix": true, "backup.oss_access_key_id": true, "backup.oss_access_key_secret": true},
+    "failed_jobs": 0,
+    "observed_private_archive": {"name": "nxm-private-files-20261105-021002.tar.gz", "bytes": 1639960}
+  },
+  "limitations": ["Archive listing was not sorted: tail6 is not proof of the newest database backup", "Presence booleans do not prove valid credentials or remote objects", "SMTP intentionally unconfigured; real mail delivery not_run", "No database restore performed"],
+  "production_business_data_or_config_modified": false,
+  "shared_services_modified": false,
+  "new_candidate_push": {"command": "git -c http.sslBackend=schannel -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=15 push origin codex/composer-security-fix", "exit_code": 1, "output": "fatal: unable to access 'https://github.com/bos432/xm.git/': Failed to connect to github.com port 443 after 21023 ms: Could not connect to server"}
+}
