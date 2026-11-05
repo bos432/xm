@@ -20,7 +20,7 @@ class ReviewDispatchMatcher
             ->whereIn('status', [Project::STATUS_SUBMITTED, Project::STATUS_REVIEWING])
             ->when($stage === Role::EXPERT, function (Builder $query) use ($user): void {
                 $query->whereDoesntHave('reviews', function (Builder $reviews) use ($user): void {
-                    $reviews->where('stage', Role::EXPERT)->where('reviewer_id', $user->id);
+                    $reviews->currentRound()->where('stage', Role::EXPERT)->where('reviewer_id', $user->id);
                 });
             });
     }

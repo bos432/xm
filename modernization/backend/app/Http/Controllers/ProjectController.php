@@ -711,10 +711,8 @@ class ProjectController extends Controller
 
     private function expertReviewSummary(Project $project): array
     {
-        $project->loadMissing(['reviews.reviewer']);
-        $reviews = $project->reviews
-            ->where('stage', Role::EXPERT)
-            ->values();
+        $reviews = $project->reviews()->currentRound()->with('reviewer')
+            ->where('stage', Role::EXPERT)->get();
         $scores = $reviews
             ->pluck('score')
             ->filter(fn ($score) => $score !== null)

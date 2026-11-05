@@ -404,9 +404,7 @@ class ReviewController extends Controller
 
     private function recommendedExpertNames(Project $project): string
     {
-        $project->loadMissing(['reviews.reviewer']);
-
-        return $project->reviews
+        return $project->reviews()->currentRound()->with('reviewer')->get()
             ->where('stage', Role::EXPERT)
             ->where('decision', 'recommend')
             ->map(fn (ProjectReview $review): string => $review->reviewer?->name ?: $review->reviewer?->username ?: '')
@@ -446,6 +444,7 @@ class ReviewController extends Controller
         }
 
         $reviewedUserIds = $project->reviews()
+            ->currentRound()
             ->where('stage', Role::EXPERT)
             ->whereIn('reviewer_id', $assignedUserIds)
             ->whereIn('decision', ['approve', 'recommend', 'accept'])
@@ -461,6 +460,7 @@ class ReviewController extends Controller
     private function hasExistingExpertReview(Project $project, int $userId): bool
     {
         return $project->reviews()
+            ->currentRound()
             ->where('stage', Role::EXPERT)
             ->where('reviewer_id', $userId)
             ->exists();

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="CLI Arguments" tests="3" assertions="193" errors="0" failures="0" skipped="0" time="1.207103">
+    <testsuite name="Tests\Feature\ExpertPendingTaskLifecycleTest" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ExpertPendingTaskLifecycleTest.php" tests="2" assertions="52" errors="0" failures="0" skipped="0" time="0.862893">
+      <testcase name="test_expert_return_then_resubmission_requires_fresh_scores_without_deleting_history" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ExpertPendingTaskLifecycleTest.php" line="17" class="Tests\Feature\ExpertPendingTaskLifecycleTest" classname="Tests.Feature.ExpertPendingTaskLifecycleTest" assertions="22" time="0.803696"/>
+      <testcase name="test_completed_expert_leaves_pending_tasks_while_other_assigned_expert_can_finish" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ExpertPendingTaskLifecycleTest.php" line="68" class="Tests\Feature\ExpertPendingTaskLifecycleTest" classname="Tests.Feature.ExpertPendingTaskLifecycleTest" assertions="30" time="0.059196"/>
+    </testsuite>
+    <testsuite name="Tests\Feature\AuthenticatedProjectLifecycleE2eTest" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AuthenticatedProjectLifecycleE2eTest.php" tests="1" assertions="141" errors="0" failures="0" skipped="0" time="0.344210">
+      <testcase name="test_six_authenticated_roles_can_submit_review_score_and_close_acceptance" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AuthenticatedProjectLifecycleE2eTest.php" line="27" class="Tests\Feature\AuthenticatedProjectLifecycleE2eTest" classname="Tests.Feature.AuthenticatedProjectLifecycleE2eTest" assertions="141" time="0.344210"/>
+    </testsuite>
+  </testsuite>
+</testsuites>

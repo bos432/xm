@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\ExpertPendingTaskLifecycleTest" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ExpertPendingTaskLifecycleTest.php" tests="2" assertions="38" errors="0" failures="1" skipped="0" time="0.673479">
+    <testcase name="test_expert_return_then_resubmission_requires_fresh_scores_without_deleting_history" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ExpertPendingTaskLifecycleTest.php" line="17" class="Tests\Feature\ExpertPendingTaskLifecycleTest" classname="Tests.Feature.ExpertPendingTaskLifecycleTest" assertions="8" time="0.617000">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\ExpertPendingTaskLifecycleTest::test_expert_return_then_resubmission_requires_fresh_scores_without_deleting_history&#13;
+Failed asserting that null is identical to 1.
+&#13;
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\AssertableJsonString.php:243
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:880
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ExpertPendingTaskLifecycleTest.php:48</failure>
+    </testcase>
+    <testcase name="test_completed_expert_leaves_pending_tasks_while_other_assigned_expert_can_finish" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\ExpertPendingTaskLifecycleTest.php" line="57" class="Tests\Feature\ExpertPendingTaskLifecycleTest" classname="Tests.Feature.ExpertPendingTaskLifecycleTest" assertions="30" time="0.056479"/>
+  </testsuite>
+</testsuites>

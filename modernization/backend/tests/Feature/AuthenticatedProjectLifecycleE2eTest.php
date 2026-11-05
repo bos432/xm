@@ -44,6 +44,7 @@ class AuthenticatedProjectLifecycleE2eTest extends TestCase
             'starts_at' => now()->subDay(),
             'ends_at' => now()->addDay(),
             'status' => ApplicationBatch::STATUS_OPEN,
+            'metadata' => ['acceptance_required_materials' => ['acceptance_application', 'financial']],
         ]);
         foreach ([['quality', 'Quality', 35], ['innovation', 'Innovation', 35], ['impact', 'Impact', 30]] as [$code, $label, $score]) {
             DictionaryItem::create([
@@ -84,6 +85,14 @@ class AuthenticatedProjectLifecycleE2eTest extends TestCase
 
         $this->withToken($tokens[$county->id])->getJson('/api/reviews/tasks')
             ->assertOk()->assertJsonPath('data.0.id', $project->id);
+        $this->withToken($tokens[$county->id])->postJson("/api/projects/{$project->id}/reviews", [
+            'decision' => 'return', 'comment' => 'Please clarify the research plan',
+        ])->assertCreated()->assertJsonPath('project.status', Project::STATUS_RETURNED);
+        $this->withToken($tokens[$unitUser->id])->putJson("/api/projects/{$project->id}", [
+            'title' => $project->title, 'summary' => 'Revised research plan after county feedback',
+        ])->assertOk();
+        $this->withToken($tokens[$unitUser->id])->postJson("/api/projects/{$project->id}/submit")
+            ->assertOk()->assertJsonPath('current_reviewer_role', 'county');
         $this->withToken($tokens[$county->id])->postJson("/api/projects/{$project->id}/reviews", ['decision' => 'approve'])
             ->assertCreated()->assertJsonPath('project.current_reviewer_role', 'department');
         $this->withToken($tokens[$department->id])->postJson("/api/projects/{$project->id}/reviews", ['decision' => 'approve'])
@@ -114,6 +123,21 @@ class AuthenticatedProjectLifecycleE2eTest extends TestCase
             'summary' => 'E2E验收材料已准备',
         ])->assertCreated();
         $acceptance = $project->acceptanceApplications()->firstOrFail();
+        $this->withToken($tokens[$unitUser->id])->postJson("/api/acceptance/{$acceptance->id}/submit")
+            ->assertUnprocessable()->assertJsonCount(2, 'missing_materials');
+        $extension = $this->withToken($tokens[$unitUser->id])->postJson("/api/acceptance/{$acceptance->id}/extensions", [
+            'reason' => 'Independent laboratory report delayed', 'expected_date' => now()->addMonth()->toDateString(),
+        ])->assertCreated()->assertJsonPath('status', 'pending')->json();
+        $this->withToken($tokens[$admin->id])->getJson('/api/acceptance?scope=visible')
+            ->assertOk()->assertJsonPath('data.0.pending_extension_count', 1);
+        $this->withToken($tokens[$county->id])->postJson("/api/acceptance/{$acceptance->id}/extensions", [
+            'extension_id' => $extension['id'], 'decision' => 'approved',
+        ])->assertForbidden();
+        $this->withToken($tokens[$admin->id])->postJson("/api/acceptance/{$acceptance->id}/extensions", [
+            'extension_id' => $extension['id'], 'decision' => 'approved', 'comment' => 'Approved after checking report schedule',
+        ])->assertOk()->assertJsonPath('status', 'approved');
+        $this->withToken($tokens[$unitUser->id])->getJson("/api/acceptance/{$acceptance->id}")
+            ->assertOk()->assertJsonPath('extensions.0.status', 'approved');
         foreach (['acceptance_application', 'project_summary', 'financial', 'achievement', 'other'] as $category) {
             $this->withToken($tokens[$unitUser->id])->postJson("/api/acceptance/{$acceptance->id}/files", [
                 'file' => UploadedFile::fake()->create($category.'.pdf', 10, 'application/pdf'),

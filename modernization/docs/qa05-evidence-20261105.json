@@ -1,0 +1,30 @@
+{
+  "increment": "QA-05",
+  "date": "2026-11-05",
+  "runtime": {"php": "8.3.30", "phpunit": "11.5.57", "database": "sqlite-memory"},
+  "production_changed": false,
+  "test_runs": [
+    {"command": "php vendor/bin/phpunit tests/Feature/ExpertPendingTaskLifecycleTest.php --log-junit ../docs/expert-resubmission-red-20261105.xml", "exit_code": 1, "tests": 2, "assertions": 38, "failures": 1},
+    {"command": "php vendor/bin/phpunit tests/Feature/ExpertPendingTaskLifecycleTest.php tests/Feature/AuthenticatedProjectLifecycleE2eTest.php --log-junit ../docs/expert-resubmission-green-20261105.xml", "exit_code": 0, "tests": 3, "assertions": 193},
+    {"command": "php vendor/bin/phpunit --log-junit ../docs/backend-final-20261105.xml", "exit_code": 0, "tests": 234, "assertions": 1243},
+    {"command": "php vendor/bin/phpunit --coverage-text --fail-on-warning --log-junit ../docs/backend-coverage-final-20261105.xml", "exit_code": 1, "tests": 234, "assertions": 1243, "warning": "No code coverage driver available"}
+  ],
+  "baseline_pint": {
+    "commit": "cef21d3",
+    "extraction_method": "git archive --format=zip with six touched PHP paths; Expand-Archive into unique TEMP directory",
+    "directory": "C:/Users/Administrator/AppData/Local/Temp/nxm-pint-baseline-5e9e6adc530a4d26b78125be20632868/source/modernization/backend/app",
+    "command": "php modernization/backend/vendor/bin/pint --test <extracted-app-directory>",
+    "exit_code": 1,
+    "finding": "All six baseline files reported preexisting line-ending/style failures"
+  },
+  "git_sync": {
+    "command": "git -c http.sslBackend=schannel -c http.version=HTTP/1.1 -c http.lowSpeedLimit=1024 -c http.lowSpeedTime=20 push origin HEAD:refs/heads/codex/composer-security-fix",
+    "exit_code": 0,
+    "output": "To https://github.com/bos432/xm.git\n   cef21d3..0ea4c1a  HEAD -> codex/composer-security-fix\n",
+    "covers": "QA-03 and QA-04 only; QA-05 pending at record creation"
+  },
+  "browser_e2e": "not_run",
+  "mysql_concurrency": "not_run",
+  "smtp_delivery": "not_run",
+  "oss_restore": "not_run"
+}
