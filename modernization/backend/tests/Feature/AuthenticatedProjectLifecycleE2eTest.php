@@ -10,6 +10,7 @@ use App\Models\Unit;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -26,6 +27,10 @@ class AuthenticatedProjectLifecycleE2eTest extends TestCase
 
     public function test_six_authenticated_roles_can_submit_review_score_and_close_acceptance(): void
     {
+        $expectedDriver = getenv('QA_EXPECTED_DB_DRIVER');
+        if ($expectedDriver !== false) {
+            $this->assertSame($expectedDriver, DB::connection()->getDriverName());
+        }
         Storage::fake('local');
         config(['filesystems.default' => 'local']);
 

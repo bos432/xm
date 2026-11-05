@@ -23,6 +23,12 @@
     "output": "To https://github.com/bos432/xm.git\n   cef21d3..0ea4c1a  HEAD -> codex/composer-security-fix\n",
     "covers": "QA-03 and QA-04 only; QA-05 pending at record creation"
   },
+  "candidate_commit": "584239519de3c4028b442c1bc0334ee15667e7cc",
+  "candidate_push_exit_code": 0,
+  "hosted_gates": [
+    {"run_id": 41963835843, "name": "Modernization CI", "status": "completed", "conclusion": "success", "online_e2e": "skipped"},
+    {"run_id": 41963836006, "name": "Modernization Quality Gate", "status": "completed", "conclusion": "success", "mysql_scope": "migrations_only"}
+  ],
   "browser_e2e": "not_run",
   "mysql_concurrency": "not_run",
   "smtp_delivery": "not_run",

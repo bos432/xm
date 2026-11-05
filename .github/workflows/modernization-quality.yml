@@ -98,6 +98,35 @@ jobs:
           count="$(php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap(); echo Illuminate\Support\Facades\DB::table("migrations")->count();')"
           test "$count" -ge 11
 
+      - name: Run review and acceptance business regressions against isolated MySQL 5.7
+        env:
+          QA_EXPECTED_DB_DRIVER: mysql
+          APP_ENV: testing
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: modernization_migration_test
+          DB_USERNAME: root
+          DB_PASSWORD: isolated-ci-root-password
+        run: >-
+          vendor/bin/phpunit
+          tests/Feature/ExpertPendingTaskLifecycleTest.php
+          tests/Feature/AuthenticatedProjectLifecycleE2eTest.php
+          tests/Feature/ReviewWorkflowTest.php
+          tests/Feature/ReviewExportTest.php
+          tests/Feature/ProjectAcceptanceWorkflowTest.php
+          --log-junit /tmp/nxm-mysql-business-results.xml
+
+      - name: Preserve isolated MySQL business regression evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mysql-business-regression-${{ github.sha }}
+          path: /tmp/nxm-mysql-business-results.xml
+          if-no-files-found: warn
+          retention-days: 14
+
   frontend:
     runs-on: ubuntu-latest
     defaults:

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\AuthenticatedProjectLifecycleE2eTest" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AuthenticatedProjectLifecycleE2eTest.php" tests="1" assertions="142" errors="0" failures="0" skipped="0" time="1.059433">
+    <testcase name="test_six_authenticated_roles_can_submit_review_score_and_close_acceptance" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AuthenticatedProjectLifecycleE2eTest.php" line="28" class="Tests\Feature\AuthenticatedProjectLifecycleE2eTest" classname="Tests.Feature.AuthenticatedProjectLifecycleE2eTest" assertions="142" time="1.059433"/>
+  </testsuite>
+</testsuites>

@@ -84,7 +84,18 @@ jobs:
         run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Full backend feature suite
-        run: php artisan test --coverage-text
+        run: php artisan test --coverage-text --coverage-clover=/tmp/nxm-backend-coverage.xml --log-junit=/tmp/nxm-backend-results.xml
+
+      - name: Preserve backend coverage and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-${{ github.sha }}
+          path: |
+            /tmp/nxm-backend-coverage.xml
+            /tmp/nxm-backend-results.xml
+          if-no-files-found: warn
+          retention-days: 14
 
   deployment-safety:
     name: Deployment backup and rollback simulations

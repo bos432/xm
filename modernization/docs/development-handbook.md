@@ -8,11 +8,11 @@
 
 ## Recent Increment
 
-2026-11-05, QA-05 return/resubmit and extension: fixed another P1 where prior expert scores blocked resubmission; history retained, only current-round scores count. Authenticated county-return/extension/material validation141 assertions; three targeted tests193 assertions; full suite234 tests1243 assertions passed. Coverage gate exits1 (no driver); extracted cef21d3 baseline Pint also fails. First candidate0ea4c1a pushed successfully; this increment awaits commit/push. Production unchanged cef21d3. Evidence: `expert-resubmission-{red,green}-20261105.xml`, `authenticated-branches-20261105.xml`, `backend-final-20261105.xml`, `qa05-evidence-20261105.json`.
+2026-11-05, QA-06 isolated CI evidence: adds five business regression files to MySQL5.7 job with explicit driver assertion, JUnit upload, and PCOV Clover/JUnit artifacts. YAML parsed; local driver test1/142 assertions passed. Hosted execution pending commit/push. Prior candidate5842395 gates passed; production remains cef21d3. Evidence: `qa06-local-driver-20261105.xml`, workflow files, and QA-06 entry below.
 
 ## Next Step
 
-Commit/push QA-05 and inspect exact-revision hosted gates; prepare persistent isolated browser fixtures/screenshots and MySQL verification. Coverage runtime, SMTP delivery and OSS restore remain open. Do not deploy this candidate before release gates or write production business data.
+Push QA-06 and inspect actual MySQL business job / coverage artifacts; fix failures before release. Then prepare persistent isolated browser fixtures/screenshots. SMTP delivery and OSS restore remain open; no production business writes.
 
 ## Evidence and State
 
@@ -97,3 +97,16 @@ Commit/push QA-05 and inspect exact-revision hosted gates; prepare persistent is
 - Pint baseline: git archive cef21d3 six touched production PHP files into unique TEMP folder, then Pint --test extracted app; exit1, confirms those baseline files already have style violations. Exact command/output metadata in qa05 JSON. Full formatting gate remains failed, not silently waived. No source-wide formatting or runtime/dependency updates.
 - Git: command-local schannel/HTTP1.1 push recovered transport without global Git config changes; exit0 cef21d3..0ea4c1a -> codex/composer-security-fix. This QA-05 source is not yet pushed at record creation. All production/shared services and formal data unchanged; no mail/OSS writes or permission grants. Acceptance ledger unchanged.
 - Limits: round SQL tested on SQLite only; MySQL concurrency remains unproven. No persistent/browser fixture or screenshots, real external delivery/restore. Next: commit/push candidate and hosted gates; persistent isolated browser/MySQL proof before release.
+
+### QA-05 Git and Hosted Gate Result
+
+- Commit584239519de3c4028b442c1bc0334ee15667e7cc pushed via command-local schannel/HTTP1.1, exit0; worktree clean at verification. GitHub public REST run/job inspection exit0 confirms CI41963835843 and Quality41963836006 completed/success for that SHA. Online E2E skipped by design. MySQL job is migration-only, not business regression. No production change.
+- Next evidence target: MySQL business regression JUnit and Clover coverage artifacts; persistent browser workflow remains separate.
+
+## 2026-11-05 QA-06: MySQL Business and Coverage Evidence Gates
+
+- Scope: `.github/workflows/modernization-quality.yml` now runs five business regression files on its existing isolated MySQL5.7 service after compatibility migration transforms; QA_EXPECTED_DB_DRIVER=mysql asserted within authenticated lifecycle test. JUnit artifact retained14 days. `.github/workflows/modernization-ci.yml` PCOV job now exports Clover and JUnit artifacts. No new services on user's server, no production credentials or deployments.
+- Local commands: node js-yaml loads both YAML documents, exit0; initial yaml module missing exit1, resolved using existing js-yaml with no installs. `QA_EXPECTED_DB_DRIVER=sqlite php vendor/bin/phpunit tests/Feature/AuthenticatedProjectLifecycleE2eTest.php --log-junit ../docs/qa06-local-driver-20261105.xml` exit0, 1 test142 assertions. New test Pint exit0. PHP8.3.30 / Node25.2.1. No dependency/config upgrades.
+- Flag probe: `php artisan test --coverage-text --coverage-clover=../docs/coverage-flag-probe.xml --log-junit=../docs/junit-flag-probe.xml --filter test_completed_expert_leaves_pending_tasks` exit1, missing coverage driver; filtered test30 assertions, no failure in JUnit, console also file_get_contents warning for local absent environment file. Hosted workflow prepares .env; flag acceptance alone does not prove coverage works. junit-flag-probe.xml retained.
+- Limits: new hosted jobs not yet run at record creation; MySQL true concurrent behavior and browser E2E remain not_run. Formal data/production services/SMTP/OSS/other sites unchanged. Acceptance ledger unchanged.
+- Next: commit/push and inspect exact-revision job outcomes/artifacts; preserve failures rather than substituting migration-only success.
