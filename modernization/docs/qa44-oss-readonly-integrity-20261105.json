@@ -1,0 +1,23 @@
+{
+  "stage": "QA-44",
+  "invoke_id": "t-hk0726wovvrehog",
+  "instance": "i-j6c2byx7kjyfueoxpwzc",
+  "command": "cd /www/wwwroot/nxm.zlck888.com/current/backend; nice -n 15 ionice -c 3 /www/server/php/83/bin/php -- --verify-existing-nxm-backups < script",
+  "script_source": "modernization/backend/tests/Operations/oss-backup-readonly.php",
+  "exit_code": 0,
+  "output": {
+    "stage": "QA-44",
+    "mode": "read_only_existing_objects",
+    "results": [
+      {"archive": "nxm-database-20261105-021002.sql.gz", "local_bytes": 87537, "head_status": 200, "get_status": 200, "download_bytes": 87537, "sha256_matches": true, "gzip_read_complete": true, "passed": true, "temporary_download_closed": true},
+      {"archive": "nxm-private-files-20261105-021002.tar.gz", "local_bytes": 1639960, "head_status": 200, "get_status": 200, "download_bytes": 1639960, "sha256_matches": true, "gzip_read_complete": true, "passed": true, "temporary_download_closed": true}
+    ],
+    "passed": true,
+    "database_import_performed": false,
+    "production_business_data_or_config_modified": false
+  },
+  "screenshot": "modernization/e2e/reports/runs/qa44-oss-readonly-integrity.png",
+  "limitations": ["No database import or application startup against restored data", "No archive extraction/path or symlink safety validation", "No OSS write was performed in this check", "No SMTP delivery"],
+  "local_guard_check": {"command": "php tests/Operations/oss-backup-readonly.php --verify-existing-nxm-backups", "exit_code": 2, "output": "Refusing execution outside the explicitly approved site backend."},
+  "syntax_check": {"command": "php -l tests/Operations/oss-backup-readonly.php", "exit_code": 0, "output": "No syntax errors detected in tests/Operations/oss-backup-readonly.php"}
+}

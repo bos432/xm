@@ -1,0 +1,13 @@
+{
+  "stage": "QA-45",
+  "invoke_id": "t-hk0726x8z7sw5xc",
+  "command_name": "nxm-qa45-readonly-restore-capacity",
+  "instance": "i-j6c2byx7kjyfueoxpwzc",
+  "exit_code": 0,
+  "commands": ["uname -sr", "nproc", "awk '/MemTotal:|MemAvailable:|SwapFree:/{print}' /proc/meminfo", "df -Pk /var/tmp /www/wwwroot/nxm.zlck888.com", "cat /proc/loadavg", "stat -fc %T /sys/fs/cgroup", "/www/server/mysql/bin/mysqld --no-defaults --version", "ss -H -ltn 'sport = :33071' | wc -l"],
+  "observations": {"linux": "5.10.134-18.al8.x86_64", "cpu_count": 8, "memory_total_kib": 15562672, "memory_available_kib": 3964056, "swap_free_kib": 0, "root_available_kib": 28880776, "www_available_kib": 81476880, "load": [0.26, 0.33, 0.32], "cgroup_fs": "tmpfs", "mysqld": "5.7.40", "available_executables": ["/www/server/mysql/bin/mysqld", "/www/server/mysql/bin/mysql", "/usr/bin/systemd-run", "/usr/bin/docker"], "port33071_listener_count": 0},
+  "screenshot": "modernization/e2e/reports/runs/qa45-restore-capacity.png",
+  "production_changed": false,
+  "temporary_database_started": false,
+  "limits_not_yet_verified": ["systemd-run CPU and memory accounting enforcement", "private Unix-socket-only mysqld flags and initialization", "temporary target cleanup and no production DB access"]
+}

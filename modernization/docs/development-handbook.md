@@ -2,7 +2,9 @@
 
 ## Current Status
 
-- QA44 live OSS read-only integrity: latest pair20261105-021002 each HEAD/GET200, byte lengths and SHA-256 match local, gzip reads complete; temps closed. Cloud task t-hk0726wovvrehog exit0. No DB import. Snapshot production preflight QA43: SMTP absent/log, OSS enabled, failed_jobs0. QA41 CI repair9070fb3 still only local due GitHub443. Evidence QA44 below; production app release/data unchanged.
+- QA45 hosted receipt: isolated candidate91242214169e100538108c518c2c2d6687f83062 pushed,independent API confirms; exact CI42020324368 and Quality42020324357 completed/success. Previous GitHub push blocker resolved for this candidate. Evidence `qa45-hosted-receipt-20261105.json`. Operational restore/soak/official batch still open; no production deployment.
+- QA45 read-only restore capacity task t-hk0726x8z7sw5xc exit0:8CPU,3964056KiB available RAM,low load,~27GiB root/~77GiB www free; existing MySQL5.7.40/systemd-run/docker available,port33071 unused. No temporary database started. Evidence `qa45-restore-capacity-20261105.json`. Next verify bounded isolated-target script before import.
+- QA44 live OSS read-only integrity: latest pair20261105-021002 each HEAD/GET200, byte lengths and SHA-256 match local, gzip reads complete; temps closed. Cloud task t-hk0726wovvrehog exit0. No DB import. Snapshot production preflight QA43: SMTP absent/log, OSS enabled, failed_jobs0. QA41 CI repair9070fb3 still only local due GitHub443. Evidence `qa44-oss-readonly-integrity-20261105.json`; production app release/data unchanged.
 - QA43 production read-only Cloud Assistant task t-hk0726w54m39dz4 exit0: current20261105105750,PHP8.3.36,failed_jobs0,mail transport log with SMTP unset; OSS enabled/all five fields present, local archive metadata exists. Real remote read/hash/restore not yet verified. Evidence `qa43-operations-preflight-20261105.json`. Reattempt GitHub443 failed; production unchanged.
 - QA42 candidate9070fb3 corrects E2E inventory (old10/1, actual11/2); four local assertions pass. Both pushes failed/reset or GitHub443 unreachable; remote remains b23d1ce. b23d1ce CI completed failure at inventory, Quality completed success. New candidate hosted not_run. Evidence `qa42-e2e-inventory-20261105.json`, `qa42-delivery-block-20261105.json`. No running shell session; production unchanged.
 - QA41 fixed candidate `b23d1ceb9419045771700c2525761c42d954a97f` pushed and independently confirmed by GitHub API. Final isolated MySQL9/9 races and rollback7tests38assertions pass; backend262/1701. QA40 valid630-byte PDF upload/access regression passes. Exact CI42016210292/Quality42016210174 in_progress at delivery checkpoint, not yet approved. Evidence `qa41-release-gates-20261105.json`, `qa40-browser-upload-final-20261105.json`, `qa41-hosted-checkpoint-20261105.json`. Production unchanged.
@@ -15,6 +17,10 @@
 - QA39/40: SMTP/OSS focused tests23/105, backup simulation4/4, Chromium browser upload/access smoke1/1. QA40 unit upload/download SHA matches; anonymous401 and business-admin draft403; isolated data retained. Frontend lint21 tests, typecheck, build and explicit E2E ESLint pass. Local commits `bb8ebf8`, `cc23c3d`, `5ffde60` are not hosted; remote `5c3930d` because GitHub:443 fails. Real SMTP/OSS restore, broader concurrency/soak and official production batch remain open. Evidence `qa39-operations-simulations.json`, `qa40-browser-upload-20261105.json`, `qa39-push-attempt-20261105.json`.
 
 ## Recent Increment
+
+2026-11-05, QA-45 hosted GREEN:9124221 exact CI42020324368/Quality42020324357 completed success; four Quality jobs success. Corrected E2E inventory gate now passed remotely. No production change. Next guarded isolated restore tooling, then remaining readiness and release review.
+
+2026-11-05, QA-45: live server resource inventory confirmed capacity/tools; no restore instance created. CPU/memory enforcement and cleanup still need validation. Evidence qa45-restore-capacity-20261105.json; production unchanged.
 
 2026-11-05, QA-44: real production OSS GET/HEAD verification of latest matching archive pair succeeded with SHA/gzip checks; read-only and bounded. Database recovery import still not_run. Candidate push remains blocked on GitHub443; see QA42 delivery record.
 
@@ -95,7 +101,7 @@ Superseded by the QA-33 repeat verification entry above: the rerun completed suc
 
 ## Next Step
 
-Prepare and run a restore against an isolated temporary MySQL instance on this host, never production; confirm CPU/disk headroom and loopback-only DB binding first. Separately retry GitHub push when HTTPS returns and verify exact-source gates. Do not deploy failed b23d1ce. SMTP awaits owner configuration; soak/official batch remain open. No local shell process running.
+Build/validate guarded disposable restore tooling using private Unix socket only,unique0700 directory,no-defaults target and CPU/memory/runtime limits; no production DB credentials/workers. Capacity QA45 passed,limits/cleanup not yet verified. Candidate9124221 exact hosted gates passed; production stillcef21d3. SMTP awaits owner configuration,soak/official batch remain open. Evidence target: isolated restore report with import/structural integrity and cleanup proof.
 
 ## Evidence and State
 
@@ -534,8 +540,25 @@ Prepare and run a restore against an isolated temporary MySQL instance on this h
 ## 2026-11-05 QA-44: Live OSS Backup Pair Integrity
 
 - Scope: execute candidate-independent, read-only existing-object verification on the same site's current production release via Cloud Assistant task `t-hk0726wovvrehog`, one approved instance only. It selects the lexicographically latest local database archive, requires a same-timestamp private archive, enforces32MiB per object and256MiB decompressed gzip limits, sends signed HEAD+GET, streams SHA256, verifies byte length/full gzip read, writes only to ephemeral tmpfile and closes it. No OSS PUT, archive extraction, or database import.
-- Files/evidence: `backend/tests/Operations/oss-backup-readonly.php` (local tool; syntax validated), `qa43-operations-preflight-20261105.json`, this handbook, report screenshot at `e2e/reports/runs/qa44-oss-readonly-integrity.png`. Cloud output is authoritative; local script standalone invocation exited2 by its deliberate guard because local machine is not the production release.
+- Files/evidence: `backend/tests/Operations/oss-backup-readonly.php` (local tool; syntax validated), `qa43-operations-preflight-20261105.json`, `qa44-oss-readonly-integrity-20261105.json`, this handbook, report screenshot at `e2e/reports/runs/qa44-oss-readonly-integrity.png`. Cloud output is authoritative; local script standalone invocation exited2 by its deliberate guard because local machine is not the production release.
 - Commands/runtime/results: PHP8.3.36 production, task exit0. Database archive `nxm-database-20261105-021002.sql.gz`:87537 bytes local/remote, HEAD200,GET200,SHA matches,gzip complete. Private archive same timestamp:1639960 bytes, HEAD200,GET200,SHA matches,gzip complete. Both temporary downloads closed; output says passed=true, database_import_performed=false, production_business_data_or_config_modified=false.
 - Isolation/data: existing server-held OSS credentials used only for scoped object reads; never printed or transferred. Bounded object/scratch/decompression/time limits; no file residue, DB mutation, production config/account/release change, mail, other site/shared service/sales/payment change. No server service restarted.
 - Ledger: real OSS object availability and byte integrity now verified. Does not prove DB import/recovery, archive semantic safety, app startup against restore, or retention cleanup. SMTP remains intentionally unconfigured, batch is not opened, soak not run. Release not yet approved.
 - Next: on this same instance, inspect cgroup CPU/memory, disk availability and existing MySQL listeners; only if capacity permits, launch a private loopback-only disposable MySQL restore target bounded to conservative resources. Never use production DB/user or dump any data outward. Then repeat recovery with a non-secret random sentinel/structural checks and destroy only temporary target. Push/candidate gate remains separate.
+
+## 2026-11-05 QA-45: Read-only Restore Capacity Inventory
+
+- Scope: collect live shared-server capacity and existing tools before proposing any temporary process. Cloud Assistant invoke t-hk0726x8z7sw5xc,exit0,one selected instance. No new DB/process/service/port was created.
+- Evidence/files: `qa45-restore-capacity-20261105.json`, screenshot `e2e/reports/runs/qa45-restore-capacity.png`, this handbook. Commands include uname,nproc,MemAvailable,df,loadavg,cgroup filesystem,mysqld --no-defaults --version,33071-listener count.
+- Results: Linux5.10.134-18.al8,8CPUs,MemAvailable3964056KiB,no swap,root available28880776KiB,www81476880KiB,load0.26/0.33/0.32. MySQL5.7.40,existing mysql/systemd-run/docker available,cgroup mounttmpfs(v1 layout),port33071 listener0. This proves inventory only,not resource enforcement or import success.
+- Permissions/data: all queries read-only, no credentials/PII/archive contents in output. No production/shared-service/other-site/config/database/account/release/mail/OSS write or sales/payment change. Task terminal; retained UI screenshots local and not staged.
+- Ledger: capacity preflight verified,restore import remains not_run; systemd CPU/memory/runtime enforcement,private datadir and cleanup must be tested before execution. Known candidate push network blocker remains separate.
+- Next: guarded restore test tool with unique0700 path,explicit no-defaults target,skip-networking Unix socket,hard CPU/memory/runtime caps and finally cleanup. Validate locally first; then use server-held OSS read credentials without exporting secrets. Do not start app/mail/queue against restored data.
+
+## 2026-11-05 QA-45 Hosted GREEN: Exact Candidate Receipt
+
+- Scope: retry earlier failed delivery and inspect exact-source GitHub gates. `git -c http.sslBackend=schannel -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=15 push origin codex/composer-security-fix` exit0,b23d1ce..9124221. Public branch REST independently confirms91242214169e100538108c518c2c2d6687f83062.
+- Evidence: `qa45-hosted-receipt-20261105.json`; exact CI42020324368 and Quality42020324357 both completed/success. Quality jobs mysql57-migrations,backend,deployment-safety,frontend all completed/success. Previous b23d1ce failure retained; new expected E2E inventory passed remotely.
+- Permissions/data: only isolated Git branch,ordinary push,no force/global-network changes. Production app remains release20261105105750/cef21d3. No production business/config/DB/account/release,shared-service,other site,mail,OSS write or sales/payment change. No active local shell handle or hosted job remains.
+- Ledger: source delivery and exact-candidate hosted gates verified. Operational readiness remains incomplete: true isolated restore,broader soak,official batch; SMTP intentionally unconfigured. Existing QA44 real OSS byte verification is not promoted to full recoverability. Current-source coverage artifact numbers not extracted,old78.51% not reused.
+- Next: build/test guarded isolated restore target and run import plus structural checks under resource caps,prove no production connection and cleanup. Do not deploy until remaining mandatory readiness gates are satisfied or explicitly scoped by owner; no source gate needs rerun until new source changes.

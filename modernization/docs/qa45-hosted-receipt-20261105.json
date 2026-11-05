@@ -1,0 +1,14 @@
+{
+  "stage": "QA-45-hosted",
+  "sha": "91242214169e100538108c518c2c2d6687f83062",
+  "branch": "codex/composer-security-fix",
+  "push": {"command": "git -c http.sslBackend=schannel -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=15 push origin codex/composer-security-fix", "exit_code": 0, "output": "To https://github.com/bos432/xm.git\n   b23d1ce..9124221  codex/composer-security-fix -> codex/composer-security-fix"},
+  "remote_receipt": {"endpoint": "GET /repos/bos432/xm/branches/codex/composer-security-fix", "sha": "91242214169e100538108c518c2c2d6687f83062"},
+  "runs": [
+    {"id": 42020324368, "name": "Modernization CI", "status": "completed", "conclusion": "success", "sha": "91242214169e100538108c518c2c2d6687f83062"},
+    {"id": 42020324357, "name": "Modernization Quality Gate", "status": "completed", "conclusion": "success", "sha": "91242214169e100538108c518c2c2d6687f83062"}
+  ],
+  "quality_jobs": [{"id": 127221150348, "name": "mysql57-migrations", "conclusion": "success"}, {"id": 127221150700, "name": "backend", "conclusion": "success"}, {"id": 127221150765, "name": "deployment-safety", "conclusion": "success"}, {"id": 127221150845, "name": "frontend", "conclusion": "success"}],
+  "proof_limits": ["Hosted success does not prove production business journeys", "Current-source coverage artifact metrics not yet extracted", "OSS bytes verified in QA44, database import still not_run", "No production deployment or merge in this increment"],
+  "production_changed": false
+}
