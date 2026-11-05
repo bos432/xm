@@ -10,6 +10,8 @@ QA-10 update: QA08-P1-DETAIL is fixed locally, not deployed. Reviewer drawer and
 
 | ID | Severity | Module | Reproduction command | Actual vs expected | Recommendation/status |
 | --- | --- | --- | --- | --- | --- |
+| QA26-P2-CANDIDATE | P2 | Dispatch rule administration | `php vendor/bin/phpunit tests/Feature/DispatchRuleAdministrationTest.php` | Wrong-role/inactive candidates silently discarded with201; expected422 and no mutation | Fixed locally scoped role/active exists + distinct validation, snapshot unaffected; qa26-dispatch-20261105.json |
+| QA26-P0-SQLITE | P0 local verification blocker | Dispatch matcher | Same test, actual rule assignment | SQLite fails `no such function: FIELD`; expected preserved configured order and successful assignment | Fixed locally portable collection ordering; production MySQL failure not claimed. Added real MySQL CI regression, pending new-source gate |
 | QA24-P1-IPV6 | P1 | Security login IP rules | `php vendor/bin/phpunit tests/Feature/AdministrativeSurfaceRegressionTest.php --filter ipv6_blacklist` | IPv6 CIDR saved but did not block matching login; expected403 and security event | Fixed locally using installed Symfony IpUtils; exact new-source hosted/production verification pending |
 | QA24-P2-CIDR | P2 | Security rule validation | `php vendor/bin/phpunit tests/Feature/AdministrativeSurfaceRegressionTest.php --filter 'invalid_ip\|malformed_legacy'` | Invalid rule returned201; legacy alphabetic mask blocked unrelated IP. Expected422/no insert and no malformed-rule match | Fixed shared strict IP/prefix validation; boundary regression for IPv4/IPv6, /0,/32,/128 and inactive rules. qa24-security-rules-20261105.json |
 | QA19-P2-DISPLAY | P2 | Acceptance records | `node --test tests/acceptance-errors.test.js` and unit browser history | History raw approve/return and UTC API strings instead of readable Chinese business display | Fixed locally QA19,18frontend tests and browser screenshot28. Not deployed |
@@ -28,6 +30,8 @@ QA-10 update: QA08-P1-DETAIL is fixed locally, not deployed. Reviewer drawer and
 | QA-DELIVERY-01 | P0 release blocker (resolved transport) | Git transport | `git ls-remote origin refs/heads/codex/composer-security-fix` | Exit1 curl28 connection reset; initial REST branch was cef21d3 | Command-local schannel/HTTP1.1 pushes through ed4f5bf succeeded. Exact candidate CI/Quality gates passed. No production deployment |
 
 ## Executed verification
+
+- QA26 full backend `php vendor/bin/phpunit --log-junit ../docs/qa26-backend-full.xml` exit0, `OK (251 tests, 1578 assertions)`. Changed-file Pint exit0. Dispatch red second run4tests46assertions1error1failure; first run also had missing unit fixture test-authoring error, corrected. Administrative and dispatch tests added to isolated MySQL workflow; new-source hosted/browser tests pending. Production unchanged.
 
 - QA24: full backend `php vendor/bin/phpunit --log-junit ../docs/qa24-backend-full.xml`, exit0, `OK (247 tests, 1517 assertions)`, PHP8.3.30. Changed-file Pint exit0. Five non-super roles denied administrative APIs; system text override/reset/export and builtin protection verified. Red security cases: 3tests,2failures,1error; see qa24-ip-behavior-red.xml. New-source coverage not measured; production unchanged. Prior562fee7 CI41984836524/Quality41984836526 confirmed completed/success, which does not cover QA24 PHP edits.
 

@@ -1,0 +1,25 @@
+{
+  "stage":"QA-26",
+  "date":"2026-11-05",
+  "runtime":"PHP8.3.30 / PHPUnit11.5.57",
+  "isolation":"SQLite memory; synthetic accounts; no production changes",
+  "red": {
+    "command":"php vendor/bin/phpunit tests/Feature/DispatchRuleAdministrationTest.php --log-junit ../docs/qa26-dispatch-fixture-fixed-red.xml",
+    "exit_code":1,"tests":4,"assertions":46,"errors":1,"failures":1,
+    "observations":["wrong-role candidate silently dropped; API201 instead of422", "FIELD ordering fails on SQLite"],
+    "initial_fixture_error":"qa26-dispatch-red.xml additionally records missing project unit/owner fixture; corrected before second run"
+  },
+  "green": {
+    "command":"php vendor/bin/phpunit --log-junit ../docs/qa26-backend-full.xml",
+    "exit_code":0,"tests":251,"assertions":1578,"errors":0,"failures":0,"skips":0
+  },
+  "format":{
+    "command":"php vendor/bin/pint --test app/Http/Controllers/ReviewDispatchRuleController.php app/Support/ReviewDispatchMatcher.php tests/Feature/DispatchRuleAdministrationTest.php",
+    "exit_code":0,"scope":"changed files only"
+  },
+  "verified":["unauthorized unit/county/department/expert CRUD and user selector403", "admin CRUD/filter and active role candidate selection", "wrong-role/inactive/duplicate/missing IDs422 with no mutation", "reverse input user order preserved", "assignment snapshot unchanged after rule modification/deletion", "invalid fields422 and no insert"],
+  "changes":["scoped exists validation and distinct candidate IDs", "portable collection order preserving supplied IDs", "add dispatch and security regression files to isolated MySQL workflow"],
+  "hosted_new_source":"not_run until push",
+  "browser_new_source":"not_run",
+  "true_concurrency":"not_run"
+}

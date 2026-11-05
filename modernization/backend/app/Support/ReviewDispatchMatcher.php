@@ -172,8 +172,9 @@ class ReviewDispatchMatcher
             ->whereIn('id', $ids)
             ->where('role', $rule->target_stage)
             ->where('is_active', true)
-            ->orderByRaw('FIELD(id, '.$ids->implode(',').')')
-            ->get();
+            ->get()
+            ->sortBy(fn (User $user): int => $ids->search((int) $user->id))
+            ->values();
     }
 
     private function activeExperts(): Collection

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\DispatchRuleAdministrationTest" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\DispatchRuleAdministrationTest.php" tests="4" assertions="46" errors="1" failures="1" skipped="0" time="0.892149">
+    <testcase name="test_unauthorized_roles_cannot_read_write_or_select_dispatch_users" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\DispatchRuleAdministrationTest.php" line="24" class="Tests\Feature\DispatchRuleAdministrationTest" classname="Tests.Feature.DispatchRuleAdministrationTest" assertions="23" time="0.795081"/>
+    <testcase name="test_admin_crud_filters_candidate_roles_and_snapshot_survives_rule_changes" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\DispatchRuleAdministrationTest.php" line="40" class="Tests\Feature\DispatchRuleAdministrationTest" classname="Tests.Feature.DispatchRuleAdministrationTest" assertions="15" time="0.056017">
+      <error type="Illuminate\Database\QueryException">Tests\Feature\DispatchRuleAdministrationTest::test_admin_crud_filters_candidate_roles_and_snapshot_survives_rule_changes&#13;
+Illuminate\Database\QueryException: SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: projects.unit_id (Connection: sqlite, Database: :memory:, SQL: insert into "projects" ("title", "category", "project_type", "status", "summary", "budget_amount", "metadata", "updated_at", "created_at") values (Totam corrupti magnam in voluptate., 科技项目, 重点扶持, draft, Unde fuga ipsum nulla quisquam quibusdam. Velit ratione impedit non modi repellendus quia qui., 85282.62, {"management_unit":"QA management"}, 2026-11-05 15:23:34, 2026-11-05 15:23:34))
+&#13;
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Database\Connection.php:838
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Database\Connection.php:794
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Database\Connection.php:573
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Database\Connection.php:537
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Database\Query\Processors\Processor.php:32
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Database\Query\Builder.php:4174
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Builder.php:2237
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1436
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1401
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Model.php:1240
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:370
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Collections\Traits\EnumeratesValues.php:275
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:365
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:321
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Database\Eloquent\Factories\Factory.php:315
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\DispatchRuleAdministrationTest.php:58</error>
+    </testcase>
+    <testcase name="test_wrong_role_inactive_duplicate_or_missing_candidates_are_rejected_without_mutation" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\DispatchRuleAdministrationTest.php" line="71" class="Tests\Feature\DispatchRuleAdministrationTest" classname="Tests.Feature.DispatchRuleAdministrationTest" assertions="1" time="0.020400">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\DispatchRuleAdministrationTest::test_wrong_role_inactive_duplicate_or_missing_candidates_are_rejected_without_mutation&#13;
+Expected response status code [422] but received 201.
+Failed asserting that 201 is identical to 422.
+&#13;
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\Concerns\AssertsStatusCodes.php:221
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\DispatchRuleAdministrationTest.php:79</failure>
+    </testcase>
+    <testcase name="test_invalid_rule_fields_do_not_persist_partial_records" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\DispatchRuleAdministrationTest.php" line="89" class="Tests\Feature\DispatchRuleAdministrationTest" classname="Tests.Feature.DispatchRuleAdministrationTest" assertions="7" time="0.020651"/>
+  </testsuite>
+</testsuites>

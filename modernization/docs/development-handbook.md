@@ -5,9 +5,11 @@
 - Published production baseline: `cef21d38e6989cffc9cc5e516dbd14f4a445d6c5` (`20261105105750`), deployed 2026-11-05 with migrations and Seeder skipped. Previous rollback target: `20261018050541` / `59bbdec`.
 - Remote `main` and production match `cef21d3`; exact-revision hosted gates passed. Independent HTTPS login/logout, seven HTTP paths, and one site PHP worker on the new release verified. Anonymous browser E2E: 2 passed.
 - Formal operations readiness is not fully verified: isolated submission and acceptance/extension closure independently read back; super-admin score configuration save/reload/restoration verified QA20. Responsive UI, other feature paths, SMTP delivery and OSS restore remain open.
-- QA24 candidate4fb9f019c7073dfe9af3c8ccbf3d0dc4e43a1bf8 CI41986146773/Quality41986146817 completed/success; not deployed. Hosted PCOV statements5282/6728=78.51%,247tests1517assertions. Local changed-file Pint passed; full-repo formatting baseline unresolved.
+- QA26 local dispatch validation/portable ordering fixes:251tests1578assertions, changed-file Pint pass; new source not yet pushed/hosted/deployed. Prior4fb9f01 CI41986146773/Quality41986146817 completed/success and coverage78.51% apply prior source only. Full-repo formatting baseline unresolved.
 
 ## Recent Increment
+
+2026-11-05, QA-26 dispatch tests exposed silent candidate dropping and SQLite FIELD failure. Strict candidate validation/portable ordered selection fixed; snapshots preserved after rule changes/deletion. Local251tests1578assertions/Pint0. MySQL workflow includes new admin+dispatch tests. Evidence qa26-dispatch-20261105.json. Production unchanged.
 
 2026-11-05, QA-25 exact4fb9f01 CI/Quality all required jobs completed/success; downloaded artifact13396575056 and parsed root metrics/JUnit:78.51% statements,247tests1517assertions. Evidence qa25-hosted-coverage-20261105.json. Production unchanged.
 
@@ -53,7 +55,7 @@
 
 ## Next Step
 
-Add isolated dispatch-rule controller integration tests (measured0/98 statements), then lifecycle and true concurrency. Exact4fb9f01 gates passed, coverage78.51%. Tab12 unit handoff retained, viewport reset; no reseed. Broader responsive UI, SMTP/OSS restore and browser upload remain open. Production unchanged.
+Commit/push QA26 dispatch fixes and verify exact hosted MySQL/coverage; then lifecycle and true concurrency. Tab12 unit handoff retained, viewport reset; no reseed. Broader responsive UI, SMTP/OSS restore and browser upload remain open. Production unchanged.
 
 ## Evidence and State
 
@@ -351,3 +353,11 @@ Add isolated dispatch-rule controller integration tests (measured0/98 statements
 - Metrics: Clover project metrics5282/6728statements78.51%,314/547methods,89files; root JUnit247tests1517assertions0errors/failures/skips. First exploratory parser selected wrong node/summed nested suites; zero metrics/755duplicate tests discarded after inspecting raw XML. Branch coverage unavailable, not100%. Raw artifacts under ignored QA07 coverage-4fb9f01. PHP8.3.30 local unchanged; no runtime changes.
 - Files: this handbook, qa25-hosted-coverage-20261105.json; QA_REPORT evidence update follows. No source/config/dependency/production/account/tenant/business/mail/OSS/shared-service/other-site changes. Existing role/API cases apply exact source; no new browser or true-concurrency claim. Acceptance status remains incomplete.
 - Next: test dispatch-rule CRUD/authorization/candidate filtering, then lifecycle/concurrency and operational evidence. Legacy import remains explicitly uncovered; coverage is not release approval.
+
+## 2026-11-05 QA-26: Dispatch Administration and Stable Assignment Snapshot
+
+- Scope: API authorization/CRUD/filter/candidate list/validation and actual rule application. Wrong-role/inactive candidates silently dropped with201; strict scoped exists/distinct now422 without mutation. SQLite rule application failed MySQL-only FIELD; collection sort preserves submitted candidate order portably. Snapshot remains byte-equivalent after rule edit/delete. No schema/dependency/permission expansion.
+- Files: DispatchRuleAdministrationTest.php, ReviewDispatchRuleController.php, ReviewDispatchMatcher.php, .github/workflows/modernization-quality.yml (add administrative/dispatch files to isolated MySQL regression), QA_REPORT, qa26-dispatch-20261105.json and JUnit. Initial fixture missed unit/owner and was corrected; second red exposed real FIELD failure plus201 mismatch. No application finding inferred from fixture error.
+- Commands: PHP8.3.30/PHPUnit11.5.57; targeted second red exit1,4tests46assertions1error1failure; initial green4/61; full php vendor/bin/phpunit --log-junit ../docs/qa26-backend-full.xml exit0,251tests1578assertions. Changed-file Pint formatted then --test exit0; git diff --check0. An rg follow-up used wrong relative workflow path and returned2; corrected root path before commit, not a test gate failure. New-source coverage/hosted/browser not_run.
+- Data/permissions: in-memory synthetic users; four unauthorized roles CRUD/select403, active correct-role candidates only, invalid candidate updates no mutation. No production config/DB/account/business changes, external SMTP/OSS, other sites/shared services or sales/payment changes. QA_REPORT adds P2 candidate and P0 isolated verification blocker fixed_local; whole-repo formatting remains open, true concurrent writes remain not_run.
+- Next: commit/push exact QA26 and inspect isolated MySQL hosted results/coverage; then lifecycle negative paths and concurrent transaction runner. Production remains cef21d3.

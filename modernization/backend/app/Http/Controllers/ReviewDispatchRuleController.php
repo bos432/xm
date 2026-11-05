@@ -11,9 +11,7 @@ use Illuminate\Validation\Rule;
 
 class ReviewDispatchRuleController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
-    }
+    public function __construct(private readonly AuditLogger $auditLogger) {}
 
     public function index(Request $request)
     {
@@ -114,7 +112,9 @@ class ReviewDispatchRuleController extends Controller
             'project_category' => ['nullable', 'string', 'max:120'],
             'project_type' => ['nullable', 'string', 'max:120'],
             'recommended_user_ids' => ['nullable', 'array'],
-            'recommended_user_ids.*' => ['integer', 'exists:users,id'],
+            'recommended_user_ids.*' => ['integer', 'distinct', Rule::exists('users', 'id')->where(fn ($query) => $query
+                ->where('role', $request->input('target_stage'))
+                ->where('is_active', true))],
             'expert_count' => ['nullable', 'integer', 'min:1', 'max:20'],
             'auto_assign' => ['required', 'boolean'],
             'is_active' => ['required', 'boolean'],
@@ -122,17 +122,8 @@ class ReviewDispatchRuleController extends Controller
             'remark' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $targetRole = $data['target_stage'];
-        $validUserIds = User::query()
-            ->whereIn('id', $data['recommended_user_ids'] ?? [])
-            ->where('role', $targetRole)
-            ->where('is_active', true)
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
-
-        $data['recommended_user_ids'] = $validUserIds;
-        $data['expert_count'] = $targetRole === Role::EXPERT ? ($data['expert_count'] ?? null) : null;
+        $data['recommended_user_ids'] = array_map('intval', $data['recommended_user_ids'] ?? []);
+        $data['expert_count'] = $data['target_stage'] === Role::EXPERT ? ($data['expert_count'] ?? null) : null;
 
         return $data;
     }
