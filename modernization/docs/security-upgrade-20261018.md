@@ -2,7 +2,7 @@
 
 ## Scope and Release Status
 
-This is a candidate change on the isolated `codex/composer-security-fix` branch. It has passed the hosted quality gate recorded for the exact candidate commit, but it has not been merged or deployed. Production remains on its existing release pending a staged release check and site-local deployment approval.
+The original candidate was published as `59bbdec` and deployed to the site-local production release `20261018050541` on 2026-10-18. Database migrations and Seeder were skipped; no shared services were reloaded. On 2026-11-05, a fresh dependency audit found newer Vite and Symfony advisories after the earlier candidate audit. Their fixes are being prepared on the isolated `codex/composer-security-fix` branch and are **not yet published or deployed**. See `security-followup-20261105.md` for current evidence and gate status.
 
 ## Changes
 
