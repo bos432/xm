@@ -13,8 +13,7 @@ Recommended production layout:
 └── shared/
     ├── .env
     ├── composer.phar
-    ├── storage/
-    └── bootstrap-cache/
+    └── storage/
 ```
 
 The BT Panel website root should point to:
@@ -58,10 +57,14 @@ bash /path/to/deploy.sh
 ```
 
 Before deployment, provision `shared/.env` (with the existing production `APP_KEY`),
-`shared/composer.phar`, `shared/storage/`, and `shared/bootstrap-cache/`. The
-deployment script creates the Laravel runtime subdirectories, links both
-`storage` and `bootstrap/cache` to the site-owned shared paths, and grants the
-configured web user access to those paths. It does not migrate or overwrite
+`shared/composer.phar` and `shared/storage/`. The
+deployment script creates the Laravel runtime subdirectories and links
+`storage` to the site-owned shared path. Each release keeps its own
+`backend/bootstrap/cache` directory so warming candidate caches cannot overwrite
+the live release's configuration or routes, and switching back restores the
+previous cache together with the previous code. Existing legacy
+`shared/bootstrap-cache` is left untouched for rollback to older releases. The
+configured web user is granted access to runtime paths. It does not migrate or overwrite
 application data; perform any database migration separately after taking and
 validating a backup.
 

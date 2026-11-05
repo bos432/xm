@@ -1,0 +1,49 @@
+{
+  "phase": "QA69",
+  "date": "2026-11-06",
+  "base": "d884ed0e6f5cea1e96593f1d8801696da4755264",
+  "defect": {
+    "severity": "P1",
+    "description": "Shared bootstrap/cache is overwritten while candidate is warmed before activation; rollback restores code but not matching configuration/routes",
+    "reproduction": "bash modernization/deploy/tests/deploy-release-safety-test.sh",
+    "red": {
+      "chunk_id": "6d1509",
+      "wall_time_seconds": 0.0000079,
+      "exit_code": 1,
+      "original_token_count": 513,
+      "output": "FAIL deployment overwrote the previous release configuration cache\nTest artifacts retained at /tmp/tmp.rO5e15Nvqz\n\n--- /tmp/tmp.rO5e15Nvqz/php.log ---\ncomposer.phar install --no-dev --optimize-autoloader --no-interaction\nartisan migrate --force\nartisan config:clear\nartisan route:clear\nartisan config:cache\nartisan route:cache\n/tmp/tmp.rO5e15Nvqz/app/releases/20261106025240/backend/artisan health:login-check\n/tmp/tmp.rO5e15Nvqz/app/releases/20261106025240/backend/artisan config:show queue.default\n/tmp/tmp.rO5e15Nvqz/app/releases/20261106025240/backend/artisan queue:failed-count\n\n--- /tmp/tmp.rO5e15Nvqz/success.log ---\n[2026-11-06 02:52:42] Backing up database before migration to /tmp/tmp.rO5e15Nvqz/app/shared/backups/database/app_test-before-20261106025240.sql.gz\n[2026-11-06 02:52:44] Cloning https://example.invalid/repo.git#main\n[2026-11-06 02:52:45] Building frontend\n[2026-11-06 02:52:45] Using frontend API base: /api\n[2026-11-06 02:52:45] Preparing release directories\n[2026-11-06 02:52:47] Applying production compatibility patches\n[2026-11-06 02:52:49] Linking shared backend runtime files\n[2026-11-06 02:52:52] Installing backend dependencies\n[2026-11-06 02:52:52] Running database migrations; verified backup created and schema changes are not automatically reversible\n[2026-11-06 02:52:52] Refreshing Laravel caches\n[2026-11-06 02:52:52] Ensuring public storage link\n[2026-11-06 02:52:52] Switching current release\n[2026-11-06 02:52:53] Activated the release through the site current symlink; no shared services were reloaded\n[2026-11-06 02:52:53] Running deployment health checks for https://nxm.zlck888.com\n[2026-11-06 02:52:53] Local credential validation and HTTPS captcha/login/logout health check passed\n[2026-11-06 02:52:53] WARNING: failed queue jobs exist; check the mail/queue worker\n[2026-11-06 02:52:53] Installing site-local runtime scripts after release health checks passed\n[2026-11-06 02:52:54] Deployment complete: 20261106025240\n[2026-11-06 02:52:54] Website root should be: /tmp/tmp.rO5e15Nvqz/app/current/public\n"
+    }
+  },
+  "fix": "Keep bootstrap/cache release-local; preserve legacy shared directory for older releases",
+  "validation": {
+    "command": "docker run --rm --pull=never --network none --read-only --cpus 0.5 --memory 256m --pids-limit 64 --tmpfs /tmp:rw,exec,nosuid,nodev,size=96m --mount type=bind,source=<isolated-worktree>/modernization/deploy,target=/input,readonly --entrypoint /bin/bash ubuntu:24.04 -lc '<copy to /tmp/repo/modernization/deploy; normalize copied CRLF; run release-safety, rollback, watchdog and backup tests under timeout>'",
+    "initial": {
+      "chunk_id": "3ede9a",
+      "wall_time_seconds": 10.0014201,
+      "session_id": 88630,
+      "original_token_count": 176,
+      "output": "PASS candidate cache is release-local and previous cache stays unchanged\nPASS successful deploy backs up database, switches current, and does not reload nginx\nPASS failed HTTP login health check restores the previous release\nPASS failed pre-switch health check preserves previous shared runtime scripts\nPASS runtime script installation failure restores both previous shared scripts and release\nPASS missing health credentials fail before switching releases\nPASS failed database backup stops before release switch and migration\nPASS empty database backup stops before release switch and migration\nPASS SQLite database backup is made before migration\nPASS relative SQLite path is rejected before migration\n"
+    },
+    "terminal": {
+      "chunk_id": "d9db90",
+      "wall_time_seconds": 0.0000072,
+      "exit_code": 0,
+      "original_token_count": 108,
+      "output": "Deployment isolation and rollback checks passed.\nPASS watchdog re-resolves current release before each worker start\nPASS database and private uploads are archived and verified without exposing credentials\nPASS dump failure preserves existing backups and removes partial files\nPASS OSS failure preserves the newly verified local archives and skips retention cleanup\nPASS retention removes only expired archives owned by this site\n"
+    },
+    "scope": "Shell simulations with fixture PHP/git/curl, not production deployment"
+  },
+  "failed_attempts": [
+    "WSL Bash/Service/CreateInstance/WSAETIMEDOUT exit1: fixed-suite did not execute",
+    "Existing MySQL image lacks flock exit1",
+    "Ubuntu tmpfs default noexec prevented mock php executable check exit1",
+    "Copy to /tmp/deploy lost expected repo layout; release-safety passed but rollback failed path lookup exit1; corrected /tmp/repo/modernization/deploy"
+  ],
+  "production_changed": false,
+  "remaining": [
+    "Exact candidate hosted CI and Quality Gate",
+    "Role evidence matrix reconciliation",
+    "Main integration and site-only deployment/postdeploy verification"
+  ],
+  "qa66_receipts": "qa66-retained-command-receipts-20261106.json"
+}

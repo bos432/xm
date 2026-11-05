@@ -28,6 +28,9 @@ mkdir -p "$MOCK_BIN" "$APP_ROOT/shared/storage" "$APP_ROOT/shared/bootstrap-cach
   "$APP_ROOT/releases/previous/public" "$APP_ROOT/releases/previous/backend"
 command -v flock >/dev/null 2>&1 || { printf 'flock is required by deploy.sh\n' >&2; exit 1; }
 ln -s "$APP_ROOT/releases/previous" "$APP_ROOT/current"
+mkdir -p "$APP_ROOT/releases/previous/backend/bootstrap"
+ln -s "$APP_ROOT/shared/bootstrap-cache" "$APP_ROOT/releases/previous/backend/bootstrap/cache"
+printf 'previous config\n' > "$APP_ROOT/shared/bootstrap-cache/config.php"
 cat > "$APP_ROOT/shared/.env" <<'ENV'
 APP_KEY=base64:dGVzdC1rZXktdmFsdWUtZm9yLXRlc3Rz
 APP_URL=https://nxm.zlck888.com
@@ -95,6 +98,10 @@ cat > "$MOCK_BIN/php" <<'MOCK'
 #!/usr/bin/env bash
 set -e
 printf '%s\n' "$*" >> "${MOCK_PHP_LOG:?}"
+case "$*" in
+  'artisan config:clear') rm -f bootstrap/cache/config.php ;;
+  'artisan config:cache') printf 'candidate config\n' > bootstrap/cache/config.php ;;
+esac
 if [[ "$*" == *"health:login-check"* ]] && [[ "${MOCK_HEALTH_LOGIN_FAIL:-0}" == "1" ]]; then
   exit 1
 fi
@@ -140,6 +147,13 @@ if ! run_deploy > "$TEST_ROOT/success.log" 2>&1; then
   exit 1
 fi
 SUCCESS_TARGET="$(readlink -f "$APP_ROOT/current")"
+if ! grep -qx 'previous config' "$APP_ROOT/releases/previous/backend/bootstrap/cache/config.php"; then
+  printf 'FAIL deployment overwrote the previous release configuration cache\n' >&2
+  exit 1
+fi
+[[ ! -L "$SUCCESS_TARGET/backend/bootstrap/cache" ]]
+grep -qx 'candidate config' "$SUCCESS_TARGET/backend/bootstrap/cache/config.php"
+printf 'PASS candidate cache is release-local and previous cache stays unchanged\n'
 [[ "$SUCCESS_TARGET" != "$APP_ROOT/releases/previous" ]]
 ! grep -q 'nginx reload' "$TEST_ROOT/success.log"
 grep -q 'HTTPS captcha/login/logout health check passed' "$TEST_ROOT/success.log"
@@ -167,6 +181,7 @@ if ! grep -q 'restored previous release' "$TEST_ROOT/failure.log"; then
   exit 1
 fi
 grep -q 'Local login health check failed' "$TEST_ROOT/failure.log"
+grep -qx 'previous config' "$APP_ROOT/current/backend/bootstrap/cache/config.php"
 printf 'PASS failed HTTP login health check restores the previous release\n'
 
 sleep 1

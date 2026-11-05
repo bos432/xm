@@ -210,12 +210,10 @@ mkdir -p \
   "$SHARED_DIR/storage/framework/sessions" \
   "$SHARED_DIR/storage/framework/views" \
   "$SHARED_DIR/storage/logs" \
-  "$SHARED_DIR/bootstrap-cache" \
   bootstrap/cache
-chown -R "$WEB_USER" "$SHARED_DIR/storage" "$SHARED_DIR/bootstrap-cache" || true
-chmod -R ug+rwX "$SHARED_DIR/storage" "$SHARED_DIR/bootstrap-cache" || true
-rm -rf bootstrap/cache
-ln -s "$SHARED_DIR/bootstrap-cache" bootstrap/cache
+# Caches contain release-specific paths and routes; never share them with current.
+chown -R "$WEB_USER" "$SHARED_DIR/storage" bootstrap/cache || true
+chmod -R ug+rwX "$SHARED_DIR/storage" bootstrap/cache || true
 cp "$COMPOSER_BIN" composer.phar
 
 log "Installing backend dependencies"

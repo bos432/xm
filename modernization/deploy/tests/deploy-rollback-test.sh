@@ -54,7 +54,8 @@ FIRST_RELEASE="$(readlink "$APP_ROOT/current")"
 [[ "$FIRST_RELEASE" == "$APP_ROOT"/releases/* ]]
 [[ ! -e "$DEPLOY_TEST_NGINX_CALLED" ]]
 [[ -L "$FIRST_RELEASE/backend/storage" ]]
-[[ -L "$FIRST_RELEASE/backend/bootstrap/cache" ]]
+[[ -d "$FIRST_RELEASE/backend/bootstrap/cache" ]]
+[[ ! -L "$FIRST_RELEASE/backend/bootstrap/cache" ]]
 for runtime_dir in \
   "$APP_ROOT/shared/storage/app/private" \
   "$APP_ROOT/shared/storage/app/public" \
