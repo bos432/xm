@@ -8,6 +8,8 @@ QA47 adds bounded, read-only SQL dump inspection for the actual single-database 
 
 QA47b validates the scanner against a real schema-only `mysqldump --no-data --routines --triggers` from the already-running labeled QA MySQL container bound to loopback127.0.0.1:13371: exit0,223 SQL statements,57,737 expanded bytes. It contains schema only, no row data; temporary gzip removed. This proves syntax compatibility only, not isolated resource enforcement or production backup recovery. Evidence is included in `qa47-restore-input-safety-20261105.json`.
 
+QA47c candidate `638267d8b7a795a1741c03b45ff3a218908dd242` is pushed and remote branch SHA independently matches. Exact Modernization CI42027427223 and Quality Gate42027427406 completed success; CI's optional online write E2E is skipped by scope. Quality backend, deployment-safety, mysql57-migrations, frontend jobs all success. This does not provide server restore or production release evidence.
+
 This increment uses the isolated worktree, SQLite in memory, array mail/cache and synthetic users, plus the labeled loopback-only MySQL 5.7.44 QA container. Production remains cef21d3. Feature tests do not prove all browser workflows or production account configuration.
 
 ## Defects

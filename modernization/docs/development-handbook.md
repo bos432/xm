@@ -2,6 +2,7 @@
 
 ## Current Status
 
+- QA47c isolated candidate `638267d8b7a795a1741c03b45ff3a218908dd242` pushed and remote SHA verified. Exact CI42027427223 and Quality42027427406 completed success; optional online E2E intentionally skipped. Hosted jobs are recorded in `qa47-restore-input-safety-20261105.json`. No production deployment; recovery/operations gates remain open.
 - QA45 hosted receipt: isolated candidate91242214169e100538108c518c2c2d6687f83062 pushed,independent API confirms; exact CI42020324368 and Quality42020324357 completed/success. Previous GitHub push blocker resolved for this candidate. Evidence `qa45-hosted-receipt-20261105.json`. Operational restore/soak/official batch still open; no production deployment.
 - QA46 archive safety gate: read-only tar.gz validator and12 tests pass; rejects traversal, absolute paths, links/devices/FIFO, duplicate normalized names, file-parent collisions, corrupt/truncated gzip, empty archives and resource-limit violations. Evidence `qa46-archive-safety-20261105.json`. Server execution blocked_external because browser page control is unavailable. No production access or changes.
 - QA47 restore-input scan:21 synthetic tests and a real loopback QA `mysqldump --no-data --routines --triggers` pass (223 statements/57,737B). No production backup scanned/imported. Prior server evidence says systemd transient execution fails for site programs, so Docker/systemd cannot be presumed to enforce limits. Evidence `qa47-restore-input-safety-20261105.json`; browser control still blocks remote read-only checks.
@@ -19,6 +20,8 @@
 - QA39/40: SMTP/OSS focused tests23/105, backup simulation4/4, Chromium browser upload/access smoke1/1. QA40 unit upload/download SHA matches; anonymous401 and business-admin draft403; isolated data retained. Frontend lint21 tests, typecheck, build and explicit E2E ESLint pass. Local commits `bb8ebf8`, `cc23c3d`, `5ffde60` are not hosted; remote `5c3930d` because GitHub:443 fails. Real SMTP/OSS restore, broader concurrency/soak and official production batch remain open. Evidence `qa39-operations-simulations.json`, `qa40-browser-upload-20261105.json`, `qa39-push-attempt-20261105.json`.
 
 ## Recent Increment
+
+2026-11-05, QA-47c delivery: commit `638267d8b7a795a1741c03b45ff3a218908dd242` pushed; `git ls-remote origin refs/heads/codex/composer-security-fix` returns same SHA. Public GitHub REST confirms CI42027427223 and Quality42027427406 completed success. CI frontend/backend/deployment tests success, online E2E skipped; all four Quality jobs success. Evidence `qa47-restore-input-safety-20261105.json`. No production change. Next regain server read-only control and verify restore resource isolation.
 
 2026-11-05, QA-47b: scanner accepted actual isolated QA `mysqldump --no-data --routines --triggers` output: exit0,223 statements/57737 expanded bytes. Fixture was from existing `nxm.qa.scope=isolated-concurrency` container bound only to127.0.0.1:13371; schema only, no row data. First capture attempt's pipe warning was corrected and disclosed in evidence. Production archive/server recovery remains not_run. Evidence `qa47-restore-input-safety-20261105.json`. Next regain read-only cloud control and verify server resource enforcement before any restore workload.
 
@@ -110,6 +113,8 @@ Superseded by the QA-33 repeat verification entry above: the rerun completed suc
 ## Next Step
 
 Restore remote read-only control. Inspect Docker daemon/image/cgroup enforcement and actual archive sizes without starting any workload. Historical server evidence says transient systemd execution failed for the site, so don't assume it provides limits. Only proceed with isolated restore if CPU/memory/time caps are proven; otherwise don't start another MySQL process on the shared host. Then validate private-file and SQL archives, restore into a unique private-socket-only target, run structural checks, and prove cleanup. QA46/47 local synthetic tests pass; production backups and restore remain not_run. Candidate9124221 hosted gates passed; production remains cef21d3. SMTP, soak and official batch remain open.
+
+Release candidate for test-only recovery tooling: `638267d8b7a795a1741c03b45ff3a218908dd242`; exact hosted CI and Quality Gate passed. It is not a production release and does not close the restore, SMTP, soak, or official-batch gates.
 
 ## Evidence and State
 

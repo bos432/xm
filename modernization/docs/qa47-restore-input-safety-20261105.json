@@ -32,5 +32,30 @@
   "extraction_performed": false,
   "server_execution": "blocked_external: browser page access unavailable",
   "production_access": false,
-  "coverage_percent": null
+  "coverage_percent": null,
+  "commit": "638267d8b7a795a1741c03b45ff3a218908dd242",
+  "remote_branch_sha": "638267d8b7a795a1741c03b45ff3a218908dd242",
+  "hosted_gates": {
+    "modernization_ci": {
+      "run_id": 42027427223,
+      "conclusion": "success",
+      "jobs": {
+        "Frontend lint and build": "success",
+        "Backend feature tests": "success",
+        "Deployment backup and rollback simulations": "success",
+        "Optional online E2E": "skipped"
+      }
+    },
+    "modernization_quality_gate": {
+      "run_id": 42027427406,
+      "conclusion": "success",
+      "jobs": {
+        "backend": "success",
+        "deployment-safety": "success",
+        "mysql57-migrations": "success",
+        "frontend": "success"
+      }
+    }
+  },
+  "production_deployed": false
 }
