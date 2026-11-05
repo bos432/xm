@@ -27,6 +27,8 @@ QA-10 update: QA08-P1-DETAIL is fixed locally, not deployed. Reviewer drawer and
 
 ## Executed verification
 
+- QA-21 responsive settings: browser390x844 reproduced clipped content (main scroll600/client375); scoped grid fix reduces main scroll to375, form boundaries39..336 and save button39..173. Screenshots33/34; `qa21-responsive-20261105.json`; static contract red exit1/green exit0, lint/test19/typecheck-utilities/build exit0. Other pages and absent narrow-screen module navigation not cleared by this fix. Push candidate7482aeb failed connection reset (session7050 terminal exit1); not deployed.
+
 - QA-20 isolated super-admin configuration: opening county score switch saved and remained enabled after full-page reload; restored original disabled value, saved and reloaded, then verified county=false, department=false, expert=true, admin=false, random assignment=true, default experts=3. Screenshots31/32 and DOM snapshots under `e2e/reports/runs/qa07-20261105-browser-fixed`; `qa20-config-db-readback-20261105.json`. Independent `php modernization/e2e/inspect-isolated.php` exited0 and confirms closed synthetic project, scores90/88/94, approved acceptance and approved extension. Production unchanged.
 
 - QA-15 visible browser: department approval -> expert92 -> admin extension approval2026-12-31 -> final approval -> unit completion/extension result observed. Screenshots20..26, two DOM exports in retained QA07 run; `qa15-browser-acceptance-20261105.json`. Local sandbox only, not production. Acceptance currently one assigned expert advances, not group acceptance. New raw decision/time presentation and completed-record extension-action observations pending investigation.

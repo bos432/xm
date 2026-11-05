@@ -1,0 +1,24 @@
+{
+  "increment": "QA-21",
+  "scope": "SettingsView local responsive layout only",
+  "production_changed": false,
+  "viewport": {"width": 390, "height": 844},
+  "before": {"document_client": 375, "main_scroll": 600, "page_stack_scroll": 582, "form_width": 540},
+  "after": {"document_client": 375, "main_scroll": 375, "page_stack_scroll": 339, "form_client": 297, "form_scroll": 297, "form_left": 39, "form_right": 336, "save_button_left": 39, "save_button_right": 173},
+  "root_cause": "Implicit grid auto minimum expanded page children; later global three-column overview declaration overrode an earlier mobile media rule.",
+  "fix": "Scoped minmax(0,1fr) page track, min-width:0 children, mobile one-column overview, reset shortcut button margins.",
+  "checks": [
+    {"command": "node --test --test-reporter=junit --test-reporter-destination=../docs/qa21-mobile-layout-red.xml tests/settings-navigation.test.js", "exit": 1, "note": "Static contract after restoring original CSS; actual browser red preceded implementation."},
+    {"command": "node --test --test-reporter=junit --test-reporter-destination=../docs/qa21-mobile-layout-green.xml tests/settings-navigation.test.js", "exit": 0},
+    {"command": "npm run lint", "exit": 0},
+    {"command": "npm test", "exit": 0, "tests": 19, "failed": 0},
+    {"command": "npm run typecheck", "exit": 0, "scope": "utilities only"},
+    {"command": "npm run build", "exit": 0, "modules": 1630}
+  ],
+  "runtime": {"node": "25.2.1", "vite": "8.3.5"},
+  "evidence_root": "modernization/e2e/reports/runs/qa07-20261105-browser-fixed",
+  "screenshots": ["33-mobile-settings-clipped.png", "34-mobile-settings-fixed.png"],
+  "viewport_reset": true,
+  "push": {"candidate": "7482aeb", "command": "git -c http.sslBackend=schannel -c http.version=HTTP/1.1 -c http.connectTimeout=20 push origin HEAD:refs/heads/codex/composer-security-fix", "session": 7050, "exit": 1, "output": "fatal: unable to access 'https://github.com/bos432/xm.git/': Recv failure: Connection was reset"},
+  "not_verified": ["Other pages mobile layout", "Mobile navigation: sidebar hidden at <=900px and no module menu seen; requires separate diagnosis", "Current source hosted gates", "Production deployment"]
+}

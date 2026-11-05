@@ -167,9 +167,27 @@ onMounted(loadGroups)
 </script>
 
 <style scoped>
+.page-stack {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.page-stack > * {
+  min-width: 0;
+}
+
 .settings-group-shortcuts {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.settings-group-shortcuts .el-button {
+  margin-left: 0;
+}
+
+@media (max-width: 900px) {
+  .settings-overview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 </style>

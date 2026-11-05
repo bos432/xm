@@ -9,6 +9,8 @@
 
 ## Recent Increment
 
+2026-11-05, QA-21 settings390x844 clipping fixed locally; browser main scroll600->375, form within viewport, frontend19/lint/typecheck-utilities/build pass. Evidence `qa21-responsive-20261105.json`. Commit7482aeb push session7050 failed connection reset; terminal. Narrow-screen module navigation remains an observation to investigate. Production unchanged.
+
 2026-11-05, QA-20 super-admin county score save/reload and restoration verified in retained local browser; independent SQLite readback confirms closed project, three submission scores, approved acceptance and extension. Evidence: `qa20-config-db-readback-20261105.json`. Production unchanged; remote branch still43d6c16.
 
 2026-11-05, QA-19 acceptance display fixed locally: Chinese history decisions/extension selector, timestamps Asia/Shanghai, date-only untouched. Frontend18/18 and lint/utility typecheck/build pass; unit browser screenshot28/DOM confirms actual history. Evidence: `qa19-acceptance-display-20261105.json`. Tab10 replaces unavailable tab9; production unchanged.
@@ -41,7 +43,7 @@
 
 ## Next Step
 
-Commit QA19/20 and resume Git sync, verify exact remote receipt and hosted gates before any deployment. Remote REST still43d6c16; local33a4e78 plus QA19/20 uncommitted. Tab11 super-admin settings handoff retained; no reseed. Responsive UI, coverage/concurrency/SMTP/OSS restore and browser upload remain open. Production unchanged.
+Commit QA21 layout/evidence, inspect remote receipt then retry Git sync/exact hosted gates; last REST43d6c16, local7482aeb plus QA21 uncommitted. Investigate mobile module navigation (sidebar hidden, no replacement observed). Tab11 super-admin settings handoff retained, viewport reset; no reseed. Broader responsive UI, coverage/concurrency/SMTP/OSS restore and browser upload remain open. Production unchanged.
 
 ## Evidence and State
 
@@ -276,3 +278,11 @@ Commit QA19/20 and resume Git sync, verify exact remote receipt and hosted gates
 - Browser: tab10 unavailable; new visible tab11 reused local authenticated super-admin. County score true after prior save/reload verified; restored false, saved and reloaded, verified all five switches and expert count3 unchanged. setChecked timeout/AX no-diff were resolved by DOM observation and actual refreshed state; no application defect inferred. Dictionary100/100 screenshot29 from prior continuation retained; dictionary query refresh still not_run. Tab11 marked handoff.
 - Isolation/data: only retained synthetic sandbox config changed then restored; no account grants or formal business data changes. No production release/config/database/account writes, mail/OSS delivery, shared service restart, other-site or sales/payment changes. Acceptance ledger QA_REPORT gains observed evidence only; real MySQL concurrency, browser upload, responsive, numerical coverage, SMTP delivery and OSS restore remain incomplete. Acceptance uses one expert, not a claim of group acceptance.
 - Next: commit current QA19/20 candidate and retry Git sync; inspect exact remote receipt and hosted gates before promotion or deployment. Production remains last verified cef21d3.
+
+## 2026-11-05 QA-21: Settings Mobile Clipping and Push Checkpoint
+
+- Scope: actual390x844 browser exposed settings content clipped: main client375/scroll600, page stack339/scroll582, form540. Root cause implicit grid auto-min sizing plus earlier mobile rule overridden by later three-column overview. Scoped constrained track/children, mobile overview and shortcut margins fix main scroll375, form297 within39..336 and save button within39..173. Other mobile pages not cleared.
+- Files: frontend/src/views/SettingsView.vue, frontend/tests/settings-navigation.test.js; qa21-responsive-20261105.json, red/green JUnit, QA_REPORT.md, handbook. Screenshots33/34 and mobile DOM in retained QA07 run. Browser red observed before fix; static contract added after initial live fix, reverted CSS to baseline to confirm red, then reapplied identical fix. Static test is not E2E; live measurements/screenshots are separate evidence.
+- Commands: node --test with settings-navigation red JUnit exit1, green exit0. npm run lint/test/typecheck/build each exit0,19tests/19pass, utilities-only typecheck,1630modules; Node25.2.1/Vite8.3.5. Prior7482aeb local commit exit0; push with command-local schannel/HTTP1.1 session7050 collected exit1 connection reset. No hosted result applies to latest source yet. No running push remains.
+- Permissions/data: local super-admin read-only layout inspection, viewport reset, tab11 handoff retained. No account/tenant/business config grants changed; no production release/DB/config/business writes, external SMTP/OSS, shared restart or other-site changes. Sales/payment not applicable. QA_REPORT gains fixed_local layout observation, no release pass. Observed sidebar hidden at<=900px without visible module replacement; diagnosis still pending.
+- Next: commit QA21 and verify remote receipt/retry, then investigate narrow-screen navigation and remaining gates. Production remains last verified cef21d3; coverage/concurrency/SMTP/OSS restore/browser upload not waived.

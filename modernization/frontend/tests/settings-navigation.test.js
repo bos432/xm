@@ -15,6 +15,15 @@ test('system settings navigation exposes the OSS backup group', () => {
   assert.equal(children.filter((item) => item.group === 'backup').length, 1)
 })
 
+test('system settings constrain nested grids on narrow screens', () => {
+  const source = readFileSync(new URL('../src/views/SettingsView.vue', import.meta.url), 'utf8')
+  const styles = source.match(/<style scoped>([\s\S]*?)<\/style>/)?.[1]
+  assert.ok(styles, 'Settings view scoped styles must exist')
+  assert.match(styles, /\.page-stack\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/)
+  assert.match(styles, /\.page-stack\s*>\s*\*\s*\{[^}]*min-width:\s*0/)
+  assert.match(styles, /@media\s*\(max-width:\s*900px\)\s*\{[^}]*\.settings-overview-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s)
+})
+
 test('application batches explain why open records are not currently applicable', () => {
   const source = readFileSync(new URL('../src/views/ApplicationBatchesView.vue', import.meta.url), 'utf8')
   const declaration = source.match(/function applicationEligibility\(batch, now = new Date\(\)\) \{([\s\S]*?)\n\}/)
