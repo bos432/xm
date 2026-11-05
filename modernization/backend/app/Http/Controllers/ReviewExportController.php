@@ -25,9 +25,7 @@ class ReviewExportController extends Controller
             abort(403, '无权导出审核任务');
         }
 
-        $projects = Project::query()
-            ->where('current_reviewer_role', Role::reviewerStageFor($request->user()->role))
-            ->whereIn('status', [Project::STATUS_SUBMITTED, Project::STATUS_REVIEWING])
+        $projects = $this->dispatchMatcher->pendingQuery($request->user())
             ->when($request->filled('project_id'), function ($query) use ($request) {
                 $query->where('id', $request->query('project_id'));
             })

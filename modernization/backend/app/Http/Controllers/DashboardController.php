@@ -17,6 +17,7 @@ use App\Models\SecurityEvent;
 use App\Models\SecurityLock;
 use App\Models\Unit;
 use App\Models\User;
+use App\Support\ReviewDispatchMatcher;
 use App\Support\Role;
 use App\Support\RuntimeConfig;
 use Carbon\Carbon;
@@ -26,6 +27,8 @@ use Illuminate\Support\Facades\File;
 
 class DashboardController extends Controller
 {
+    public function __construct(private readonly ReviewDispatchMatcher $dispatchMatcher) {}
+
     public function summary(Request $request): JsonResponse
     {
         if (! Role::userCan($request->user(), 'view_dashboard')) {
@@ -42,6 +45,14 @@ class DashboardController extends Controller
             ->groupBy('status')
             ->pluck('total', 'status');
 
+        $pendingReviews = Role::userCan($request->user(), 'review_projects')
+            && in_array($request->user()->role, Role::reviewerRoles(), true)
+            ? $this->dispatchMatcher->pendingQuery($request->user())->get()
+                ->filter(fn (Project $project): bool => $this->dispatchMatcher->userCanReview(
+                    $project, $request->user(), Role::reviewerStageFor($request->user()->role)
+                ))->count()
+            : 0;
+
         $summary = [
             'projects' => [
                 'total' => (clone $projectQuery)->count(),
@@ -51,12 +62,7 @@ class DashboardController extends Controller
                     ->count(),
             ],
             'reviews' => [
-                'pending' => in_array($request->user()->role, Role::reviewerRoles(), true)
-                    ? Project::query()
-                        ->where('current_reviewer_role', Role::reviewerStageFor($request->user()->role))
-                        ->whereIn('status', [Project::STATUS_SUBMITTED, Project::STATUS_REVIEWING])
-                        ->count()
-                    : 0,
+                'pending' => $pendingReviews,
             ],
             'messages' => [
                 'unread' => Message::query()
@@ -91,7 +97,7 @@ class DashboardController extends Controller
                     ->first(),
             ],
             'registrations' => null,
-            'role_focus' => $this->roleFocus($request),
+            'role_focus' => $this->roleFocus($request, $pendingReviews),
             'operation_logs' => null,
             'security' => null,
             'migration' => null,
@@ -168,7 +174,7 @@ class DashboardController extends Controller
         return response()->json($summary);
     }
 
-    private function roleFocus(Request $request): array
+    private function roleFocus(Request $request, int $pendingReviews): array
     {
         $user = $request->user();
 
@@ -197,10 +203,7 @@ class DashboardController extends Controller
             $stage = Role::reviewerStageFor($user->role);
 
             return [
-                'review_pending' => Project::query()
-                    ->where('current_reviewer_role', $stage)
-                    ->whereIn('status', [Project::STATUS_SUBMITTED, Project::STATUS_REVIEWING])
-                    ->count(),
+                'review_pending' => $pendingReviews,
                 'review_done' => ProjectReview::query()
                     ->where('stage', $stage)
                     ->where('reviewer_id', $user->id)

@@ -5,11 +5,26 @@ namespace App\Support;
 use App\Models\Project;
 use App\Models\ReviewDispatchRule;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 class ReviewDispatchMatcher
 {
+    public function pendingQuery(User $user): Builder
+    {
+        $stage = Role::reviewerStageFor($user->role);
+
+        return Project::query()
+            ->where('current_reviewer_role', $stage)
+            ->whereIn('status', [Project::STATUS_SUBMITTED, Project::STATUS_REVIEWING])
+            ->when($stage === Role::EXPERT, function (Builder $query) use ($user): void {
+                $query->whereDoesntHave('reviews', function (Builder $reviews) use ($user): void {
+                    $reviews->where('stage', Role::EXPERT)->where('reviewer_id', $user->id);
+                });
+            });
+    }
+
     public function apply(Project $project, string $stage): ?array
     {
         if (! in_array($stage, [Role::DEPARTMENT, Role::EXPERT], true)) {

@@ -29,9 +29,7 @@ class ReviewController extends Controller
         $this->authorizeReviewer($request);
 
         $stage = Role::reviewerStageFor($request->user()->role);
-        $query = Project::query()
-            ->where('current_reviewer_role', Role::reviewerStageFor($request->user()->role))
-            ->whereIn('status', [Project::STATUS_SUBMITTED, Project::STATUS_REVIEWING])
+        $query = $this->dispatchMatcher->pendingQuery($request->user())
             ->when($request->filled('project_id'), function ($query) use ($request) {
                 $query->where('id', $request->query('project_id'));
             })
