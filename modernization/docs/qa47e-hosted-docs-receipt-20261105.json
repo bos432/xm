@@ -1,0 +1,21 @@
+{
+  "stage": "QA47e",
+  "commit": "e83ad092e6955ff99a92c71c3bafb2aead5c61a3",
+  "push_command": "git -c http.sslBackend=schannel -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=20 push origin codex/composer-security-fix",
+  "push_exit_code": 0,
+  "remote_verification_command": "git ls-remote origin refs/heads/codex/composer-security-fix",
+  "remote_branch_sha": "e83ad092e6955ff99a92c71c3bafb2aead5c61a3",
+  "workflow_verification": {
+    "command": "GET https://api.github.com/repos/bos432/xm/actions/runs?branch=codex%2Fcomposer-security-fix&per_page=10",
+    "ci_run_id": 42030427512,
+    "ci_status": "completed",
+    "ci_conclusion": "success",
+    "quality_run_id": 42030427563,
+    "quality_status": "completed",
+    "quality_conclusion": "success"
+  },
+  "production_deployed": false,
+  "database_or_business_data_changed": false,
+  "other_sites_or_shared_services_changed": false,
+  "next_action": "regain read-only Cloud Assistant control and inspect existing server isolation/resource-enforcement options before any restore workload"
+}

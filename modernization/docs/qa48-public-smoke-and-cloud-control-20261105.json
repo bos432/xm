@@ -1,0 +1,30 @@
+{
+  "stage": "QA48",
+  "date": "2026-11-05",
+  "git_refs_command": "git ls-remote origin refs/heads/main refs/heads/codex/composer-security-fix",
+  "git_refs_output": [
+    "e83ad092e6955ff99a92c71c3bafb2aead5c61a3 refs/heads/codex/composer-security-fix",
+    "cef21d38e6989cffc9cc5e516dbd14f4a445d6c5 refs/heads/main"
+  ],
+  "read_only_http_checks": [
+    { "command": "curl.exe -sS -o NUL -w GET /", "status": 200, "content_type": "text/html" },
+    { "command": "curl.exe -sS -o NUL -w GET /login", "status": 200, "content_type": "text/html" },
+    { "command": "curl.exe -sS -o NUL -w GET /api/auth/captcha", "status": 200, "content_type": "application/json" },
+    { "command": "curl.exe -sS -o NUL -w GET /api/public/homepage", "status": 200, "content_type": "application/json" },
+    { "command": "curl.exe -sS -o NUL -w GET /api/auth/me", "status": 401, "content_type": "application/json" }
+  ],
+  "cloud_control": {
+    "browser_tab_present": true,
+    "attempt": "cua.getTab({url: existing Aliyun Cloud Assistant result URL}, {browser: 'iab'})",
+    "result": "browser.user is unavailable",
+    "server_command_executed": false
+  },
+  "production_write_or_deploy": false,
+  "business_data_changed": false,
+  "shared_services_or_other_sites_changed": false,
+  "limitations": [
+    "HTTP smoke does not prove authenticated role workflows, restore readiness, SMTP delivery, OSS recovery, queue health, or deployment readiness.",
+    "No current server release identifier was read because Cloud Assistant control is unavailable."
+  ],
+  "next_action": "restore supported read-only Cloud Assistant page control, then inspect existing backup sizes and resource-isolation enforcement before any restore workload"
+}

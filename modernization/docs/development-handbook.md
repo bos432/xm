@@ -2,6 +2,8 @@
 
 ## Current Status
 
+- QA48 read-only public smoke: GitHub main remains `cef21d38e6989cffc9cc5e516dbd14f4a445d6c5`; live root/login/captcha/public homepage returned expected 200 and anonymous `/api/auth/me` returned 401. Cloud Assistant tab is present, but `cua.getTab` fails `browser.user is unavailable`; no server command ran and no live release ID was read. Evidence `qa48-public-smoke-and-cloud-control-20261105.json`. Operational readiness remains open.
+- QA47e documentation delivery: doc-only commit `e83ad092e6955ff99a92c71c3bafb2aead5c61a3` pushed and independently confirmed by `git ls-remote`; exact CI42030427512 and Quality42030427563 completed success. Evidence `qa47e-hosted-docs-receipt-20261105.json`. No production deployment or data/service change. Recovery/operations gates remain open.
 - QA47c isolated candidate `638267d8b7a795a1741c03b45ff3a218908dd242` pushed and remote SHA verified. Exact CI42027427223 and Quality42027427406 completed success; optional online E2E intentionally skipped. Hosted jobs are recorded in `qa47-restore-input-safety-20261105.json`. No production deployment; recovery/operations gates remain open.
 - QA45 hosted receipt: isolated candidate91242214169e100538108c518c2c2d6687f83062 pushed,independent API confirms; exact CI42020324368 and Quality42020324357 completed/success. Previous GitHub push blocker resolved for this candidate. Evidence `qa45-hosted-receipt-20261105.json`. Operational restore/soak/official batch still open; no production deployment.
 - QA46 archive safety gate: read-only tar.gz validator and12 tests pass; rejects traversal, absolute paths, links/devices/FIFO, duplicate normalized names, file-parent collisions, corrupt/truncated gzip, empty archives and resource-limit violations. Evidence `qa46-archive-safety-20261105.json`. Server execution blocked_external because browser page control is unavailable. No production access or changes.
@@ -20,6 +22,10 @@
 - QA39/40: SMTP/OSS focused tests23/105, backup simulation4/4, Chromium browser upload/access smoke1/1. QA40 unit upload/download SHA matches; anonymous401 and business-admin draft403; isolated data retained. Frontend lint21 tests, typecheck, build and explicit E2E ESLint pass. Local commits `bb8ebf8`, `cc23c3d`, `5ffde60` are not hosted; remote `5c3930d` because GitHub:443 fails. Real SMTP/OSS restore, broader concurrency/soak and official production batch remain open. Evidence `qa39-operations-simulations.json`, `qa40-browser-upload-20261105.json`, `qa39-push-attempt-20261105.json`.
 
 ## Recent Increment
+
+2026-11-05, QA-48 public smoke and control check: remote main=`cef21d38e6989cffc9cc5e516dbd14f4a445d6c5`, isolated branch=`e83ad092e6955ff99a92c71c3bafb2aead5c61a3`. Live GET `/`, `/login`, `/api/auth/captcha`, `/api/public/homepage` returned 200; anonymous `/api/auth/me` returned401. Existing Cloud Assistant result tab is listed, but tab binding fails `browser.user is unavailable`; no server command ran and current release ID remains unverified. Evidence `qa48-public-smoke-and-cloud-control-20261105.json`. No production writes/deployment or shared-service/other-site change. Next restore supported Cloud Assistant page control and perform read-only host isolation/backup inventory; no restore process before resource caps are proven.
+
+2026-11-05, QA-47e documentation delivery receipt: ordinary push of `e83ad092e6955ff99a92c71c3bafb2aead5c61a3` exited0; `git ls-remote origin refs/heads/codex/composer-security-fix` returned the same SHA. Public GitHub Actions API confirms exact CI42030427512 and Quality42030427563 completed/success. Evidence `qa47e-hosted-docs-receipt-20261105.json`. Production, database, business data, shared services and other sites unchanged. Next regain read-only Cloud Assistant access and inspect actual isolation/resource enforcement before any restore workload.
 
 2026-11-05, QA-47c delivery: commit `638267d8b7a795a1741c03b45ff3a218908dd242` pushed; `git ls-remote origin refs/heads/codex/composer-security-fix` returns same SHA. Public GitHub REST confirms CI42027427223 and Quality42027427406 completed success. CI frontend/backend/deployment tests success, online E2E skipped; all four Quality jobs success. Evidence `qa47-restore-input-safety-20261105.json`. No production change. Next regain server read-only control and verify restore resource isolation.
 
@@ -604,3 +610,32 @@ Release candidate for test-only recovery tooling: `638267d8b7a795a1741c03b45ff3a
 - Permissions/data: existing local labeled QA container only; no schema/data mutation. Container process/port unchanged. Production database/backup, server, OSS, mail, release, shared services and other sites untouched. No test account or personal data exported.
 - Ledger: scanner syntax compatibility evidence verified for small isolated fixture. Production archive scan/import and recovery are still not_run; this is not readiness proof.
 - Next: restore access to remote Cloud Assistant page and run read-only host image/cgroup/archive inventory. Do not start any restore workload without verified resource caps.
+
+## 2026-11-05 QA-47d: Hosted Documentation Delivery Checkpoint
+
+- Scope: publish the handbook/QA evidence update for commit638267d's exact hosted gate results. Doc-only commit `e83ad09` created locally, then ordinary isolated-branch push attempted and failed.
+- Evidence: `qa47d-docs-delivery-20261105.json`; command recorded there. Push exit1, curl28 RPC connection reset. Independent GitHub REST branch SHA remains638267d8b7a795a1741c03b45ff3a218908dd242. GitHub Actions exact CI42027427223/Quality42027427406 remain completed success for638267d only. No CI gate yet for local e83ad09.
+- Files: QA_REPORT, development handbook and QA47 evidence in e83ad09; current recovery checklist retained locally. Added this delivery evidence and checkpoint in working tree after e83ad09.
+- Isolation/data: no force push/global network configuration, no production code/data/config/account/release, server/OSS/mail/shared service/other site or sales/payment change. No test/service process.
+- Ledger: source commit638267d is hosted/green. Documentation commit e83ad09 and following checkpoint edits are local-only until push receipt. Recovery and operational readiness still open.
+- Next: retry normal push after transport recovery; verify remote SHA through GitHub API and run status for that exact SHA. Do not deploy these QA-only changes.
+
+## 2026-11-05 QA-47e: Hosted Documentation Receipt
+
+- Scope: retry ordinary delivery for the doc-only `e83ad09` commit after the previous transport reset. Push command `git -c http.sslBackend=schannel -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=20 push origin codex/composer-security-fix` exited0. `git ls-remote origin refs/heads/codex/composer-security-fix` independently returned `e83ad092e6955ff99a92c71c3bafb2aead5c61a3`.
+- Evidence: `qa47e-hosted-docs-receipt-20261105.json`. Read-only GitHub Actions API reports exact CI42030427512 and Quality42030427563 for `e83ad092e6955ff99a92c71c3bafb2aead5c61a3`, both completed/success.
+- Files: added `qa47e-hosted-docs-receipt-20261105.json`; updated this handoff's Current Status, Recent Increment and append-only history. The prior QA47d failed-attempt evidence remains unchanged.
+- Validation: push exit0; remote SHA exact match; exact-source CI and Quality Gate success. No source tests rerun because this increment only publishes documentation and records hosted receipt.
+- Permissions/data: isolated branch only. No production app/config/database/account/release, business data, OSS/mail settings, shared service, other site or sales/payment change. No active shell/service process.
+- Ledger: hosted documentation receipt verified; operational recovery and production readiness remain incomplete. Hosted success does not prove runtime/restore readiness.
+- Next: regain read-only Cloud Assistant access, inspect server backup size and already-available isolation/resource-enforcement facilities; do not start restore work until CPU, memory and runtime caps are proven.
+
+## 2026-11-05 QA-48: Public Smoke and Cloud Control Check
+
+- Scope: read-only check of current GitHub refs and public production HTTP behavior, then attempt to bind the already listed Cloud Assistant result tab through supported browser control.
+- Evidence: `qa48-public-smoke-and-cloud-control-20261105.json`. `git ls-remote origin refs/heads/main refs/heads/codex/composer-security-fix` returned main=`cef21d38e6989cffc9cc5e516dbd14f4a445d6c5` and isolated branch=`e83ad092e6955ff99a92c71c3bafb2aead5c61a3`. Five HTTP GET checks: `/` 200 text/html; `/login` 200 text/html; `/api/auth/captcha` 200 application/json; `/api/public/homepage` 200 application/json; anonymous `/api/auth/me` 401 application/json.
+- Control result: CUA inventory lists the Cloud Assistant result tab, but binding its exact URL returns `browser.user is unavailable`. No remote command was issued; server release ID, backup sizes and cgroup enforcement remain unverified.
+- Permissions/data: HTTP checks are GET only; captcha issuance may create short-lived challenge state, but no account/business record was changed. No production deployment, database/config/account/OSS/mail write, shared-service or other-site change. No server process was started.
+- Validation: exact public responses above; no source tests run. These checks do not verify authenticated role workflows, SMTP delivery, backup restore, queue health or release identity.
+- Ledger: public anonymous endpoint behavior confirmed; server operations readiness remains incomplete and cloud control is blocked_external for this attempt.
+- Next: recover supported browser control or use the user's authenticated terminal surface, then run only the previously reviewed read-only server inventory. Do not start recovery workload until resource limits are demonstrated.
