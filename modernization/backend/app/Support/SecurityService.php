@@ -7,6 +7,7 @@ use App\Models\SecurityIpRule;
 use App\Models\SecurityLock;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\IpUtils;
 
 final class SecurityService
 {
@@ -125,25 +126,6 @@ final class SecurityService
 
     private function ipMatchesCidr(string $ip, string $cidr): bool
     {
-        if ($ip === $cidr) {
-            return true;
-        }
-
-        if (! str_contains($cidr, '/')) {
-            return false;
-        }
-
-        [$subnet, $bits] = explode('/', $cidr, 2);
-        $ipLong = ip2long($ip);
-        $subnetLong = ip2long($subnet);
-        $bits = (int) $bits;
-
-        if ($ipLong === false || $subnetLong === false || $bits < 0 || $bits > 32) {
-            return false;
-        }
-
-        $mask = -1 << (32 - $bits);
-
-        return ($ipLong & $mask) === ($subnetLong & $mask);
+        return IpRange::isValid($cidr) && IpUtils::checkIp($ip, $cidr);
     }
 }

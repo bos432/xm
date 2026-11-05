@@ -1,0 +1,39 @@
+{
+  "stage": "QA-24",
+  "date": "2026-11-05",
+  "runtime": "PHP 8.3.30 / PHPUnit 11.5.57",
+  "environment": "isolated worktree; PHPUnit SQLite memory, array cache/mail, sync queue",
+  "red": {
+    "command": "php vendor/bin/phpunit tests/Feature/AdministrativeSurfaceRegressionTest.php --filter 'invalid_ip|ipv6_blacklist|malformed_legacy' --log-junit ../docs/qa24-ip-behavior-red.xml",
+    "exit_code": 1,
+    "tests": 3,
+    "failures": 2,
+    "errors": 1,
+    "observations": ["invalid rule returned 201 instead of 422", "IPv6 CIDR failed to block", "legacy alphabetic prefix blocked unrelated address"]
+  },
+  "green": {
+    "command": "php vendor/bin/phpunit --log-junit ../docs/qa24-backend-full.xml",
+    "exit_code": 0,
+    "tests": 247,
+    "assertions": 1517,
+    "failures": 0,
+    "errors": 0,
+    "coverage": "not measured for new source"
+  },
+  "format": {
+    "command": "php vendor/bin/pint --test app/Support/IpRange.php app/Support/SecurityService.php app/Http/Controllers/SecurityController.php tests/Feature/AdministrativeSurfaceRegressionTest.php",
+    "exit_code": 0,
+    "scope": "changed PHP files only; repository baseline gate unresolved"
+  },
+  "prior_candidate_gates": {
+    "sha": "562fee78448a135d781e285334fee6cbc20605ca",
+    "command": "Invoke-RestMethod https://api.github.com/repos/bos432/xm/actions/runs/{id}",
+    "exit_code": 0,
+    "CI_41984836524": "completed/success",
+    "Quality_41984836526": "completed/success",
+    "new_php_source": "not yet hosted"
+  },
+  "production_changed": false,
+  "external_channels_used": false,
+  "remaining": ["true MySQL concurrent transactions", "browser upload", "SMTP delivery", "OSS isolated restore", "broader role responsive testing"]
+}

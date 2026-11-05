@@ -5,13 +5,15 @@
 - Published production baseline: `cef21d38e6989cffc9cc5e516dbd14f4a445d6c5` (`20261105105750`), deployed 2026-11-05 with migrations and Seeder skipped. Previous rollback target: `20261018050541` / `59bbdec`.
 - Remote `main` and production match `cef21d3`; exact-revision hosted gates passed. Independent HTTPS login/logout, seven HTTP paths, and one site PHP worker on the new release verified. Anonymous browser E2E: 2 passed.
 - Formal operations readiness is not fully verified: isolated submission and acceptance/extension closure independently read back; super-admin score configuration save/reload/restoration verified QA20. Responsive UI, other feature paths, SMTP delivery and OSS restore remain open.
-- Isolated candidate867f76efc6d1e044deaafbc8b1ea748010d8d3ee pushed and exact REST receipt verified. CI41983313169/Quality41983313166 completed/success, online write E2E skipped. Local backend240tests1376assertions, frontend19 and lint/utility typecheck/build pass. Not deployed. Evidence: `qa21-hosted-checkpoint-20261105.json`.
+- Isolated candidate562fee78448a135d781e285334fee6cbc20605ca CI41984836524/Quality41984836526 completed/success. New QA24 local IP validation/IPv6 fixes pass backend247tests1517assertions and changed-file Pint; not yet hosted/deployed. Frontend21 and lint/utility typecheck/build passed previously, unchanged. Backend statement coverage74.17% applies prior867f76e only.
 
 ## Recent Increment
 
+2026-11-05, QA-24 administrative API coverage exposed malformed CIDR acceptance/overblocking and ineffective IPv6 CIDR. Shared strict validation and installed Symfony matcher fix; red3tests2failures1error -> full green247tests1517assertions, changed-file Pint0. Evidence qa24-security-rules-20261105.json and JUnit. Production unchanged; new source awaits push/gates.
+
 2026-11-05, QA-23 exact867f76e hosted PCOV artifact downloaded via existing Git helper authentication, inspected: statements4991/6729=74.17%,methods290/546=53.11%,240tests1376assertions,0failures. Measured uncovered TOP5 now in QA_REPORT. Evidence `qa23-coverage-20261105.json`; branch coverage unavailable. No production changes.
 
-2026-11-05, QA-22 mobile module navigation fixed locally using existing role menu groups; super-admin dictionary direct link/refresh and unit closed-project link verified390x844; desktop sidebar restored/icon hidden. Frontend21/lint/utility typecheck/build pass. Evidence `qa22-mobile-navigation-20261105.json`. Not pushed/deployed yet.
+2026-11-05, QA-22 mobile module navigation fixed using existing role menu groups; super-admin dictionary direct link/refresh and unit closed-project link verified390x844; desktop sidebar restored/icon hidden. Frontend21/lint/utility typecheck/build pass. Pushed562fee7, CI41984836524/Quality41984836526 in_progress. Evidence `qa22-mobile-navigation-20261105.json`. Not deployed.
 
 2026-11-05, QA-21 hosted checkpoint: candidate867f76e push exit0 and exact REST receipt confirmed; CI41983313169/Quality41983313166 completed/success, online write E2E skipped. Evidence `qa21-hosted-checkpoint-20261105.json`. Production unchanged; old failed push handles terminal.
 
@@ -49,7 +51,7 @@
 
 ## Next Step
 
-Commit/push QA22/23 and verify exact-source hosted gates; add targeted integration tests for measured security/system-text/dispatch coverage gaps. Tab12 unit closed-project list handoff retained, viewport reset; no reseed. Broader responsive UI, true concurrency/SMTP/OSS restore and browser upload remain open. Production unchanged.
+Commit/push QA24 security rule fixes and inspect exact new-source hosted gates/coverage; then dispatch/lifecycle coverage and true concurrency. Prior562fee7 gates passed. Tab12 unit handoff retained, viewport reset; no reseed. Broader responsive UI, SMTP/OSS restore and browser upload remain open. Production unchanged.
 
 ## Evidence and State
 
@@ -321,3 +323,17 @@ Commit/push QA22/23 and verify exact-source hosted gates; add targeted integrati
 - QA_REPORT measured uncovered TOP5: lifecycle200, system text144, security128, project127, legacy-import command117 statements. Dispatch rule controller additionally0/98. These identify test gaps, not proven correctness failures. Earlier local missing-driver and unauthenticated artifact failures retained as history, now superseded only for hosted numerical evidence.
 - Isolation/data: documentation/evidence only; no user/tenant/production config, DB, account/business writes, external SMTP/OSS or other-service/site changes. Runtime versions not changed/newly measured. Acceptance ledger coverage section updated; overall readiness not passed.
 - Next: commit/push pending QA22/23 and targeted isolated integration coverage for security/system text/dispatch, followed by exact hosted gates. True MySQL concurrency, operational restore/mail and browser upload remain open.
+
+### QA-22/23 Push Checkpoint
+
+- Commit562fee78448a135d781e285334fee6cbc20605ca and push both exit0; GitHub branch REST exactly matches. CI41984836524 and Quality41984836526 observed in_progress. Generated QA22 red JUnit two spaces-only lines normalized after raw backup under ignored QA07 run root; staged whitespace gate then0. No credentials committed.
+- No production changes or new runtime/permission/coverage claim. Previous867f76e passing gates do not prove new frontend. Next: poll the exact new handles and add isolated integration tests for uncovered administrative controllers. Tab12 handoff and viewport reset; other-service isolation unchanged.
+
+## 2026-11-05 QA-24: Administrative API Regression and IP Rule Correctness
+
+- Scope: five non-super roles denied security/system-text APIs; super-admin text lifecycle/export/builtin protection and policy/lock/rule roundtrip. Confirmed malformed IP rules accepted201, IPv6 CIDR not enforced, malformed legacy prefix cast to0 and overblocks unrelated hosts. Shared IpRange validates address/prefix on save and legacy read; existing Symfony IpUtils handles matching. No new dependency/schema.
+- Files: backend/tests/Feature/AdministrativeSurfaceRegressionTest.php, app/Support/IpRange.php, app/Support/SecurityService.php, app/Http/Controllers/SecurityController.php; QA_REPORT.md, qa24-security-rules-20261105.json and qa24 XML evidence. First admin run failed due test dotted-JSON-key assertion; corrected test passed3/99 before IP cases. This test-authoring error is not an application defect.
+- Commands: PHP8.3.30/PHPUnit11.5.57; security red filter exit1,3tests2failures1error; targeted initial fixed6tests126assertions exit0; full php vendor/bin/phpunit --log-junit ../docs/qa24-backend-full.xml exit0,247tests1517assertions. Added IPv4/IPv6 boundary/family/inactive cases. Changed-file Pint formatting then --test exit0. Whole-repo formatting baseline remains unresolved. New coverage not measured; prior74.17% not expanded to new source.
+- Hosted checkpoint: Invoke-RestMethod exact562fee7 runs41984836524/41984836526 exit0, completed/success. These predate QA24 PHP changes. No running shell sessions remain. Initial rg inventory in backend returned1/no matches; not a toolchain failure or evidence that root has no rules.
+- Isolation/permissions/data: SQLite memory, synthetic roles, array mail/cache and sync queue; denied roles create no rows. No production release/config/database/account/business writes, no SMTP/OSS, shared-service restart, other-site changes or sales/payment changes. QA_REPORT gains two defects fixed_local; overall readiness incomplete.
+- Next: commit/push exact QA24 candidate and check hosted gates/coverage, then cover dispatch/lifecycle and true concurrency. Production remains last verified cef21d3; no deployment before remaining gates.

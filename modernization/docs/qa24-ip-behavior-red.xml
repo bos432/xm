@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\AdministrativeSurfaceRegressionTest" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AdministrativeSurfaceRegressionTest.php" tests="3" assertions="2" errors="1" failures="2" skipped="0" time="0.789308">
+    <testcase name="test_invalid_ip_rules_are_rejected_without_creating_rows" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AdministrativeSurfaceRegressionTest.php" line="95" class="Tests\Feature\AdministrativeSurfaceRegressionTest" classname="Tests.Feature.AdministrativeSurfaceRegressionTest" assertions="1" time="0.755468">
+      <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\AdministrativeSurfaceRegressionTest::test_invalid_ip_rules_are_rejected_without_creating_rows&#13;
+Expected response status code [422] but received 201.
+Failed asserting that 201 is identical to 422.
+&#13;
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:45
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:175
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Testing\Concerns\AssertsStatusCodes.php:221
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AdministrativeSurfaceRegressionTest.php:100</failure>
+    </testcase>
+    <testcase name="test_ipv6_blacklist_blocks_inside_subnet_and_allows_outside" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AdministrativeSurfaceRegressionTest.php" line="109" class="Tests\Feature\AdministrativeSurfaceRegressionTest" classname="Tests.Feature.AdministrativeSurfaceRegressionTest" assertions="1" time="0.016857">
+      <failure type="PHPUnit\Framework\AssertionFailedError">Tests\Feature\AdministrativeSurfaceRegressionTest::test_ipv6_blacklist_blocks_inside_subnet_and_allows_outside&#13;
+IPv6 subnet blacklist did not block login
+&#13;
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AdministrativeSurfaceRegressionTest.php:116</failure>
+    </testcase>
+    <testcase name="test_malformed_legacy_prefix_does_not_block_unrelated_addresses" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AdministrativeSurfaceRegressionTest.php" line="123" class="Tests\Feature\AdministrativeSurfaceRegressionTest" classname="Tests.Feature.AdministrativeSurfaceRegressionTest" assertions="0" time="0.016983">
+      <error type="Symfony\Component\HttpKernel\Exception\HttpException">Tests\Feature\AdministrativeSurfaceRegressionTest::test_malformed_legacy_prefix_does_not_block_unrelated_addresses&#13;
+Symfony\Component\HttpKernel\Exception\HttpException: 当前 IP 已被限制访问
+&#13;
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Foundation\Application.php:1440
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\vendor\laravel\framework\src\Illuminate\Foundation\helpers.php:67
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\app\Support\SecurityService.php:24
+C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AdministrativeSurfaceRegressionTest.php:126</error>
+    </testcase>
+  </testsuite>
+</testsuites>

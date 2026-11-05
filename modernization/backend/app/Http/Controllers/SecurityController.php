@@ -6,6 +6,7 @@ use App\Models\SecurityEvent;
 use App\Models\SecurityIpRule;
 use App\Models\SecurityLock;
 use App\Support\AuditLogger;
+use App\Support\IpRange;
 use App\Support\Role;
 use App\Support\RuntimeConfig;
 use Carbon\Carbon;
@@ -13,9 +14,7 @@ use Illuminate\Http\Request;
 
 class SecurityController extends Controller
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
-    }
+    public function __construct(private readonly AuditLogger $auditLogger) {}
 
     public function events(Request $request)
     {
@@ -61,7 +60,11 @@ class SecurityController extends Controller
             'identity_type' => ['required_if:kind,lock', 'nullable', 'in:username,ip'],
             'identity_value' => ['required_if:kind,lock', 'nullable', 'string', 'max:160'],
             'rule_type' => ['required_if:kind,ip_rule', 'nullable', 'in:blacklist,whitelist'],
-            'cidr' => ['required_if:kind,ip_rule', 'nullable', 'string', 'max:80'],
+            'cidr' => ['bail', 'required_if:kind,ip_rule', 'nullable', 'string', 'max:80', function ($attribute, $value, $fail): void {
+                if (! IpRange::isValid($value)) {
+                    $fail('请输入有效的 IPv4、IPv6 地址或 CIDR 网段');
+                }
+            }],
             'description' => ['nullable', 'string', 'max:500'],
         ]);
 
