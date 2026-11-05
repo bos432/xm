@@ -1,0 +1,36 @@
+{
+  "stage": "QA-39",
+  "source_revision": "5c3930dde532a9684cd70078bfaf2370ce4ef5ac",
+  "commands": [
+    {
+      "command": "php vendor/bin/phpunit tests/Feature/OssBackupCommandTest.php tests/Feature/MailDeliverySafetyTest.php tests/Feature/MessageAndSettingWorkflowTest.php --log-junit ../docs/qa39-mail-oss-settings.xml",
+      "working_directory": "modernization/backend",
+      "runtime": "PHP 8.3.30; PHPUnit 11.5.57",
+      "exit_code": 0,
+      "tests": 23,
+      "assertions": 105,
+      "summary": "SMTP delivery gate/secret handling, OSS setting validation and secret masking, fake signed upload and size verification, failed upload/local archive retention"
+    },
+    {
+      "command": "bash modernization/deploy/tests/site-backup-test.sh",
+      "runtime": "GNU Bash 5.2.21",
+      "exit_code": 0,
+      "summary": [
+        "PASS database and private uploads are archived and verified without exposing credentials",
+        "PASS dump failure preserves existing backups and removes partial files",
+        "PASS OSS failure preserves the newly verified local archives and skips retention cleanup",
+        "PASS retention removes only expired archives owned by this site"
+      ]
+    }
+  ],
+  "external_calls": {
+    "smtp": false,
+    "oss": false
+  },
+  "restore": {
+    "attempted": false,
+    "reason": "No real OSS-configured archive was available and isolated restore requires a DBA-approved disposable MySQL target per isolated-restore-rehearsal-runbook.md"
+  },
+  "production_or_other_sites_modified": false,
+  "production_services_restarted": false
+}
