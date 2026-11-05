@@ -1,0 +1,28 @@
+{
+  "increment": "QA-22",
+  "scope": "Mobile replacement for sidebar hidden below 900px",
+  "production_changed": false,
+  "root_cause": "Sidebar display:none at <=900px with no alternate module navigation.",
+  "implementation": "Topbar menu icon opens responsive drawer using the same visibleMenuGroups, expanded role-filtered child routes and router guards. Selecting a target closes drawer; no role/API changes.",
+  "checks": [
+    {"command": "node --test --test-reporter=junit --test-reporter-destination=../docs/qa22-mobile-navigation-red.xml tests/settings-navigation.test.js", "exit": 1},
+    {"command": "node --test --test-reporter=junit --test-reporter-destination=../docs/qa22-mobile-navigation-green.xml tests/settings-navigation.test.js", "exit": 0},
+    {"command": "npm run lint", "exit": 0},
+    {"command": "npm test", "exit": 0, "tests": 21, "failed": 0},
+    {"command": "npm run typecheck", "exit": 0, "scope": "utilities only"},
+    {"command": "npm run build", "exit": 0, "modules": 1630}
+  ],
+  "browser": {
+    "environment": "127.0.0.1:18742 retained isolated sandbox",
+    "tab": "12",
+    "viewport": "390x844",
+    "super_admin": "Visible module groups and children; Project Type navigates to /dictionary-items?group=project_type, drawer closes; hard refresh preserves title, group and QA Type row.",
+    "unit": "Only default/business/review/organization modules; no portal/system module; selecting Closed navigates /projects?status=closed, drawer closes and retained closed project appears.",
+    "desktop": "Viewport reset; original sidebar visible and mobile button isVisible false.",
+    "files": ["35-mobile-superadmin-navigation.png", "36-mobile-unit-navigation.png", "qa22-dictionary-refresh-dom.txt", "qa22-unit-navigation-dom.txt"],
+    "evidence_root": "modernization/e2e/reports/runs/qa07-20261105-browser-fixed"
+  },
+  "security_test": "Executable navigation helper rejects unauthorized menu key and child path, uses authorized item's actual route instead of passed forged route.",
+  "runtime": {"node": "25.2.1", "vite": "8.3.5"},
+  "limits": ["Other four roles not separately rechecked in mobile browser", "No production E2E", "Not a full responsive audit of every screen", "Real concurrency, numerical coverage, mail delivery, OSS restore and browser file upload still incomplete"]
+}

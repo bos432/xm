@@ -5,9 +5,15 @@
 - Published production baseline: `cef21d38e6989cffc9cc5e516dbd14f4a445d6c5` (`20261105105750`), deployed 2026-11-05 with migrations and Seeder skipped. Previous rollback target: `20261018050541` / `59bbdec`.
 - Remote `main` and production match `cef21d3`; exact-revision hosted gates passed. Independent HTTPS login/logout, seven HTTP paths, and one site PHP worker on the new release verified. Anonymous browser E2E: 2 passed.
 - Formal operations readiness is not fully verified: isolated submission and acceptance/extension closure independently read back; super-admin score configuration save/reload/restoration verified QA20. Responsive UI, other feature paths, SMTP delivery and OSS restore remain open.
-- Isolated source candidate33a4e787cfe2c64a7bf48116832878add27fafd6 committed locally; push twice failed connection reset/connect timeout, REST remote still43d6c16. Prior43d6c16 hosted CI41974720298/Quality41974720285 passed, not evidence for new source. Latest checkpoint: `qa18-candidate-checkpoint-20261105.json`. Backend240tests/1376assertions and frontend17/17 pass locally, not deployed.
+- Isolated candidate867f76efc6d1e044deaafbc8b1ea748010d8d3ee pushed and exact REST receipt verified. CI41983313169/Quality41983313166 completed/success, online write E2E skipped. Local backend240tests1376assertions, frontend19 and lint/utility typecheck/build pass. Not deployed. Evidence: `qa21-hosted-checkpoint-20261105.json`.
 
 ## Recent Increment
+
+2026-11-05, QA-23 exact867f76e hosted PCOV artifact downloaded via existing Git helper authentication, inspected: statements4991/6729=74.17%,methods290/546=53.11%,240tests1376assertions,0failures. Measured uncovered TOP5 now in QA_REPORT. Evidence `qa23-coverage-20261105.json`; branch coverage unavailable. No production changes.
+
+2026-11-05, QA-22 mobile module navigation fixed locally using existing role menu groups; super-admin dictionary direct link/refresh and unit closed-project link verified390x844; desktop sidebar restored/icon hidden. Frontend21/lint/utility typecheck/build pass. Evidence `qa22-mobile-navigation-20261105.json`. Not pushed/deployed yet.
+
+2026-11-05, QA-21 hosted checkpoint: candidate867f76e push exit0 and exact REST receipt confirmed; CI41983313169/Quality41983313166 completed/success, online write E2E skipped. Evidence `qa21-hosted-checkpoint-20261105.json`. Production unchanged; old failed push handles terminal.
 
 2026-11-05, QA-21 settings390x844 clipping fixed locally; browser main scroll600->375, form within viewport, frontend19/lint/typecheck-utilities/build pass. Evidence `qa21-responsive-20261105.json`. Commit7482aeb push session7050 failed connection reset; terminal. Narrow-screen module navigation remains an observation to investigate. Production unchanged.
 
@@ -43,7 +49,7 @@
 
 ## Next Step
 
-Commit QA21 layout/evidence, inspect remote receipt then retry Git sync/exact hosted gates; last REST43d6c16, local7482aeb plus QA21 uncommitted. Investigate mobile module navigation (sidebar hidden, no replacement observed). Tab11 super-admin settings handoff retained, viewport reset; no reseed. Broader responsive UI, coverage/concurrency/SMTP/OSS restore and browser upload remain open. Production unchanged.
+Commit/push QA22/23 and verify exact-source hosted gates; add targeted integration tests for measured security/system-text/dispatch coverage gaps. Tab12 unit closed-project list handoff retained, viewport reset; no reseed. Broader responsive UI, true concurrency/SMTP/OSS restore and browser upload remain open. Production unchanged.
 
 ## Evidence and State
 
@@ -286,3 +292,32 @@ Commit QA21 layout/evidence, inspect remote receipt then retry Git sync/exact ho
 - Commands: node --test with settings-navigation red JUnit exit1, green exit0. npm run lint/test/typecheck/build each exit0,19tests/19pass, utilities-only typecheck,1630modules; Node25.2.1/Vite8.3.5. Prior7482aeb local commit exit0; push with command-local schannel/HTTP1.1 session7050 collected exit1 connection reset. No hosted result applies to latest source yet. No running push remains.
 - Permissions/data: local super-admin read-only layout inspection, viewport reset, tab11 handoff retained. No account/tenant/business config grants changed; no production release/DB/config/business writes, external SMTP/OSS, shared restart or other-site changes. Sales/payment not applicable. QA_REPORT gains fixed_local layout observation, no release pass. Observed sidebar hidden at<=900px without visible module replacement; diagnosis still pending.
 - Next: commit QA21 and verify remote receipt/retry, then investigate narrow-screen navigation and remaining gates. Production remains last verified cef21d3; coverage/concurrency/SMTP/OSS restore/browser upload not waived.
+
+### QA-21 Hosted Receipt Checkpoint
+
+- Commit867f76e exit0 after cached whitespace gate initially exit2 on generated red JUnit; raw backup retained, trailing whitespace mechanically trimmed, cached check then0. Push command-local schannel/HTTP1.1/lowSpeed exit0, exact local and remote REST SHA match867f76efc6d1e044deaafbc8b1ea748010d8d3ee. New exact-source CI41983313169 and Quality41983313166 verified in_progress. Evidence qa21-hosted-checkpoint-20261105.json.
+- No source changes after candidate in this checkpoint; documentation only. No runtime/coverage/new permission results claimed. Production/config/database/accounts/business data, mail/OSS and other sites unchanged; no service restart. Acceptance ledger unchanged. Tab11 handoff, viewport reset.
+- Next: inspect those exact run handles; independently continue mobile navigation and remaining operational/coverage/concurrency evidence. In-progress is not passed and does not authorize bypassing remaining release gates.
+
+### QA-21 Exact-source Gates Completed
+
+- GitHub REST run/job inspection exit0:867f76e CI41983313169 completed/success (frontend, deployment simulations, backend success; optional online E2E skipped); Quality41983313166 completed/success (mysql57-migrations, frontend, backend, deployment-safety success). qa21-hosted-checkpoint-20261105.json updated. This supersedes in_progress above without changing historical observation.
+- No production changes, accounts/business writes, external channel tests or new coverage percentage claim. Hosted MySQL regression success is not true concurrent transaction proof; backup simulation is not OSS restore. Current handoff remains tab11 at restored settings, viewport reset. Acceptance ledger unchanged apart from evidence checkpoint.
+- Next: diagnose missing narrow-screen module navigation; retrieve actual coverage and close remaining operations/browser evidence before deployment. Do not rerun already-passing gates without source changes or new concern.
+
+## 2026-11-05 QA-22: Role-aware Narrow-screen Navigation
+
+- Scope: confirmed sidebar disappears <=900px with no replacement. Added topbar icon and left drawer; uses same visibleMenuGroups/expanded child permission filters as desktop and existing route guards. No backend grant/API/schema/dependency changes. Selecting authorized target closes drawer. Forged menu/child inputs rejected by executable helper test.
+- Files: frontend/src/App.vue, src/styles.css, tests/settings-navigation.test.js; qa22-mobile-navigation-20261105.json, red/green JUnit, QA_REPORT.md, handbook. Screenshots35/36, dictionary-refresh/unit-menu DOM in retained QA07 run root.
+- Commands: node --test settings-navigation with red JUnit exit1 before implementation, green exit0 after; npm run lint/test/typecheck/build exit0,21tests/21pass, utilities-only typecheck,Vite8.3.5/1630modules,Node25.2.1. Static template checks limited to discoverability/permission data source; executable helper tests invalid key/child, forged route and drawer-close behavior. Full PHP not rerun for frontend-only change; prior240/1376 applies unchanged backend.
+- Browser: tab11 unavailable -> tab12 on retained local session; super-admin390x844 drawer shows authorized groups/children, project_type link, drawer close and hard refresh preserve correct dictionary title/filter/QA Type. Unit login via existing approved credentials and visible arithmetic captcha, only default/business/review/organization modules; no portal/system. Closed project navigation loads retained project1. Desktop restored; sidebar visible/mobile button isVisible false. Tab12 handoff, viewport reset. Other four roles not separately rechecked mobile.
+- Data/isolation: synthetic login/token activity only, no business record or grant writes. No production release/config/DB/account changes, external SMTP/OSS, shared service restart, other sites or payment/sales changes. QA_REPORT fixed_local entry; no full acceptance claim. Previous867f76e gates passed but new frontend source requires exact new-source gates.
+- Next: commit/push QA22 and verify exact gates; retrieve coverage and close concurrency/operations/browser-upload evidence. No production deployment before remaining requirements are proven.
+
+## 2026-11-05 QA-23: Measured Hosted Coverage and Ranked Gaps
+
+- Scope: retrieve actual exact867f76e PCOV coverage instead of unavailable/assumed percentages. No source/runtime/dependency changes. gh auth status exit1 (not logged in); existing Git credential helper can authenticate GitHub artifact REST in-process. No token printed, copied to repository or new grant created.
+- Evidence: qa23-coverage-20261105.json; raw coverage.zip/Clover/JUnit in ignored QA07 coverage-867f76e directory. Artifact13394801915 belongs CI41983313169/exact867f76e, SHA256d21af62bbe98877e7fd53cb5fd5d1f14aecad36df69b07287690ae9e4fe0e171. Authenticated listing/download/Expand-Archive/XML parsing commands all exit0. Metrics88files,4991/6729statements74.17%,290/546methods53.11%;240tests1376assertions0errors0failures0skips. PCOV conditionals0 means branch coverage unavailable; no branch percentage inferred. QA22 backend unchanged, frontend metrics separate.
+- QA_REPORT measured uncovered TOP5: lifecycle200, system text144, security128, project127, legacy-import command117 statements. Dispatch rule controller additionally0/98. These identify test gaps, not proven correctness failures. Earlier local missing-driver and unauthenticated artifact failures retained as history, now superseded only for hosted numerical evidence.
+- Isolation/data: documentation/evidence only; no user/tenant/production config, DB, account/business writes, external SMTP/OSS or other-service/site changes. Runtime versions not changed/newly measured. Acceptance ledger coverage section updated; overall readiness not passed.
+- Next: commit/push pending QA22/23 and targeted isolated integration coverage for security/system text/dispatch, followed by exact hosted gates. True MySQL concurrency, operational restore/mail and browser upload remain open.

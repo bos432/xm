@@ -1,0 +1,27 @@
+{
+  "increment": "QA-23",
+  "source_sha": "867f76efc6d1e044deaafbc8b1ea748010d8d3ee",
+  "run_id": 41983313169,
+  "artifact_id": 13394801915,
+  "artifact_name": "backend-coverage-867f76efc6d1e044deaafbc8b1ea748010d8d3ee",
+  "artifact_zip_sha256": "d21af62bbe98877e7fd53cb5fd5d1f14aecad36df69b07287690ae9e4fe0e171",
+  "local_evidence_root": "modernization/e2e/reports/runs/qa07-20261105-browser-fixed/coverage-867f76e",
+  "retrieval": "Git credential helper used inside process to authenticate GitHub REST artifact download; credential never printed or persisted. gh auth status exit1 was resolved by reusing existing authorized Git helper, not a new account/grant.",
+  "commands": [
+    "Invoke-RestMethod authenticated /repos/bos432/xm/actions/runs/41983313169/artifacts",
+    "Invoke-WebRequest authenticated /repos/bos432/xm/actions/artifacts/13394801915/zip -OutFile coverage.zip; Expand-Archive",
+    "[xml] coverage.xml; SelectNodes('//file'); project.metrics; Get-FileHash coverage.zip -Algorithm SHA256"
+  ],
+  "command_exit_codes": [0, 0, 0],
+  "metrics": {"files": 88, "statements": 6729, "covered_statements": 4991, "statement_percent": 74.17, "methods": 546, "covered_methods": 290, "method_percent": 53.11, "tests": 240, "assertions": 1376, "errors": 0, "failures": 0, "skipped": 0},
+  "top5_by_uncovered_statements": [
+    {"file": "app/Http/Controllers/ProjectLifecycleController.php", "statements": 295, "covered": 95, "uncovered": 200, "percent": 32.2},
+    {"file": "app/Http/Controllers/SystemTextController.php", "statements": 144, "covered": 0, "uncovered": 144, "percent": 0},
+    {"file": "app/Http/Controllers/SecurityController.php", "statements": 128, "covered": 0, "uncovered": 128, "percent": 0},
+    {"file": "app/Http/Controllers/ProjectController.php", "statements": 686, "covered": 559, "uncovered": 127, "percent": 81.49},
+    {"file": "app/Console/Commands/ImportLegacyRecords.php", "statements": 117, "covered": 0, "uncovered": 117, "percent": 0}
+  ],
+  "additional_high_risk": {"file": "app/Http/Controllers/ReviewDispatchRuleController.php", "statements": 98, "covered": 0},
+  "limits": ["Clover conditionals zero; branch coverage unavailable", "Metrics describe exact backend source867f76e; QA22 changes only frontend", "Coverage quantity does not prove correctness", "No production or external channel verification"],
+  "production_changed": false
+}

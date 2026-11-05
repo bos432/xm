@@ -24,6 +24,41 @@ test('system settings constrain nested grids on narrow screens', () => {
   assert.match(styles, /@media\s*\(max-width:\s*900px\)\s*\{[^}]*\.settings-overview-grid\s*\{[^}]*grid-template-columns:\s*minmax\(0,\s*1fr\)/s)
 })
 
+test('mobile navigation exposes only the current role menu groups and routes', () => {
+  const app = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
+  assert.match(app, /data-testid="mobile-menu-button"/)
+  assert.match(app, /data-testid="mobile-navigation-drawer"/)
+  assert.match(app, /v-for="group in visibleMenuGroups"/)
+  assert.match(app, /v-for="item in mobileMenuItems"/)
+  assert.match(app, /mobileMenuItems = computed\(\(\) => visibleMenuGroups\.value\.find\(\(group\) => group\.key === mobileGroupKey\.value\)\?\.items \|\| \[\]\)/)
+  assert.match(app, /function openMobileMenuGroup\(group\)/)
+  assert.match(app, /function openMobileMenuItem\(item, child\)/)
+})
+
+test('mobile navigation rejects items and children outside the authorized group', () => {
+  const app = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
+  const declaration = app.match(/function openMobileMenuItem\(item, child\) \{([\s\S]*?)\n\}/)
+  assert.ok(declaration)
+  const destinations = []
+  const visible = { value: true }
+  const navigate = runInNewContext(`(function openMobileMenuItem(item, child) { ${declaration[1]} })`, {
+    mobileMenuItems: { value: [{ key: 'projects', path: '/projects', children: [{ path: '/projects?status=closed' }] }] },
+    mobileNavigationVisible: visible,
+    router: { push: (path) => destinations.push(path) }
+  })
+  navigate({ key: 'settings', path: '/settings' })
+  navigate({ key: 'projects' }, { path: '/settings?group=review' })
+  assert.deepEqual(destinations, [])
+  assert.equal(visible.value, true)
+  navigate({ key: 'projects', path: '/settings' })
+  assert.deepEqual(destinations, ['/projects'])
+  assert.equal(visible.value, false)
+  visible.value = true
+  navigate({ key: 'projects' }, { path: '/projects?status=closed' })
+  assert.deepEqual(destinations, ['/projects', '/projects?status=closed'])
+  assert.equal(visible.value, false)
+})
+
 test('application batches explain why open records are not currently applicable', () => {
   const source = readFileSync(new URL('../src/views/ApplicationBatchesView.vue', import.meta.url), 'utf8')
   const declaration = source.match(/function applicationEligibility\(batch, now = new Date\(\)\) \{([\s\S]*?)\n\}/)

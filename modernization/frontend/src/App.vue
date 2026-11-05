@@ -47,6 +47,16 @@
     </el-aside>
     <el-container>
       <el-header class="topbar">
+        <el-tooltip content="打开导航菜单" placement="bottom">
+          <el-button
+            class="mobile-menu-button"
+            data-testid="mobile-menu-button"
+            :icon="Menu"
+            circle
+            aria-label="打开导航菜单"
+            @click="openMobileNavigation"
+          />
+        </el-tooltip>
         <div class="topbar-title">
           <strong>{{ title }}</strong>
           <span>{{ texts.t('app.topbar.subtitle', '阿拉善盟科技计划项目管理信息系统') }}</span>
@@ -80,6 +90,37 @@
       </el-main>
     </el-container>
 
+    <el-drawer
+      v-model="mobileNavigationVisible"
+      data-testid="mobile-navigation-drawer"
+      title="导航菜单"
+      direction="ltr"
+      size="min(360px, 100vw)"
+      class="mobile-navigation-drawer"
+    >
+      <nav aria-label="模块导航" class="mobile-module-list">
+        <el-button
+          v-for="group in visibleMenuGroups"
+          :key="group.key"
+          :type="mobileGroupKey === group.key ? 'primary' : 'default'"
+          :aria-pressed="mobileGroupKey === group.key"
+          @click="openMobileMenuGroup(group)"
+        >{{ group.label }}</el-button>
+      </nav>
+      <nav aria-label="功能导航" class="mobile-feature-list">
+        <section v-for="item in mobileMenuItems" :key="item.key">
+          <el-button text @click="openMobileMenuItem(item)">{{ menuLabel(item) }}{{ item.children?.length ? ' / ' + (item.allLabel || '全部') : '' }}</el-button>
+          <el-button
+            v-for="child in item.children || []"
+            :key="child.path"
+            text
+            :type="activeMenuPath === child.path ? 'primary' : 'default'"
+            @click="openMobileMenuItem(item, child)"
+          >{{ child.label }}</el-button>
+        </section>
+      </nav>
+    </el-drawer>
+
     <el-dialog v-model="passwordVisible" title="修改密码" width="460px">
       <el-form :model="passwordForm" label-position="top">
         <el-form-item label="当前密码"><el-input v-model="passwordForm.current_password" type="password" show-password /></el-form-item>
@@ -110,7 +151,7 @@
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ArrowDown, Bell, Checked, Collection, Connection, DataLine, Document, FolderChecked, FolderOpened, Guide, House, Lock, Message, OfficeBuilding, Operation, Setting, SwitchButton, Tickets, User, Warning } from '@element-plus/icons-vue'
+import { ArrowDown, Bell, Checked, Collection, Connection, DataLine, Document, FolderChecked, FolderOpened, Guide, House, Lock, Menu, Message, OfficeBuilding, Operation, Setting, SwitchButton, Tickets, User, Warning } from '@element-plus/icons-vue'
 import { api } from './api.js'
 import { useSessionStore } from './store.js'
 import { useTextStore } from './texts.js'
@@ -125,6 +166,8 @@ const profileVisible = ref(false)
 const savingProfile = ref(false)
 const unreadMessages = ref(0)
 const sessionExpiredNotified = ref(false)
+const mobileNavigationVisible = ref(false)
+const mobileGroupKey = ref('')
 const passwordForm = reactive({ current_password: '', password: '', password_confirmation: '' })
 const profileForm = reactive({ name: '', mobile: '', email: '' })
 
@@ -368,6 +411,7 @@ const visibleMenuGroups = computed(() => {
 const activeGroupKey = computed(() => routeMenuMatch.value?.groupKey || visibleMenuGroups.value[0]?.key || '')
 const currentMenuGroup = computed(() => visibleMenuGroups.value.find((group) => group.key === activeGroupKey.value) || visibleMenuGroups.value[0] || null)
 const currentMenuItems = computed(() => currentMenuGroup.value?.items || [])
+const mobileMenuItems = computed(() => visibleMenuGroups.value.find((group) => group.key === mobileGroupKey.value)?.items || [])
 const activeMenuPath = computed(() => routeMenuMatch.value?.child?.path || routeMenuMatch.value?.item?.path || route.fullPath)
 const defaultOpeneds = computed(() => currentMenuItems.value.filter((item) => item.children?.length).map((item) => `menu-${item.key}`))
 const routeMenuMatch = computed(() => {
@@ -471,6 +515,24 @@ function openMenuGroup(group) {
   router.push(firstMenuPath(group))
 }
 
+function openMobileNavigation() {
+  mobileGroupKey.value = activeGroupKey.value
+  mobileNavigationVisible.value = true
+}
+
+function openMobileMenuGroup(group) {
+  if (visibleMenuGroups.value.some((item) => item.key === group.key)) mobileGroupKey.value = group.key
+}
+
+function openMobileMenuItem(item, child) {
+  const allowedItem = mobileMenuItems.value.find((entry) => entry.key === item.key)
+  if (!allowedItem) return
+  const path = child ? allowedItem.children?.find((entry) => entry.path === child.path)?.path : allowedItem.path
+  if (!path) return
+  mobileNavigationVisible.value = false
+  router.push(path)
+}
+
 function roleLabel(role) {
   return roleLabels[role] || role || '-'
 }
@@ -569,6 +631,7 @@ function handleSessionExpired() {
 }
 
 watch(() => route.path, () => {
+  mobileNavigationVisible.value = false
   if (route.path !== '/login') sessionExpiredNotified.value = false
   refreshUnreadMessages()
 })

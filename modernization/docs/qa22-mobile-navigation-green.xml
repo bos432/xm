@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="system settings navigation exposes the OSS backup group" time="0.002011" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\settings-navigation.test.js"/>
+	<testcase name="system settings constrain nested grids on narrow screens" time="0.000691" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\settings-navigation.test.js"/>
+	<testcase name="mobile navigation exposes only the current role menu groups and routes" time="0.000299" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\settings-navigation.test.js"/>
+	<testcase name="mobile navigation rejects items and children outside the authorized group" time="0.001892" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\settings-navigation.test.js"/>
+	<testcase name="application batches explain why open records are not currently applicable" time="0.002527" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\settings-navigation.test.js"/>
+	<!-- tests 5 -->
+	<!-- suites 0 -->
+	<!-- pass 5 -->
+	<!-- fail 0 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 114.399 -->
+</testsuites>

@@ -27,6 +27,8 @@ QA-10 update: QA08-P1-DETAIL is fixed locally, not deployed. Reviewer drawer and
 
 ## Executed verification
 
+- QA-22 mobile navigation: sidebar hidden below900px had no replacement; added role-filtered drawer and topbar icon. Actual390x844 super-admin dictionary project_type direct link + hard-refresh passed; unit only default/business/review/organization groups, closed-project route passed; desktop icon hidden after viewport reset. Red contract exit1 -> green exit0; executable helper rejects forged menu/child; frontend21/lint/typecheck-utilities/build pass. `qa22-mobile-navigation-20261105.json`, screenshots35/36. Local only, not deployed; other mobile roles/screens not broadly cleared.
+
 - QA-21 responsive settings: browser390x844 reproduced clipped content (main scroll600/client375); scoped grid fix reduces main scroll to375, form boundaries39..336 and save button39..173. Screenshots33/34; `qa21-responsive-20261105.json`; static contract red exit1/green exit0, lint/test19/typecheck-utilities/build exit0. Other pages and absent narrow-screen module navigation not cleared by this fix. Push candidate7482aeb failed connection reset (session7050 terminal exit1); not deployed.
 
 - QA-20 isolated super-admin configuration: opening county score switch saved and remained enabled after full-page reload; restored original disabled value, saved and reloaded, then verified county=false, department=false, expert=true, admin=false, random assignment=true, default experts=3. Screenshots31/32 and DOM snapshots under `e2e/reports/runs/qa07-20261105-browser-fixed`; `qa20-config-db-readback-20261105.json`. Independent `php modernization/e2e/inspect-isolated.php` exited0 and confirms closed synthetic project, scores90/88/94, approved acceptance and approved extension. Production unchanged.
@@ -71,4 +73,16 @@ Database output evidence: `post-final-review.json`, driver sqlite/status approve
 
 ## Coverage and high-risk targets
 
-Line/branch coverage: unavailable, not 0% and not 100%. A ranked uncovered-file TOP5 cannot be honestly computed without coverage evidence. Risk-based targets (not measured ranking): ReviewController.php, ReviewDispatchMatcher.php, AcceptanceController.php, ProjectController.php, DashboardController.php.
+QA-23 supersedes the earlier unavailable numerical coverage. Authenticated artifact download for exact867f76e CI41983313169/artifact13394801915 succeeded (exit0); Clover and JUnit inspected locally. Statement coverage **74.17% (4991/6729)**, method coverage **53.11% (290/546)**,88files;240tests1376assertions,0errors/0failures/0skips. Branch coverage unavailable (PCOV Clover conditionals zero), not100%. Commands, artifact hash and parsed metrics: `qa23-coverage-20261105.json`. Raw archive/XML retained in ignored QA07 run root. No credential printed/persisted, no production change.
+
+Measured TOP5 by uncovered statements (risk reviewed, not a claim that all omissions are equally severe):
+
+| File | Covered / Statements | Uncovered | Coverage |
+| --- | --- | --- | --- |
+| ProjectLifecycleController.php | 95 / 295 | 200 | 32.20% |
+| SystemTextController.php | 0 / 144 | 144 | 0% |
+| SecurityController.php | 0 / 128 | 128 | 0% |
+| ProjectController.php | 559 / 686 | 127 | 81.49% |
+| ImportLegacyRecords.php | 0 / 117 | 117 | 0% |
+
+ReviewDispatchRuleController.php additionally has0/98 covered statements. These are explicit test gaps, not verified defects. Prior local missing-driver failure remains valid locally; hosted PCOV evidence now resolves the numerical report requirement for this exact backend source.

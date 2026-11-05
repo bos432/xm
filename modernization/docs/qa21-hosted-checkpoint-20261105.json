@@ -1,0 +1,13 @@
+{
+  "source": "867f76efc6d1e044deaafbc8b1ea748010d8d3ee",
+  "command": "git -c http.sslBackend=schannel -c http.version=HTTP/1.1 -c http.lowSpeedLimit=100 -c http.lowSpeedTime=20 push origin HEAD:refs/heads/codex/composer-security-fix",
+  "exit": 0,
+  "output": "To https://github.com/bos432/xm.git\n   43d6c16..867f76e  HEAD -> codex/composer-security-fix",
+  "receipt": {"method": "GitHub branch REST", "sha": "867f76efc6d1e044deaafbc8b1ea748010d8d3ee"},
+  "runs": [
+    {"id": 41983313166, "name": "Modernization Quality Gate", "status": "completed", "conclusion": "success", "jobs": ["mysql57-migrations:success", "frontend:success", "backend:success", "deployment-safety:success"]},
+    {"id": 41983313169, "name": "Modernization CI", "status": "completed", "conclusion": "success", "jobs": ["Frontend lint and build:success", "Deployment backup and rollback simulations:success", "Backend feature tests:success", "Optional online E2E:skipped"]}
+  ],
+  "production_changed": false,
+  "generated_evidence_normalization": "qa21 red JUnit whitespace-only lines trimmed after exact raw backup under ignored QA07 run root. No semantic output changed."
+}

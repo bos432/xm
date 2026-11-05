@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="system settings navigation exposes the OSS backup group" time="0.001889" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\settings-navigation.test.js"/>
+	<testcase name="system settings constrain nested grids on narrow screens" time="0.001172" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\settings-navigation.test.js"/>
+	<testcase name="mobile navigation exposes only the current role menu groups and routes" time="0.001212" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\settings-navigation.test.js" failure="The input did not match the regular expression /data-testid=&amp;quot;mobile-menu-button&amp;quot;/. Input:'&lt;template>\r\n' +  '  &lt;RouterView v-if=&amp;quot;$route.meta.public || $route.meta.guest&amp;quot; />\r\n' +  '  &lt;el-container v-else class=&amp;quot;shell gov-shell&amp;quot;>\r\n' +  '    &lt;el-aside width=&amp;quot;292px&amp;quot; class=&amp;quot;sidebar dual-sidebar&amp;quot;>\r\n' +  '      &lt;div class=&amp;quot;module-rail&amp;quot;>\r\n' +  '        &lt;button\r\n' +  '          v-for=&amp;quot;group in visibleMenuGroups&amp;quot;\r\n' +  '          :key=&amp;quot;group.key&amp;quot;\r\n' +  '          type=&amp;quot;button&amp;quot;\r\n' +  '          class=&amp;quot;module-button&amp;quot;\r\n' +  '          :class=&amp;quot;{ active: group.key === activeGroupKey }&amp;quot;\r\n' +  '          @click=&amp;quot;openMenuGroup(group)&amp;quot;\r\n' +  '        >\r\n' +  '          &lt;el-icon>&lt;component :is=&amp;quot;groupIcon(group.key)&amp;quot; />&lt;/el-icon>\r\n' +  '          &lt;span>{{ group.label }}&lt;/span>\r\n' +  '        &lt;/button>\r\n' +  '      &lt;/div>\r\n' +  '      &lt;div class=&amp;quot;section-sidebar&amp;quot;>\r\n' +  '        &lt;div class=&amp;quot;brand&amp;quot;>\r\n' +  &amp;quot;          &lt;strong>{{ texts.t('app.brand.title', '科技项目管理') }}&lt;/strong>\r\n&amp;quot; +  &amp;quot;          &lt;span>{{ texts.t('app.brand.subtitle', '公共服务后台') }}&lt;/span>\r\n&amp;quot; +  '        &lt;/div>\r\n' +  '        &lt;div v-if=&amp;quot;currentMenuGroup&amp;quot; class=&amp;quot;section-title-block&amp;quot;>\r\n' +  '          &lt;strong>{{ currentMenuGroup.label }}&lt;/strong>\r\n' +  '        &lt;/div>\r\n' +  '        &lt;el-menu :default-active=&amp;quot;activeMenuPath&amp;quot; :default-openeds=&amp;quot;defaultOpeneds&amp;quot; router>\r\n' +  '          &lt;template v-for=&amp;quot;item in currentMenuItems&amp;quot; :key=&amp;quot;item.key&amp;quot;>\r\n' +  '            &lt;el-sub-menu v-if=&amp;quot;item.children?.length&amp;quot; :index=&amp;quot;`menu-${item.key}`&amp;quot;>\r\n' +  '              &lt;template #title>\r\n' +  '                &lt;el-icon>&lt;component :is=&amp;quot;menuIcon(item.key)&amp;quot; />&lt;/el-icon>\r\n' +  '                &lt;span>{{ menuLabel(item) }}&lt;/span>\r\n' +  '              &lt;/template>\r\n' +  '              &lt;el-menu-item :index=&amp;quot;item.path&amp;quot;>\r\n' +  &amp;quot;                &lt;span>{{ item.allLabel || '全部' }}&lt;/span>\r\n&amp;quot; +  '              &lt;/el-menu-item>\r\n' +  '              &lt;el-menu-item v-for=&amp;quot;child in item.children&amp;quot; :key=&amp;quot;child.path&amp;quot; :index=&amp;quot;child.path&amp;quot;>\r\n' +  '                &lt;span>{{ child.label }}&lt;/span>\r\n' +  '              &lt;/el-menu-item>\r\n' +  '            &lt;/el-sub-menu>\r\n' +  '            &lt;el-menu-item v-else :index=&amp;quot;item.path&amp;quot;>\r\n' +  '              &lt;el-icon>&lt;component :is=&amp;quot;menuIcon(item.key)&amp;quot; />&lt;/el-icon>\r\n' +  '              &lt;span>{{ menuLabel(item) }}&lt;/span>\r\n' +  '            &lt;/el-menu-item>\r\n' +  '          &lt;/template>\r\n' +  '        &lt;/el-menu>\r\n' +  '      &lt;/div>\r\n' +  '    &lt;/el-aside>\r\n' +  '    &lt;el-container>\r\n' +  '      &lt;el-header class=&amp;quot;topbar&amp;quot;>\r\n' +  '        &lt;div class=&amp;quot;topbar-title&amp;quot;>\r\n' +  '          &lt;strong>{{ title }}&lt;/strong>\r\n' +  &amp;quot;          &lt;span>{{ texts.t('app.topbar.subtitle', '阿拉善盟科技计划项目管理信息系统') }}&lt;/span>\r\n&amp;quot; +  '        &lt;/div>\r\n' +  '        &lt;div class=&amp;quot;topbar-actions&amp;quot;>\r\n' +  `          &lt;el-tooltip :content=&amp;quot;texts.t('app.message.tooltip', '站内消息')&amp;quot; placement=&amp;quot;bottom&amp;quot;>\r\n` +  '            &lt;el-badge :value=&amp;quot;unreadMessages&amp;quot; :hidden=&amp;quot;unreadMessages === 0&amp;quot; :max=&amp;quot;99&amp;quot;>\r\n' +  `              &lt;el-button :icon=&amp;quot;Bell&amp;quot; circle @click=&amp;quot;router.push('/messages')&amp;quot; />\r\n` +  '            &lt;/el-badge>\r\n' +  '          &lt;/el-tooltip>\r\n' +  '          &lt;el-dropdown trigger=&amp;quot;click&amp;quot; @command=&amp;quot;handleAccountCommand&amp;quot;>\r\n' +  '            &lt;el-button class=&amp;quot;account-button&amp;quot;>\r\n' +  '              &lt;el-icon>&lt;User />&lt;/el-icon>\r\n' +  `              &lt;span class=&amp;quot;account-name&amp;quot;>{{ session.user?.name || session.user?.username || texts.t('app.account.default_name', '当前账号') }}&lt;/span>\r\n` +  '              &lt;span class=&amp;quot;account-role&amp;quot;>{{ roleLabel(session.role) }}&lt;/span>\r\n' +  '              &lt;el-icon class=&amp;quot;el-icon--right&amp;quot;>&lt;ArrowDown />&lt;/el-icon>\r\n' +  '            &lt;/el-button>\r\n' +  '            &lt;template #dropdown>\r\n' +  '              &lt;el-dropdown-menu>\r\n' +  `                &lt;el-dropdown-item command=&amp;quot;profile&amp;quot; :icon=&amp;quot;User&amp;quot;>{{ texts.t('app.profile', '个人资料') }}&lt;/el-dropdown-item>\r\n` +  `                &lt;el-dropdown-item command=&amp;quot;password&amp;quot; :icon=&amp;quot;Lock&amp;quot;>{{ texts.t('app.change_password', '修改密码') }}&lt;/el-dropdown-item>\r\n` +  `                &lt;el-dropdown-item divided command=&amp;quot;switch&amp;quot; :icon=&amp;quot;SwitchButton&amp;quot;>{{ texts.t('app.switch_account', '切换账号') }}&lt;/el-dropdown-item>\r\n` +  `                &lt;el-dropdown-item command=&amp;quot;logout&amp;quot; :icon=&amp;quot;SwitchButton&amp;quot;>{{ texts.t('app.logout', '退出登录') }}&lt;/el-dropdown-item>\r\n` +  '              &lt;/el-dropdown-menu>\r\n' +  '            &lt;/template>\r\n' +  '          &lt;/el-dropdown>\r\n' +  '        &lt;/div>\r\n' +  '      &lt;/el-header>\r\n' +  '      &lt;el-main>\r\n' +  '        &lt;RouterView />\r\n' +  '      &lt;/el-main>\r\n' +  '    &lt;/el-container>\r\n' +  '\r\n' +  '    &lt;el-dialog v-model=&amp;quot;passwordVisible&amp;quot; title=&amp;quot;修改密码&amp;quot; width=&amp;quot;460px&amp;quot;>\r\n' +  '      &lt;el-form :model=&amp;quot;passwordForm&amp;quot; label-position=&amp;quot;top&amp;quot;>\r\n' +  '        &lt;el-form-item label=&amp;quot;当前密码&amp;quot;>&lt;el-input v-model=&amp;quot;passwordForm.current_password&amp;quot; type=&amp;quot;password&amp;quot; show-password />&lt;/el-form-item>\r\n' +  '        &lt;el-form-item label=&amp;quot;新密码&amp;quot;>&lt;el-input v-model=&amp;quot;passwordForm.password&amp;quot; type=&amp;quot;password&amp;quot; show-password />&lt;/el-form-item>\r\n' +  '        &lt;el-form-item label=&amp;quot;确认新密码&amp;quot;>&lt;el-input v-model=&amp;quot;passwordForm.password_confirmation&amp;quot; type=&amp;quot;password&amp;quot; show-password />&lt;/el-form-item>\r\n' +  '      &lt;/el-form>\r\n' +  '      &lt;template #footer>\r\n' +  '        &lt;el-button @click=&amp;quot;passwordVisible = false&amp;quot;>取消&lt;/el-button>\r\n' +  '        &lt;el-button type=&amp;quot;primary&amp;quot; :loading=&amp;quot;savingPassword&amp;quot; @click=&amp;quot;updatePassword&amp;quot;>保存&lt;/el-button>\r\n' +  '      &lt;/template>\r\n' +  '    &lt;/el-dialog>\r\n' +  '\r\n' +  '    &lt;el-dialog v-model=&amp;quot;profileVisible&amp;quot; title=&amp;quot;个人资料&amp;quot; width=&amp;quot;460px&amp;quot;>\r\n' +  '      &lt;el-form :model=&amp;quot;profileForm&amp;quot; label-position=&amp;quot;top&amp;quot;>\r\n' +  '        &lt;el-form-item label=&amp;quot;姓名&amp;quot;>&lt;el-input v-model=&amp;quot;profileForm.name&amp;quot; />&lt;/el-form-item>\r\n' +  '        &lt;el-form-item label=&amp;quot;手机&amp;quot;>&lt;el-input v-model=&amp;quot;profileForm.mobile&amp;quot; />&lt;/el-form-item>\r\n' +  '        &lt;el-form-item label=&amp;quot;邮箱&amp;quot;>&lt;el-input v-model=&amp;quot;profileForm.email&amp;quot; />&lt;/el-form-item>\r\n' +  '      &lt;/el-form>\r\n' +  '      &lt;template #footer>\r\n' +  '        &lt;el-button @click=&amp;quot;profileVisible = false&amp;quot;>取消&lt;/el-button>\r\n' +  '        &lt;el-button type=&amp;quot;primary&amp;quot; :loading=&amp;quot;savingProfile&amp;quot; @click=&amp;quot;updateProfile&amp;quot;>保存&lt;/el-button>\r\n' +  '      &lt;/template>\r\n' +  '    &lt;/el-dialog>\r\n' +  '  &lt;/el-container>\r\n' +  '&lt;/template>\r\n' +  '\r\n' +  '&lt;script setup>\r\n' +  &amp;quot;import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'\r\n&amp;quot; +  &amp;quot;import { useRoute, useRouter } from 'vue-router'\r\n&amp;quot; +  &amp;quot;import { ElMessage } from 'element-plus'\r\n&amp;quot; +  &amp;quot;import { ArrowDown, Bell, Checked, Collection, Connection, DataLine, Document, FolderChecked, FolderOpened, Guide, House, Lock, Message, OfficeBuilding, Operation, Setting, SwitchButton, Tickets, User, Warning } from '@element-plus/icons-vue'\r\n&amp;quot; +  &amp;quot;import { api } from './api.js'\r\n&amp;quot; +  &amp;quot;import { useSessionStore } from './store.js'\r\n&amp;quot; +  &amp;quot;import { useTextStore } from './texts.js'\r\n&amp;quot; +  '\r\n' +  'const route = useRoute()\r\n' +  'const router = useRouter()\r\n' +  'const session = useSessionStore()\r\n' +  'const texts = useTextStore()\r\n' +  'const passwordVisible = ref(false)\r\n' +  'const savingPassword = ref(false)\r\n' +  'const profileVisible = ref(false)\r\n' +  'const savingProfile = ref(false)\r\n' +  'const unreadMessages = ref(0)\r\n' +  'const sessionExpiredNotified = ref(false)\r\n' +  &amp;quot;const passwordForm = reactive({ current_password: '', password: '', password_confirmation: '' })\r\n&amp;quot; +  &amp;quot;const profileForm = reactive({ name: '', mobile: '', email: '' })\r\n&amp;quot; +  '\r\n' +  'const iconMap = {\r\n' +  '  dashboard: DataLine,\r\n' +  '  projects: FolderOpened,\r\n' +  '  application_batches: Collection,\r\n' +  '  acceptance: FolderChecked,\r\n' +  '  acceptance_admin: FolderChecked,\r\n' +  '  lifecycle: Connection,\r\n' +  '  units: OfficeBuilding,\r\n' +  '  users: User,\r\n' +  '  unit_profile: OfficeBuilding,\r\n' +  '  reviews: Checked,\r\n' +  '  dispatch_rules: Guide,\r\n' +  '  messages: Bell,\r\n' +  '  migration: Connection,\r\n' +  '  operation_logs: Tickets,\r\n' +  '  public_home: House,\r\n' +  '  mail_center: Message,\r\n' +  '  roles: Operation,\r\n' +  '  security: Warning,\r\n' +  '  dictionary_items: Collection,\r\n' +  '  system_texts: Document,\r\n' +  '  settings: Setting\r\n' +  '}\r\n' +  'const groupIconMap = {\r\n' +  '  business: FolderOpened,\r\n' +  '  organization: OfficeBuilding,\r\n' +  '  review: Checked,\r\n' +  '  portal: House,\r\n' +  '  system: Setting,\r\n' +  '  default: DataLine\r\n' +  '}\r\n' +  'const menuGroups = {\r\n' +  &amp;quot;  dashboard: 'default',\r\n&amp;quot; +  &amp;quot;  projects: 'business',\r\n&amp;quot; +  &amp;quot;  application_batches: 'business',\r\n&amp;quot; +  &amp;quot;  lifecycle: 'business',\r\n&amp;quot; +  &amp;quot;  units: 'organization',\r\n&amp;quot; +  &amp;quot;  users: 'organization',\r\n&amp;quot; +  &amp;quot;  unit_profile: 'organization',\r\n&amp;quot; +  &amp;quot;  reviews: 'review',\r\n&amp;quot; +  &amp;quot;  dispatch_rules: 'review',\r\n&amp;quot; +  &amp;quot;  acceptance: 'review',\r\n&amp;quot; +  &amp;quot;  acceptance_admin: 'review',\r\n&amp;quot; +  &amp;quot;  acceptance_review: 'review',\r\n&amp;quot; +  &amp;quot;  messages: 'default',\r\n&amp;quot; +  &amp;quot;  public_home: 'portal',\r\n&amp;quot; +  &amp;quot;  mail_center: 'portal',\r\n&amp;quot; +  &amp;quot;  roles: 'system',\r\n&amp;quot; +  &amp;quot;  security: 'system',\r\n&amp;quot; +  &amp;quot;  dictionary_items: 'system',\r\n&amp;quot; +  &amp;quot;  system_texts: 'system',\r\n&amp;quot; +  &amp;quot;  settings: 'system',\r\n&amp;quot; +  &amp;quot;  migration: 'system',\r\n&amp;quot; +  &amp;quot;  operation_logs: 'system'\r\n&amp;quot; +  '}\r\n' +  'const menuGroupLabels = {\r\n' +  &amp;quot;  default: '常用入口',\r\n&amp;quot; +  &amp;quot;  business: '项目业务',\r\n&amp;quot; +  &amp;quot;  organization: '组织账号',\r\n&amp;quot; +  &amp;quot;  review: '审核验收',\r\n&amp;quot; +  &amp;quot;  portal: '门户运营',\r\n&amp;quot; +  &amp;quot;  system: '系统管理'\r\n&amp;quot; +  '}\r\n' +  &amp;quot;const menuGroupOrder = ['default', 'business', 'review', 'organization', 'portal', 'system']\r\n&amp;quot; +  'const menuItemOrder = {\r\n' +  &amp;quot;  default: ['dashboard', 'messages'],\r\n&amp;quot; +  &amp;quot;  business: ['projects', 'application_batches', 'lifecycle'],\r\n&amp;quot; +  &amp;quot;  review: ['reviews', 'dispatch_rules', 'acceptance', 'acceptance_admin', 'acceptance_review'],\r\n&amp;quot; +  &amp;quot;  organization: ['units', 'users', 'unit_profile'],\r\n&amp;quot; +  &amp;quot;  portal: ['public_home', 'mail_center'],\r\n&amp;quot; +  &amp;quot;  system: ['dictionary_items', 'settings', 'system_texts', 'roles', 'security', 'migration', 'operation_logs']\r\n&amp;quot; +  '}\r\n' +  'const dictionaryMenuChildren = [\r\n' +  &amp;quot;  { label: '专家评分项', path: '/dictionary-items?group=expert_review_criterion', group: 'expert_review_criterion' },\r\n&amp;quot; +  &amp;quot;  { label: '项目类别', path: '/dictionary-items?group=project_category', group: 'project_category' },\r\n&amp;quot; +  &amp;quot;  { label: '项目类型', path: '/dictionary-items?group=project_type', group: 'project_type' },\r\n&amp;quot; +  &amp;quot;  { label: '归口管理单位', path: '/dictionary-items?group=management_unit', group: 'management_unit' },\r\n&amp;quot; +  &amp;quot;  { label: '所属领域', path: '/dictionary-items?group=project_field', group: 'project_field' },\r\n&amp;quot; +  &amp;quot;  { label: '研究方向', path: '/dictionary-items?group=research_direction', group: 'research_direction' },\r\n&amp;quot; +  &amp;quot;  { label: '项目状态', path: '/dictionary-items?group=project_status', group: 'project_status' }\r\n&amp;quot; +  ']\r\n' +  'const settingsMenuChildren = [\r\n' +  &amp;quot;  { label: '站点信息', path: '/settings?group=site', group: 'site' },\r\n&amp;quot; +  &amp;quot;  { label: '邮件 SMTP', path: '/settings?group=mail', group: 'mail' },\r\n&amp;quot; +  &amp;quot;  { label: '上传策略', path: '/settings?group=upload', group: 'upload' },\r\n&amp;quot; +  &amp;quot;  { label: '安全策略', path: '/settings?group=security', group: 'security' },\r\n&amp;quot; +  &amp;quot;  { label: '审核与评分', path: '/settings?group=review', group: 'review' },\r\n&amp;quot; +  &amp;quot;  { label: '备份与 OSS', path: '/settings?group=backup', group: 'backup' }\r\n&amp;quot; +  ']\r\n' +  'const projectsMenuChildren = [\r\n' +  &amp;quot;  { label: '草稿项目', path: '/projects?status=draft', query: { status: 'draft' } },\r\n&amp;quot; +  &amp;quot;  { label: '退回修改', path: '/projects?status=returned', query: { status: 'returned' } },\r\n&amp;quot; +  &amp;quot;  { label: '已提交', path: '/projects?status=submitted', query: { status: 'submitted' } },\r\n&amp;quot; +  &amp;quot;  { label: '审核中', path: '/projects?status=reviewing', query: { st&amp;quot;... 15202 more characters">
+		<failure type="testCodeFailure" message="The input did not match the regular expression /data-testid=&amp;quot;mobile-menu-button&amp;quot;/. Input:'&lt;template>\r\n' +  '  &lt;RouterView v-if=&amp;quot;$route.meta.public || $route.meta.guest&amp;quot; />\r\n' +  '  &lt;el-container v-else class=&amp;quot;shell gov-shell&amp;quot;>\r\n' +  '    &lt;el-aside width=&amp;quot;292px&amp;quot; class=&amp;quot;sidebar dual-sidebar&amp;quot;>\r\n' +  '      &lt;div class=&amp;quot;module-rail&amp;quot;>\r\n' +  '        &lt;button\r\n' +  '          v-for=&amp;quot;group in visibleMenuGroups&amp;quot;\r\n' +  '          :key=&amp;quot;group.key&amp;quot;\r\n' +  '          type=&amp;quot;button&amp;quot;\r\n' +  '          class=&amp;quot;module-button&amp;quot;\r\n' +  '          :class=&amp;quot;{ active: group.key === activeGroupKey }&amp;quot;\r\n' +  '          @click=&amp;quot;openMenuGroup(group)&amp;quot;\r\n' +  '        >\r\n' +  '          &lt;el-icon>&lt;component :is=&amp;quot;groupIcon(group.key)&amp;quot; />&lt;/el-icon>\r\n' +  '          &lt;span>{{ group.label }}&lt;/span>\r\n' +  '        &lt;/button>\r\n' +  '      &lt;/div>\r\n' +  '      &lt;div class=&amp;quot;section-sidebar&amp;quot;>\r\n' +  '        &lt;div class=&amp;quot;brand&amp;quot;>\r\n' +  &amp;quot;          &lt;strong>{{ texts.t('app.brand.title', '科技项目管理') }}&lt;/strong>\r\n&amp;quot; +  &amp;quot;          &lt;span>{{ texts.t('app.brand.subtitle', '公共服务后台') }}&lt;/span>\r\n&amp;quot; +  '        &lt;/div>\r\n' +  '        &lt;div v-if=&amp;quot;currentMenuGroup&amp;quot; class=&amp;quot;section-title-block&amp;quot;>\r\n' +  '          &lt;strong>{{ currentMenuGroup.label }}&lt;/strong>\r\n' +  '        &lt;/div>\r\n' +  '        &lt;el-menu :default-active=&amp;quot;activeMenuPath&amp;quot; :default-openeds=&amp;quot;defaultOpeneds&amp;quot; router>\r\n' +  '          &lt;template v-for=&amp;quot;item in currentMenuItems&amp;quot; :key=&amp;quot;item.key&amp;quot;>\r\n' +  '            &lt;el-sub-menu v-if=&amp;quot;item.children?.length&amp;quot; :index=&amp;quot;`menu-${item.key}`&amp;quot;>\r\n' +  '              &lt;template #title>\r\n' +  '                &lt;el-icon>&lt;component :is=&amp;quot;menuIcon(item.key)&amp;quot; />&lt;/el-icon>\r\n' +  '                &lt;span>{{ menuLabel(item) }}&lt;/span>\r\n' +  '              &lt;/template>\r\n' +  '              &lt;el-menu-item :index=&amp;quot;item.path&amp;quot;>\r\n' +  &amp;quot;                &lt;span>{{ item.allLabel || '全部' }}&lt;/span>\r\n&amp;quot; +  '              &lt;/el-menu-item>\r\n' +  '              &lt;el-menu-item v-for=&amp;quot;child in item.children&amp;quot; :key=&amp;quot;child.path&amp;quot; :index=&amp;quot;child.path&amp;quot;>\r\n' +  '                &lt;span>{{ child.label }}&lt;/span>\r\n' +  '              &lt;/el-menu-item>\r\n' +  '            &lt;/el-sub-menu>\r\n' +  '            &lt;el-menu-item v-else :index=&amp;quot;item.path&amp;quot;>\r\n' +  '              &lt;el-icon>&lt;component :is=&amp;quot;menuIcon(item.key)&amp;quot; />&lt;/el-icon>\r\n' +  '              &lt;span>{{ menuLabel(item) }}&lt;/span>\r\n' +  '            &lt;/el-menu-item>\r\n' +  '          &lt;/template>\r\n' +  '        &lt;/el-menu>\r\n' +  '      &lt;/div>\r\n' +  '    &lt;/el-aside>\r\n' +  '    &lt;el-container>\r\n' +  '      &lt;el-header class=&amp;quot;topbar&amp;quot;>\r\n' +  '        &lt;div class=&amp;quot;topbar-title&amp;quot;>\r\n' +  '          &lt;strong>{{ title }}&lt;/strong>\r\n' +  &amp;quot;          &lt;span>{{ texts.t('app.topbar.subtitle', '阿拉善盟科技计划项目管理信息系统') }}&lt;/span>\r\n&amp;quot; +  '        &lt;/div>\r\n' +  '        &lt;div class=&amp;quot;topbar-actions&amp;quot;>\r\n' +  `          &lt;el-tooltip :content=&amp;quot;texts.t('app.message.tooltip', '站内消息')&amp;quot; placement=&amp;quot;bottom&amp;quot;>\r\n` +  '            &lt;el-badge :value=&amp;quot;unreadMessages&amp;quot; :hidden=&amp;quot;unreadMessages === 0&amp;quot; :max=&amp;quot;99&amp;quot;>\r\n' +  `              &lt;el-button :icon=&amp;quot;Bell&amp;quot; circle @click=&amp;quot;router.push('/messages')&amp;quot; />\r\n` +  '            &lt;/el-badge>\r\n' +  '          &lt;/el-tooltip>\r\n' +  '          &lt;el-dropdown trigger=&amp;quot;click&amp;quot; @command=&amp;quot;handleAccountCommand&amp;quot;>\r\n' +  '            &lt;el-button class=&amp;quot;account-button&amp;quot;>\r\n' +  '              &lt;el-icon>&lt;User />&lt;/el-icon>\r\n' +  `              &lt;span class=&amp;quot;account-name&amp;quot;>{{ session.user?.name || session.user?.username || texts.t('app.account.default_name', '当前账号') }}&lt;/span>\r\n` +  '              &lt;span class=&amp;quot;account-role&amp;quot;>{{ roleLabel(session.role) }}&lt;/span>\r\n' +  '              &lt;el-icon class=&amp;quot;el-icon--right&amp;quot;>&lt;ArrowDown />&lt;/el-icon>\r\n' +  '            &lt;/el-button>\r\n' +  '            &lt;template #dropdown>\r\n' +  '              &lt;el-dropdown-menu>\r\n' +  `                &lt;el-dropdown-item command=&amp;quot;profile&amp;quot; :icon=&amp;quot;User&amp;quot;>{{ texts.t('app.profile', '个人资料') }}&lt;/el-dropdown-item>\r\n` +  `                &lt;el-dropdown-item command=&amp;quot;password&amp;quot; :icon=&amp;quot;Lock&amp;quot;>{{ texts.t('app.change_password', '修改密码') }}&lt;/el-dropdown-item>\r\n` +  `                &lt;el-dropdown-item divided command=&amp;quot;switch&amp;quot; :icon=&amp;quot;SwitchButton&amp;quot;>{{ texts.t('app.switch_account', '切换账号') }}&lt;/el-dropdown-item>\r\n` +  `                &lt;el-dropdown-item command=&amp;quot;logout&amp;quot; :icon=&amp;quot;SwitchButton&amp;quot;>{{ texts.t('app.logout', '退出登录') }}&lt;/el-dropdown-item>\r\n` +  '              &lt;/el-dropdown-menu>\r\n' +  '            &lt;/template>\r\n' +  '          &lt;/el-dropdown>\r\n' +  '        &lt;/div>\r\n' +  '      &lt;/el-header>\r\n' +  '      &lt;el-main>\r\n' +  '        &lt;RouterView />\r\n' +  '      &lt;/el-main>\r\n' +  '    &lt;/el-container>\r\n' +  '\r\n' +  '    &lt;el-dialog v-model=&amp;quot;passwordVisible&amp;quot; title=&amp;quot;修改密码&amp;quot; width=&amp;quot;460px&amp;quot;>\r\n' +  '      &lt;el-form :model=&amp;quot;passwordForm&amp;quot; label-position=&amp;quot;top&amp;quot;>\r\n' +  '        &lt;el-form-item label=&amp;quot;当前密码&amp;quot;>&lt;el-input v-model=&amp;quot;passwordForm.current_password&amp;quot; type=&amp;quot;password&amp;quot; show-password />&lt;/el-form-item>\r\n' +  '        &lt;el-form-item label=&amp;quot;新密码&amp;quot;>&lt;el-input v-model=&amp;quot;passwordForm.password&amp;quot; type=&amp;quot;password&amp;quot; show-password />&lt;/el-form-item>\r\n' +  '        &lt;el-form-item label=&amp;quot;确认新密码&amp;quot;>&lt;el-input v-model=&amp;quot;passwordForm.password_confirmation&amp;quot; type=&amp;quot;password&amp;quot; show-password />&lt;/el-form-item>\r\n' +  '      &lt;/el-form>\r\n' +  '      &lt;template #footer>\r\n' +  '        &lt;el-button @click=&amp;quot;passwordVisible = false&amp;quot;>取消&lt;/el-button>\r\n' +  '        &lt;el-button type=&amp;quot;primary&amp;quot; :loading=&amp;quot;savingPassword&amp;quot; @click=&amp;quot;updatePassword&amp;quot;>保存&lt;/el-button>\r\n' +  '      &lt;/template>\r\n' +  '    &lt;/el-dialog>\r\n' +  '\r\n' +  '    &lt;el-dialog v-model=&amp;quot;profileVisible&amp;quot; title=&amp;quot;个人资料&amp;quot; width=&amp;quot;460px&amp;quot;>\r\n' +  '      &lt;el-form :model=&amp;quot;profileForm&amp;quot; label-position=&amp;quot;top&amp;quot;>\r\n' +  '        &lt;el-form-item label=&amp;quot;姓名&amp;quot;>&lt;el-input v-model=&amp;quot;profileForm.name&amp;quot; />&lt;/el-form-item>\r\n' +  '        &lt;el-form-item label=&amp;quot;手机&amp;quot;>&lt;el-input v-model=&amp;quot;profileForm.mobile&amp;quot; />&lt;/el-form-item>\r\n' +  '        &lt;el-form-item label=&amp;quot;邮箱&amp;quot;>&lt;el-input v-model=&amp;quot;profileForm.email&amp;quot; />&lt;/el-form-item>\r\n' +  '      &lt;/el-form>\r\n' +  '      &lt;template #footer>\r\n' +  '        &lt;el-button @click=&amp;quot;profileVisible = false&amp;quot;>取消&lt;/el-button>\r\n' +  '        &lt;el-button type=&amp;quot;primary&amp;quot; :loading=&amp;quot;savingProfile&amp;quot; @click=&amp;quot;updateProfile&amp;quot;>保存&lt;/el-button>\r\n' +  '      &lt;/template>\r\n' +  '    &lt;/el-dialog>\r\n' +  '  &lt;/el-container>\r\n' +  '&lt;/template>\r\n' +  '\r\n' +  '&lt;script setup>\r\n' +  &amp;quot;import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'\r\n&amp;quot; +  &amp;quot;import { useRoute, useRouter } from 'vue-router'\r\n&amp;quot; +  &amp;quot;import { ElMessage } from 'element-plus'\r\n&amp;quot; +  &amp;quot;import { ArrowDown, Bell, Checked, Collection, Connection, DataLine, Document, FolderChecked, FolderOpened, Guide, House, Lock, Message, OfficeBuilding, Operation, Setting, SwitchButton, Tickets, User, Warning } from '@element-plus/icons-vue'\r\n&amp;quot; +  &amp;quot;import { api } from './api.js'\r\n&amp;quot; +  &amp;quot;import { useSessionStore } from './store.js'\r\n&amp;quot; +  &amp;quot;import { useTextStore } from './texts.js'\r\n&amp;quot; +  '\r\n' +  'const route = useRoute()\r\n' +  'const router = useRouter()\r\n' +  'const session = useSessionStore()\r\n' +  'const texts = useTextStore()\r\n' +  'const passwordVisible = ref(false)\r\n' +  'const savingPassword = ref(false)\r\n' +  'const profileVisible = ref(false)\r\n' +  'const savingProfile = ref(false)\r\n' +  'const unreadMessages = ref(0)\r\n' +  'const sessionExpiredNotified = ref(false)\r\n' +  &amp;quot;const passwordForm = reactive({ current_password: '', password: '', password_confirmation: '' })\r\n&amp;quot; +  &amp;quot;const profileForm = reactive({ name: '', mobile: '', email: '' })\r\n&amp;quot; +  '\r\n' +  'const iconMap = {\r\n' +  '  dashboard: DataLine,\r\n' +  '  projects: FolderOpened,\r\n' +  '  application_batches: Collection,\r\n' +  '  acceptance: FolderChecked,\r\n' +  '  acceptance_admin: FolderChecked,\r\n' +  '  lifecycle: Connection,\r\n' +  '  units: OfficeBuilding,\r\n' +  '  users: User,\r\n' +  '  unit_profile: OfficeBuilding,\r\n' +  '  reviews: Checked,\r\n' +  '  dispatch_rules: Guide,\r\n' +  '  messages: Bell,\r\n' +  '  migration: Connection,\r\n' +  '  operation_logs: Tickets,\r\n' +  '  public_home: House,\r\n' +  '  mail_center: Message,\r\n' +  '  roles: Operation,\r\n' +  '  security: Warning,\r\n' +  '  dictionary_items: Collection,\r\n' +  '  system_texts: Document,\r\n' +  '  settings: Setting\r\n' +  '}\r\n' +  'const groupIconMap = {\r\n' +  '  business: FolderOpened,\r\n' +  '  organization: OfficeBuilding,\r\n' +  '  review: Checked,\r\n' +  '  portal: House,\r\n' +  '  system: Setting,\r\n' +  '  default: DataLine\r\n' +  '}\r\n' +  'const menuGroups = {\r\n' +  &amp;quot;  dashboard: 'default',\r\n&amp;quot; +  &amp;quot;  projects: 'business',\r\n&amp;quot; +  &amp;quot;  application_batches: 'business',\r\n&amp;quot; +  &amp;quot;  lifecycle: 'business',\r\n&amp;quot; +  &amp;quot;  units: 'organization',\r\n&amp;quot; +  &amp;quot;  users: 'organization',\r\n&amp;quot; +  &amp;quot;  unit_profile: 'organization',\r\n&amp;quot; +  &amp;quot;  reviews: 'review',\r\n&amp;quot; +  &amp;quot;  dispatch_rules: 'review',\r\n&amp;quot; +  &amp;quot;  acceptance: 'review',\r\n&amp;quot; +  &amp;quot;  acceptance_admin: 'review',\r\n&amp;quot; +  &amp;quot;  acceptance_review: 'review',\r\n&amp;quot; +  &amp;quot;  messages: 'default',\r\n&amp;quot; +  &amp;quot;  public_home: 'portal',\r\n&amp;quot; +  &amp;quot;  mail_center: 'portal',\r\n&amp;quot; +  &amp;quot;  roles: 'system',\r\n&amp;quot; +  &amp;quot;  security: 'system',\r\n&amp;quot; +  &amp;quot;  dictionary_items: 'system',\r\n&amp;quot; +  &amp;quot;  system_texts: 'system',\r\n&amp;quot; +  &amp;quot;  settings: 'system',\r\n&amp;quot; +  &amp;quot;  migration: 'system',\r\n&amp;quot; +  &amp;quot;  operation_logs: 'system'\r\n&amp;quot; +  '}\r\n' +  'const menuGroupLabels = {\r\n' +  &amp;quot;  default: '常用入口',\r\n&amp;quot; +  &amp;quot;  business: '项目业务',\r\n&amp;quot; +  &amp;quot;  organization: '组织账号',\r\n&amp;quot; +  &amp;quot;  review: '审核验收',\r\n&amp;quot; +  &amp;quot;  portal: '门户运营',\r\n&amp;quot; +  &amp;quot;  system: '系统管理'\r\n&amp;quot; +  '}\r\n' +  &amp;quot;const menuGroupOrder = ['default', 'business', 'review', 'organization', 'portal', 'system']\r\n&amp;quot; +  'const menuItemOrder = {\r\n' +  &amp;quot;  default: ['dashboard', 'messages'],\r\n&amp;quot; +  &amp;quot;  business: ['projects', 'application_batches', 'lifecycle'],\r\n&amp;quot; +  &amp;quot;  review: ['reviews', 'dispatch_rules', 'acceptance', 'acceptance_admin', 'acceptance_review'],\r\n&amp;quot; +  &amp;quot;  organization: ['units', 'users', 'unit_profile'],\r\n&amp;quot; +  &amp;quot;  portal: ['public_home', 'mail_center'],\r\n&amp;quot; +  &amp;quot;  system: ['dictionary_items', 'settings', 'system_texts', 'roles', 'security', 'migration', 'operation_logs']\r\n&amp;quot; +  '}\r\n' +  'const dictionaryMenuChildren = [\r\n' +  &amp;quot;  { label: '专家评分项', path: '/dictionary-items?group=expert_review_criterion', group: 'expert_review_criterion' },\r\n&amp;quot; +  &amp;quot;  { label: '项目类别', path: '/dictionary-items?group=project_category', group: 'project_category' },\r\n&amp;quot; +  &amp;quot;  { label: '项目类型', path: '/dictionary-items?group=project_type', group: 'project_type' },\r\n&amp;quot; +  &amp;quot;  { label: '归口管理单位', path: '/dictionary-items?group=management_unit', group: 'management_unit' },\r\n&amp;quot; +  &amp;quot;  { label: '所属领域', path: '/dictionary-items?group=project_field', group: 'project_field' },\r\n&amp;quot; +  &amp;quot;  { label: '研究方向', path: '/dictionary-items?group=research_direction', group: 'research_direction' },\r\n&amp;quot; +  &amp;quot;  { label: '项目状态', path: '/dictionary-items?group=project_status', group: 'project_status' }\r\n&amp;quot; +  ']\r\n' +  'const settingsMenuChildren = [\r\n' +  &amp;quot;  { label: '站点信息', path: '/settings?group=site', group: 'site' },\r\n&amp;quot; +  &amp;quot;  { label: '邮件 SMTP', path: '/settings?group=mail', group: 'mail' },\r\n&amp;quot; +  &amp;quot;  { label: '上传策略', path: '/settings?group=upload', group: 'upload' },\r\n&amp;quot; +  &amp;quot;  { label: '安全策略', path: '/settings?group=security', group: 'security' },\r\n&amp;quot; +  &amp;quot;  { label: '审核与评分', path: '/settings?group=review', group: 'review' },\r\n&amp;quot; +  &amp;quot;  { label: '备份与 OSS', path: '/settings?group=backup', group: 'backup' }\r\n&amp;quot; +  ']\r\n' +  'const projectsMenuChildren = [\r\n' +  &amp;quot;  { label: '草稿项目', path: '/projects?status=draft', query: { status: 'draft' } },\r\n&amp;quot; +  &amp;quot;  { label: '退回修改', path: '/projects?status=returned', query: { status: 'returned' } },\r\n&amp;quot; +  &amp;quot;  { label: '已提交', path: '/projects?status=submitted', query: { status: 'submitted' } },\r\n&amp;quot; +  &amp;quot;  { label: '审核中', path: '/projects?status=reviewing', query: { st&amp;quot;... 15202 more characters">
+[Error [ERR_TEST_FAILURE]: The input did not match the regular expression /data-testid="mobile-menu-button"/. Input:
+
+'&lt;template>\r\n' +
+  '  &lt;RouterView v-if="$route.meta.public || $route.meta.guest" />\r\n' +
+  '  &lt;el-container v-else class="shell gov-shell">\r\n' +
+  '    &lt;el-aside width="292px" class="sidebar dual-sidebar">\r\n' +
+  '      &lt;div class="module-rail">\r\n' +
+  '        &lt;button\r\n' +
+  '          v-for="group in visibleMenuGroups"\r\n' +
+  '          :key="group.key"\r\n' +
+  '          type="button"\r\n' +
+  '          class="module-button"\r\n' +
+  '          :class="{ active: group.key === activeGroupKey }"\r\n' +
+  '          @click="openMenuGroup(group)"\r\n' +
+  '        >\r\n' +
+  '          &lt;el-icon>&lt;component :is="groupIcon(group.key)" />&lt;/el-icon>\r\n' +
+  '          &lt;span>{{ group.label }}&lt;/span>\r\n' +
+  '        &lt;/button>\r\n' +
+  '      &lt;/div>\r\n' +
+  '      &lt;div class="section-sidebar">\r\n' +
+  '        &lt;div class="brand">\r\n' +
+  "          &lt;strong>{{ texts.t('app.brand.title', '科技项目管理') }}&lt;/strong>\r\n" +
+  "          &lt;span>{{ texts.t('app.brand.subtitle', '公共服务后台') }}&lt;/span>\r\n" +
+  '        &lt;/div>\r\n' +
+  '        &lt;div v-if="currentMenuGroup" class="section-title-block">\r\n' +
+  '          &lt;strong>{{ currentMenuGroup.label }}&lt;/strong>\r\n' +
+  '        &lt;/div>\r\n' +
+  '        &lt;el-menu :default-active="activeMenuPath" :default-openeds="defaultOpeneds" router>\r\n' +
+  '          &lt;template v-for="item in currentMenuItems" :key="item.key">\r\n' +
+  '            &lt;el-sub-menu v-if="item.children?.length" :index="`menu-${item.key}`">\r\n' +
+  '              &lt;template #title>\r\n' +
+  '                &lt;el-icon>&lt;component :is="menuIcon(item.key)" />&lt;/el-icon>\r\n' +
+  '                &lt;span>{{ menuLabel(item) }}&lt;/span>\r\n' +
+  '              &lt;/template>\r\n' +
+  '              &lt;el-menu-item :index="item.path">\r\n' +
+  "                &lt;span>{{ item.allLabel || '全部' }}&lt;/span>\r\n" +
+  '              &lt;/el-menu-item>\r\n' +
+  '              &lt;el-menu-item v-for="child in item.children" :key="child.path" :index="child.path">\r\n' +
+  '                &lt;span>{{ child.label }}&lt;/span>\r\n' +
+  '              &lt;/el-menu-item>\r\n' +
+  '            &lt;/el-sub-menu>\r\n' +
+  '            &lt;el-menu-item v-else :index="item.path">\r\n' +
+  '              &lt;el-icon>&lt;component :is="menuIcon(item.key)" />&lt;/el-icon>\r\n' +
+  '              &lt;span>{{ menuLabel(item) }}&lt;/span>\r\n' +
+  '            &lt;/el-menu-item>\r\n' +
+  '          &lt;/template>\r\n' +
+  '        &lt;/el-menu>\r\n' +
+  '      &lt;/div>\r\n' +
+  '    &lt;/el-aside>\r\n' +
+  '    &lt;el-container>\r\n' +
+  '      &lt;el-header class="topbar">\r\n' +
+  '        &lt;div class="topbar-title">\r\n' +
+  '          &lt;strong>{{ title }}&lt;/strong>\r\n' +
+  "          &lt;span>{{ texts.t('app.topbar.subtitle', '阿拉善盟科技计划项目管理信息系统') }}&lt;/span>\r\n" +
+  '        &lt;/div>\r\n' +
+  '        &lt;div class="topbar-actions">\r\n' +
+  `          &lt;el-tooltip :content="texts.t('app.message.tooltip', '站内消息')" placement="bottom">\r\n` +
+  '            &lt;el-badge :value="unreadMessages" :hidden="unreadMessages === 0" :max="99">\r\n' +
+  `              &lt;el-button :icon="Bell" circle @click="router.push('/messages')" />\r\n` +
+  '            &lt;/el-badge>\r\n' +
+  '          &lt;/el-tooltip>\r\n' +
+  '          &lt;el-dropdown trigger="click" @command="handleAccountCommand">\r\n' +
+  '            &lt;el-button class="account-button">\r\n' +
+  '              &lt;el-icon>&lt;User />&lt;/el-icon>\r\n' +
+  `              &lt;span class="account-name">{{ session.user?.name || session.user?.username || texts.t('app.account.default_name', '当前账号') }}&lt;/span>\r\n` +
+  '              &lt;span class="account-role">{{ roleLabel(session.role) }}&lt;/span>\r\n' +
+  '              &lt;el-icon class="el-icon--right">&lt;ArrowDown />&lt;/el-icon>\r\n' +
+  '            &lt;/el-button>\r\n' +
+  '            &lt;template #dropdown>\r\n' +
+  '              &lt;el-dropdown-menu>\r\n' +
+  `                &lt;el-dropdown-item command="profile" :icon="User">{{ texts.t('app.profile', '个人资料') }}&lt;/el-dropdown-item>\r\n` +
+  `                &lt;el-dropdown-item command="password" :icon="Lock">{{ texts.t('app.change_password', '修改密码') }}&lt;/el-dropdown-item>\r\n` +
+  `                &lt;el-dropdown-item divided command="switch" :icon="SwitchButton">{{ texts.t('app.switch_account', '切换账号') }}&lt;/el-dropdown-item>\r\n` +
+  `                &lt;el-dropdown-item command="logout" :icon="SwitchButton">{{ texts.t('app.logout', '退出登录') }}&lt;/el-dropdown-item>\r\n` +
+  '              &lt;/el-dropdown-menu>\r\n' +
+  '            &lt;/template>\r\n' +
+  '          &lt;/el-dropdown>\r\n' +
+  '        &lt;/div>\r\n' +
+  '      &lt;/el-header>\r\n' +
+  '      &lt;el-main>\r\n' +
+  '        &lt;RouterView />\r\n' +
+  '      &lt;/el-main>\r\n' +
+  '    &lt;/el-container>\r\n' +
+  '\r\n' +
+  '    &lt;el-dialog v-model="passwordVisible" title="修改密码" width="460px">\r\n' +
+  '      &lt;el-form :model="passwordForm" label-position="top">\r\n' +
+  '        &lt;el-form-item label="当前密码">&lt;el-input v-model="passwordForm.current_password" type="password" show-password />&lt;/el-form-item>\r\n' +
+  '        &lt;el-form-item label="新密码">&lt;el-input v-model="passwordForm.password" type="password" show-password />&lt;/el-form-item>\r\n' +
+  '        &lt;el-form-item label="确认新密码">&lt;el-input v-model="passwordForm.password_confirmation" type="password" show-password />&lt;/el-form-item>\r\n' +
+  '      &lt;/el-form>\r\n' +
+  '      &lt;template #footer>\r\n' +
+  '        &lt;el-button @click="passwordVisible = false">取消&lt;/el-button>\r\n' +
+  '        &lt;el-button type="primary" :loading="savingPassword" @click="updatePassword">保存&lt;/el-button>\r\n' +
+  '      &lt;/template>\r\n' +
+  '    &lt;/el-dialog>\r\n' +
+  '\r\n' +
+  '    &lt;el-dialog v-model="profileVisible" title="个人资料" width="460px">\r\n' +
+  '      &lt;el-form :model="profileForm" label-position="top">\r\n' +
+  '        &lt;el-form-item label="姓名">&lt;el-input v-model="profileForm.name" />&lt;/el-form-item>\r\n' +
+  '        &lt;el-form-item label="手机">&lt;el-input v-model="profileForm.mobile" />&lt;/el-form-item>\r\n' +
+  '        &lt;el-form-item label="邮箱">&lt;el-input v-model="profileForm.email" />&lt;/el-form-item>\r\n' +
+  '      &lt;/el-form>\r\n' +
+  '      &lt;template #footer>\r\n' +
+  '        &lt;el-button @click="profileVisible = false">取消&lt;/el-button>\r\n' +
+  '        &lt;el-button type="primary" :loading="savingProfile" @click="updateProfile">保存&lt;/el-button>\r\n' +
+  '      &lt;/template>\r\n' +
+  '    &lt;/el-dialog>\r\n' +
+  '  &lt;/el-container>\r\n' +
+  '&lt;/template>\r\n' +
+  '\r\n' +
+  '&lt;script setup>\r\n' +
+  "import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'\r\n" +
+  "import { useRoute, useRouter } from 'vue-router'\r\n" +
+  "import { ElMessage } from 'element-plus'\r\n" +
+  "import { ArrowDown, Bell, Checked, Collection, Connection, DataLine, Document, FolderChecked, FolderOpened, Guide, House, Lock, Message, OfficeBuilding, Operation, Setting, SwitchButton, Tickets, User, Warning } from '@element-plus/icons-vue'\r\n" +
+  "import { api } from './api.js'\r\n" +
+  "import { useSessionStore } from './store.js'\r\n" +
+  "import { useTextStore } from './texts.js'\r\n" +
+  '\r\n' +
+  'const route = useRoute()\r\n' +
+  'const router = useRouter()\r\n' +
+  'const session = useSessionStore()\r\n' +
+  'const texts = useTextStore()\r\n' +
+  'const passwordVisible = ref(false)\r\n' +
+  'const savingPassword = ref(false)\r\n' +
+  'const profileVisible = ref(false)\r\n' +
+  'const savingProfile = ref(false)\r\n' +
+  'const unreadMessages = ref(0)\r\n' +
+  'const sessionExpiredNotified = ref(false)\r\n' +
+  "const passwordForm = reactive({ current_password: '', password: '', password_confirmation: '' })\r\n" +
+  "const profileForm = reactive({ name: '', mobile: '', email: '' })\r\n" +
+  '\r\n' +
+  'const iconMap = {\r\n' +
+  '  dashboard: DataLine,\r\n' +
+  '  projects: FolderOpened,\r\n' +
+  '  application_batches: Collection,\r\n' +
+  '  acceptance: FolderChecked,\r\n' +
+  '  acceptance_admin: FolderChecked,\r\n' +
+  '  lifecycle: Connection,\r\n' +
+  '  units: OfficeBuilding,\r\n' +
+  '  users: User,\r\n' +
+  '  unit_profile: OfficeBuilding,\r\n' +
+  '  reviews: Checked,\r\n' +
+  '  dispatch_rules: Guide,\r\n' +
+  '  messages: Bell,\r\n' +
+  '  migration: Connection,\r\n' +
+  '  operation_logs: Tickets,\r\n' +
+  '  public_home: House,\r\n' +
+  '  mail_center: Message,\r\n' +
+  '  roles: Operation,\r\n' +
+  '  security: Warning,\r\n' +
+  '  dictionary_items: Collection,\r\n' +
+  '  system_texts: Document,\r\n' +
+  '  settings: Setting\r\n' +
+  '}\r\n' +
+  'const groupIconMap = {\r\n' +
+  '  business: FolderOpened,\r\n' +
+  '  organization: OfficeBuilding,\r\n' +
+  '  review: Checked,\r\n' +
+  '  portal: House,\r\n' +
+  '  system: Setting,\r\n' +
+  '  default: DataLine\r\n' +
+  '}\r\n' +
+  'const menuGroups = {\r\n' +
+  "  dashboard: 'default',\r\n" +
+  "  projects: 'business',\r\n" +
+  "  application_batches: 'business',\r\n" +
+  "  lifecycle: 'business',\r\n" +
+  "  units: 'organization',\r\n" +
+  "  users: 'organization',\r\n" +
+  "  unit_profile: 'organization',\r\n" +
+  "  reviews: 'review',\r\n" +
+  "  dispatch_rules: 'review',\r\n" +
+  "  acceptance: 'review',\r\n" +
+  "  acceptance_admin: 'review',\r\n" +
+  "  acceptance_review: 'review',\r\n" +
+  "  messages: 'default',\r\n" +
+  "  public_home: 'portal',\r\n" +
+  "  mail_center: 'portal',\r\n" +
+  "  roles: 'system',\r\n" +
+  "  security: 'system',\r\n" +
+  "  dictionary_items: 'system',\r\n" +
+  "  system_texts: 'system',\r\n" +
+  "  settings: 'system',\r\n" +
+  "  migration: 'system',\r\n" +
+  "  operation_logs: 'system'\r\n" +
+  '}\r\n' +
+  'const menuGroupLabels = {\r\n' +
+  "  default: '常用入口',\r\n" +
+  "  business: '项目业务',\r\n" +
+  "  organization: '组织账号',\r\n" +
+  "  review: '审核验收',\r\n" +
+  "  portal: '门户运营',\r\n" +
+  "  system: '系统管理'\r\n" +
+  '}\r\n' +
+  "const menuGroupOrder = ['default', 'business', 'review', 'organization', 'portal', 'system']\r\n" +
+  'const menuItemOrder = {\r\n' +
+  "  default: ['dashboard', 'messages'],\r\n" +
+  "  business: ['projects', 'application_batches', 'lifecycle'],\r\n" +
+  "  review: ['reviews', 'dispatch_rules', 'acceptance', 'acceptance_admin', 'acceptance_review'],\r\n" +
+  "  organization: ['units', 'users', 'unit_profile'],\r\n" +
+  "  portal: ['public_home', 'mail_center'],\r\n" +
+  "  system: ['dictionary_items', 'settings', 'system_texts', 'roles', 'security', 'migration', 'operation_logs']\r\n" +
+  '}\r\n' +
+  'const dictionaryMenuChildren = [\r\n' +
+  "  { label: '专家评分项', path: '/dictionary-items?group=expert_review_criterion', group: 'expert_review_criterion' },\r\n" +
+  "  { label: '项目类别', path: '/dictionary-items?group=project_category', group: 'project_category' },\r\n" +
+  "  { label: '项目类型', path: '/dictionary-items?group=project_type', group: 'project_type' },\r\n" +
+  "  { label: '归口管理单位', path: '/dictionary-items?group=management_unit', group: 'management_unit' },\r\n" +
+  "  { label: '所属领域', path: '/dictionary-items?group=project_field', group: 'project_field' },\r\n" +
+  "  { label: '研究方向', path: '/dictionary-items?group=research_direction', group: 'research_direction' },\r\n" +
+  "  { label: '项目状态', path: '/dictionary-items?group=project_status', group: 'project_status' }\r\n" +
+  ']\r\n' +
+  'const settingsMenuChildren = [\r\n' +
+  "  { label: '站点信息', path: '/settings?group=site', group: 'site' },\r\n" +
+  "  { label: '邮件 SMTP', path: '/settings?group=mail', group: 'mail' },\r\n" +
+  "  { label: '上传策略', path: '/settings?group=upload', group: 'upload' },\r\n" +
+  "  { label: '安全策略', path: '/settings?group=security', group: 'security' },\r\n" +
+  "  { label: '审核与评分', path: '/settings?group=review', group: 'review' },\r\n" +
+  "  { label: '备份与 OSS', path: '/settings?group=backup', group: 'backup' }\r\n" +
+  ']\r\n' +
+  'const projectsMenuChildren = [\r\n' +
+  "  { label: '草稿项目', path: '/projects?status=draft', query: { status: 'draft' } },\r\n" +
+  "  { label: '退回修改', path: '/projects?status=returned', query: { status: 'returned' } },\r\n" +
+  "  { label: '已提交', path: '/projects?status=submitted', query: { status: 'submitted' } },\r\n" +
+  "  { label: '审核中', path: '/projects?status=reviewing', query: { st"... 15202 more characters
+] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: The input did not match the regular expression /data-testid="mobile-menu-button"/. Input:
+
+  '&lt;template>\r\n' +
+    '  &lt;RouterView v-if="$route.meta.public || $route.meta.guest" />\r\n' +
+    '  &lt;el-container v-else class="shell gov-shell">\r\n' +
+    '    &lt;el-aside width="292px" class="sidebar dual-sidebar">\r\n' +
+    '      &lt;div class="module-rail">\r\n' +
+    '        &lt;button\r\n' +
+    '          v-for="group in visibleMenuGroups"\r\n' +
+    '          :key="group.key"\r\n' +
+    '          type="button"\r\n' +
+    '          class="module-button"\r\n' +
+    '          :class="{ active: group.key === activeGroupKey }"\r\n' +
+    '          @click="openMenuGroup(group)"\r\n' +
+    '        >\r\n' +
+    '          &lt;el-icon>&lt;component :is="groupIcon(group.key)" />&lt;/el-icon>\r\n' +
+    '          &lt;span>{{ group.label }}&lt;/span>\r\n' +
+    '        &lt;/button>\r\n' +
+    '      &lt;/div>\r\n' +
+    '      &lt;div class="section-sidebar">\r\n' +
+    '        &lt;div class="brand">\r\n' +
+    "          &lt;strong>{{ texts.t('app.brand.title', '科技项目管理') }}&lt;/strong>\r\n" +
+    "          &lt;span>{{ texts.t('app.brand.subtitle', '公共服务后台') }}&lt;/span>\r\n" +
+    '        &lt;/div>\r\n' +
+    '        &lt;div v-if="currentMenuGroup" class="section-title-block">\r\n' +
+    '          &lt;strong>{{ currentMenuGroup.label }}&lt;/strong>\r\n' +
+    '        &lt;/div>\r\n' +
+    '        &lt;el-menu :default-active="activeMenuPath" :default-openeds="defaultOpeneds" router>\r\n' +
+    '          &lt;template v-for="item in currentMenuItems" :key="item.key">\r\n' +
+    '            &lt;el-sub-menu v-if="item.children?.length" :index="`menu-${item.key}`">\r\n' +
+    '              &lt;template #title>\r\n' +
+    '                &lt;el-icon>&lt;component :is="menuIcon(item.key)" />&lt;/el-icon>\r\n' +
+    '                &lt;span>{{ menuLabel(item) }}&lt;/span>\r\n' +
+    '              &lt;/template>\r\n' +
+    '              &lt;el-menu-item :index="item.path">\r\n' +
+    "                &lt;span>{{ item.allLabel || '全部' }}&lt;/span>\r\n" +
+    '              &lt;/el-menu-item>\r\n' +
+    '              &lt;el-menu-item v-for="child in item.children" :key="child.path" :index="child.path">\r\n' +
+    '                &lt;span>{{ child.label }}&lt;/span>\r\n' +
+    '              &lt;/el-menu-item>\r\n' +
+    '            &lt;/el-sub-menu>\r\n' +
+    '            &lt;el-menu-item v-else :index="item.path">\r\n' +
+    '              &lt;el-icon>&lt;component :is="menuIcon(item.key)" />&lt;/el-icon>\r\n' +
+    '              &lt;span>{{ menuLabel(item) }}&lt;/span>\r\n' +
+    '            &lt;/el-menu-item>\r\n' +
+    '          &lt;/template>\r\n' +
+    '        &lt;/el-menu>\r\n' +
+    '      &lt;/div>\r\n' +
+    '    &lt;/el-aside>\r\n' +
+    '    &lt;el-container>\r\n' +
+    '      &lt;el-header class="topbar">\r\n' +
+    '        &lt;div class="topbar-title">\r\n' +
+    '          &lt;strong>{{ title }}&lt;/strong>\r\n' +
+    "          &lt;span>{{ texts.t('app.topbar.subtitle', '阿拉善盟科技计划项目管理信息系统') }}&lt;/span>\r\n" +
+    '        &lt;/div>\r\n' +
+    '        &lt;div class="topbar-actions">\r\n' +
+    `          &lt;el-tooltip :content="texts.t('app.message.tooltip', '站内消息')" placement="bottom">\r\n` +
+    '            &lt;el-badge :value="unreadMessages" :hidden="unreadMessages === 0" :max="99">\r\n' +
+    `              &lt;el-button :icon="Bell" circle @click="router.push('/messages')" />\r\n` +
+    '            &lt;/el-badge>\r\n' +
+    '          &lt;/el-tooltip>\r\n' +
+    '          &lt;el-dropdown trigger="click" @command="handleAccountCommand">\r\n' +
+    '            &lt;el-button class="account-button">\r\n' +
+    '              &lt;el-icon>&lt;User />&lt;/el-icon>\r\n' +
+    `              &lt;span class="account-name">{{ session.user?.name || session.user?.username || texts.t('app.account.default_name', '当前账号') }}&lt;/span>\r\n` +
+    '              &lt;span class="account-role">{{ roleLabel(session.role) }}&lt;/span>\r\n' +
+    '              &lt;el-icon class="el-icon--right">&lt;ArrowDown />&lt;/el-icon>\r\n' +
+    '            &lt;/el-button>\r\n' +
+    '            &lt;template #dropdown>\r\n' +
+    '              &lt;el-dropdown-menu>\r\n' +
+    `                &lt;el-dropdown-item command="profile" :icon="User">{{ texts.t('app.profile', '个人资料') }}&lt;/el-dropdown-item>\r\n` +
+    `                &lt;el-dropdown-item command="password" :icon="Lock">{{ texts.t('app.change_password', '修改密码') }}&lt;/el-dropdown-item>\r\n` +
+    `                &lt;el-dropdown-item divided command="switch" :icon="SwitchButton">{{ texts.t('app.switch_account', '切换账号') }}&lt;/el-dropdown-item>\r\n` +
+    `                &lt;el-dropdown-item command="logout" :icon="SwitchButton">{{ texts.t('app.logout', '退出登录') }}&lt;/el-dropdown-item>\r\n` +
+    '              &lt;/el-dropdown-menu>\r\n' +
+    '            &lt;/template>\r\n' +
+    '          &lt;/el-dropdown>\r\n' +
+    '        &lt;/div>\r\n' +
+    '      &lt;/el-header>\r\n' +
+    '      &lt;el-main>\r\n' +
+    '        &lt;RouterView />\r\n' +
+    '      &lt;/el-main>\r\n' +
+    '    &lt;/el-container>\r\n' +
+    '\r\n' +
+    '    &lt;el-dialog v-model="passwordVisible" title="修改密码" width="460px">\r\n' +
+    '      &lt;el-form :model="passwordForm" label-position="top">\r\n' +
+    '        &lt;el-form-item label="当前密码">&lt;el-input v-model="passwordForm.current_password" type="password" show-password />&lt;/el-form-item>\r\n' +
+    '        &lt;el-form-item label="新密码">&lt;el-input v-model="passwordForm.password" type="password" show-password />&lt;/el-form-item>\r\n' +
+    '        &lt;el-form-item label="确认新密码">&lt;el-input v-model="passwordForm.password_confirmation" type="password" show-password />&lt;/el-form-item>\r\n' +
+    '      &lt;/el-form>\r\n' +
+    '      &lt;template #footer>\r\n' +
+    '        &lt;el-button @click="passwordVisible = false">取消&lt;/el-button>\r\n' +
+    '        &lt;el-button type="primary" :loading="savingPassword" @click="updatePassword">保存&lt;/el-button>\r\n' +
+    '      &lt;/template>\r\n' +
+    '    &lt;/el-dialog>\r\n' +
+    '\r\n' +
+    '    &lt;el-dialog v-model="profileVisible" title="个人资料" width="460px">\r\n' +
+    '      &lt;el-form :model="profileForm" label-position="top">\r\n' +
+    '        &lt;el-form-item label="姓名">&lt;el-input v-model="profileForm.name" />&lt;/el-form-item>\r\n' +
+    '        &lt;el-form-item label="手机">&lt;el-input v-model="profileForm.mobile" />&lt;/el-form-item>\r\n' +
+    '        &lt;el-form-item label="邮箱">&lt;el-input v-model="profileForm.email" />&lt;/el-form-item>\r\n' +
+    '      &lt;/el-form>\r\n' +
+    '      &lt;template #footer>\r\n' +
+    '        &lt;el-button @click="profileVisible = false">取消&lt;/el-button>\r\n' +
+    '        &lt;el-button type="primary" :loading="savingProfile" @click="updateProfile">保存&lt;/el-button>\r\n' +
+    '      &lt;/template>\r\n' +
+    '    &lt;/el-dialog>\r\n' +
+    '  &lt;/el-container>\r\n' +
+    '&lt;/template>\r\n' +
+    '\r\n' +
+    '&lt;script setup>\r\n' +
+    "import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'\r\n" +
+    "import { useRoute, useRouter } from 'vue-router'\r\n" +
+    "import { ElMessage } from 'element-plus'\r\n" +
+    "import { ArrowDown, Bell, Checked, Collection, Connection, DataLine, Document, FolderChecked, FolderOpened, Guide, House, Lock, Message, OfficeBuilding, Operation, Setting, SwitchButton, Tickets, User, Warning } from '@element-plus/icons-vue'\r\n" +
+    "import { api } from './api.js'\r\n" +
+    "import { useSessionStore } from './store.js'\r\n" +
+    "import { useTextStore } from './texts.js'\r\n" +
+    '\r\n' +
+    'const route = useRoute()\r\n' +
+    'const router = useRouter()\r\n' +
+    'const session = useSessionStore()\r\n' +
+    'const texts = useTextStore()\r\n' +
+    'const passwordVisible = ref(false)\r\n' +
+    'const savingPassword = ref(false)\r\n' +
+    'const profileVisible = ref(false)\r\n' +
+    'const savingProfile = ref(false)\r\n' +
+    'const unreadMessages = ref(0)\r\n' +
+    'const sessionExpiredNotified = ref(false)\r\n' +
+    "const passwordForm = reactive({ current_password: '', password: '', password_confirmation: '' })\r\n" +
+    "const profileForm = reactive({ name: '', mobile: '', email: '' })\r\n" +
+    '\r\n' +
+    'const iconMap = {\r\n' +
+    '  dashboard: DataLine,\r\n' +
+    '  projects: FolderOpened,\r\n' +
+    '  application_batches: Collection,\r\n' +
+    '  acceptance: FolderChecked,\r\n' +
+    '  acceptance_admin: FolderChecked,\r\n' +
+    '  lifecycle: Connection,\r\n' +
+    '  units: OfficeBuilding,\r\n' +
+    '  users: User,\r\n' +
+    '  unit_profile: OfficeBuilding,\r\n' +
+    '  reviews: Checked,\r\n' +
+    '  dispatch_rules: Guide,\r\n' +
+    '  messages: Bell,\r\n' +
+    '  migration: Connection,\r\n' +
+    '  operation_logs: Tickets,\r\n' +
+    '  public_home: House,\r\n' +
+    '  mail_center: Message,\r\n' +
+    '  roles: Operation,\r\n' +
+    '  security: Warning,\r\n' +
+    '  dictionary_items: Collection,\r\n' +
+    '  system_texts: Document,\r\n' +
+    '  settings: Setting\r\n' +
+    '}\r\n' +
+    'const groupIconMap = {\r\n' +
+    '  business: FolderOpened,\r\n' +
+    '  organization: OfficeBuilding,\r\n' +
+    '  review: Checked,\r\n' +
+    '  portal: House,\r\n' +
+    '  system: Setting,\r\n' +
+    '  default: DataLine\r\n' +
+    '}\r\n' +
+    'const menuGroups = {\r\n' +
+    "  dashboard: 'default',\r\n" +
+    "  projects: 'business',\r\n" +
+    "  application_batches: 'business',\r\n" +
+    "  lifecycle: 'business',\r\n" +
+    "  units: 'organization',\r\n" +
+    "  users: 'organization',\r\n" +
+    "  unit_profile: 'organization',\r\n" +
+    "  reviews: 'review',\r\n" +
+    "  dispatch_rules: 'review',\r\n" +
+    "  acceptance: 'review',\r\n" +
+    "  acceptance_admin: 'review',\r\n" +
+    "  acceptance_review: 'review',\r\n" +
+    "  messages: 'default',\r\n" +
+    "  public_home: 'portal',\r\n" +
+    "  mail_center: 'portal',\r\n" +
+    "  roles: 'system',\r\n" +
+    "  security: 'system',\r\n" +
+    "  dictionary_items: 'system',\r\n" +
+    "  system_texts: 'system',\r\n" +
+    "  settings: 'system',\r\n" +
+    "  migration: 'system',\r\n" +
+    "  operation_logs: 'system'\r\n" +
+    '}\r\n' +
+    'const menuGroupLabels = {\r\n' +
+    "  default: '常用入口',\r\n" +
+    "  business: '项目业务',\r\n" +
+    "  organization: '组织账号',\r\n" +
+    "  review: '审核验收',\r\n" +
+    "  portal: '门户运营',\r\n" +
+    "  system: '系统管理'\r\n" +
+    '}\r\n' +
+    "const menuGroupOrder = ['default', 'business', 'review', 'organization', 'portal', 'system']\r\n" +
+    'const menuItemOrder = {\r\n' +
+    "  default: ['dashboard', 'messages'],\r\n" +
+    "  business: ['projects', 'application_batches', 'lifecycle'],\r\n" +
+    "  review: ['reviews', 'dispatch_rules', 'acceptance', 'acceptance_admin', 'acceptance_review'],\r\n" +
+    "  organization: ['units', 'users', 'unit_profile'],\r\n" +
+    "  portal: ['public_home', 'mail_center'],\r\n" +
+    "  system: ['dictionary_items', 'settings', 'system_texts', 'roles', 'security', 'migration', 'operation_logs']\r\n" +
+    '}\r\n' +
+    'const dictionaryMenuChildren = [\r\n' +
+    "  { label: '专家评分项', path: '/dictionary-items?group=expert_review_criterion', group: 'expert_review_criterion' },\r\n" +
+    "  { label: '项目类别', path: '/dictionary-items?group=project_category', group: 'project_category' },\r\n" +
+    "  { label: '项目类型', path: '/dictionary-items?group=project_type', group: 'project_type' },\r\n" +
+    "  { label: '归口管理单位', path: '/dictionary-items?group=management_unit', group: 'management_unit' },\r\n" +
+    "  { label: '所属领域', path: '/dictionary-items?group=project_field', group: 'project_field' },\r\n" +
+    "  { label: '研究方向', path: '/dictionary-items?group=research_direction', group: 'research_direction' },\r\n" +
+    "  { label: '项目状态', path: '/dictionary-items?group=project_status', group: 'project_status' }\r\n" +
+    ']\r\n' +
+    'const settingsMenuChildren = [\r\n' +
+    "  { label: '站点信息', path: '/settings?group=site', group: 'site' },\r\n" +
+    "  { label: '邮件 SMTP', path: '/settings?group=mail', group: 'mail' },\r\n" +
+    "  { label: '上传策略', path: '/settings?group=upload', group: 'upload' },\r\n" +
+    "  { label: '安全策略', path: '/settings?group=security', group: 'security' },\r\n" +
+    "  { label: '审核与评分', path: '/settings?group=review', group: 'review' },\r\n" +
+    "  { label: '备份与 OSS', path: '/settings?group=backup', group: 'backup' }\r\n" +
+    ']\r\n' +
+    'const projectsMenuChildren = [\r\n' +
+    "  { label: '草稿项目', path: '/projects?status=draft', query: { status: 'draft' } },\r\n" +
+    "  { label: '退回修改', path: '/projects?status=returned', query: { status: 'returned' } },\r\n" +
+    "  { label: '已提交', path: '/projects?status=submitted', query: { status: 'submitted' } },\r\n" +
+    "  { label: '审核中', path: '/projects?status=reviewing', query: { st"... 15202 more characters
+
+      at TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/settings-navigation.test.js:29:10)
+      at Test.runInAsyncScope (node:async_hooks:213:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:788:18)
+      at Test.postRun (node:internal/test_runner/test:1235:19)
+      at Test.run (node:internal/test_runner/test:1163:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:788:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '&lt;template>\r\n  &lt;RouterView v-if="$route.meta.public || $route.meta.guest" />\r\n  &lt;el-container v-else class="shell gov-shell">\r\n    &lt;el-aside width="292px" class="sidebar dual-sidebar">\r\n      &lt;div class="module-rail">\r\n        &lt;button\r\n          v-for="group in visibleMenuGroups"\r\n          :key="group.key"\r\n          type="button"\r\n          class="module-button"\r\n          :class="{ active: group.key === activeGroupKey }"\r\n          @click="openMenuGroup(group)"\r\n        >\r\n          &lt;el-icon>&lt;component :is="groupIcon(group.key)" />&lt;/el-icon>\r\n          &lt;span>{{ group.label }}&lt;/span>\r\n        &lt;/button>\r\n      &lt;/div>\r\n      &lt;div class="section-sidebar">\r\n        &lt;div class="brand">\r\n          &lt;strong>{{ texts.t(\'app.brand.title\', \'科技项目管理\') }}&lt;/strong>\r\n          &lt;span>{{ texts.t(\'app.brand.subtitle\', \'公共服务后台\') }}&lt;/span>\r\n        &lt;/div>\r\n        &lt;div v-if="currentMenuGroup" class="section-title-block">\r\n          &lt;strong>{{ currentMenuGroup.label }}&lt;/strong>\r\n        &lt;/div>\r\n        &lt;el-menu :default-active="activeMenuPath" :default-openeds="defaultOpeneds" router>\r\n          &lt;template v-for="item in currentMenuItems" :key="item.key">\r\n            &lt;el-sub-menu v-if="item.children?.length" :index="`menu-${item.key}`">\r\n              &lt;template #title>\r\n                &lt;el-icon>&lt;component :is="menuIcon(item.key)" />&lt;/el-icon>\r\n                &lt;span>{{ menuLabel(item) }}&lt;/span>\r\n              &lt;/template>\r\n              &lt;el-menu-item :index="item.path">\r\n                &lt;span>{{ item.allLabel || \'全部\' }}&lt;/span>\r\n              &lt;/el-menu-item>\r\n              &lt;el-menu-item v-for="child in item.children" :key="child.path" :index="child.path">\r\n                &lt;span>{{ child.label }}&lt;/span>\r\n              &lt;/el-menu-item>\r\n            &lt;/el-sub-menu>\r\n            &lt;el-menu-item v-else :index="item.path">\r\n              &lt;el-icon>&lt;component :is="menuIcon(item.key)" />&lt;/el-icon>\r\n              &lt;span>{{ menuLabel(item) }}&lt;/span>\r\n            &lt;/el-menu-item>\r\n          &lt;/template>\r\n        &lt;/el-menu>\r\n      &lt;/div>\r\n    &lt;/el-aside>\r\n    &lt;el-container>\r\n      &lt;el-header class="topbar">\r\n        &lt;div class="topbar-title">\r\n          &lt;strong>{{ title }}&lt;/strong>\r\n          &lt;span>{{ texts.t(\'app.topbar.subtitle\', \'阿拉善盟科技计划项目管理信息系统\') }}&lt;/span>\r\n        &lt;/div>\r\n        &lt;div class="topbar-actions">\r\n          &lt;el-tooltip :content="texts.t(\'app.message.tooltip\', \'站内消息\')" placement="bottom">\r\n            &lt;el-badge :value="unreadMessages" :hidden="unreadMessages === 0" :max="99">\r\n              &lt;el-button :icon="Bell" circle @click="router.push(\'/messages\')" />\r\n            &lt;/el-badge>\r\n          &lt;/el-tooltip>\r\n          &lt;el-dropdown trigger="click" @command="handleAccountCommand">\r\n            &lt;el-button class="account-button">\r\n              &lt;el-icon>&lt;User />&lt;/el-icon>\r\n              &lt;span class="account-name">{{ session.user?.name || session.user?.username || texts.t(\'app.account.default_name\', \'当前账号\') }}&lt;/span>\r\n              &lt;span class="account-role">{{ roleLabel(session.role) }}&lt;/span>\r\n              &lt;el-icon class="el-icon--right">&lt;ArrowDown />&lt;/el-icon>\r\n            &lt;/el-button>\r\n            &lt;template #dropdown>\r\n              &lt;el-dropdown-menu>\r\n                &lt;el-dropdown-item command="profile" :icon="User">{{ texts.t(\'app.profile\', \'个人资料\') }}&lt;/el-dropdown-item>\r\n                &lt;el-dropdown-item command="password" :icon="Lock">{{ texts.t(\'app.change_password\', \'修改密码\') }}&lt;/el-dropdown-item>\r\n                &lt;el-dropdown-item divided command="switch" :icon="SwitchButton">{{ texts.t(\'app.switch_account\', \'切换账号\') }}&lt;/el-dropdown-item>\r\n                &lt;el-dropdown-item command="logout" :icon="SwitchButton">{{ texts.t(\'app.logout\', \'退出登录\') }}&lt;/el-dropdown-item>\r\n              &lt;/el-dropdown-menu>\r\n            &lt;/template>\r\n          &lt;/el-dropdown>\r\n        &lt;/div>\r\n      &lt;/el-header>\r\n      &lt;el-main>\r\n        &lt;RouterView />\r\n      &lt;/el-main>\r\n    &lt;/el-container>\r\n\r\n    &lt;el-dialog v-model="passwordVisible" title="修改密码" width="460px">\r\n      &lt;el-form :model="passwordForm" label-position="top">\r\n        &lt;el-form-item label="当前密码">&lt;el-input v-model="passwordForm.current_password" type="password" show-password />&lt;/el-form-item>\r\n        &lt;el-form-item label="新密码">&lt;el-input v-model="passwordForm.password" type="password" show-password />&lt;/el-form-item>\r\n        &lt;el-form-item label="确认新密码">&lt;el-input v-model="passwordForm.password_confirmation" type="password" show-password />&lt;/el-form-item>\r\n      &lt;/el-form>\r\n      &lt;template #footer>\r\n        &lt;el-button @click="passwordVisible = false">取消&lt;/el-button>\r\n        &lt;el-button type="primary" :loading="savingPassword" @click="updatePassword">保存&lt;/el-button>\r\n      &lt;/template>\r\n    &lt;/el-dialog>\r\n\r\n    &lt;el-dialog v-model="profileVisible" title="个人资料" width="460px">\r\n      &lt;el-form :model="profileForm" label-position="top">\r\n        &lt;el-form-item label="姓名">&lt;el-input v-model="profileForm.name" />&lt;/el-form-item>\r\n        &lt;el-form-item label="手机">&lt;el-input v-model="profileForm.mobile" />&lt;/el-form-item>\r\n        &lt;el-form-item label="邮箱">&lt;el-input v-model="profileForm.email" />&lt;/el-form-item>\r\n      &lt;/el-form>\r\n      &lt;template #footer>\r\n        &lt;el-button @click="profileVisible = false">取消&lt;/el-button>\r\n        &lt;el-button type="primary" :loading="savingProfile" @click="updateProfile">保存&lt;/el-button>\r\n      &lt;/template>\r\n    &lt;/el-dialog>\r\n  &lt;/el-container>\r\n&lt;/template>\r\n\r\n&lt;script setup>\r\nimport { computed, onMounted, onUnmounted, reactive, ref, watch } from \'vue\'\r\nimport { useRoute, useRouter } from \'vue-router\'\r\nimport { ElMessage } from \'element-plus\'\r\nimport { ArrowDown, Bell, Checked, Collection, Connection, DataLine, Document, FolderChecked, FolderOpened, Guide, House, Lock, Message, OfficeBuilding, Operation, Setting, SwitchButton, Tickets, User, Warning } from \'@element-plus/icons-vue\'\r\nimport { api } from \'./api.js\'\r\nimport { useSessionStore } from \'./store.js\'\r\nimport { useTextStore } from \'./texts.js\'\r\n\r\nconst route = useRoute()\r\nconst router = useRouter()\r\nconst session = useSessionStore()\r\nconst texts = useTextStore()\r\nconst passwordVisible = ref(false)\r\nconst savingPassword = ref(false)\r\nconst profileVisible = ref(false)\r\nconst savingProfile = ref(false)\r\nconst unreadMessages = ref(0)\r\nconst sessionExpiredNotified = ref(false)\r\nconst passwordForm = reactive({ current_password: \'\', password: \'\', password_confirmation: \'\' })\r\nconst profileForm = reactive({ name: \'\', mobile: \'\', email: \'\' })\r\n\r\nconst iconMap = {\r\n  dashboard: DataLine,\r\n  projects: FolderOpened,\r\n  application_batches: Collection,\r\n  acceptance: FolderChecked,\r\n  acceptance_admin: FolderChecked,\r\n  lifecycle: Connection,\r\n  units: OfficeBuilding,\r\n  users: User,\r\n  unit_profile: OfficeBuilding,\r\n  reviews: Checked,\r\n  dispatch_rules: Guide,\r\n  messages: Bell,\r\n  migration: Connection,\r\n  operation_logs: Tickets,\r\n  public_home: House,\r\n  mail_center: Message,\r\n  roles: Operation,\r\n  security: Warning,\r\n  dictionary_items: Collection,\r\n  system_texts: Document,\r\n  settings: Setting\r\n}\r\nconst groupIconMap = {\r\n  business: FolderOpened,\r\n  organization: OfficeBuilding,\r\n  review: Checked,\r\n  portal: House,\r\n  system: Setting,\r\n  default: DataLine\r\n}\r\nconst menuGroups = {\r\n  dashboard: \'default\',\r\n  projects: \'business\',\r\n  application_batches: \'business\',\r\n  lifecycle: \'business\',\r\n  units: \'organization\',\r\n  users: \'organization\',\r\n  unit_profile: \'organization\',\r\n  reviews: \'review\',\r\n  dispatch_rules: \'review\',\r\n  acceptance: \'review\',\r\n  acceptance_admin: \'review\',\r\n  acceptance_review: \'review\',\r\n  messages: \'default\',\r\n  public_home: \'portal\',\r\n  mail_center: \'portal\',\r\n  roles: \'system\',\r\n  security: \'system\',\r\n  dictionary_items: \'system\',\r\n  system_texts: \'system\',\r\n  settings: \'system\',\r\n  migration: \'system\',\r\n  operation_logs: \'system\'\r\n}\r\nconst menuGroupLabels = {\r\n  default: \'常用入口\',\r\n  business: \'项目业务\',\r\n  organization: \'组织账号\',\r\n  review: \'审核验收\',\r\n  portal: \'门户运营\',\r\n  system: \'系统管理\'\r\n}\r\nconst menuGroupOrder = [\'default\', \'business\', \'review\', \'organization\', \'portal\', \'system\']\r\nconst menuItemOrder = {\r\n  default: [\'dashboard\', \'messages\'],\r\n  business: [\'projects\', \'application_batches\', \'lifecycle\'],\r\n  review: [\'reviews\', \'dispatch_rules\', \'acceptance\', \'acceptance_admin\', \'acceptance_review\'],\r\n  organization: [\'units\', \'users\', \'unit_profile\'],\r\n  portal: [\'public_home\', \'mail_center\'],\r\n  system: [\'dictionary_items\', \'settings\', \'system_texts\', \'roles\', \'security\', \'migration\', \'operation_logs\']\r\n}\r\nconst dictionaryMenuChildren = [\r\n  { label: \'专家评分项\', path: \'/dictionary-items?group=expert_review_criterion\', group: \'expert_review_criterion\' },\r\n  { label: \'项目类别\', path: \'/dictionary-items?group=project_category\', group: \'project_category\' },\r\n  { label: \'项目类型\', path: \'/dictionary-items?group=project_type\', group: \'project_type\' },\r\n  { label: \'归口管理单位\', path: \'/dictionary-items?group=management_unit\', group: \'management_unit\' },\r\n  { label: \'所属领域\', path: \'/dictionary-items?group=project_field\', group: \'project_field\' },\r\n  { label: \'研究方向\', path: \'/dictionary-items?group=research_direction\', group: \'research_direction\' },\r\n  { label: \'项目状态\', path: \'/dictionary-items?group=project_status\', group: \'project_status\' }\r\n]\r\nconst settingsMenuChildren = [\r\n  { label: \'站点信息\', path: \'/settings?group=site\', group: \'site\' },\r\n  { label: \'邮件 SMTP\', path: \'/settings?group=mail\', group: \'mail\' },\r\n  { label: \'上传策略\', path: \'/settings?group=upload\', group: \'upload\' },\r\n  { label: \'安全策略\', path: \'/settings?group=security\', group: \'security\' },\r\n  { label: \'审核与评分\', path: \'/settings?group=review\', group: \'review\' },\r\n  { label: \'备份与 OSS\', path: \'/settings?group=backup\', group: \'backup\' }\r\n]\r\nconst projectsMenuChildren = [\r\n  { label: \'草稿项目\', path: \'/projects?status=draft\', query: { status: \'draft\' } },\r\n  { label: \'退回修改\', path: \'/projects?status=returned\', query: { status: \'returned\' } },\r\n  { label: \'已提交\', path: \'/projects?status=submitted\', query: { status: \'submitted\' } },\r\n  { label: \'审核中\', path: \'/projects?status=reviewing\', query: { st'... 15202 more characters,
+    expected: /data-testid="mobile-menu-button"/,
+    operator: 'match',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="application batches explain why open records are not currently applicable" time="0.002381" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\settings-navigation.test.js"/>
+	<!-- tests 4 -->
+	<!-- suites 0 -->
+	<!-- pass 3 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 130.1023 -->
+</testsuites>
