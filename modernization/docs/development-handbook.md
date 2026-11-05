@@ -8,11 +8,11 @@
 
 ## Recent Increment
 
-2026-11-05, QA-06 isolated CI evidence: adds five business regression files to MySQL5.7 job with explicit driver assertion, JUnit upload, and PCOV Clover/JUnit artifacts. YAML parsed; local driver test1/142 assertions passed. Hosted execution pending commit/push. Prior candidate5842395 gates passed; production remains cef21d3. Evidence: `qa06-local-driver-20261105.xml`, workflow files, and QA-06 entry below.
+2026-11-05, QA-06 isolated CI evidence: candidateed4f5bf pushed; CI41964436275 and Quality41964436249 completed/success, including five MySQL5.7 business regression files with actual driver assertion. PCOV Clover/JUnit and MySQL JUnit artifacts exist; unauthenticated download401/logs403, so coverage numbers not yet read. Production remains cef21d3. Evidence: `qa06-hosted-evidence-20261105.json`, `qa06-local-driver-20261105.xml`.
 
 ## Next Step
 
-Push QA-06 and inspect actual MySQL business job / coverage artifacts; fix failures before release. Then prepare persistent isolated browser fixtures/screenshots. SMTP delivery and OSS restore remain open; no production business writes.
+Prepare persistent isolated browser fixtures/screenshots and true concurrent MySQL tests; retrieve coverage artifacts through authorized GitHub access or expose a machine-readable CI summary. SMTP delivery, OSS restore and formatting gate remain open. No production business writes or premature deployment.
 
 ## Evidence and State
 
@@ -110,3 +110,10 @@ Push QA-06 and inspect actual MySQL business job / coverage artifacts; fix failu
 - Flag probe: `php artisan test --coverage-text --coverage-clover=../docs/coverage-flag-probe.xml --log-junit=../docs/junit-flag-probe.xml --filter test_completed_expert_leaves_pending_tasks` exit1, missing coverage driver; filtered test30 assertions, no failure in JUnit, console also file_get_contents warning for local absent environment file. Hosted workflow prepares .env; flag acceptance alone does not prove coverage works. junit-flag-probe.xml retained.
 - Limits: new hosted jobs not yet run at record creation; MySQL true concurrent behavior and browser E2E remain not_run. Formal data/production services/SMTP/OSS/other sites unchanged. Acceptance ledger unchanged.
 - Next: commit/push and inspect exact-revision job outcomes/artifacts; preserve failures rather than substituting migration-only success.
+
+### QA-06 Hosted Result and Artifact Access Checkpoint
+
+- Push exit0, commit ed4f5bf23beb4a21c8ac23026606fb1ec5b7ea5a. GitHub REST run/jobs/artifact inspection exit0: Quality41964436249 and CI41964436275 completed/success. MySQL job127038054596 includes the five-file business regression step; actual DB driver assertion passed. Backend feature job127038054770 completed/success with PCOV configured. Optional production online E2E skipped.
+- Artifacts: MySQL JUnit13387185885 (1853 bytes), backend coverage/JUnit13386214189 (42301 bytes). Download attempt via public REST exits1/HTTP401 Requires authentication; log HEAD probes403. Metadata proves artifact existence, not numerical coverage contents. Evidence JSON retains exact URLs/IDs; no credentials searched or exposed.
+- Independent local runtime inventory: docker info/ps exit0, Docker29.8.1, many unrelated containers active. No containers/services started, stopped or altered. Browser screenshots and true concurrency remain separate requirements. Production unchanged; no migration, Seeder, business writes or shared reload.
+- Next: persistent isolated browser workflow and concurrency evidence; authenticated artifact retrieval or CI coverage summary before final QA delivery. SMTP/OSS restore and Pint remain incomplete.

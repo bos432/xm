@@ -1,0 +1,22 @@
+{
+  "increment": "QA-06",
+  "candidate_commit": "ed4f5bf23beb4a21c8ac23026606fb1ec5b7ea5a",
+  "push_exit_code": 0,
+  "runs": [
+    {"id": 41964436249, "name": "Modernization Quality Gate", "status": "completed", "conclusion": "success", "url": "https://github.com/bos432/xm/actions/runs/41964436249"},
+    {"id": 41964436275, "name": "Modernization CI", "status": "completed", "conclusion": "success", "url": "https://github.com/bos432/xm/actions/runs/41964436275", "online_e2e": "skipped"}
+  ],
+  "mysql_business_job": {"id": 127038054596, "conclusion": "success", "driver_assertion": "mysql", "test_files": ["ExpertPendingTaskLifecycleTest.php", "AuthenticatedProjectLifecycleE2eTest.php", "ReviewWorkflowTest.php", "ReviewExportTest.php", "ProjectAcceptanceWorkflowTest.php"]},
+  "coverage_job": {"id": 127038054770, "conclusion": "success", "configured_driver": "pcov", "coverage_percentage": null, "contents_read": false},
+  "artifacts": [
+    {"id": 13387185885, "name": "mysql-business-regression-ed4f5bf23beb4a21c8ac23026606fb1ec5b7ea5a", "size_bytes": 1853},
+    {"id": 13386214189, "name": "backend-coverage-ed4f5bf23beb4a21c8ac23026606fb1ec5b7ea5a", "size_bytes": 42301}
+  ],
+  "download_probe": {"url": "https://api.github.com/repos/bos432/xm/actions/artifacts/13387185885/zip", "exit_code": 1, "http_status": 401, "message": "Requires authentication"},
+  "log_probes_http_status": 403,
+  "production_commit": "cef21d38e6989cffc9cc5e516dbd14f4a445d6c5",
+  "production_changed": false,
+  "browser_workflow": "not_run",
+  "true_mysql_concurrency": "not_run",
+  "next_action": "Persistent isolated browser proof and concurrency; read authorized coverage artifact or emit CI summary."
+}
