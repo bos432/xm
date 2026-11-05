@@ -121,6 +121,7 @@ jobs:
           tests/Feature/DispatchRuleAdministrationTest.php
           tests/Feature/AdministrativeSurfaceRegressionTest.php
           tests/Feature/LifecycleActionRegressionTest.php
+          tests/Feature/AcceptanceReviewAtomicityTest.php
           --log-junit /tmp/nxm-mysql-business-results.xml
 
       - name: Verify simultaneous review decisions with independent PHP processes
@@ -139,7 +140,9 @@ jobs:
           QUEUE_CONNECTION: sync
           MAIL_MAILER: array
           BCRYPT_ROUNDS: '4'
-        run: php tests/Concurrency/lifecycle-race.php | tee /tmp/nxm-mysql-concurrency-results.json
+        run: |
+          set -o pipefail
+          php tests/Concurrency/lifecycle-race.php | tee /tmp/nxm-mysql-concurrency-results.json
 
       - name: Preserve isolated MySQL business regression evidence
         if: always()
@@ -149,6 +152,8 @@ jobs:
           path: |
             /tmp/nxm-mysql-business-results.xml
             /tmp/nxm-mysql-concurrency-results.json
+            modernization/docs/qa32-mysql-acceptance-atomicity.xml
+            modernization/docs/qa32-mysql-project-review-atomicity.xml
           if-no-files-found: warn
           retention-days: 14
 

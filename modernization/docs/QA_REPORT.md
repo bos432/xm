@@ -2,9 +2,25 @@
 
 ## Scope and evidence limits
 
-This increment uses the isolated worktree, SQLite in memory, array mail/cache and synthetic users. Production remains cef21d3. Local API Feature tests do not prove browser usability, MySQL concurrency or production account configuration.
+This increment uses the isolated worktree, SQLite in memory, array mail/cache and synthetic users, plus the labeled loopback-only MySQL 5.7.44 QA container. Production remains cef21d3. Feature tests do not prove all browser workflows or production account configuration.
 
 ## Defects
+
+QA-32 extends verified concurrency coverage to eight cases, including two different experts concurrently scoring one assigned project; both scores persist, and project advances to admin only after both. Acceptance, extension and project-review audit failures now roll back all affected business rows and notifications. Local backend258/1681 and frontend/security gates pass; production remains unchanged. Evidence: `qa32-concurrency-20261105.json`, `qa32-eight-races-20261105.json`, `qa32-backend-full.xml`, `qa32-mysql-acceptance-atomicity.xml`, `qa32-mysql-project-review-atomicity.xml`.
+
+Exact command/exit-code ledger and remaining release gates: `qa32-release-gates-20261105.json`. Local gates do not substitute for candidate-specific hosted checks or the unrun production integrations listed there.
+
+| ID | Severity | Module | Reproduction command | Actual vs expected | Recommendation/status |
+| --- | --- | --- | --- | --- | --- |
+| QA32-P1-ATOMICITY | P1 | Project/acceptance/extension review writes | Guarded runner under `modernization/backend/tests/Concurrency/run-mysql-race.ps1`; failure injection in the two rollback Feature tests | Audit-write failure previously left project review or extension decision committed without audit/message; expected all related rows transition together or roll back | Fixed locally with transactions; isolated MySQL failure-injection tests pass; hosted gates and production pending |
+
+QA-29 (superseded by QA-32): acceptance two-process race reproduced two201/conflicting review rows in `qa28-acceptance-red.json` (exit1). Locked transaction with stage recheck now protects acceptance review/state/project closure/audit/messages. The final eight-case evidence including concurrent expert scores is `qa32-eight-races-20261105.json`.
+
+QA-32 rollback evidence: acceptance close and extension audit failures each leave state/review/log/message rows unchanged; project review audit failure rolls back its state, review, audit and notifications. Isolated MySQL5.7 XML: `qa32-mysql-acceptance-atomicity.xml`, `qa32-mysql-project-review-atomicity.xml`.
+
+| ID | Severity | Module | Reproduction command | Actual vs expected | Recommendation/status |
+| --- | --- | --- | --- | --- | --- |
+| QA29-P1-ACCEPTANCE-RACE | P1 | Acceptance decision | Guarded MySQL launcher, red/green JSON above | Opposite decisions both201, two review rows and conflicting notifications; expected one accepted decision and one422 | Fixed locally: locked stage check and transaction; seven race cases green, production pending |
 
 QA-28: real MySQL5.7.44 two-process barrier test supersedes blanket concurrency not_run only for task/progress/rectification/certification review and county main-project review. Command from repo root: `powershell -NoProfile -ExecutionPolicy Bypass -File modernization/backend/tests/Concurrency/run-mysql-race.ps1 -EvidencePath ../docs/qa28-concurrency-green-20261105.json`. Red exit1: four lifecycle routes200/200, duplicate audits and conflicting final decisions. Fixed atomic submitted-state update plus audit transaction; green exit0 five cases, lifecycle200/422 and project201/409, distinct PIDs/single audit/winner preserved. Raw output: qa28-concurrency-red/green-20261105.json; summary qa28-concurrency-20261105.json. Full backend255tests1663assertions; audit-failure rollback preserves whole row. Not deployed; expert/acceptance/extension/soak still unproven.
 

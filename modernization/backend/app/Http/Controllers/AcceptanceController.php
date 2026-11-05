@@ -17,6 +17,7 @@ use App\Support\Role;
 use App\Support\RuntimeConfig;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AcceptanceController extends Controller
@@ -216,27 +217,37 @@ class AcceptanceController extends Controller
                 'score' => $this->roleLabel($stage).'未开启评分，不能提交评分。',
             ]);
         }
-        $review = AcceptanceReview::create($data + [
-            'acceptance_application_id' => $acceptance->id,
-            'reviewer_id' => $request->user()->id,
-            'stage' => $stage,
-            'reviewed_at' => now(),
-        ]);
+        [$review, $acceptance] = DB::transaction(function () use ($request, $acceptance, $stage, $data): array {
+            $locked = AcceptanceApplication::query()->lockForUpdate()->findOrFail($acceptance->id);
+            abort_unless($locked->current_reviewer_role === $stage
+                && in_array($locked->status, [AcceptanceApplication::STATUS_SUBMITTED, AcceptanceApplication::STATUS_REVIEWING], true),
+                422, '当前验收状态已变化，请刷新后重试');
+            abort_unless($this->dispatchMatcher->userCanReview($locked->project, $request->user(), $stage), 403, '该验收已派单给其他审核人员');
 
-        $acceptance->update($this->nextAcceptanceState($acceptance, $data['decision']));
-        if (in_array($acceptance->status, [AcceptanceApplication::STATUS_APPROVED, AcceptanceApplication::STATUS_CLOSED], true)) {
-            $acceptance->project()->update(['status' => Project::STATUS_CLOSED]);
-        }
+            $review = AcceptanceReview::create($data + [
+                'acceptance_application_id' => $locked->id,
+                'reviewer_id' => $request->user()->id,
+                'stage' => $stage,
+                'reviewed_at' => now(),
+            ]);
 
-        $this->auditLogger->record($request, 'acceptance.reviewed', $review, [
-            'acceptance_id' => $acceptance->id,
-            'decision' => $data['decision'],
-        ]);
-        $this->notifyOwner($acceptance, '验收审核状态更新', '审核结果：'.$data['decision'].'。'.($data['comment'] ?? ''));
+            $locked->update($this->nextAcceptanceState($locked, $data['decision']));
+            if (in_array($locked->status, [AcceptanceApplication::STATUS_APPROVED, AcceptanceApplication::STATUS_CLOSED], true)) {
+                $locked->project()->update(['status' => Project::STATUS_CLOSED]);
+            }
 
-        if ($acceptance->current_reviewer_role) {
-            $this->notifyRole($acceptance, $acceptance->current_reviewer_role, '收到待审验收', '项目“'.$acceptance->project->title.'”已流转到你的验收审核阶段。');
-        }
+            $this->auditLogger->record($request, 'acceptance.reviewed', $review, [
+                'acceptance_id' => $locked->id,
+                'decision' => $data['decision'],
+            ]);
+            $this->notifyOwner($locked, '验收审核状态更新', '审核结果：'.$data['decision'].'。'.($data['comment'] ?? ''));
+
+            if ($locked->current_reviewer_role) {
+                $this->notifyRole($locked, $locked->current_reviewer_role, '收到待审验收', '项目“'.$locked->project->title.'”已流转到你的验收审核阶段。');
+            }
+
+            return [$review, $locked];
+        });
 
         return response()->json([
             'review' => $review,
@@ -312,22 +323,21 @@ class AcceptanceController extends Controller
             ->where('acceptance_application_id', $acceptance->id)
             ->findOrFail($data['extension_id']);
 
-        $updated = AcceptanceExtension::query()->whereKey($extension->id)->where('status', 'pending')->update([
-            'status' => $data['decision'],
-            'review_comment' => $data['comment'] ?? null,
-            'reviewed_by' => $request->user()->id,
-            'reviewed_at' => now(),
-        ]);
+        return DB::transaction(function () use ($request, $acceptance, $extension, $data): AcceptanceExtension {
+            $updated = AcceptanceExtension::query()->whereKey($extension->id)->where('status', 'pending')->update([
+                'status' => $data['decision'],
+                'review_comment' => $data['comment'] ?? null,
+                'reviewed_by' => $request->user()->id,
+                'reviewed_at' => now(),
+            ]);
+            abort_unless($updated === 1, 422, '该延期申请已处理，请刷新后查看结果');
+            $extension->refresh();
 
-        if ($updated !== 1) {
-            return response()->json(['message' => '该延期申请已处理，请刷新后查看结果'], 422);
-        }
-        $extension->refresh();
+            $this->auditLogger->record($request, 'acceptance.extension_reviewed', $extension, ['decision' => $data['decision']]);
+            $this->notifyOwner($acceptance, '验收延期申请已处理', '处理结果：'.$data['decision'].'。'.($data['comment'] ?? ''));
 
-        $this->auditLogger->record($request, 'acceptance.extension_reviewed', $extension, ['decision' => $data['decision']]);
-        $this->notifyOwner($acceptance, '验收延期申请已处理', '处理结果：'.$data['decision'].'。'.($data['comment'] ?? ''));
-
-        return $extension->refresh();
+            return $extension->refresh();
+        });
     }
 
     private function canView(Request $request): bool

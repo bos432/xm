@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="Tests\Feature\AcceptanceReviewAtomicityTest" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AcceptanceReviewAtomicityTest.php" tests="1" assertions="6" errors="0" failures="0" skipped="0" time="49.550633">
+    <testcase name="test_failed_final_review_audit_rolls_back_review_and_project_closure" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\backend\tests\Feature\AcceptanceReviewAtomicityTest.php" line="18" class="Tests\Feature\AcceptanceReviewAtomicityTest" classname="Tests.Feature.AcceptanceReviewAtomicityTest" assertions="6" time="49.550633"/>
+  </testsuite>
+</testsuites>

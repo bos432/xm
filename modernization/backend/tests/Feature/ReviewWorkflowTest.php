@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\OperationLog;
 use App\Models\Project;
 use App\Models\ProjectReview;
 use App\Models\Unit;
@@ -14,6 +15,35 @@ use Tests\TestCase;
 class ReviewWorkflowTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_project_review_rolls_back_when_audit_write_fails(): void
+    {
+        $unit = Unit::factory()->create();
+        $owner = User::factory()->create(['unit_id' => $unit->id, 'role' => Role::UNIT]);
+        $county = User::factory()->create(['role' => Role::COUNTY]);
+        $project = Project::factory()->create([
+            'unit_id' => $unit->id, 'owner_id' => $owner->id,
+            'status' => Project::STATUS_SUBMITTED, 'current_reviewer_role' => Role::COUNTY,
+        ]);
+        $before = $project->refresh()->getRawOriginal();
+        OperationLog::creating(function (): void {
+            throw new \RuntimeException('QA project-review audit failure');
+        });
+        Sanctum::actingAs($county);
+        $this->withoutExceptionHandling();
+        try {
+            $this->postJson('/api/projects/'.$project->id.'/reviews', ['decision' => 'approve']);
+            $this->fail('Audit failure must not commit review state');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('QA project-review audit failure', $exception->getMessage());
+        } finally {
+            OperationLog::flushEventListeners();
+        }
+        $this->assertSame($before, $project->refresh()->getRawOriginal());
+        $this->assertDatabaseCount('project_reviews', 0);
+        $this->assertDatabaseCount('operation_logs', 0);
+        $this->assertDatabaseCount('messages', 0);
+    }
 
     public function test_project_can_move_through_full_review_chain(): void
     {

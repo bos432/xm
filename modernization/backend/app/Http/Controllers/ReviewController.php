@@ -229,27 +229,28 @@ class ReviewController extends Controller
                 }
             }
 
+            $this->auditLogger->record($request, 'project.reviewed', $review, [
+                'project_id' => $project->id,
+                'decision' => $data['decision'],
+                'next_status' => $project->status,
+                'next_reviewer_role' => $project->current_reviewer_role,
+            ]);
+
+            Message::create([
+                'recipient_id' => $project->owner_id,
+                'project_id' => $project->id,
+                'type' => 'review',
+                'title' => '项目审核状态更新',
+                'body' => '审核结果：'.$data['decision'].'。'.($data['comment'] ?? ''),
+            ]);
+
+            if ($project->current_reviewer_role) {
+                $this->notifyReviewRecipients($project, $project->current_reviewer_role, $assignment,
+                    '收到待审项目', $this->dispatchMessageBody($project, $assignment));
+            }
+
             return [$review, $assignment, $project];
         });
-
-        $this->auditLogger->record($request, 'project.reviewed', $review, [
-            'project_id' => $project->id,
-            'decision' => $data['decision'],
-            'next_status' => $project->status,
-            'next_reviewer_role' => $project->current_reviewer_role,
-        ]);
-
-        Message::create([
-            'recipient_id' => $project->owner_id,
-            'project_id' => $project->id,
-            'type' => 'review',
-            'title' => '项目审核状态更新',
-            'body' => '审核结果：'.$data['decision'].'。'.($data['comment'] ?? ''),
-        ]);
-
-        if ($project->current_reviewer_role) {
-            $this->notifyReviewRecipients($project, $project->current_reviewer_role, $assignment, '收到待审项目', $this->dispatchMessageBody($project, $assignment));
-        }
 
         return response()->json([
             'review' => $review,

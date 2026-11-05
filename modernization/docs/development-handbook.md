@@ -5,9 +5,11 @@
 - Published production baseline: `cef21d38e6989cffc9cc5e516dbd14f4a445d6c5` (`20261105105750`), deployed 2026-11-05 with migrations and Seeder skipped. Previous rollback target: `20261018050541` / `59bbdec`.
 - Remote `main` and production match `cef21d3`; exact-revision hosted gates passed. Independent HTTPS login/logout, seven HTTP paths, and one site PHP worker on the new release verified. Anonymous browser E2E: 2 passed.
 - Formal operations readiness is not fully verified: isolated submission and acceptance/extension closure independently read back; super-admin score configuration save/reload/restoration verified QA20. Responsive UI, other feature paths, SMTP delivery and OSS restore remain open.
-- QA28 true MySQL5.7 two-process race reproduced four double approvals/overwrites in lifecycle reviews; atomic submitted-state update plus audit transaction now passes all five cases. Backend255tests1663assertions and changed-file Pint pass. New candidate remains isolated/not deployed; exact hosted gates and new-source coverage pending. Broader concurrency/operations remain open.
+- QA32: eight actual MySQL5.7 two-process races pass: four lifecycle review types, acceptance, extension, two independently scoring experts, and county project review. Project/acceptance/lifecycle state, review rows, audit and messages roll back on injected audit failure. Full backend258/1681; frontend gates and npm audit pass. Candidate isolated/not deployed; exact hosted gates and production readiness remain open.
 
 ## Recent Increment
+
+2026-11-05, QA-32 transaction/concurrency increment: acceptance two-process conflict, expert independent scores, and extension/audit failure validated. Eight MySQL races and full backend258/1681 pass; project/acceptance/extension rollback tests pass on MySQL. Frontend audit/lint/test21/typecheck/build and deployment simulation tests pass. Evidence qa32-release-gates-20261105.json, qa32-eight-races-20261105.json and JUnit. Production unchanged.
 
 2026-11-05, QA-28 lifecycle/credential review atomicity fixed after real MySQL5.7 two-process reproduction: four200/200 failures now200/422, project201/409 remains correct; single audit/winner preserved. Audit failure rolls back unchanged row. Full255/1663; evidence qa28-concurrency-20261105.json. Production unchanged.
 
@@ -59,7 +61,7 @@
 
 ## Next Step
 
-Commit/push QA28 candidate and verify exact remote/gates; extend same isolated runner to expert scores and acceptance/extension races. QA27 already committed3fa6957. Tab12 unit handoff retained, no reseed. Broader UI, SMTP/OSS restore and browser upload remain open. Production unchanged.
+Commit/push QA32 candidate and verify exact remote plus hosted CI/Quality results. Then continue actual browser role workflow and unresolved edit-submit races; SMTP real delivery, OSS isolated restore, uploads and soak remain open. No production deployment until exact-source hosted gates pass and readiness evidence is reviewed. Production unchanged.
 
 ## Evidence and State
 
@@ -388,3 +390,12 @@ Commit/push QA28 candidate and verify exact remote/gates; extend same isolated r
 - Isolation/permissions/data: existing labeled loopback-only local container13371,512MiB/0.5CPU; synthetic units/reviewers, ephemeral tokens deleted; only isolated database migrated (nothing pending). Array mail/cache, sync queue. No production release/config/DB/account/business change, external mail/OSS, sales/payment or other-site/shared-service change. Worker processes exited; no running shell session.
 - Acceptance status: four P1 race defects fixed_local; project race verified existing behavior; new coverage/hosted gates not_run. Expert/acceptance/extension concurrent decisions, edit-submit races, soak, browser upload, SMTP and OSS restoration remain unproven. Prior78.51% applies prior source only.
 - Next: commit/push exact candidate and hosted gates, then extend isolated concurrency coverage to experts and acceptance/extension. No release approval yet.
+
+## 2026-11-05 QA-32: Workflow Transactions and Eight MySQL Race Cases
+
+- Scope: QA28/29 found and fixed four lifecycle double-review races, acceptance conflicting approval/return, audit-failure partial project/acceptance writes, and extension decision surviving audit failure. Project review now includes review/state/audit/owner and next-stage notifications within existing transaction; acceptance already locks/revalidates and transactionally writes review/state/project/audit/messages; extension conditional pending update now shares transaction with audit/message. Eight actual two-process MySQL races all pass: task book, progress, rectification, expert certification, acceptance, extension, two distinct experts scoring same project independently (scores90/80 and stage advances only after both), county project review.
+- Files: ReviewController.php, AcceptanceController.php; ReviewWorkflowTest.php, AcceptanceReviewAtomicityTest.php, lifecycle-race.php, guarded launcher, quality workflow; qa32-release-gates-20261105.json, qa32-eight-races-20261105.json, qa32-backend-full.xml and MySQL rollback JUnit files, QA_REPORT.
+- Commands/environment: PHP8.3.30, PHPUnit11.5.57, MySQL5.7.44; `powershell -NoProfile -ExecutionPolicy Bypass -File tests/Concurrency/run-mysql-race.ps1 -EvidencePath ../docs/qa32-eight-races-20261105.json` from modernization/backend exit0, 8/8 cases, then acceptance rollback2tests13 assertions and project review rollback1test5 assertions exit0. Full `php vendor/bin/phpunit --log-junit ../docs/qa32-backend-full.xml` exit0,258tests1681assertions. Targeted Pint pass; frontend lint21 tests, utility typecheck, build and npm audit pass; see evidence files for exact outputs. Previous harness failures were addressed: random unique users, correct criteria codes, parse runner JSON (not CLI exit alone), deactivated QA criteria before repeat, repaired incorrect CWD/path. Not application findings.
+- Isolation/data: labeled container `nxm-qa-mysql57-20261105`, loopback 127.0.0.1:13371, 512MiB/0.5CPU; database only `modernization_migration_test`; synthetic users/projects/criteria. Ephemeral access tokens deleted. No production/app shared database, external SMTP/OSS, server services, other sites, sales/payment or deployment changed.
+- Acceptance status: eight listed race paths and injected project/acceptance/extension audit rollback verified locally. Three-plus simultaneous experts, edit/submit races, broader load/soak, browser upload, real SMTP, OSS restore, exact hosted gates and production operations are still `not_run`. Existing 78.51% coverage applies the prior 4fb9f01 commit only.
+- Next: commit and retry push; verify branch SHA exactly then hosted required jobs and coverage for candidate. Do not deploy before those gates and remaining readiness evidence.

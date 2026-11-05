@@ -1,0 +1,12 @@
+{
+  "stage": "QA-29",
+  "runtime": "PHP 8.3.30 / PHPUnit 11.5.57 / MySQL 5.7.44",
+  "red": {"command":"powershell -NoProfile -ExecutionPolicy Bypass -File modernization/backend/tests/Concurrency/run-mysql-race.ps1 -EvidencePath ../docs/qa28-acceptance-red.json","exit_code":1,"acceptance_statuses":[201,201],"duplicate_reviews":true,"evidence":"qa28-acceptance-red.json"},
+  "green": {"command":"from modernization/backend: powershell -NoProfile -ExecutionPolicy Bypass -File tests/Concurrency/run-mysql-race.ps1 -EvidencePath ../docs/qa32-eight-races-20261105.json","exit_code":0,"cases":8,"all_passed":true,"acceptance_statuses":[201,422],"extension_statuses":[200,422],"project_statuses":[201,409],"expert_multi_review_statuses":[201,201],"expert_scores_persisted":[90,80],"expert_stage_transitions_to_admin_after_both_scores":true,"single_audit_per_decision":true,"winner_preserved":true,"independent_processes":true},
+  "application_change": "Acceptance review locks and revalidates current stage inside transaction covering review, acceptance/project transition, audit and notification. Lifecycle fix retained; existing extension compare-and-set verified.",
+  "isolation": "Local labelled MySQL5.7.44 container only,127.0.0.1:13371,512MiB/0.5CPU; synthetic data; ephemeral tokens revoked; array mail/cache and sync queue.",
+  "harness_correction": "Initial extension fixture lacked associated acceptance; corrected. Laravel error rendering exited0, so launcher now parses JSON and requires passing cases, not exit code alone. Repeated run exposed Faker collisions against prior retained QA rows; all race fixtures now use cryptographically random unique identity fields.",
+  "rollback_test": {"acceptance":{"command":"php vendor/bin/phpunit tests/Feature/AcceptanceReviewAtomicityTest.php","isolated_sqlite":{"exit_code":0,"tests":2,"assertions":13},"isolated_mysql57":{"included_in_guarded_launcher":true,"evidence":"qa32-mysql-acceptance-atomicity.xml"}},"project_review":{"command":"php vendor/bin/phpunit tests/Feature/ReviewWorkflowTest.php --filter=test_project_review_rolls_back_when_audit_write_fails","isolated_sqlite":{"exit_code":0,"tests":1,"assertions":5},"isolated_mysql57":{"included_in_guarded_launcher":true,"evidence":"qa32-mysql-project-review-atomicity.xml"}}},
+  "not_proven": ["three-or-more simultaneous expert scores", "edit versus submit races", "resource soak", "hosted exact-candidate gates", "new-source coverage", "SMTP delivery", "OSS restoration"],
+  "production_changed": false
+}
