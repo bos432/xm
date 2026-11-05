@@ -1,0 +1,11 @@
+{
+  "phase": "QA-19", "status": "fixed_local_not_deployed",
+  "scope": "Acceptance review decision labels, extension selector status, list/history timestamps in Asia/Shanghai; date-only values unchanged",
+  "red": {"command": "node --test --test-reporter=junit --test-reporter-destination=../docs/qa19-acceptance-display-red.xml tests/acceptance-errors.test.js", "exit_code": 1, "reason": "Acceptance missing timestamp formatter"},
+  "green": {"command": "node --test --test-reporter=junit --test-reporter-destination=../docs/qa19-acceptance-display-green.xml tests/acceptance-errors.test.js", "exit_code": 0},
+  "frontend": {"commands": ["npm run lint", "npm test", "npm run typecheck", "npm run build"], "exit_codes": [0,0,0,0], "tests": 18, "node": "25.2.1", "vite": "8.3.5", "typecheck": "utilities only"},
+  "browser": {"tab": "10", "role": "unit", "observed": ["Review history renders Chinese return/approve labels", "Admin extension processed timestamp displays2026-11-05 14:04:16", "Plan date remains2026-12-31", "Completed unit record has no extension operation"], "evidence_root": "../e2e/reports/runs/qa07-20261105-browser-fixed", "screenshot": "28-unit-localized-acceptance-history.png", "dom": "qa19-unit-localized-dom.txt"},
+  "production_changed": false,
+  "git_remote_observed": "43d6c16041e0d28481129595cd5250f2fa09e589",
+  "limits": ["Display scope acceptance page only, other pages not claimed localized", "No new browser upload coverage", "No production changes"]
+}

@@ -5,6 +5,26 @@ import { runInNewContext } from 'node:vm'
 
 const source = readFileSync(new URL('../src/views/AcceptanceView.vue', import.meta.url), 'utf8')
 
+test('acceptance renders Chinese decisions and business timezone timestamps in history and lists', () => {
+  const dateDeclaration = source.match(/function formatDateTime\([^)]*\) \{[\s\S]*?\n\}/)
+  assert.ok(dateDeclaration, 'Acceptance must format API timestamps for business display')
+  const format = runInNewContext(`(${dateDeclaration[0]})`, { Date, Intl })
+  assert.equal(format('2026-11-05T06:04:16.000000Z'), '2026-11-05 14:04:16')
+  assert.equal(format('2026-12-31'), '2026-12-31')
+  assert.equal(format('2026-11-05 14:04:16'), '2026-11-05 14:04:16')
+  for (const value of [null, '', undefined, 'not-a-date', {}, []]) assert.equal(format(value), '-')
+  const decisionDeclaration = source.match(/function decisionLabel\([^)]*\) \{[\s\S]*?\n\}/)
+  const decision = runInNewContext(`(${decisionDeclaration[0]})`)
+  for (const [code, label] of Object.entries({ approve: '通过', return: '退回修改', reject: '驳回', close: '终审关闭' })) {
+    assert.equal(decision(code), label)
+  }
+  assert.match(source, /label="结果"[^>]*>\s*<template #default="\{ row \}">\{\{ decisionLabel\(row.decision\)/)
+  for (const expression of ['row.submitted_at', 'row.reviewed_at', 'row.latest_extension?.created_at', 'row.created_at || row.requested_at']) {
+    assert.ok(source.includes(`formatDateTime(${expression})`), `Missing readable timestamp: ${expression}`)
+  }
+  assert.ok(source.includes('extensionStatusLabel(item.status)'), 'Extension selector must use Chinese status')
+})
+
 test('completed acceptance hides new unit extension action while admin can resolve historical requests', () => {
   const declaration = source.match(/function canExtend\([^)]*\) \{[\s\S]*?\n\}/)
   for (const [role, expected] of [['unit', false], ['admin', true], ['county', false]]) {

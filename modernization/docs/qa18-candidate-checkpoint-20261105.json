@@ -1,0 +1,21 @@
+{
+  "phase": "QA-18",
+  "source_commit": "33a4e787cfe2c64a7bf48116832878add27fafd6",
+  "branch": "codex/composer-security-fix",
+  "status": "committed_not_pushed",
+  "scope": "QA13..17 source/tests/evidence and two new isolated MySQL business test files in workflow",
+  "commands": [
+    {"command": "git diff --cached --check", "first_exit": 1, "reason": "Four trailing whitespace lines in generated red JUnit", "correction": "Retained exact raw copies in ignored QA07 run root, stripped trailing whitespace only", "final_exit": 0},
+    {"command": "git commit -m fix:enforce-acceptance-scoring-and-extension-consistency", "exit": 0, "files": 33},
+    {"command": "git -c http.sslBackend=schannel -c http.version=HTTP/1.1 push origin HEAD:refs/heads/codex/composer-security-fix", "session": 44083, "exit": 1, "output": "Recv failure: Connection was reset"},
+    {"command": "git -c http.sslBackend=schannel -c http.version=HTTP/1.1 ls-remote origin refs/heads/codex/composer-security-fix", "session": 30532, "exit": 128, "output": "Failed to connect to github.com port 443 after 21070 ms"},
+    {"command": "Invoke-RestMethod https://api.github.com/repos/bos432/xm/branches/codex%2Fcomposer-security-fix", "exit": 0, "remote_sha": "43d6c16041e0d28481129595cd5250f2fa09e589"},
+    {"command": "git -c http.sslBackend=schannel -c http.version=HTTP/1.1 -c http.connectTimeout=15 -c http.lowSpeedLimit=1 -c http.lowSpeedTime=20 push origin HEAD:refs/heads/codex/composer-security-fix", "session": 87404, "exit": 1, "output": "Failed to connect to github.com port 443 after 21011 ms"}
+  ],
+  "hosted_new_candidate": "not_run_remote_does_not_have_commit",
+  "runtime": {"php": "8.3.30", "node": "25.2.1", "backend": "240tests1376assertions pass", "frontend": "17tests pass;lint/typecheck-utilities/build pass", "coverage": "not_measured"},
+  "live_sandbox": {"checked_at": "2026-11-05T14:22:42+08:00", "listeners": [{"address": "127.0.0.1", "port": 18741, "pid": 95304}, {"address": "127.0.0.1", "port": 18742, "pid": 87464}], "preserved": true},
+  "browser": {"tab": "9", "role": "unit", "url": "http://127.0.0.1:18742/acceptance?scope=visible", "handoff_marked": true},
+  "production_changed": false,
+  "remaining": ["Raw acceptance review decision/time display", "Super-admin configuration and responsive UI", "Independent final database readback", "Push and exact-revision hosted/MySQL/security gates", "Numerical coverage/true concurrency/SMTP/OSS restore", "Browser upload chooser"]
+}

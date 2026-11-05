@@ -4,10 +4,16 @@
 
 - Published production baseline: `cef21d38e6989cffc9cc5e516dbd14f4a445d6c5` (`20261105105750`), deployed 2026-11-05 with migrations and Seeder skipped. Previous rollback target: `20261018050541` / `59bbdec`.
 - Remote `main` and production match `cef21d3`; exact-revision hosted gates passed. Independent HTTPS login/logout, seven HTTP paths, and one site PHP worker on the new release verified. Anonymous browser E2E: 2 passed.
-- Formal operations readiness is not fully verified: isolated browser submission and acceptance/extension closure now observed through unit result; super-admin/configuration, other feature paths, SMTP delivery and OSS restore remain open.
-- Isolated candidate43d6c16 hosted CI41974720298 and Quality41974720285 completed/success; QA-13..17 acceptance fixes are newer local changes and not covered by those gates. Latest evidence: `qa17-extension-finality-20261105.json`. Backend240tests/1376assertions and prior frontend17/17 pass locally, not deployed.
+- Formal operations readiness is not fully verified: isolated submission and acceptance/extension closure independently read back; super-admin score configuration save/reload/restoration verified QA20. Responsive UI, other feature paths, SMTP delivery and OSS restore remain open.
+- Isolated source candidate33a4e787cfe2c64a7bf48116832878add27fafd6 committed locally; push twice failed connection reset/connect timeout, REST remote still43d6c16. Prior43d6c16 hosted CI41974720298/Quality41974720285 passed, not evidence for new source. Latest checkpoint: `qa18-candidate-checkpoint-20261105.json`. Backend240tests/1376assertions and frontend17/17 pass locally, not deployed.
 
 ## Recent Increment
+
+2026-11-05, QA-20 super-admin county score save/reload and restoration verified in retained local browser; independent SQLite readback confirms closed project, three submission scores, approved acceptance and extension. Evidence: `qa20-config-db-readback-20261105.json`. Production unchanged; remote branch still43d6c16.
+
+2026-11-05, QA-19 acceptance display fixed locally: Chinese history decisions/extension selector, timestamps Asia/Shanghai, date-only untouched. Frontend18/18 and lint/utility typecheck/build pass; unit browser screenshot28/DOM confirms actual history. Evidence: `qa19-acceptance-display-20261105.json`. Tab10 replaces unavailable tab9; production unchanged.
+
+2026-11-05, QA-18 candidate checkpoint: QA13..17 committed33a4e78; adds two new regression files to isolated MySQL CI. Push sessions44083/87404 finished exit1; ls-remote30532 exit128, REST still43d6c16. Hosted gates for new source not_run. Sandbox loopback listeners reverified14:22 live; no restart/reseed/production changes. Evidence: `qa18-candidate-checkpoint-20261105.json`.
 
 2026-11-05, QA-17 extension overwrite fixed locally: another admin could replace approved with rejected. Atomic pending-only update now rejects stale decisions422 and preserves full original row. Red200 vs422 -> green5tests99assertions; backend240/1376, targeted Pint pass. Evidence: `qa17-extension-finality-20261105.json`. True MySQL concurrency not yet proven.
 
@@ -35,7 +41,7 @@
 
 ## Next Step
 
-Localize raw history decision/time display; then super-admin/configuration and responsive checks. Acceptance1 and extension1 approved/completed through visible browser; tab9 unit list shows completed record without new extension action. Do not reseed live sandbox/PIDs95304/87464. QA-13..17 source needs push and exact hosted gates; prior43d6c16 gates passed. Coverage/concurrency/SMTP/OSS restore and browser upload chooser remain open. No production business writes.
+Commit QA19/20 and resume Git sync, verify exact remote receipt and hosted gates before any deployment. Remote REST still43d6c16; local33a4e78 plus QA19/20 uncommitted. Tab11 super-admin settings handoff retained; no reseed. Responsive UI, coverage/concurrency/SMTP/OSS restore and browser upload remain open. Production unchanged.
 
 ## Evidence and State
 
@@ -245,3 +251,28 @@ Localize raw history decision/time display; then super-admin/configuration and r
 - Commands: PHP targeted --filter decision_is_final red exit1/1test3assertions actual200 vs422. Green configuration suite exit0/5tests99assertions; full php vendor/bin/phpunit --log-junit ../docs/qa17-backend-regression.xml exit0/240tests1376assertions. Targeted two-file Pint exit0; PHP8.3.30/PHPUnit11.5.57/SQLite. No frontend changes this increment; prior QA16 frontend17 applies only same source. Sequential duplicate test not true concurrent MySQL evidence.
 - Isolation: synthetic in-memory owner/admin/super-admin identities, retained-row attributes verified; no production business/account/config/release/database, SMTP/OSS, other-site/service changes. Payment/sales not applicable. QA_REPORT new P1 fixed_local/not_deployed, no overall release claim.
 - Next: render readable history decision/time; push pending candidate and inspect exact CI/MySQL gates, with browser admin/configuration/responsive and coverage/concurrency/operations evidence still open.
+
+## 2026-11-05 QA-18: Candidate Commit and Verified Git Transport Failure
+
+- Scope: review and commit QA13..17 fixes/evidence, extend existing isolated MySQL job to AcceptanceConfigurationAndTimelineTest and ProjectAcceptanceHintTest. No deployment/main promotion. Source33a4e787cfe2c64a7bf48116832878add27fafd6. Evidence docs/qa18-candidate-checkpoint-20261105.json.
+- Commands: git diff --cached --check first exit1 four whitespace-only lines in generated red JUnit; exact raw copies retained in ignored QA07 root before mechanically trimming trailing whitespace, final check0. git commit exit0/33files. Push session44083 exit1 connection reset; ls-remote30532 exit128 connect443 timeout; REST branch inspection exit0 remote43d6c16. Retry push87404 exit1 connect443 timeout. All handles collected/terminal, no pending push process. No authenticated artifact/gate pass claimed for new source.
+- Verification basis: current source PHP full240tests1376assertions, frontend17 plus lint/typecheck-utilities/build pass in QA16/17; no code change after those except CI test selection, which awaits hosted run. Full repo Pint baseline/coverage/real concurrency not waived. Runtime PHP8.3.30/Node25.2.1 unchanged.
+- Isolation/state: loopback live PIDs95304/87464 reverified14:22; left running intentionally for continued UI, data retained. Browser tab9 marked handoff, unit completed list screenshot27. No production credentials in commit; synthetic credentials excluded, no grants/accounts/business writes in this checkpoint. Production release/config/DB, shared services, SMTP/OSS and other sites unchanged; payment/sales not applicable. Acceptance ledger no new pass, source fixes remain not_deployed.
+- Next: raw history decision/time display and super-admin/responsive UI while transport recovers; recheck authoritative remote SHA then push/gates. Independent final DB state and operational/coverage/concurrency evidence remain incomplete.
+
+## 2026-11-05 QA-19: Readable Acceptance Decisions and Timestamps
+
+- Scope: reuse existing decisionLabel in review rows; Chinese extension selector status; display list/history/timeline times in Asia/Shanghai with seconds, leave date-only values unchanged. Invalid/null input becomes dash. Frontend display only; other pages not claimed localized, no API/database changes.
+- Files: frontend/src/views/AcceptanceView.vue, frontend/tests/acceptance-errors.test.js; docs/qa19-acceptance-display-20261105.json and red/green JUnit; screenshot28 and DOM under retained QA07 root. Red formatter missing exit1, green exit0; full frontend18pass, lint/typecheck-utilities/build all exit0, Node25.2.1/Vite8.3.5/1630modules. Backend source unchanged since QA17 full240/1376, not rerun this display increment. git diff --check checkpoint required.
+- Browser: old tab9 binding unavailable, new visible tab10 shares unit session. Actual list2026-11-05 13:24:23, review labels通过/退回修改, extension time14:04:16 and calendar date2026-12-31 verified. Screenshot28/qa19-unit-localized-dom.txt, handoff marked. Local listener PIDs95304/87464 rechecked; no restart/reseed. REST remote remains43d6c16, candidate33a4e78 not received.
+- Permissions/data: browser reads only retained synthetic unit result; no new grants/accounts/business writes, production release/config/DB/mail/OSS, shared restart or other sites. Payment/sales not applicable. QA_REPORT adds fixed-local display entry, no overall release pass.
+- Next: super-admin configuration and responsive UI, then independent final database readback and exact candidate gates; coverage/concurrency/SMTP/OSS restore/browser upload remain open.
+
+## 2026-11-05 QA-20: Configuration Persistence and Independent Closure Readback
+
+- Scope: retained local super-admin settings save/reload/restoration; independent SQLite readback after browser acceptance closure. No new application behavior changes. QA19 display fix remains pending integration.
+- Files: e2e/inspect-isolated.php adds acceptance/history/extension read-only output; docs/qa20-config-db-readback-20261105.json, QA_REPORT.md, this handbook. Screenshots29..32 and QA20 DOM exports retained under QA07 ignored run root, no credentials in tracked evidence.
+- Commands: isolated NXM_QA_SANDBOX plus php modernization/e2e/inspect-isolated.php exit0, driver sqlite, project1 closed/current reviewer null, budget125000.00, submission scores90/88/94, support6.5wan, acceptance approved/closed_at14:05:54+08:00, extension approved/date2026-12-31. php -l inspect-isolated.php exit0; git diff --check exit0 with CRLF warnings. PHP8.3.30/Node25.2.1 from existing runtime; no fresh test-count or coverage claim. REST branch inspection exit0 remains43d6c16.
+- Browser: tab10 unavailable; new visible tab11 reused local authenticated super-admin. County score true after prior save/reload verified; restored false, saved and reloaded, verified all five switches and expert count3 unchanged. setChecked timeout/AX no-diff were resolved by DOM observation and actual refreshed state; no application defect inferred. Dictionary100/100 screenshot29 from prior continuation retained; dictionary query refresh still not_run. Tab11 marked handoff.
+- Isolation/data: only retained synthetic sandbox config changed then restored; no account grants or formal business data changes. No production release/config/database/account writes, mail/OSS delivery, shared service restart, other-site or sales/payment changes. Acceptance ledger QA_REPORT gains observed evidence only; real MySQL concurrency, browser upload, responsive, numerical coverage, SMTP delivery and OSS restore remain incomplete. Acceptance uses one expert, not a claim of group acceptance.
+- Next: commit current QA19/20 candidate and retry Git sync; inspect exact remote receipt and hosted gates before promotion or deployment. Production remains last verified cef21d3.

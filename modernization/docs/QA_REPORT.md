@@ -10,6 +10,7 @@ QA-10 update: QA08-P1-DETAIL is fixed locally, not deployed. Reviewer drawer and
 
 | ID | Severity | Module | Reproduction command | Actual vs expected | Recommendation/status |
 | --- | --- | --- | --- | --- | --- |
+| QA19-P2-DISPLAY | P2 | Acceptance records | `node --test tests/acceptance-errors.test.js` and unit browser history | History raw approve/return and UTC API strings instead of readable Chinese business display | Fixed locally QA19,18frontend tests and browser screenshot28. Not deployed |
 | QA17-P1-EXTENSION-OVERWRITE | P1 | Extension decision finality | `php vendor/bin/phpunit tests/Feature/AcceptanceConfigurationAndTimelineTest.php --filter decision_is_final` | Another admin could overwrite approved with rejected200; expected422 and original row unchanged | Fixed locally atomic pending-only update; full240/1376. qa17-extension-finality-20261105.json; true concurrency pending |
 | QA16-P1-TERMINAL-EXTENSION | P1 | Acceptance extension | `php vendor/bin/phpunit tests/Feature/AcceptanceConfigurationAndTimelineTest.php --filter terminal` | Completed acceptance allowed new extension201, expected422/no write | Fixed locally; approved/closed/rejected guards, preserved history, browser action hidden. qa16-terminal-extension-20261105.json. Not deployed |
 | QA10-P2-STATUS | P2 | Project acceptance next action | `php vendor/bin/phpunit tests/Feature/ProjectAcceptanceHintTest.php` | Submitted unit told to create acceptance; reviewers saw raw status. Expected Chinese state and actual acceptance progress | Fixed locally QA14; green34assertions, backend238/1357, not deployed. qa14-acceptance-hint-20261105.json |
@@ -25,6 +26,8 @@ QA-10 update: QA08-P1-DETAIL is fixed locally, not deployed. Reviewer drawer and
 | QA-DELIVERY-01 | P0 release blocker (resolved transport) | Git transport | `git ls-remote origin refs/heads/codex/composer-security-fix` | Exit1 curl28 connection reset; initial REST branch was cef21d3 | Command-local schannel/HTTP1.1 pushes through ed4f5bf succeeded. Exact candidate CI/Quality gates passed. No production deployment |
 
 ## Executed verification
+
+- QA-20 isolated super-admin configuration: opening county score switch saved and remained enabled after full-page reload; restored original disabled value, saved and reloaded, then verified county=false, department=false, expert=true, admin=false, random assignment=true, default experts=3. Screenshots31/32 and DOM snapshots under `e2e/reports/runs/qa07-20261105-browser-fixed`; `qa20-config-db-readback-20261105.json`. Independent `php modernization/e2e/inspect-isolated.php` exited0 and confirms closed synthetic project, scores90/88/94, approved acceptance and approved extension. Production unchanged.
 
 - QA-15 visible browser: department approval -> expert92 -> admin extension approval2026-12-31 -> final approval -> unit completion/extension result observed. Screenshots20..26, two DOM exports in retained QA07 run; `qa15-browser-acceptance-20261105.json`. Local sandbox only, not production. Acceptance currently one assigned expert advances, not group acceptance. New raw decision/time presentation and completed-record extension-action observations pending investigation.
 

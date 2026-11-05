@@ -51,9 +51,9 @@
         </template>
       </el-table-column>
       <el-table-column label="最近延期" width="170">
-        <template #default="{ row }">{{ row.latest_extension?.created_at || '-' }}</template>
+        <template #default="{ row }">{{ formatDateTime(row.latest_extension?.created_at) }}</template>
       </el-table-column>
-      <el-table-column prop="submitted_at" label="提交时间" width="170" />
+      <el-table-column label="提交时间" width="170"><template #default="{ row }">{{ formatDateTime(row.submitted_at) }}</template></el-table-column>
       <el-table-column prop="summary" label="验收说明" min-width="220" show-overflow-tooltip />
       <el-table-column label="操作" width="310" fixed="right">
         <template #default="{ row }">
@@ -138,7 +138,7 @@
         <template v-else>
           <el-form-item label="延期记录">
             <el-select v-model="extensionForm.extension_id">
-              <el-option v-for="item in detail?.extensions || []" :key="item.id" :label="`${item.reason}（${item.status}）`" :value="item.id" />
+              <el-option v-for="item in detail?.extensions || []" :key="item.id" :label="`${item.reason}（${extensionStatusLabel(item.status)}）`" :value="item.id" />
             </el-select>
           </el-form-item>
           <el-form-item label="处理结果">
@@ -202,7 +202,7 @@
             <el-descriptions-item label="阶段">{{ selectedTimelineItem.label }}</el-descriptions-item>
             <el-descriptions-item label="状态">{{ timelineStatusLabel(selectedTimelineItem.status) }}</el-descriptions-item>
             <el-descriptions-item label="处理人">{{ selectedTimelineItem.handler || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="处理时间">{{ selectedTimelineItem.handled_at || '-' }}</el-descriptions-item>
+            <el-descriptions-item label="处理时间">{{ formatDateTime(selectedTimelineItem.handled_at) }}</el-descriptions-item>
             <el-descriptions-item label="处理结果">{{ decisionLabel(selectedTimelineItem.decision) }}</el-descriptions-item>
             <el-descriptions-item label="评分">{{ selectedTimelineItem.score ?? '-' }}</el-descriptions-item>
             <el-descriptions-item label="意见" :span="2"><div class="rich-content detail-rich-content" v-html="selectedTimelineItem.comment || '-'" /></el-descriptions-item>
@@ -232,12 +232,12 @@
           <div class="section-title">审核记录</div>
           <el-table :data="detail.reviews || []" border size="small">
             <el-table-column label="阶段" width="110"><template #default="{ row }">{{ roleLabel(row.stage) }}</template></el-table-column>
-            <el-table-column prop="decision" label="结果" width="100" />
+            <el-table-column label="结果" width="100"><template #default="{ row }">{{ decisionLabel(row.decision) }}</template></el-table-column>
             <el-table-column prop="score" label="评分" width="80" />
             <el-table-column label="意见" min-width="220">
               <template #default="{ row }"><div class="rich-content detail-rich-content" v-html="row.comment || '-'" /></template>
             </el-table-column>
-            <el-table-column prop="reviewed_at" label="时间" width="170" />
+            <el-table-column label="时间" width="170"><template #default="{ row }">{{ formatDateTime(row.reviewed_at) }}</template></el-table-column>
           </el-table>
         </section>
         <section>
@@ -253,7 +253,7 @@
             <el-table-column label="申请人/时间" width="170">
               <template #default="{ row }">
                 <div>{{ row.requester?.name || row.requester?.username || row.requested_by || '-' }}</div>
-                <small>{{ row.created_at || row.requested_at || '-' }}</small>
+                <small>{{ formatDateTime(row.created_at || row.requested_at) }}</small>
               </template>
             </el-table-column>
             <el-table-column label="处理意见" min-width="160">
@@ -262,7 +262,7 @@
             <el-table-column label="处理人/时间" width="170">
               <template #default="{ row }">
                 <div>{{ row.reviewer?.name || row.reviewer?.username || row.reviewed_by || '-' }}</div>
-                <small>{{ row.reviewed_at || '-' }}</small>
+                <small>{{ formatDateTime(row.reviewed_at) }}</small>
               </template>
             </el-table-column>
           </el-table>
@@ -344,6 +344,20 @@ function defaultScope() {
 
 function statusMeta(value) {
   return statusLabels[value] || { label: value || '-', type: 'info' }
+}
+
+function formatDateTime(value) {
+  if (typeof value !== 'string' || !value) return '-'
+  const calendarDate = /^\d{4}-\d{2}-\d{2}$/.test(value)
+  const localTimestamp = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)
+  const date = new Date(localTimestamp ? `${value.replace(' ', 'T')}+08:00` : value)
+  if (Number.isNaN(date.getTime())) return '-'
+  if (calendarDate) return value
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23'
+  }).formatToParts(date).map(part => [part.type, part.value]))
+  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}`
 }
 
 function extensionStatusLabel(value) {

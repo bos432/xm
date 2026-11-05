@@ -8,6 +8,7 @@ $app = require __DIR__.'/isolated-app.php';
 $app->make(Kernel::class)->bootstrap();
 $project = Project::query()->where('title', 'QA-20261105-BROWSER-项目全流程')->firstOrFail();
 $reviews = $project->reviews()->orderBy('id')->get();
+$acceptance = $project->acceptanceApplications()->latest('id')->with(['reviews', 'extensions'])->first();
 echo json_encode([
     'driver' => DB::connection()->getDriverName(),
     'project_id' => $project->id,
@@ -24,4 +25,19 @@ echo json_encode([
         'decision' => $review->decision,
         'score' => $review->score,
     ])->all(),
+    'acceptance' => $acceptance ? [
+        'id' => $acceptance->id,
+        'status' => $acceptance->status,
+        'closed_at' => $acceptance->closed_at?->toIso8601String(),
+        'current_reviewer_role' => $acceptance->current_reviewer_role,
+        'reviews' => $acceptance->reviews->map(fn ($review) => [
+            'stage' => $review->stage, 'reviewer_id' => $review->reviewer_id,
+            'decision' => $review->decision, 'score' => $review->score,
+        ])->all(),
+        'extensions' => $acceptance->extensions->map(fn ($extension) => [
+            'id' => $extension->id, 'status' => $extension->status,
+            'expected_date' => $extension->expected_date?->toDateString(),
+            'requested_by' => $extension->requested_by, 'reviewed_by' => $extension->reviewed_by,
+        ])->all(),
+    ] : null,
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES).PHP_EOL;

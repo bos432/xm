@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+	<testcase name="acceptance renders Chinese decisions and business timezone timestamps in history and lists" time="0.000883" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js" failure="Acceptance must format API timestamps for business display">
+		<failure type="testCodeFailure" message="Acceptance must format API timestamps for business display">
+[Error [ERR_TEST_FAILURE]: Acceptance must format API timestamps for business display] {
+  code: 'ERR_TEST_FAILURE',
+  failureType: 'testCodeFailure',
+  cause: AssertionError [ERR_ASSERTION]: Acceptance must format API timestamps for business display
+      at TestContext.&lt;anonymous> (file:///C:/Users/Administrator/.codex/worktrees/composer-security-fix/xm.zlck888.com_20260519_183454/modernization/frontend/tests/acceptance-errors.test.js:10:10)
+      at Test.runInAsyncScope (node:async_hooks:213:14)
+      at Test.run (node:internal/test_runner/test:1106:25)
+      at Test.start (node:internal/test_runner/test:1003:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: null,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+}
+		</failure>
+	</testcase>
+	<testcase name="completed acceptance hides new unit extension action while admin can resolve historical requests" time="0.001151" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance createAcceptance shows rejected API error, preserves form and permits retry" time="0.013430" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance submitAcceptance shows rejected API error, preserves form and permits retry" time="0.000707" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance saveReview shows rejected API error, preserves form and permits retry" time="0.000593" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance saveExtension shows rejected API error, preserves form and permits retry" time="0.000612" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance uploadFile shows rejected API error, preserves form and permits retry" time="0.000735" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance list failure reports an error and retains existing rows" time="0.000581" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance materials expose authorized download and report failures" time="0.000711" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<testcase name="acceptance scoring follows server stage configuration and strips hidden scores" time="0.001038" classname="test" file="C:\Users\Administrator\.codex\worktrees\composer-security-fix\xm.zlck888.com_20260519_183454\modernization\frontend\tests\acceptance-errors.test.js"/>
+	<!-- tests 10 -->
+	<!-- suites 0 -->
+	<!-- pass 9 -->
+	<!-- fail 1 -->
+	<!-- cancelled 0 -->
+	<!-- skipped 0 -->
+	<!-- todo 0 -->
+	<!-- duration_ms 125.7769 -->
+</testsuites>

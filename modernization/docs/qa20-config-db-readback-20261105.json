@@ -1,0 +1,35 @@
+{
+  "increment": "QA-20",
+  "environment": "retained loopback SQLite sandbox only",
+  "production_changed": false,
+  "database_command": "$env:NXM_QA_SANDBOX=(Join-Path (Get-Location) 'modernization/e2e/reports/runs/qa07-20261105-browser-fixed/sandbox'); php modernization/e2e/inspect-isolated.php; $qaExit=$LASTEXITCODE; Remove-Item Env:NXM_QA_SANDBOX; exit $qaExit",
+  "database_exit_code": 0,
+  "observed": {
+    "driver": "sqlite",
+    "project_id": 1,
+    "project_status": "closed",
+    "current_reviewer_role": null,
+    "budget_amount": "125000.00",
+    "submission_expert_scores": [90, 88, 94],
+    "support_total_wan": 6.5,
+    "acceptance_status": "approved",
+    "closed_at": "2026-11-05T14:05:54+08:00",
+    "acceptance_history": ["county:return", "county:approve", "department:approve", "expert:approve:92", "admin:approve"],
+    "extension_status": "approved",
+    "extension_expected_date": "2026-12-31"
+  },
+  "browser": {
+    "tab": "11",
+    "settings_url": "http://127.0.0.1:18742/settings?group=review",
+    "county_enabled_after_prior_save_and_reload": true,
+    "county_disabled_after_restore_save_and_reload": true,
+    "final_switches": {"county": false, "department": false, "expert": true, "admin": false, "random": true},
+    "expert_count": 3,
+    "dictionary_total_observed_prior_continuation": "100 / 100",
+    "tooling": "Old tab unavailable; new tab11 preserved authenticated session. setChecked timeout and AX click reported no diff; read-only DOM verified false before save, fresh reload verified false. Not an application failure claim.",
+    "evidence_root": "modernization/e2e/reports/runs/qa07-20261105-browser-fixed",
+    "files": ["29-superadmin-expert-template.png", "30-superadmin-review-settings.png", "31-superadmin-county-score-persisted.png", "32-superadmin-review-restored.png", "qa20-review-enabled-dom.txt", "qa20-review-restored-dom.txt"]
+  },
+  "remote_branch_rest": "43d6c16041e0d28481129595cd5250f2fa09e589",
+  "limits": ["No production verification or writes", "Acceptance group scoring not proven: one expert advanced acceptance", "Responsive UI, browser file chooser, numerical coverage, true MySQL concurrency, SMTP delivery and OSS restore remain incomplete"]
+}
