@@ -2,6 +2,12 @@
 
 ## Scope and evidence limits
 
+QA46: read-only bounded tar.gz inspection tool passes12 synthetic tests (Python3.12.10), including traversal/absolute paths, links/special entries, duplicate/parent collisions, corrupted gzip footer, invalid limits and CLI output/exit codes. Full command/output/exit0: `qa46-archive-safety-20261105.json`. Real backup extraction, SQL dump inspection/import, resource enforcement and restore cleanup are **not_run**. Browser page access is unavailable although tab inventory works; server execution is **blocked_external**. No application source/configuration/production data changed. This is not proof of recoverability; no new coverage percentage is claimed.
+
+QA47 adds bounded, read-only SQL dump inspection for the actual single-database mysqldump shape:21 synthetic tests pass, covering SQL/client commands that could switch schema, change global state/accounts/privileges, access the filesystem, invoke procedures or scheduled events, or reference another schema, plus versioned executable comments, delimiters, malformed gzip and bounded memory. Evidence `qa47-restore-input-safety-20261105.json`. This is a conservative lexical scanner, not a complete MySQL parser. The real production dump has not been scanned, imported, or semantically verified. No production data or service changed.
+
+QA47b validates the scanner against a real schema-only `mysqldump --no-data --routines --triggers` from the already-running labeled QA MySQL container bound to loopback127.0.0.1:13371: exit0,223 SQL statements,57,737 expanded bytes. It contains schema only, no row data; temporary gzip removed. This proves syntax compatibility only, not isolated resource enforcement or production backup recovery. Evidence is included in `qa47-restore-input-safety-20261105.json`.
+
 This increment uses the isolated worktree, SQLite in memory, array mail/cache and synthetic users, plus the labeled loopback-only MySQL 5.7.44 QA container. Production remains cef21d3. Feature tests do not prove all browser workflows or production account configuration.
 
 ## Defects

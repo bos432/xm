@@ -1,0 +1,36 @@
+{
+  "stage": "QA47",
+  "timestamp": "2026-11-05T12:23:48.742445+00:00",
+  "runtime": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "synthetic_test_command": [
+    "C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "modernization/backend/tests/Operations",
+    "-p",
+    "test_restore_archive_safety.py",
+    "-v"
+  ],
+  "synthetic_test_exit_code": 0,
+  "synthetic_test_count": 21,
+  "isolated_mysql_fixture_command": "docker exec -e MYSQL_PWD nxm-qa-mysql57-20261105 mysqldump --user=root --no-data --routines --triggers modernization_migration_test",
+  "fixture_exit_code": 0,
+  "fixture_observation": {
+    "mysqldump_exit": 0,
+    "statements": 223,
+    "expanded_bytes": 57737,
+    "docker_scope": "nxm.qa.scope=isolated-concurrency;127.0.0.1:13371",
+    "schema_only": true,
+    "production_access": false
+  },
+  "initial_capture_attempt": "exit0 but emitted Python reader-thread warning; repeated with pipe closed and no subprocess communicate thread; final capture clean",
+  "production_archive_scanned": false,
+  "sql_executed_or_imported": false,
+  "extraction_performed": false,
+  "server_execution": "blocked_external: browser page access unavailable",
+  "production_access": false,
+  "coverage_percent": null
+}

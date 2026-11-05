@@ -1,0 +1,23 @@
+{
+  "stage": "QA46",
+  "timestamp": "2026-11-05T11:55:57.571006+00:00",
+  "runtime": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "command": [
+    "C:\\Users\\Administrator\\AppData\\Local\\Programs\\Python\\Python312\\python.exe",
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "modernization/backend/tests/Operations",
+    "-p",
+    "test_restore_archive_safety.py",
+    "-v"
+  ],
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "test_cli_returns_only_counts_and_refuses_unsafe_archive (test_restore_archive_safety.ArchiveSafetyTest.test_cli_returns_only_counts_and_refuses_unsafe_archive) ... ok\ntest_corrupt_gzip_footer_is_rejected_after_tar_end (test_restore_archive_safety.ArchiveSafetyTest.test_corrupt_gzip_footer_is_rejected_after_tar_end) ... ok\ntest_deep_and_long_paths_are_rejected (test_restore_archive_safety.ArchiveSafetyTest.test_deep_and_long_paths_are_rejected) ... ok\ntest_empty_archive_is_rejected (test_restore_archive_safety.ArchiveSafetyTest.test_empty_archive_is_rejected) ... ok\ntest_file_as_parent_is_rejected_in_either_order (test_restore_archive_safety.ArchiveSafetyTest.test_file_as_parent_is_rejected_in_either_order) ... ok\ntest_invalid_limits_are_rejected (test_restore_archive_safety.ArchiveSafetyTest.test_invalid_limits_are_rejected) ... ok\ntest_links_devices_and_fifo_are_rejected (test_restore_archive_safety.ArchiveSafetyTest.test_links_devices_and_fifo_are_rejected) ... ok\ntest_non_tar_and_truncated_gzip_are_rejected (test_restore_archive_safety.ArchiveSafetyTest.test_non_tar_and_truncated_gzip_are_rejected) ... ok\ntest_normalized_duplicates_are_rejected (test_restore_archive_safety.ArchiveSafetyTest.test_normalized_duplicates_are_rejected) ... ok\ntest_resource_limits_are_enforced (test_restore_archive_safety.ArchiveSafetyTest.test_resource_limits_are_enforced) ... ok\ntest_unsafe_paths_are_rejected (test_restore_archive_safety.ArchiveSafetyTest.test_unsafe_paths_are_rejected) ... ok\ntest_valid_archive_is_read_only_and_returns_counts (test_restore_archive_safety.ArchiveSafetyTest.test_valid_archive_is_read_only_and_returns_counts) ... ok\n\n----------------------------------------------------------------------\nRan 12 tests in 0.239s\n\nOK\n",
+  "scope": "synthetic archives only; read-only validator; no extraction, SQL import, production access or deployment",
+  "server_execution": "blocked_external: browser control unavailable",
+  "coverage_percent": null
+}
